@@ -1,0 +1,47 @@
+# ====================================
+# Claude Code 忽略檔案清單
+# ====================================
+
+# 編譯產出
+target/
+build/
+*.class
+*.jar
+*.war
+
+# IDE 設定
+.idea/
+*.iml
+.vscode/
+*.swp
+.project
+.classpath
+.settings/
+
+# 日誌
+*.log
+logs/
+
+# 暫存
+*.tmp
+*.temp
+*.bak
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 依賴
+node_modules/
+
+# 敏感資料
+*.env.local
+*.env.production
+application-local.yml
+secrets/
+
+# 大型檔案
+*.sql
+*.dump
+*.csv
+*.xlsx

@@ -1,0 +1,353 @@
+package com.booking.platform.service;
+
+import com.booking.platform.common.exception.BusinessException;
+import com.booking.platform.common.exception.ErrorCode;
+import com.booking.platform.common.exception.ResourceNotFoundException;
+import com.booking.platform.common.response.PageResponse;
+import com.booking.platform.common.tenant.TenantContext;
+import com.booking.platform.dto.request.CreateCustomerRequest;
+import com.booking.platform.dto.response.CustomerResponse;
+import com.booking.platform.entity.customer.Customer;
+import com.booking.platform.entity.customer.MembershipLevel;
+import com.booking.platform.entity.customer.PointTransaction;
+import com.booking.platform.enums.CustomerStatus;
+import com.booking.platform.mapper.CustomerMapper;
+import com.booking.platform.repository.CustomerRepository;
+import com.booking.platform.repository.MembershipLevelRepository;
+import com.booking.platform.repository.PointTransactionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 顧客服務
+ *
+ * @author Developer
+ * @since 1.0.0
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+@Slf4j
+public class CustomerService {
+
+    private final CustomerRepository customerRepository;
+    private final MembershipLevelRepository membershipLevelRepository;
+    private final PointTransactionRepository pointTransactionRepository;
+    private final CustomerMapper customerMapper;
+
+    // ========================================
+    // 查詢方法
+    // ========================================
+
+    public PageResponse<CustomerResponse> getList(
+            CustomerStatus status,
+            String keyword,
+            Pageable pageable
+    ) {
+        String tenantId = TenantContext.getTenantId();
+
+        Page<Customer> page = customerRepository.findByTenantIdAndFilters(
+                tenantId, status, keyword, pageable
+        );
+
+        List<CustomerResponse> content = page.getContent().stream()
+                .map(c -> {
+                    String levelName = null;
+                    if (c.getMembershipLevelId() != null) {
+                        levelName = membershipLevelRepository
+                                .findByIdAndTenantIdAndDeletedAtIsNull(c.getMembershipLevelId(), tenantId)
+                                .map(MembershipLevel::getName)
+                                .orElse(null);
+                    }
+                    return customerMapper.toResponse(c, levelName);
+                })
+                .collect(Collectors.toList());
+
+        return PageResponse.<CustomerResponse>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
+
+    public CustomerResponse getDetail(String id) {
+        String tenantId = TenantContext.getTenantId();
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        String levelName = null;
+        if (entity.getMembershipLevelId() != null) {
+            levelName = membershipLevelRepository
+                    .findByIdAndTenantIdAndDeletedAtIsNull(entity.getMembershipLevelId(), tenantId)
+                    .map(MembershipLevel::getName)
+                    .orElse(null);
+        }
+
+        return customerMapper.toResponse(entity, levelName);
+    }
+
+    public CustomerResponse getByLineUserId(String lineUserId) {
+        String tenantId = TenantContext.getTenantId();
+
+        Customer entity = customerRepository.findByTenantIdAndLineUserIdAndDeletedAtIsNull(tenantId, lineUserId)
+                .orElse(null);
+
+        return entity != null ? customerMapper.toResponse(entity) : null;
+    }
+
+    public List<CustomerResponse> getBirthdayCustomers() {
+        String tenantId = TenantContext.getTenantId();
+        LocalDate today = LocalDate.now();
+
+        return customerRepository.findBirthdayCustomers(
+                        tenantId, today.getMonthValue(), today.getDayOfMonth()
+                ).stream()
+                .map(customerMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ========================================
+    // 寫入方法
+    // ========================================
+
+    @Transactional
+    public CustomerResponse create(CreateCustomerRequest request) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("建立顧客，租戶：{}，參數：{}", tenantId, request);
+
+        // 檢查 LINE User ID 是否重複
+        if (request.getLineUserId() != null && !request.getLineUserId().isEmpty()) {
+            if (customerRepository.existsByTenantIdAndLineUserIdAndDeletedAtIsNull(
+                    tenantId, request.getLineUserId())) {
+                throw new BusinessException(
+                        ErrorCode.CUSTOMER_LINE_ID_DUPLICATE,
+                        "此 LINE 帳號已綁定其他顧客"
+                );
+            }
+        }
+
+        // 檢查手機號碼是否重複
+        if (request.getPhone() != null && !request.getPhone().isEmpty()) {
+            if (customerRepository.existsByTenantIdAndPhoneAndDeletedAtIsNull(
+                    tenantId, request.getPhone())) {
+                throw new BusinessException(
+                        ErrorCode.CUSTOMER_PHONE_DUPLICATE,
+                        "此手機號碼已存在"
+                );
+            }
+        }
+
+        // 取得預設會員等級
+        String defaultLevelId = membershipLevelRepository
+                .findByTenantIdAndIsDefaultTrueAndDeletedAtIsNull(tenantId)
+                .map(MembershipLevel::getId)
+                .orElse(null);
+
+        Customer entity = Customer.builder()
+                .lineUserId(request.getLineUserId())
+                .name(request.getName())
+                .nickname(request.getNickname())
+                .phone(request.getPhone())
+                .email(request.getEmail())
+                .gender(request.getGender())
+                .birthday(request.getBirthday())
+                .address(request.getAddress())
+                .status(CustomerStatus.ACTIVE)
+                .membershipLevelId(defaultLevelId)
+                .totalSpent(BigDecimal.ZERO)
+                .visitCount(0)
+                .pointBalance(0)
+                .noShowCount(0)
+                .note(request.getNote())
+                .tags(request.getTags())
+                .build();
+
+        entity.setTenantId(tenantId);
+        entity = customerRepository.save(entity);
+
+        log.info("顧客建立成功，ID：{}", entity.getId());
+
+        return customerMapper.toResponse(entity);
+    }
+
+    @Transactional
+    public CustomerResponse update(String id, CreateCustomerRequest request) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("更新顧客，ID：{}，參數：{}", id, request);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        // 檢查手機號碼是否重複（排除自己）
+        if (request.getPhone() != null && !request.getPhone().isEmpty()) {
+            if (customerRepository.existsByTenantIdAndPhoneAndIdNotAndDeletedAtIsNull(
+                    tenantId, request.getPhone(), id)) {
+                throw new BusinessException(
+                        ErrorCode.CUSTOMER_PHONE_DUPLICATE,
+                        "此手機號碼已存在"
+                );
+            }
+        }
+
+        entity.setName(request.getName());
+        entity.setNickname(request.getNickname());
+        entity.setPhone(request.getPhone());
+        entity.setEmail(request.getEmail());
+        entity.setGender(request.getGender());
+        entity.setBirthday(request.getBirthday());
+        entity.setAddress(request.getAddress());
+        entity.setNote(request.getNote());
+        entity.setTags(request.getTags());
+
+        entity = customerRepository.save(entity);
+
+        log.info("顧客更新成功，ID：{}", entity.getId());
+
+        return customerMapper.toResponse(entity);
+    }
+
+    @Transactional
+    public void delete(String id) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("刪除顧客，ID：{}", id);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        entity.softDelete();
+        customerRepository.save(entity);
+
+        log.info("顧客刪除成功，ID：{}", id);
+    }
+
+    // ========================================
+    // 點數操作
+    // ========================================
+
+    @Transactional
+    public CustomerResponse addPoints(String id, int points, String description) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("增加顧客點數，ID：{}，點數：{}", id, points);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        entity.addPoints(points);
+        entity = customerRepository.save(entity);
+
+        // 記錄點數交易
+        PointTransaction transaction = PointTransaction.builder()
+                .customerId(id)
+                .type("EARN")
+                .points(points)
+                .balanceAfter(entity.getPointBalance())
+                .description(description)
+                .build();
+        transaction.setTenantId(tenantId);
+        pointTransactionRepository.save(transaction);
+
+        log.info("顧客點數增加成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
+
+        return customerMapper.toResponse(entity);
+    }
+
+    @Transactional
+    public CustomerResponse deductPoints(String id, int points, String description) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("扣除顧客點數，ID：{}，點數：{}", id, points);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        if (!entity.deductPoints(points)) {
+            throw new BusinessException(
+                    ErrorCode.POINT_INSUFFICIENT,
+                    "點數不足"
+            );
+        }
+
+        entity = customerRepository.save(entity);
+
+        // 記錄點數交易
+        PointTransaction transaction = PointTransaction.builder()
+                .customerId(id)
+                .type("REDEEM")
+                .points(-points)
+                .balanceAfter(entity.getPointBalance())
+                .description(description)
+                .build();
+        transaction.setTenantId(tenantId);
+        pointTransactionRepository.save(transaction);
+
+        log.info("顧客點數扣除成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
+
+        return customerMapper.toResponse(entity);
+    }
+
+    // ========================================
+    // 狀態操作
+    // ========================================
+
+    @Transactional
+    public CustomerResponse blockCustomer(String id) {
+        String tenantId = TenantContext.getTenantId();
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        entity.setStatus(CustomerStatus.BLOCKED);
+        entity = customerRepository.save(entity);
+
+        log.info("顧客已封鎖，ID：{}", id);
+
+        return customerMapper.toResponse(entity);
+    }
+
+    @Transactional
+    public CustomerResponse unblockCustomer(String id) {
+        String tenantId = TenantContext.getTenantId();
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        entity.setStatus(CustomerStatus.ACTIVE);
+        entity = customerRepository.save(entity);
+
+        log.info("顧客已解除封鎖，ID：{}", id);
+
+        return customerMapper.toResponse(entity);
+    }
+}
