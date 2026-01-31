@@ -1,47 +1,48 @@
 # 前端頁面規範
 
-## 技術選擇
+## 技術
 
-- Thymeleaf 模板引擎
-- Bootstrap 5 UI 框架
-- 原生 JavaScript（Fetch API）
+Thymeleaf + Bootstrap 5 + 原生 JS + FullCalendar
 
-## 目錄結構
+## 結構
+
+| 目錄 | 內容 |
+|------|------|
+| admin/ | login, dashboard, tenants, tenant-detail, point-topups, features |
+| tenant/ | login, register, forgot-password, dashboard, bookings, calendar, customers, staff, services, products, coupons, campaigns, settings, line-settings, feature-store, points |
+| fragments/ | sidebar-admin, sidebar-tenant |
+| error/ | 404, 500 |
+
+## 版面
+
+```html
+<head th:replace="~{tenant/layout :: head}"></head>
+<nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+<th:block th:replace="~{tenant/layout :: scripts}"></th:block>
 ```
-templates/
-├── admin/           # 超級管理後台
-├── tenant/          # 店家後台
-├── fragments/       # 共用片段
-└── error/           # 錯誤頁面
-```
 
-## 頁面命名
+## common.js API
 
-- 列表頁：`xxx-list.html` 或 `xxxs.html`
-- 詳情頁：`xxx-detail.html`
-- 表單頁：`xxx-form.html`
-
-## API 呼叫
 ```javascript
-async function loadData() {
-    const response = await fetch('/api/xxx', {
-        headers: {
-            'Authorization': 'Bearer ' + getToken()
-        }
-    });
-    const result = await response.json();
-    if (result.success) {
-        renderData(result.data);
-    } else {
-        showError(result.message);
-    }
-}
+// Token
+getToken(), setToken(token), isLoggedIn()
+
+// API（自動處理 Token、錯誤）
+api.get(url, params)
+api.post(url, data)
+api.put(url, data)
+api.delete(url)
+
+// 通知
+showSuccess(msg), showError(msg), showConfirm(msg)
+
+// 格式化
+formatDate(), formatDateTime(), formatMoney(), formatNumber()
+
+// 分頁
+renderPagination(pageData, onPageClick)
 ```
 
-## 共用函式（common.js）
+## tenant.js 公開頁面
 
-- `getToken()` - 取得 JWT Token
-- `showSuccess(message)` - 顯示成功訊息
-- `showError(message)` - 顯示錯誤訊息
-- `formatDate(date)` - 格式化日期
-- `formatMoney(amount)` - 格式化金額
+checkAuth() 會跳過：`/login`, `/register`, `/forgot-password`, `/reset-password`

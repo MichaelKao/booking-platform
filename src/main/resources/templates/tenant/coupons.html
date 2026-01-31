@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>票券管理 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div><h1 class="page-title">票券管理</h1><p class="page-subtitle">管理優惠券和折價券</p></div>
+                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增票券</button>
+                </div>
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">票券列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>票券名稱</th><th>類型</th><th>折扣</th><th>有效期限</th><th>已發放/上限</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <tbody id="dataTable"><tr><td colspan="7" class="text-center text-muted py-5">載入中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="modalTitle">新增票券</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="dataForm" novalidate>
+                    <input type="hidden" id="dataId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">票券名稱 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" required maxlength="100">
+                            <div class="invalid-feedback">請輸入票券名稱</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">類型 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type" required onchange="toggleTypeFields()">
+                                <option value="DISCOUNT_AMOUNT">折價券（固定金額）</option>
+                                <option value="DISCOUNT_PERCENT">折扣券（百分比）</option>
+                                <option value="GIFT">兌換券</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 折價券欄位 -->
+                    <div class="row" id="discountAmountFields">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">折抵金額 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="discountAmount" min="1" step="1">
+                            </div>
+                            <div class="invalid-feedback">請輸入折抵金額</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">最低消費金額</label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="minOrderAmount" min="0">
+                            </div>
+                            <div class="form-text">不填則無門檻</div>
+                        </div>
+                    </div>
+
+                    <!-- 折扣券欄位 -->
+                    <div class="row d-none" id="discountPercentFields">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">折扣 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="discountPercent" min="1" max="99" step="1" placeholder="例如：10 表示打9折">
+                                <span class="input-group-text">% off</span>
+                            </div>
+                            <div class="form-text">輸入 10 表示打 9 折，20 表示打 8 折</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">最高折抵金額</label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="maxDiscountAmount" min="0">
+                            </div>
+                            <div class="form-text">不填則無上限</div>
+                        </div>
+                    </div>
+
+                    <!-- 兌換券欄位 -->
+                    <div class="row d-none" id="giftFields">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">兌換項目 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="giftItem" maxlength="200" placeholder="例如：免費護髮一次">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">有效期天數</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="validDays" min="1" max="365">
+                                <span class="input-group-text">天</span>
+                            </div>
+                            <div class="form-text">從領取日起算</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">發行數量</label>
+                            <input type="number" class="form-control" id="totalQuantity" min="1">
+                            <div class="form-text">不填則無上限</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">使用說明</label>
+                        <textarea class="form-control" id="description" rows="2" maxlength="500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
+            </div>
+        </div></div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'coupons';
+        const TYPE_MAP = { DISCOUNT_AMOUNT: '折價券', DISCOUNT_PERCENT: '折扣券', GIFT: '兌換券' };
+
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        function toggleTypeFields() {
+            const type = document.getElementById('type').value;
+            document.getElementById('discountAmountFields').classList.toggle('d-none', type !== 'DISCOUNT_AMOUNT');
+            document.getElementById('discountPercentFields').classList.toggle('d-none', type !== 'DISCOUNT_PERCENT');
+            document.getElementById('giftFields').classList.toggle('d-none', type !== 'GIFT');
+        }
+
+        async function loadData() {
+            try {
+                const r = await api.get('/api/coupons');
+                const items = r.data?.content || r.data || [];
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="7" class="text-center text-muted py-5">暫無票券</td></tr>'
+                    : items.map(c => {
+                        let discountText = '-';
+                        if (c.type === 'DISCOUNT_AMOUNT' && c.discountAmount) {
+                            discountText = '折抵 ' + formatMoney(c.discountAmount);
+                        } else if (c.type === 'DISCOUNT_PERCENT' && c.discountPercent) {
+                            discountText = (c.discountPercent * 100) + '% off';
+                        } else if (c.type === 'GIFT') {
+                            discountText = c.giftItem || '兌換品';
+                        }
+                        const validText = c.validDays ? c.validDays + ' 天' : '無期限';
+                        return `<tr>
+                            <td><strong>${escapeHtml(c.name)}</strong></td>
+                            <td>${TYPE_MAP[c.type] || c.type}</td>
+                            <td>${discountText}</td>
+                            <td>${validText}</td>
+                            <td>${c.issuedCount || 0} / ${c.totalQuantity || '∞'}</td>
+                            <td>${getCouponStatusBadge(c.status)}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editData('${c.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-outline-danger" onclick="deleteData('${c.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
+            } catch (e) {
+                console.error('載入票券失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="7" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('type').value = 'DISCOUNT_AMOUNT';
+            toggleTypeFields();
+            document.getElementById('modalTitle').textContent = '新增票券';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/coupons/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('type').value = d.type || 'DISCOUNT_AMOUNT';
+                    document.getElementById('discountAmount').value = d.discountAmount || '';
+                    document.getElementById('discountPercent').value = d.discountPercent ? d.discountPercent * 100 : '';
+                    document.getElementById('minOrderAmount').value = d.minOrderAmount || '';
+                    document.getElementById('maxDiscountAmount').value = d.maxDiscountAmount || '';
+                    document.getElementById('giftItem').value = d.giftItem || '';
+                    document.getElementById('validDays').value = d.validDays || '';
+                    document.getElementById('totalQuantity').value = d.totalQuantity || '';
+                    document.getElementById('description').value = d.description || '';
+                    toggleTypeFields();
+                    document.getElementById('modalTitle').textContent = '編輯票券';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入票券詳情失敗:', e);
+                showError('載入票券詳情失敗');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameEl = document.getElementById('name');
+            const type = document.getElementById('type').value;
+
+            let isValid = true;
+
+            // 名稱必填
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                nameEl.classList.remove('is-invalid');
+            }
+
+            // 依類型驗證必填欄位
+            if (type === 'DISCOUNT_AMOUNT') {
+                const amountEl = document.getElementById('discountAmount');
+                if (!amountEl.value || parseFloat(amountEl.value) <= 0) {
+                    amountEl.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    amountEl.classList.remove('is-invalid');
+                }
+            } else if (type === 'DISCOUNT_PERCENT') {
+                const percentEl = document.getElementById('discountPercent');
+                const val = parseFloat(percentEl.value);
+                if (!percentEl.value || val <= 0 || val >= 100) {
+                    percentEl.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    percentEl.classList.remove('is-invalid');
+                }
+            } else if (type === 'GIFT') {
+                const giftEl = document.getElementById('giftItem');
+                if (!giftEl.value.trim()) {
+                    giftEl.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    giftEl.classList.remove('is-invalid');
+                }
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查表單欄位');
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const data = {
+                name: nameEl.value.trim(),
+                type: type,
+                description: document.getElementById('description').value.trim() || null,
+                validDays: document.getElementById('validDays').value ? parseInt(document.getElementById('validDays').value) : null,
+                totalQuantity: document.getElementById('totalQuantity').value ? parseInt(document.getElementById('totalQuantity').value) : null
+            };
+
+            if (type === 'DISCOUNT_AMOUNT') {
+                data.discountAmount = parseFloat(document.getElementById('discountAmount').value);
+                data.minOrderAmount = document.getElementById('minOrderAmount').value ? parseFloat(document.getElementById('minOrderAmount').value) : null;
+            } else if (type === 'DISCOUNT_PERCENT') {
+                data.discountPercent = parseFloat(document.getElementById('discountPercent').value) / 100;
+                data.maxDiscountAmount = document.getElementById('maxDiscountAmount').value ? parseFloat(document.getElementById('maxDiscountAmount').value) : null;
+            } else if (type === 'GIFT') {
+                data.giftItem = document.getElementById('giftItem').value.trim();
+            }
+
+            try {
+                const r = id ? await api.put(`/api/coupons/${id}`, data) : await api.post('/api/coupons', data);
+                if (r.success) {
+                    showSuccess(id ? '票券更新成功' : '票券建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('儲存票券失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            }
+        }
+
+        async function deleteData(id) {
+            if (!await showConfirm('確定要刪除此票券嗎？')) return;
+            try {
+                const r = await api.delete(`/api/coupons/${id}`);
+                if (r.success) {
+                    showSuccess('票券已刪除');
+                    loadData();
+                }
+            } catch (e) {
+                console.error('刪除票券失敗:', e);
+                showError('刪除失敗');
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

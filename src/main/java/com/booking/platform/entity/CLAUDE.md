@@ -1,44 +1,53 @@
 # Entity 規範
 
-## 必要標註
+## 繼承
+
+所有業務 Entity 繼承 `BaseEntity`：id, tenantId, createdAt, updatedAt, deletedAt
+
+例外：`TenantLineConfig` 用 tenantId 作主鍵
+
+## 標註
+
 ```java
 @Entity
-@Table(name = "xxx", indexes = {...})
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "xxx")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
-public class XxxEntity extends BaseEntity {
+public class Xxx extends BaseEntity { }
 ```
 
-## 繼承 BaseEntity
+## 目錄
 
-所有業務 Entity 都要繼承 `BaseEntity`，自動擁有：
-- id（UUID）
-- tenantId（租戶 ID）
-- createdAt, createdBy
-- updatedAt, updatedBy
-- deletedAt（軟刪除）
+| 目錄 | Entity |
+|------|--------|
+| tenant/ | Tenant |
+| staff/ | Staff, StaffSchedule, StaffLeave |
+| service/ | ServiceCategory, ServiceItem |
+| booking/ | Booking, BookingHistory |
+| customer/ | Customer, Membership, MembershipLevel |
+| product/ | ProductCategory, Product |
+| marketing/ | Coupon, CouponInstance, Campaign, PointTransaction |
+| system/ | Feature, TenantFeature, PointTopUp, AuditLog, AdminUser |
+| line/ | TenantLineConfig, LineUser |
 
-## 索引設計
+## 索引
+
 ```java
-@Table(
-    name = "xxx",
-    indexes = {
-        // 列表查詢
-        @Index(name = "idx_xxx_tenant_status", columnList = "tenant_id, status"),
-        // 軟刪除過濾
-        @Index(name = "idx_xxx_tenant_deleted", columnList = "tenant_id, deleted_at")
-    }
-)
+@Table(name = "xxx", indexes = {
+    @Index(name = "idx_xxx_tenant_status", columnList = "tenant_id, status"),
+    @Index(name = "idx_xxx_tenant_deleted", columnList = "tenant_id, deleted_at")
+})
 ```
 
-## 欄位註解
+## LINE Entity
+
 ```java
-/**
- * 欄位說明
- */
-@Column(name = "column_name", nullable = false, length = 100)
-private String fieldName;
+// TenantLineConfig - Token 加密儲存
+channelSecretEncrypted      // AES-256-GCM
+channelAccessTokenEncrypted // AES-256-GCM
+
+// LineUser
+lineUserId   // LINE 平台 ID
+customerId   // 關聯 Customer（可 null）
 ```

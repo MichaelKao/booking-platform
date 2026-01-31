@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    Tenant 店家後台側邊欄片段
+
+    使用方式：th:replace="~{fragments/sidebar-tenant :: sidebar}"
+-->
+
+<!-- 側邊欄 -->
+<nav th:fragment="sidebar" id="sidebar">
+    <!-- Logo -->
+    <a class="sidebar-brand" href="/tenant/dashboard">
+        <i class="bi bi-calendar-check sidebar-brand-icon"></i>
+        <span class="sidebar-brand-text">預約平台</span>
+    </a>
+
+    <hr class="sidebar-divider">
+
+    <!-- 導航選單 -->
+    <ul class="nav flex-column">
+        <!-- 儀表板 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/dashboard"
+               th:classappend="${#strings.equals(currentPage, 'dashboard')} ? 'active' : ''">
+                <i class="bi bi-speedometer2"></i>
+                <span>儀表板</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">預約管理</div>
+
+        <!-- 預約列表 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/bookings"
+               th:classappend="${#strings.equals(currentPage, 'bookings')} ? 'active' : ''">
+                <i class="bi bi-calendar-event"></i>
+                <span>預約列表</span>
+            </a>
+        </li>
+
+        <!-- 行事曆 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/calendar"
+               th:classappend="${#strings.equals(currentPage, 'calendar')} ? 'active' : ''">
+                <i class="bi bi-calendar3"></i>
+                <span>行事曆</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">顧客管理</div>
+
+        <!-- 顧客列表 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/customers"
+               th:classappend="${#strings.equals(currentPage, 'customers')} ? 'active' : ''">
+                <i class="bi bi-people"></i>
+                <span>顧客列表</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">店家設定</div>
+
+        <!-- 員工管理 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/staff"
+               th:classappend="${#strings.equals(currentPage, 'staff')} ? 'active' : ''">
+                <i class="bi bi-person-badge"></i>
+                <span>員工管理</span>
+            </a>
+        </li>
+
+        <!-- 服務項目 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/services"
+               th:classappend="${#strings.equals(currentPage, 'services')} ? 'active' : ''">
+                <i class="bi bi-list-check"></i>
+                <span>服務項目</span>
+            </a>
+        </li>
+
+        <!-- 商品管理 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/products"
+               th:classappend="${#strings.equals(currentPage, 'products')} ? 'active' : ''">
+                <i class="bi bi-box-seam"></i>
+                <span>商品管理</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">行銷推廣</div>
+
+        <!-- 票券管理 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/coupons"
+               th:classappend="${#strings.equals(currentPage, 'coupons')} ? 'active' : ''">
+                <i class="bi bi-ticket-perforated"></i>
+                <span>票券管理</span>
+            </a>
+        </li>
+
+        <!-- 行銷活動 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/campaigns"
+               th:classappend="${#strings.equals(currentPage, 'campaigns')} ? 'active' : ''">
+                <i class="bi bi-megaphone"></i>
+                <span>行銷活動</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">系統</div>
+
+        <!-- 店家設定 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/settings"
+               th:classappend="${#strings.equals(currentPage, 'settings')} ? 'active' : ''">
+                <i class="bi bi-gear"></i>
+                <span>店家設定</span>
+            </a>
+        </li>
+
+        <!-- LINE 設定 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/line-settings"
+               th:classappend="${#strings.equals(currentPage, 'line-settings')} ? 'active' : ''">
+                <i class="bi bi-chat-dots"></i>
+                <span>LINE 設定</span>
+            </a>
+        </li>
+
+        <!-- 功能商店 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/feature-store"
+               th:classappend="${#strings.equals(currentPage, 'feature-store')} ? 'active' : ''">
+                <i class="bi bi-puzzle"></i>
+                <span>功能商店</span>
+            </a>
+        </li>
+
+        <!-- 點數管理 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/points"
+               th:classappend="${#strings.equals(currentPage, 'points')} ? 'active' : ''">
+                <i class="bi bi-coin"></i>
+                <span>點數管理</span>
+            </a>
+        </li>
+    </ul>
+
+    <hr class="sidebar-divider">
+
+    <!-- 摺疊按鈕 -->
+    <div class="text-center d-none d-md-block">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    </div>
+</nav>
+</html>

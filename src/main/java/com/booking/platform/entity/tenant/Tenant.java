@@ -99,6 +99,28 @@ public class Tenant extends BaseEntity {
     private String address;
 
     // ========================================
+    // 認證欄位
+    // ========================================
+
+    /**
+     * 登入密碼（BCrypt 加密）
+     */
+    @Column(name = "password", length = 100)
+    private String password;
+
+    /**
+     * 密碼重設 Token
+     */
+    @Column(name = "password_reset_token", length = 100)
+    private String passwordResetToken;
+
+    /**
+     * 密碼重設 Token 過期時間
+     */
+    @Column(name = "password_reset_token_expiry")
+    private LocalDateTime passwordResetTokenExpiry;
+
+    // ========================================
     // 狀態欄位
     // ========================================
 

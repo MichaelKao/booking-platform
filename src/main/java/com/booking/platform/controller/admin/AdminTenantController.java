@@ -4,10 +4,12 @@ import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.common.response.PageResponse;
 import com.booking.platform.dto.request.CreateTenantRequest;
 import com.booking.platform.dto.request.UpdateTenantRequest;
+import com.booking.platform.dto.response.PointTopUpResponse;
 import com.booking.platform.dto.response.TenantDetailResponse;
 import com.booking.platform.dto.response.TenantListItemResponse;
 import com.booking.platform.dto.response.TenantResponse;
 import com.booking.platform.enums.TenantStatus;
+import com.booking.platform.service.PointTopUpService;
 import com.booking.platform.service.TenantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,7 @@ public class AdminTenantController {
     // ========================================
 
     private final TenantService tenantService;
+    private final PointTopUpService pointTopUpService;
 
     // ========================================
     // 查詢 API
@@ -143,6 +146,41 @@ public class AdminTenantController {
     // ========================================
 
     /**
+     * 更新租戶狀態（統一端點）
+     *
+     * @param id 租戶 ID
+     * @param request 狀態請求
+     * @return 更新結果
+     */
+    @PutMapping("/{id}/status")
+    public ApiResponse<TenantResponse> updateStatus(
+            @PathVariable String id,
+            @RequestBody java.util.Map<String, String> request
+    ) {
+        String status = request.get("status");
+        log.info("收到更新租戶狀態請求，ID：{}，狀態：{}", id, status);
+
+        TenantResponse result;
+        switch (status) {
+            case "ACTIVE":
+                result = tenantService.activate(id);
+                break;
+            case "SUSPENDED":
+                result = tenantService.suspend(id);
+                break;
+            case "FROZEN":
+                result = tenantService.freeze(id);
+                break;
+            default:
+                throw new com.booking.platform.common.exception.BusinessException(
+                        com.booking.platform.common.exception.ErrorCode.SYS_PARAM_ERROR,
+                        "無效的狀態值：" + status
+                );
+        }
+        return ApiResponse.ok("狀態更新成功", result);
+    }
+
+    /**
      * 啟用租戶
      *
      * @param id 租戶 ID
@@ -196,5 +234,24 @@ public class AdminTenantController {
     ) {
         log.info("收到增加租戶點數請求，ID：{}，金額：{}", id, amount);
         return ApiResponse.ok(tenantService.addPoints(id, amount));
+    }
+
+    /**
+     * 取得租戶儲值記錄
+     *
+     * @param id 租戶 ID
+     * @param page 頁碼
+     * @param size 每頁筆數
+     * @return 儲值記錄
+     */
+    @GetMapping("/{id}/topups")
+    public ApiResponse<PageResponse<PointTopUpResponse>> getTenantTopups(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        size = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ApiResponse.ok(pointTopUpService.getAllTopUps(null, id, pageable));
     }
 }

@@ -104,4 +104,45 @@ public interface PointTopUpRepository extends JpaRepository<PointTopUp, String> 
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime
     );
+
+    /**
+     * 查詢店家的儲值申請（不帶狀態篩選）
+     */
+    @Query("""
+            SELECT p FROM PointTopUp p
+            WHERE p.tenantId = :tenantId
+            AND p.deletedAt IS NULL
+            ORDER BY p.createdAt DESC
+            """)
+    Page<PointTopUp> findByTenantId(
+            @Param("tenantId") String tenantId,
+            Pageable pageable
+    );
+
+    /**
+     * 查詢店家的儲值申請（帶狀態篩選）
+     */
+    @Query("""
+            SELECT p FROM PointTopUp p
+            WHERE p.tenantId = :tenantId
+            AND p.status = :status
+            AND p.deletedAt IS NULL
+            ORDER BY p.createdAt DESC
+            """)
+    Page<PointTopUp> findByTenantIdAndStatus(
+            @Param("tenantId") String tenantId,
+            @Param("status") TopUpStatus status,
+            Pageable pageable
+    );
+
+    /**
+     * 統計店家待審核儲值金額
+     */
+    @Query("""
+            SELECT COALESCE(SUM(p.amount), 0) FROM PointTopUp p
+            WHERE p.tenantId = :tenantId
+            AND p.deletedAt IS NULL
+            AND p.status = 'PENDING'
+            """)
+    BigDecimal sumPendingAmountByTenantId(@Param("tenantId") String tenantId);
 }

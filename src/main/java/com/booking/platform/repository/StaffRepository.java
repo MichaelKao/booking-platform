@@ -60,6 +60,11 @@ public interface StaffRepository extends JpaRepository<Staff, String> {
             """)
     List<Staff> findBookableStaffs(@Param("tenantId") String tenantId);
 
+    /**
+     * 根據狀態查詢員工（給 LINE Bot 用）
+     */
+    List<Staff> findByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, StaffStatus status);
+
     // ========================================
     // 統計查詢
     // ========================================

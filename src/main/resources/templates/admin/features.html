@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    功能管理頁面
+
+    路徑：GET /admin/features
+    功能：管理平台所有功能項目
+-->
+<head th:replace="~{admin/layout :: head}">
+    <title>功能管理 - 預約平台管理後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-admin :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{admin/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">功能管理</h1>
+                        <p class="page-subtitle">管理平台所有功能項目和訂閱</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateFeatureModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增功能
+                    </button>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-primary">
+                            <div class="card-body">
+                                <div class="stat-label text-primary">總功能數</div>
+                                <div class="stat-value" id="totalFeatures">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-success">
+                            <div class="card-body">
+                                <div class="stat-label text-success">免費功能</div>
+                                <div class="stat-value" id="freeFeatures">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-info">
+                            <div class="card-body">
+                                <div class="stat-label text-info">付費功能</div>
+                                <div class="stat-value" id="paidFeatures">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-warning">
+                            <div class="card-body">
+                                <div class="stat-label text-warning">總訂閱數</div>
+                                <div class="stat-value" id="totalSubscriptions">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能列表 -->
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <h6 class="data-table-title">功能列表</h6>
+                        <div class="data-table-actions">
+                            <!-- 類型篩選 -->
+                            <select class="form-select form-select-sm" id="typeFilter" style="width: 120px;" onchange="loadFeatures()">
+                                <option value="">全部類型</option>
+                                <option value="FREE">免費</option>
+                                <option value="PAID">付費</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>功能資訊</th>
+                                        <th>類型</th>
+                                        <th>計費方式</th>
+                                        <th>訂閱數</th>
+                                        <th>狀態</th>
+                                        <th class="text-center" style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="featuresTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-5">
+                                            <div class="spinner-border spinner-border-sm me-2"></div>
+                                            載入中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{admin/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div th:replace="~{admin/layout :: confirm-modal}"></div>
+
+    <!-- 新增/編輯功能 Modal -->
+    <div class="modal fade" id="featureModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="featureModalTitle">新增功能</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="featureForm">
+                        <input type="hidden" id="featureId">
+
+                        <div class="row">
+                            <!-- 功能代碼 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="featureCode" class="form-label">功能代碼 <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="featureCode"
+                                       placeholder="例如：LINE_BOT"
+                                       pattern="^[A-Z][A-Z0-9_]*$"
+                                       required>
+                                <div class="form-text">只能使用大寫英文、數字和底線</div>
+                            </div>
+
+                            <!-- 功能名稱 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="featureName" class="form-label">功能名稱 <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="featureName"
+                                       placeholder="例如：LINE Bot 整合"
+                                       required>
+                            </div>
+                        </div>
+
+                        <!-- 功能描述 -->
+                        <div class="mb-3">
+                            <label for="featureDescription" class="form-label">功能描述</label>
+                            <textarea class="form-control"
+                                      id="featureDescription"
+                                      rows="2"
+                                      placeholder="功能說明..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- 功能類型 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="featureType" class="form-label">功能類型 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="featureType" required onchange="togglePricing()">
+                                    <option value="FREE">免費功能</option>
+                                    <option value="PAID">付費功能</option>
+                                </select>
+                            </div>
+
+                            <!-- 排序 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="featureSort" class="form-label">排序</label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="featureSort"
+                                       value="0"
+                                       min="0">
+                            </div>
+                        </div>
+
+                        <!-- 計費設定（付費功能時顯示） -->
+                        <div id="pricingSection" style="display: none;">
+                            <hr>
+                            <h6 class="mb-3">計費設定</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="monthlyPoints" class="form-label">月費（點數）</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="monthlyPoints"
+                                           placeholder="每月扣除點數"
+                                           min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="usagePoints" class="form-label">使用費（點數/次）</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="usagePoints"
+                                           placeholder="每次使用扣除點數"
+                                           min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 啟用狀態 -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="featureEnabled" checked>
+                                <label class="form-check-label" for="featureEnabled">啟用此功能</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFeature()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訂閱店家列表 Modal -->
+    <div class="modal fade" id="subscriptionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">訂閱店家列表</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>店家</th>
+                                    <th>訂閱時間</th>
+                                    <th>狀態</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptionTable">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">載入中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{admin/layout :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 設定當前頁面
+        const currentPage = 'features';
+
+        // 當前功能 ID
+        let currentFeatureCode = null;
+
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFeatures();
+        });
+
+        /**
+         * 載入功能列表
+         */
+        async function loadFeatures() {
+            const type = document.getElementById('typeFilter').value;
+            const params = type ? { type } : {};
+
+            try {
+                const result = await api.get('/api/admin/features', params);
+                if (result.success && result.data) {
+                    renderFeatures(result.data);
+                    updateStats(result.data);
+                }
+            } catch (error) {
+                console.error('載入功能失敗:', error);
+                document.getElementById('featuresTable').innerHTML =
+                    '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗，請重試</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染功能表格
+         */
+        function renderFeatures(features) {
+            const tbody = document.getElementById('featuresTable');
+
+            if (!features || features.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-puzzle text-gray-300"></i>
+                                <h5>尚無功能資料</h5>
+                                <p>點擊「新增功能」建立第一個功能</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = features.map(feature => {
+                // 轉換 API 回應格式
+                const isFree = feature.isFree;
+                const isActive = feature.isActive;
+                const typeLabel = isFree ? '免費' : '付費';
+                const typeClass = isFree ? 'bg-success' : 'bg-primary';
+
+                return `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${escapeHtml(feature.name)}</div>
+                        <div class="small text-muted">${escapeHtml(feature.code)}</div>
+                        ${feature.description ? `<div class="small text-secondary mt-1">${escapeHtml(feature.description)}</div>` : ''}
+                    </td>
+                    <td>
+                        <span class="badge ${typeClass}">${typeLabel}</span>
+                    </td>
+                    <td>
+                        ${!isFree ? `
+                            ${feature.monthlyPoints ? `<div>月費：${formatNumber(feature.monthlyPoints)} 點</div>` : ''}
+                            ${!feature.monthlyPoints ? '-' : ''}
+                        ` : '<span class="text-muted">-</span>'}
+                    </td>
+                    <td>
+                        <span class="text-muted">-</span>
+                    </td>
+                    <td>
+                        ${isActive ?
+                            '<span class="badge bg-success">啟用中</span>' :
+                            '<span class="badge bg-secondary">停用中</span>'}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary" onclick="openEditFeatureModal('${feature.code}')" title="編輯">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            ${isActive ?
+                                `<button class="btn btn-outline-warning" onclick="toggleFeature('${feature.code}', false)" title="停用">
+                                    <i class="bi bi-pause"></i>
+                                </button>` :
+                                `<button class="btn btn-outline-success" onclick="toggleFeature('${feature.code}', true)" title="啟用">
+                                    <i class="bi bi-play"></i>
+                                </button>`}
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        /**
+         * 更新統計數據
+         */
+        function updateStats(features) {
+            const total = features.length;
+            const free = features.filter(f => f.isFree === true).length;
+            const paid = features.filter(f => f.isFree === false).length;
+            const subs = 0; // 訂閱數需要另外 API 取得
+
+            document.getElementById('totalFeatures').textContent = formatNumber(total);
+            document.getElementById('freeFeatures').textContent = formatNumber(free);
+            document.getElementById('paidFeatures').textContent = formatNumber(paid);
+            document.getElementById('totalSubscriptions').textContent = formatNumber(subs);
+        }
+
+        /**
+         * 切換計費區塊顯示
+         */
+        function togglePricing() {
+            const type = document.getElementById('featureType').value;
+            document.getElementById('pricingSection').style.display = type === 'PAID' ? 'block' : 'none';
+        }
+
+        /**
+         * 開啟新增功能 Modal
+         */
+        function openCreateFeatureModal() {
+            document.getElementById('featureModalTitle').textContent = '新增功能';
+            document.getElementById('featureForm').reset();
+            document.getElementById('featureId').value = '';
+            document.getElementById('featureCode').disabled = false;
+            document.getElementById('featureEnabled').checked = true;
+            document.getElementById('pricingSection').style.display = 'none';
+
+            const modal = new bootstrap.Modal(document.getElementById('featureModal'));
+            modal.show();
+        }
+
+        /**
+         * 開啟編輯功能 Modal
+         */
+        async function openEditFeatureModal(featureCode) {
+            try {
+                const result = await api.get(`/api/admin/features/${featureCode}`);
+                if (result.success && result.data) {
+                    const feature = result.data;
+                    currentFeatureCode = featureCode;
+
+                    document.getElementById('featureModalTitle').textContent = '編輯功能';
+                    document.getElementById('featureId').value = feature.id;
+                    document.getElementById('featureCode').value = feature.code;
+                    document.getElementById('featureCode').disabled = true;
+                    document.getElementById('featureName').value = feature.name || '';
+                    document.getElementById('featureDescription').value = feature.description || '';
+                    document.getElementById('featureType').value = feature.isFree ? 'FREE' : 'PAID';
+                    document.getElementById('featureSort').value = feature.sortOrder || 0;
+                    document.getElementById('monthlyPoints').value = feature.monthlyPoints || 0;
+                    document.getElementById('featureEnabled').checked = feature.isActive;
+
+                    // 顯示計費區塊
+                    document.getElementById('pricingSection').style.display = feature.isFree ? 'none' : 'block';
+
+                    const modal = new bootstrap.Modal(document.getElementById('featureModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('載入功能詳情失敗:', error);
+                showError('載入功能詳情失敗');
+            }
+        }
+
+        /**
+         * 儲存功能
+         */
+        async function saveFeature() {
+            const featureCode = document.getElementById('featureCode').value;
+            const isEdit = document.getElementById('featureCode').disabled;
+
+            if (!isEdit) {
+                // 新增功能尚未支援，功能由系統初始化產生
+                showError('新增功能尚未開放，功能定義由系統初始化產生');
+                bootstrap.Modal.getInstance(document.getElementById('featureModal')).hide();
+                return;
+            }
+
+            // 編輯模式 - 調用 PUT API
+            const data = {
+                name: document.getElementById('featureName').value,
+                description: document.getElementById('featureDescription').value,
+                isActive: document.getElementById('featureEnabled').checked,
+                monthlyPoints: parseInt(document.getElementById('monthlyPoints').value) || 0,
+                sortOrder: parseInt(document.getElementById('featureSort').value) || 0
+            };
+
+            try {
+                const result = await api.put(`/api/admin/features/${featureCode}`, data);
+                if (result.success) {
+                    showSuccess('功能更新成功');
+                    bootstrap.Modal.getInstance(document.getElementById('featureModal')).hide();
+                    loadFeatures();
+                }
+            } catch (error) {
+                console.error('儲存功能失敗:', error);
+                showError('儲存功能失敗');
+            }
+        }
+
+        /**
+         * 切換功能狀態
+         */
+        async function toggleFeature(featureCode, enabled) {
+            const action = enabled ? '啟用' : '停用';
+            const confirmed = await showConfirm(`確定要${action}此功能嗎？`);
+            if (!confirmed) return;
+
+            try {
+                const result = await api.put(`/api/admin/features/${featureCode}`, {
+                    isActive: enabled
+                });
+                if (result.success) {
+                    showSuccess(`功能已${action}`);
+                    loadFeatures();
+                }
+            } catch (error) {
+                console.error('切換功能狀態失敗:', error);
+                showError(`${action}功能失敗`);
+            }
+        }
+
+        /**
+         * 開啟訂閱店家 Modal
+         */
+        async function openSubscriptionModal(featureCode) {
+            currentFeatureCode = featureCode;
+            document.getElementById('subscriptionTable').innerHTML =
+                '<tr><td colspan="4" class="text-center text-muted py-4">載入中...</td></tr>';
+
+            const modal = new bootstrap.Modal(document.getElementById('subscriptionModal'));
+            modal.show();
+
+            try {
+                const result = await api.get(`/api/admin/features/${featureCode}/subscriptions`);
+                if (result.success && result.data) {
+                    renderSubscriptions(result.data);
+                }
+            } catch (error) {
+                console.error('載入訂閱列表失敗:', error);
+                document.getElementById('subscriptionTable').innerHTML =
+                    '<tr><td colspan="4" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染訂閱列表
+         */
+        function renderSubscriptions(subscriptions) {
+            const tbody = document.getElementById('subscriptionTable');
+
+            if (!subscriptions || subscriptions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">尚無訂閱店家</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = subscriptions.map(sub => `
+                <tr>
+                    <td>
+                        <a href="/admin/tenants/${sub.tenantId}">${escapeHtml(sub.tenantName)}</a>
+                        <div class="small text-muted">${escapeHtml(sub.tenantCode)}</div>
+                    </td>
+                    <td class="small">${formatDateTime(sub.subscribedAt)}</td>
+                    <td>
+                        ${sub.enabled ?
+                            '<span class="badge bg-success">啟用中</span>' :
+                            '<span class="badge bg-secondary">停用中</span>'}
+                    </td>
+                    <td class="text-center">
+                        ${sub.enabled ?
+                            `<button class="btn btn-sm btn-outline-danger" onclick="disableTenantFeature('${sub.tenantId}', '${currentFeatureCode}')">
+                                停用
+                            </button>` :
+                            `<button class="btn btn-sm btn-outline-success" onclick="enableTenantFeature('${sub.tenantId}', '${currentFeatureCode}')">
+                                啟用
+                            </button>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 啟用店家功能
+         */
+        async function enableTenantFeature(tenantId, featureCode) {
+            try {
+                const result = await api.post(`/api/admin/tenants/${tenantId}/features/${featureCode}/enable`);
+                if (result.success) {
+                    showSuccess('功能已啟用');
+                    openSubscriptionModal(featureCode);
+                    loadFeatures();
+                }
+            } catch (error) {
+                console.error('啟用功能失敗:', error);
+            }
+        }
+
+        /**
+         * 停用店家功能
+         */
+        async function disableTenantFeature(tenantId, featureCode) {
+            const confirmed = await showConfirm('確定要停用此店家的功能嗎？');
+            if (!confirmed) return;
+
+            try {
+                const result = await api.post(`/api/admin/tenants/${tenantId}/features/${featureCode}/disable`);
+                if (result.success) {
+                    showSuccess('功能已停用');
+                    openSubscriptionModal(featureCode);
+                    loadFeatures();
+                }
+            } catch (error) {
+                console.error('停用功能失敗:', error);
+            }
+        }
+
+        /**
+         * HTML 跳脫
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

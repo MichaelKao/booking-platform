@@ -99,6 +99,28 @@ public class PointTopUpService {
     }
 
     /**
+     * 取得儲值統計資料
+     */
+    public java.util.Map<String, Object> getStats() {
+        long pendingCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.PENDING);
+        long approvedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.APPROVED);
+        long rejectedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.REJECTED);
+
+        // 計算總金額（已通過的）
+        BigDecimal totalAmount = pointTopUpRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtAsc(TopUpStatus.APPROVED)
+                .stream()
+                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return java.util.Map.of(
+                "pendingCount", pendingCount,
+                "approvedCount", approvedCount,
+                "rejectedCount", rejectedCount,
+                "totalAmount", totalAmount
+        );
+    }
+
+    /**
      * 取得儲值申請詳情
      */
     public PointTopUpResponse getTopUpDetail(String id) {

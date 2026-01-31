@@ -42,6 +42,15 @@ public class ReportController {
     }
 
     /**
+     * 取得儀表板統計（Dashboard 用）
+     */
+    @GetMapping("/dashboard")
+    public ApiResponse<ReportSummaryResponse> getDashboard() {
+        ReportSummaryResponse result = reportService.getTodaySummary();
+        return ApiResponse.ok(result);
+    }
+
+    /**
      * 取得今日統計
      */
     @GetMapping("/today")

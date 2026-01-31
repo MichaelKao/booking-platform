@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歡迎加入</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #1cc88a; border-radius: 8px 8px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
+                                歡迎加入預約平台！
+                            </h1>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px; color: #333333; font-size: 20px;">
+                                您的店家帳號已建立
+                            </h2>
+
+                            <p style="margin: 0 0 15px; color: #666666; font-size: 16px; line-height: 1.6;">
+                                親愛的 <strong th:text="${tenantName}">店家</strong> 您好，
+                            </p>
+
+                            <p style="margin: 0 0 15px; color: #666666; font-size: 16px; line-height: 1.6;">
+                                恭喜您成功註冊預約平台！您現在可以開始使用我們的服務來管理您的預約。
+                            </p>
+
+                            <!-- Info Box -->
+                            <div style="padding: 20px; background-color: #e8f4fd; border-radius: 6px; margin: 20px 0;">
+                                <p style="margin: 0 0 10px; color: #333333; font-size: 14px;">
+                                    <strong>您的帳號資訊：</strong>
+                                </p>
+                                <p style="margin: 0; color: #666666; font-size: 14px;">
+                                    店家代碼：<strong th:text="${tenantCode}">my-shop</strong>
+                                </p>
+                            </div>
+
+                            <!-- Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="border-radius: 6px; background-color: #1cc88a;">
+                                        <a th:href="${loginUrl}"
+                                           style="display: inline-block; padding: 14px 30px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600;">
+                                            前往登入
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h3 style="margin: 30px 0 15px; color: #333333; font-size: 16px;">
+                                接下來您可以：
+                            </h3>
+                            <ul style="margin: 0; padding: 0 0 0 20px; color: #666666; font-size: 14px; line-height: 1.8;">
+                                <li>設定您的店家基本資訊</li>
+                                <li>新增服務項目和員工</li>
+                                <li>設定 LINE Bot 開始接受預約</li>
+                                <li>探索更多功能</li>
+                            </ul>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0; color: #999999; font-size: 12px; text-align: center;">
+                                此為系統自動發送的郵件，請勿直接回覆。<br>
+                                Copyright &copy; 預約平台
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

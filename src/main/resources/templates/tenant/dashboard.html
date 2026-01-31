@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>儀表板 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header">
+                    <h1 class="page-title">儀表板</h1>
+                    <p class="page-subtitle">店家營運總覽</p>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row dashboard-stats">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-primary h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-primary">今日預約</div>
+                                        <div class="stat-value" id="todayBookings">-</div>
+                                    </div>
+                                    <div class="col-auto"><div class="stat-icon-circle primary"><i class="bi bi-calendar-check"></i></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-warning h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-warning">待確認</div>
+                                        <div class="stat-value" id="pendingBookings">-</div>
+                                    </div>
+                                    <div class="col-auto"><div class="stat-icon-circle warning"><i class="bi bi-hourglass-split"></i></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-success h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-success">本月營收</div>
+                                        <div class="stat-value" id="monthlyRevenue">-</div>
+                                    </div>
+                                    <div class="col-auto"><div class="stat-icon-circle success"><i class="bi bi-currency-dollar"></i></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-info h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-info">總顧客數</div>
+                                        <div class="stat-value" id="totalCustomers">-</div>
+                                    </div>
+                                    <div class="col-auto"><div class="stat-icon-circle info"><i class="bi bi-people"></i></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="mb-3">快速操作</h6>
+                        <div class="quick-actions">
+                            <a href="/tenant/bookings" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','booking')">
+                                <i class="bi bi-plus-circle"></i><span>新增預約</span>
+                            </a>
+                            <a href="/tenant/customers" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','customer')">
+                                <i class="bi bi-person-plus"></i><span>新增顧客</span>
+                            </a>
+                            <a href="/tenant/calendar" class="quick-action-btn">
+                                <i class="bi bi-calendar3"></i><span>查看行事曆</span>
+                            </a>
+                            <a href="/tenant/coupons" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','coupon')">
+                                <i class="bi bi-ticket-perforated"></i><span>建立票券</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 內容區塊 -->
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="m-0">今日預約</h6>
+                                <a href="/tenant/bookings" class="btn btn-sm btn-primary">查看全部</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead><tr><th>時間</th><th>顧客</th><th>服務</th><th>員工</th><th>狀態</th></tr></thead>
+                                        <tbody id="todayBookingsTable"><tr><td colspan="5" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2"></div>載入中...</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header"><h6 class="m-0">最近活動</h6></div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" id="recentActivities">
+                                    <div class="list-group-item text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2"></div>載入中...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 本週統計 -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header"><h6 class="m-0">本週預約趨勢</h6></div>
+                            <div class="card-body">
+                                <div id="weeklyChart" style="height: 300px;">
+                                    <div class="text-center text-muted py-5">
+                                        <i class="bi bi-bar-chart-line" style="font-size: 3rem;"></i>
+                                        <p class="mt-2">統計圖表功能開發中</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'dashboard';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            loadTodayBookings();
+            loadRecentActivities();
+        });
+
+        async function loadDashboardData() {
+            try {
+                const r = await api.get('/api/reports/dashboard');
+                if (r.success && r.data) {
+                    document.getElementById('todayBookings').textContent = formatNumber(r.data.todayBookings || 0);
+                    document.getElementById('pendingBookings').textContent = formatNumber(r.data.pendingBookings || 0);
+                    document.getElementById('monthlyRevenue').textContent = formatMoney(r.data.monthlyRevenue || 0);
+                    document.getElementById('totalCustomers').textContent = formatNumber(r.data.totalCustomers || 0);
+                }
+            } catch (e) {
+                console.error('載入統計資料失敗:', e);
+                // 嘗試從各 API 分別取得
+                loadStatsFromIndividualAPIs();
+            }
+        }
+
+        async function loadStatsFromIndividualAPIs() {
+            try {
+                // 今日預約數
+                const today = new Date().toISOString().split('T')[0];
+                const bookingsResult = await api.get('/api/bookings', { date: today, size: 1 });
+                if (bookingsResult.success && bookingsResult.data) {
+                    document.getElementById('todayBookings').textContent = formatNumber(bookingsResult.data.totalElements || 0);
+                }
+            } catch (e) { document.getElementById('todayBookings').textContent = '0'; }
+
+            try {
+                // 待確認數
+                const pendingResult = await api.get('/api/bookings', { status: 'PENDING', size: 1 });
+                if (pendingResult.success && pendingResult.data) {
+                    document.getElementById('pendingBookings').textContent = formatNumber(pendingResult.data.totalElements || 0);
+                }
+            } catch (e) { document.getElementById('pendingBookings').textContent = '0'; }
+
+            try {
+                // 顧客數
+                const customersResult = await api.get('/api/customers', { size: 1 });
+                if (customersResult.success && customersResult.data) {
+                    document.getElementById('totalCustomers').textContent = formatNumber(customersResult.data.totalElements || 0);
+                }
+            } catch (e) { document.getElementById('totalCustomers').textContent = '0'; }
+
+            document.getElementById('monthlyRevenue').textContent = formatMoney(0);
+        }
+
+        async function loadTodayBookings() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const r = await api.get('/api/bookings', { date: today, size: 10, sort: 'startTime,asc' });
+                if (r.success && r.data && r.data.content) {
+                    renderTodayBookings(r.data.content);
+                }
+            } catch (e) {
+                console.error('載入今日預約失敗:', e);
+                document.getElementById('todayBookingsTable').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        function renderTodayBookings(bookings) {
+            const tbody = document.getElementById('todayBookingsTable');
+            if (!bookings || bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">今日暫無預約</p>
+                    <a href="/tenant/bookings" class="btn btn-primary btn-sm mt-2" onclick="sessionStorage.setItem('openCreateModal','booking')">
+                        <i class="bi bi-plus me-1"></i>新增預約
+                    </a>
+                </td></tr>`;
+                return;
+            }
+            tbody.innerHTML = bookings.map(b => `<tr>
+                <td class="fw-bold">${b.startTime?.substring(0, 5) || '-'}</td>
+                <td>${escapeHtml(b.customerName || '-')}</td>
+                <td>${escapeHtml(b.serviceName || '-')}</td>
+                <td>${escapeHtml(b.staffName || '未指定')}</td>
+                <td>${getBookingStatusBadge(b.status)}</td>
+            </tr>`).join('');
+        }
+
+        async function loadRecentActivities() {
+            try {
+                const r = await api.get('/api/bookings', { size: 5, sort: 'createdAt,desc' });
+                if (r.success && r.data && r.data.content) {
+                    renderRecentActivities(r.data.content);
+                }
+            } catch (e) {
+                console.error('載入最近活動失敗:', e);
+                document.getElementById('recentActivities').innerHTML = '<div class="list-group-item text-center text-danger py-4">載入失敗</div>';
+            }
+        }
+
+        function renderRecentActivities(bookings) {
+            const container = document.getElementById('recentActivities');
+            if (!bookings || bookings.length === 0) {
+                container.innerHTML = '<div class="list-group-item text-center text-muted py-4">暫無活動記錄</div>';
+                return;
+            }
+            container.innerHTML = bookings.map(b => `<div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold small">${escapeHtml(b.customerName || '-')}</div>
+                        <div class="small text-muted">${escapeHtml(b.serviceName || '-')}</div>
+                    </div>
+                    <small class="text-muted">${formatDateTime(b.createdAt)}</small>
+                </div>
+            </div>`).join('');
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

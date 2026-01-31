@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>行銷活動 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">行銷活動</h1>
+                        <p class="page-subtitle">建立並管理行銷推廣活動，吸引更多顧客</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增活動
+                    </button>
+                </div>
+
+                <!-- 狀態說明 -->
+                <div class="alert alert-light mb-4">
+                    <div class="d-flex gap-3 flex-wrap">
+                        <span><span class="badge bg-secondary">草稿</span> 尚未發布</span>
+                        <span><span class="badge bg-success">進行中</span> 活動進行中</span>
+                        <span><span class="badge bg-warning text-dark">已暫停</span> 暫時停止</span>
+                        <span><span class="badge bg-dark">已結束</span> 活動結束</span>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">活動列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>活動名稱</th>
+                                        <th>類型</th>
+                                        <th>活動期間</th>
+                                        <th class="text-center">狀態</th>
+                                        <th class="text-center" style="width: 180px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                    <tr><td colspan="5" class="text-center text-muted py-5">
+                                        <div class="spinner-border spinner-border-sm me-2"></div>載入中...
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <!-- 新增/編輯活動 Modal -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增活動</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light mb-4">
+                        <small><i class="bi bi-info-circle me-1"></i>新建立的活動為「草稿」狀態，需點擊「發布」按鈕才會生效</small>
+                    </div>
+
+                    <form id="dataForm" novalidate>
+                        <input type="hidden" id="dataId">
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">活動名稱 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" required maxlength="100"
+                                       placeholder="例如：新春限時優惠">
+                                <div class="invalid-feedback">請輸入活動名稱</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">活動類型 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="type" required>
+                                    <option value="BIRTHDAY">生日活動</option>
+                                    <option value="NEW_CUSTOMER">新客活動</option>
+                                    <option value="SPENDING_THRESHOLD">滿額活動</option>
+                                    <option value="LIMITED_TIME">限時活動</option>
+                                    <option value="RECALL">喚回活動</option>
+                                    <option value="REFERRAL">推薦活動</option>
+                                </select>
+                                <div class="form-text" id="typeHint">針對生日當月的顧客</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">開始時間</label>
+                                <input type="datetime-local" class="form-control" id="startAt">
+                                <div class="form-text">不填則立即開始</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">結束時間</label>
+                                <input type="datetime-local" class="form-control" id="endAt">
+                                <div class="invalid-feedback">結束時間必須晚於開始時間</div>
+                                <div class="form-text">不填則永久有效</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">活動描述</label>
+                            <textarea class="form-control" id="description" rows="3" maxlength="500"
+                                      placeholder="描述活動內容、優惠方式等..."></textarea>
+                            <div class="form-text d-flex justify-content-end">
+                                <span><span id="descCount">0</span>/500</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()" id="saveBtn">
+                        <span class="btn-text">儲存</span>
+                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'campaigns';
+        const TYPE_MAP = {
+            BIRTHDAY: '生日活動', NEW_CUSTOMER: '新客活動', SPENDING_THRESHOLD: '滿額活動',
+            LIMITED_TIME: '限時活動', RECALL: '喚回活動', REFERRAL: '推薦活動'
+        };
+        const TYPE_HINTS = {
+            BIRTHDAY: '針對生日當月的顧客',
+            NEW_CUSTOMER: '首次來店的新顧客',
+            SPENDING_THRESHOLD: '消費達指定金額觸發',
+            LIMITED_TIME: '指定時間內的限時優惠',
+            RECALL: '久未來店的老顧客喚回',
+            REFERRAL: '推薦新顧客獎勵'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+
+            document.getElementById('description').addEventListener('input', function() {
+                document.getElementById('descCount').textContent = this.value.length;
+            });
+
+            document.getElementById('type').addEventListener('change', function() {
+                document.getElementById('typeHint').textContent = TYPE_HINTS[this.value] || '';
+            });
+        });
+
+        async function loadData() {
+            try {
+                const r = await api.get('/api/campaigns');
+                const items = r.data?.content || r.data || [];
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? `<tr><td colspan="5" class="text-center text-muted py-5">
+                        <i class="bi bi-megaphone" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">尚無行銷活動</p>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="openCreateModal()">
+                            <i class="bi bi-plus me-1"></i>建立第一個活動
+                        </button>
+                       </td></tr>`
+                    : items.map(c => {
+                        const period = (c.startAt ? formatDateTime(c.startAt) : '立即') + ' ~ ' + (c.endAt ? formatDateTime(c.endAt) : '永久');
+                        return `<tr>
+                            <td>
+                                <div class="fw-bold">${escapeHtml(c.name)}</div>
+                                ${c.description ? `<small class="text-muted">${escapeHtml(c.description.substring(0, 50))}${c.description.length > 50 ? '...' : ''}</small>` : ''}
+                            </td>
+                            <td><span class="badge bg-light text-dark">${TYPE_MAP[c.type] || c.type}</span></td>
+                            <td class="small">${period}</td>
+                            <td class="text-center">${getCampaignStatusBadge(c.status)}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    ${c.status === 'DRAFT' ? `<button class="btn btn-success" onclick="publishCampaign('${c.id}')" title="發布活動"><i class="bi bi-play-fill"></i> 發布</button>` : ''}
+                                    ${c.status === 'ACTIVE' ? `<button class="btn btn-warning" onclick="pauseCampaign('${c.id}')" title="暫停"><i class="bi bi-pause-fill"></i></button>` : ''}
+                                    ${c.status === 'PAUSED' ? `<button class="btn btn-success" onclick="resumeCampaign('${c.id}')" title="恢復"><i class="bi bi-play-fill"></i></button>` : ''}
+                                    ${!['ENDED'].includes(c.status) ? `<button class="btn btn-outline-danger" onclick="endCampaign('${c.id}')" title="結束"><i class="bi bi-stop-fill"></i></button>` : ''}
+                                    <button class="btn btn-outline-secondary" onclick="editData('${c.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
+            } catch (e) {
+                console.error('載入活動失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('descCount').textContent = '0';
+            document.getElementById('typeHint').textContent = TYPE_HINTS['BIRTHDAY'];
+            document.getElementById('modalTitle').textContent = '新增活動';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/campaigns/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('type').value = d.type || 'BIRTHDAY';
+                    document.getElementById('startAt').value = d.startAt ? d.startAt.substring(0, 16) : '';
+                    document.getElementById('endAt').value = d.endAt ? d.endAt.substring(0, 16) : '';
+                    document.getElementById('description').value = d.description || '';
+                    document.getElementById('descCount').textContent = (d.description || '').length;
+                    document.getElementById('typeHint').textContent = TYPE_HINTS[d.type] || '';
+                    document.getElementById('modalTitle').textContent = '編輯活動';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入活動詳情失敗:', e);
+                showError('載入活動詳情失敗');
+            }
+        }
+
+        function formatDateTimeForApi(value) {
+            if (!value) return null;
+            return value.replace('T', ' ') + ':00';
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameEl = document.getElementById('name');
+            const startAtEl = document.getElementById('startAt');
+            const endAtEl = document.getElementById('endAt');
+
+            let isValid = true;
+
+            // 名稱驗證
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                nameEl.classList.remove('is-invalid');
+            }
+
+            // 日期驗證
+            const startVal = startAtEl.value;
+            const endVal = endAtEl.value;
+            if (startVal && endVal && new Date(endVal) <= new Date(startVal)) {
+                endAtEl.classList.add('is-invalid');
+                showError('結束時間必須晚於開始時間');
+                isValid = false;
+            } else {
+                endAtEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const data = {
+                name: nameEl.value.trim(),
+                type: document.getElementById('type').value,
+                startAt: formatDateTimeForApi(startVal),
+                endAt: formatDateTimeForApi(endVal),
+                description: document.getElementById('description').value.trim() || null
+            };
+
+            const btn = document.getElementById('saveBtn');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const r = id ? await api.put(`/api/campaigns/${id}`, data) : await api.post('/api/campaigns', data);
+                if (r.success) {
+                    showSuccess(id ? '活動已更新' : '活動已建立（草稿狀態）');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('儲存活動失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        async function publishCampaign(id) {
+            if (!await showConfirm('確定要發布此活動嗎？發布後活動將立即生效。')) return;
+            try {
+                const r = await api.post(`/api/campaigns/${id}/publish`);
+                if (r.success) { showSuccess('活動已發布'); loadData(); }
+            } catch (e) { showError('發布失敗: ' + (e.message || '')); }
+        }
+
+        async function pauseCampaign(id) {
+            if (!await showConfirm('確定要暫停此活動嗎？')) return;
+            try {
+                const r = await api.post(`/api/campaigns/${id}/pause`);
+                if (r.success) { showSuccess('活動已暫停'); loadData(); }
+            } catch (e) { showError('暫停失敗'); }
+        }
+
+        async function resumeCampaign(id) {
+            if (!await showConfirm('確定要恢復此活動嗎？')) return;
+            try {
+                const r = await api.post(`/api/campaigns/${id}/resume`);
+                if (r.success) { showSuccess('活動已恢復'); loadData(); }
+            } catch (e) { showError('恢復失敗'); }
+        }
+
+        async function endCampaign(id) {
+            if (!await showConfirm('確定要結束此活動嗎？此操作無法復原。')) return;
+            try {
+                const r = await api.post(`/api/campaigns/${id}/end`);
+                if (r.success) { showSuccess('活動已結束'); loadData(); }
+            } catch (e) { showError('結束失敗'); }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -44,7 +44,8 @@ public class BookingController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) BookingStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) String staffId
+            @RequestParam(required = false) String staffId,
+            @RequestParam(required = false) String sort
     ) {
         size = Math.min(size, 100);
         Pageable pageable = PageRequest.of(page, size);
@@ -62,6 +63,17 @@ public class BookingController {
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         return ApiResponse.ok(bookingService.getByStaffAndDate(staffId, date));
+    }
+
+    /**
+     * 取得行事曆資料
+     */
+    @GetMapping("/calendar")
+    public ApiResponse<List<BookingResponse>> getCalendarData(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end
+    ) {
+        return ApiResponse.ok(bookingService.getCalendarData(start, end));
     }
 
     // ========================================

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>功能商店 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">功能商店</h1>
+                        <p class="page-subtitle">瀏覽並訂閱加值功能，提升您的服務品質</p>
+                    </div>
+                    <a href="/tenant/points" class="btn btn-outline-primary">
+                        <i class="bi bi-wallet2 me-1"></i>餘額：<span id="pointBalance">-</span> 點
+                    </a>
+                </div>
+
+                <!-- 說明提示 -->
+                <div class="alert alert-light mb-4">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-lightbulb me-2 text-warning" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>如何使用功能商店？</strong>
+                            <ol class="mb-0 mt-2 ps-3">
+                                <li>瀏覽下方的加值功能，選擇適合您的功能</li>
+                                <li>點擊「立即訂閱」按鈕開通功能</li>
+                                <li>付費功能會每月自動從您的點數餘額扣款</li>
+                                <li>點數不足時可前往「點數管理」頁面儲值</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能卡片 -->
+                <div class="row" id="featureCards">
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-2 text-muted">載入功能列表中...</p>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <style>
+        .feature-card {
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        .feature-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .feature-card.subscribed {
+            border-color: #198754;
+            background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+        }
+        .feature-card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .feature-card-body {
+            padding: 1.25rem;
+            min-height: 120px;
+        }
+        .feature-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .feature-price-unit {
+            font-size: 0.875rem;
+            font-weight: normal;
+            color: #6c757d;
+        }
+        .feature-card-footer {
+            padding: 1rem 1.25rem;
+            background: #f8f9fa;
+        }
+        .subscribed-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+        }
+    </style>
+    <script>
+        const currentPage = 'feature-store';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFeatures();
+            loadPointBalance();
+        });
+
+        async function loadPointBalance() {
+            try {
+                const r = await api.get('/api/points/balance');
+                if (r.success && r.data) {
+                    document.getElementById('pointBalance').textContent = formatNumber(r.data.balance || 0);
+                }
+            } catch (e) {
+                document.getElementById('pointBalance').textContent = '0';
+            }
+        }
+
+        async function loadFeatures() {
+            try {
+                const r = await api.get('/api/feature-store');
+                const features = r.data || [];
+
+                if (features.length === 0) {
+                    document.getElementById('featureCards').innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <i class="bi bi-puzzle text-muted" style="font-size: 4rem;"></i>
+                            <p class="mt-3 text-muted">暫無可用功能</p>
+                            <p class="small text-muted">請稍後再來查看</p>
+                        </div>`;
+                    return;
+                }
+
+                // 分類：已訂閱優先
+                const subscribed = features.filter(f => f.isEnabled);
+                const available = features.filter(f => !f.isEnabled);
+                const sortedFeatures = [...subscribed, ...available];
+
+                document.getElementById('featureCards').innerHTML = sortedFeatures.map(f => {
+                    const iconClass = getFeatureIcon(f.code);
+                    const bgColor = f.isFree ? 'bg-success' : 'bg-primary';
+                    const cardClass = f.isEnabled ? 'subscribed' : '';
+
+                    return `
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="feature-card h-100 position-relative ${cardClass}">
+                                ${f.isEnabled ? '<span class="badge bg-success subscribed-badge"><i class="bi bi-check-circle me-1"></i>已訂閱</span>' : ''}
+                                <div class="feature-card-header d-flex align-items-center">
+                                    <div class="feature-icon ${bgColor} me-3">
+                                        <i class="bi bi-${iconClass}"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">${escapeHtml(f.name)}</h6>
+                                        <small class="text-muted">${f.isFree ? '免費功能' : '付費功能'}</small>
+                                    </div>
+                                </div>
+                                <div class="feature-card-body">
+                                    <p class="text-muted small mb-3">${escapeHtml(f.description || '暫無說明')}</p>
+                                    ${!f.isFree ? `
+                                        <div class="feature-price">
+                                            ${formatNumber(f.monthlyPrice || 0)}
+                                            <span class="feature-price-unit">點 / 月</span>
+                                        </div>
+                                    ` : `
+                                        <div class="feature-price text-success">
+                                            免費
+                                        </div>
+                                    `}
+                                </div>
+                                <div class="feature-card-footer">
+                                    ${f.isEnabled ? `
+                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="unsubscribe('${f.code}', '${escapeHtml(f.name)}')" id="btn-${f.code}">
+                                            <span class="btn-text"><i class="bi bi-x-circle me-1"></i>取消訂閱</span>
+                                            <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>處理中...</span>
+                                        </button>
+                                    ` : `
+                                        <button class="btn btn-primary btn-sm w-100" onclick="subscribe('${f.code}', '${escapeHtml(f.name)}', ${f.monthlyPrice || 0}, ${f.isFree})" id="btn-${f.code}">
+                                            <span class="btn-text"><i class="bi bi-plus-circle me-1"></i>立即訂閱</span>
+                                            <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>處理中...</span>
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error('載入功能列表失敗:', e);
+                document.getElementById('featureCards').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+                        <p class="mt-3 text-danger">載入失敗</p>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadFeatures()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>重新載入
+                        </button>
+                    </div>`;
+            }
+        }
+
+        function getFeatureIcon(code) {
+            const icons = {
+                LINE_BOT: 'chat-dots-fill',
+                CAMPAIGN: 'megaphone-fill',
+                COUPON: 'ticket-perforated-fill',
+                REPORT: 'graph-up-arrow',
+                SMS: 'phone-fill',
+                ADVANCED_BOOKING: 'calendar-plus-fill',
+                CUSTOMER_ANALYTICS: 'people-fill',
+                INVENTORY: 'box-seam-fill'
+            };
+            return icons[code] || 'puzzle-fill';
+        }
+
+        async function subscribe(code, name, price, isFree) {
+            let confirmMsg = `確定要訂閱「${name}」功能嗎？`;
+            if (!isFree && price > 0) {
+                confirmMsg += `\n\n每月將自動扣除 ${formatNumber(price)} 點`;
+            }
+
+            if (!await showConfirm(confirmMsg)) return;
+
+            const btn = document.getElementById(`btn-${code}`);
+            if (btn) {
+                btn.querySelector('.btn-text').classList.add('d-none');
+                btn.querySelector('.btn-loading').classList.remove('d-none');
+                btn.disabled = true;
+            }
+
+            try {
+                const r = await api.post(`/api/feature-store/${code}/apply`);
+                if (r.success) {
+                    showSuccess(`「${name}」功能已開通！`);
+                    loadFeatures();
+                    loadPointBalance();
+                }
+            } catch (e) {
+                console.error('訂閱失敗:', e);
+                if (e.message && e.message.includes('點數不足')) {
+                    showError('點數餘額不足，請先前往「點數管理」儲值');
+                } else {
+                    showError('訂閱失敗：' + (e.message || '請稍後再試'));
+                }
+                // 恢復按鈕狀態
+                if (btn) {
+                    btn.querySelector('.btn-text').classList.remove('d-none');
+                    btn.querySelector('.btn-loading').classList.add('d-none');
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        async function unsubscribe(code, name) {
+            if (!await showConfirm(`確定要取消訂閱「${name}」功能嗎？\n\n取消後將無法使用此功能，但已扣除的點數不予退還。`)) return;
+
+            const btn = document.getElementById(`btn-${code}`);
+            if (btn) {
+                btn.querySelector('.btn-text').classList.add('d-none');
+                btn.querySelector('.btn-loading').classList.remove('d-none');
+                btn.disabled = true;
+            }
+
+            try {
+                const r = await api.post(`/api/feature-store/${code}/cancel`);
+                if (r.success) {
+                    showSuccess(`已取消訂閱「${name}」功能`);
+                    loadFeatures();
+                    loadPointBalance();
+                }
+            } catch (e) {
+                console.error('取消訂閱失敗:', e);
+                showError('取消訂閱失敗：' + (e.message || '請稍後再試'));
+                // 恢復按鈕狀態
+                if (btn) {
+                    btn.querySelector('.btn-text').classList.remove('d-none');
+                    btn.querySelector('.btn-loading').classList.add('d-none');
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,52 +1,44 @@
 # Service 規範
 
-## 必要標註
+## 標註
+
 ```java
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class XxxService {
 ```
 
-## 方法結構
+## 寫入方法
 
-使用分區註解：
 ```java
-@Transactional
-public XxxResponse create(CreateXxxRequest request) {
-    
-    // ========================================
-    // 1. 取得當前租戶
-    // ========================================
-    
-    String tenantId = TenantContext.getTenantId();
-    
-    // ========================================
-    // 2. 驗證業務規則
-    // ========================================
-    
-    // ...
-    
-    // ========================================
-    // 3. 建立資料
-    // ========================================
-    
-    // ...
-}
+@Transactional  // 單獨加
+public XxxResponse create(...) { }
 ```
 
 ## 必要步驟
 
-1. 取得租戶 ID
+1. 取得 `TenantContext.getTenantId()`
 2. 驗證業務規則
-3. 執行主要邏輯
-4. 記錄稽核日誌
-5. 清除相關快取
-6. 發送通知（如需要）
+3. 執行主邏輯
+4. 記錄 AuditLog（重要操作）
+5. 清快取（如有）
+6. 發通知（如需）
 
-## 例外處理
+## 目錄
+
+| 目錄 | 服務 |
+|------|------|
+| / | AuthService, TenantService, SettingsService |
+| admin/ | AdminTenantService, AdminFeatureService |
+| notification/ | EmailService, NotificationService |
+| line/ | LineWebhookService, LineConversationService |
+
+## LINE 對話狀態
+
 ```java
-throw new BusinessException(ErrorCode.XXX_ERROR, "錯誤訊息");
-throw new ResourceNotFoundException(ErrorCode.XXX_NOT_FOUND, "找不到資料");
+// Redis Key: line:conversation:{tenantId}:{lineUserId}
+// TTL: 30 分鐘
+lineConversationService.getState(tenantId, lineUserId);
+lineConversationService.setState(tenantId, lineUserId, state, context);
 ```

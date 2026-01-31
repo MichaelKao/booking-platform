@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>員工管理 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div><h1 class="page-title">員工管理</h1><p class="page-subtitle">管理服務人員</p></div>
+                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增員工</button>
+                </div>
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">員工列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>員工資訊</th><th>聯絡方式</th><th>可預約</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <tbody id="dataTable"><tr><td colspan="5" class="text-center text-muted py-5">載入中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <!-- 新增/編輯員工 Modal -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="modalTitle">新增員工</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="dataForm" novalidate>
+                    <input type="hidden" id="dataId">
+                    <div class="mb-3">
+                        <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required maxlength="50">
+                        <div class="invalid-feedback">請輸入員工姓名（最多50字）</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">顯示名稱</label>
+                        <input type="text" class="form-control" id="displayName" maxlength="50">
+                        <div class="form-text">用於顧客端顯示，不填則使用姓名</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">電話</label>
+                            <input type="tel" class="form-control" id="phone" maxlength="20" pattern="[0-9\-\+\s]*">
+                            <div class="invalid-feedback">請輸入有效的電話號碼</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">電子郵件</label>
+                            <input type="email" class="form-control" id="email" maxlength="100">
+                            <div class="invalid-feedback">請輸入有效的電子郵件</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">簡介</label>
+                        <textarea class="form-control" id="bio" rows="3" maxlength="500"></textarea>
+                        <div class="form-text"><span id="bioCount">0</span>/500</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isBookable" checked>
+                                <label class="form-check-label" for="isBookable">可接受預約</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isVisible" checked>
+                                <label class="form-check-label" for="isVisible">顯示於前台</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveData()">
+                    <span class="btn-text">儲存</span>
+                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>處理中...</span>
+                </button>
+            </div>
+        </div></div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'staff';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            // 字數計算
+            document.getElementById('bio').addEventListener('input', function() {
+                document.getElementById('bioCount').textContent = this.value.length;
+            });
+        });
+
+        async function loadData() {
+            try {
+                const r = await api.get('/api/staff');
+                const items = r.data?.content || r.data || [];
+                console.log('載入員工資料:', items);
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="5" class="text-center text-muted py-5">暫無員工，請點擊「新增員工」建立</td></tr>'
+                    : items.map(s => `<tr>
+                        <td>
+                            <div class="fw-bold">${escapeHtml(s.name)}</div>
+                            ${s.displayName && s.displayName !== s.name ? `<small class="text-muted">${escapeHtml(s.displayName)}</small>` : ''}
+                        </td>
+                        <td>
+                            ${s.phone ? `<div><i class="bi bi-telephone me-1"></i>${escapeHtml(s.phone)}</div>` : ''}
+                            ${s.email ? `<div class="small"><i class="bi bi-envelope me-1"></i>${escapeHtml(s.email)}</div>` : ''}
+                            ${!s.phone && !s.email ? '-' : ''}
+                        </td>
+                        <td>${s.isBookable !== false ? '<span class="badge bg-success">是</span>' : '<span class="badge bg-secondary">否</span>'}</td>
+                        <td>${getStaffStatusBadge(s.status)}</td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                console.error('載入員工失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-5">載入失敗，請重新整理頁面</td></tr>';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('isBookable').checked = true;
+            document.getElementById('isVisible').checked = true;
+            document.getElementById('bioCount').textContent = '0';
+            document.getElementById('modalTitle').textContent = '新增員工';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/staff/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('displayName').value = d.displayName || '';
+                    document.getElementById('phone').value = d.phone || '';
+                    document.getElementById('email').value = d.email || '';
+                    document.getElementById('bio').value = d.bio || '';
+                    document.getElementById('bioCount').textContent = (d.bio || '').length;
+                    document.getElementById('isBookable').checked = d.isBookable !== false;
+                    document.getElementById('isVisible').checked = d.isVisible !== false;
+                    document.getElementById('modalTitle').textContent = '編輯員工';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入員工詳情失敗:', e);
+                showError('載入員工詳情失敗');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+
+            // 自訂驗證
+            let isValid = true;
+
+            // 姓名必填
+            if (!nameInput.value.trim()) {
+                nameInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                nameInput.classList.remove('is-invalid');
+            }
+
+            // Email 格式驗證
+            const emailValue = emailInput.value.trim();
+            if (emailValue && !isValidEmail(emailValue)) {
+                emailInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查表單欄位');
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const data = {
+                name: nameInput.value.trim(),
+                displayName: document.getElementById('displayName').value.trim() || null,
+                phone: document.getElementById('phone').value.trim() || null,
+                email: emailValue || null,
+                bio: document.getElementById('bio').value.trim() || null,
+                isBookable: document.getElementById('isBookable').checked,
+                isVisible: document.getElementById('isVisible').checked
+            };
+
+            const btn = document.querySelector('#formModal .btn-primary');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                console.log('送出員工資料:', data);
+                const r = id ? await api.put(`/api/staff/${id}`, data) : await api.post('/api/staff', data);
+                console.log('API 回應:', r);
+                if (r.success) {
+                    showSuccess(id ? '員工更新成功' : '員工建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('儲存員工失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteData(id) {
+            if (!await showConfirm('確定要刪除此員工嗎？此操作無法復原。')) return;
+            try {
+                const r = await api.delete(`/api/staff/${id}`);
+                if (r.success) {
+                    showSuccess('員工已刪除');
+                    loadData();
+                }
+            } catch (e) {
+                console.error('刪除員工失敗:', e);
+                showError('刪除失敗: ' + (e.message || '請稍後再試'));
+            }
+        }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

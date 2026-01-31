@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    行事曆頁面
+
+    路徑：GET /tenant/calendar
+    功能：以行事曆視圖顯示預約
+-->
+<head th:replace="~{tenant/layout :: head}">
+    <title>行事曆 - 店家後台</title>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">行事曆</h1>
+                        <p class="page-subtitle">預約行事曆視圖</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='/tenant/bookings?action=create'">
+                        <i class="bi bi-plus-lg me-1"></i>新增預約
+                    </button>
+                </div>
+
+                <!-- 行事曆 -->
+                <div class="calendar-container">
+                    <div id="calendar"></div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- 預約詳情 Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">預約詳情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="bookingDetail">
+                    載入中...
+                </div>
+                <div class="modal-footer" id="bookingActions">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts with FullCalendar -->
+    <th:block th:replace="~{tenant/layout :: scripts-with-calendar}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentPage = 'calendar';
+        let calendar = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            calendar = initCalendar('calendar', {
+                onEventClick: showBookingDetail,
+                onDateClick: (date) => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    window.location.href = `/tenant/bookings?date=${dateStr}&action=create`;
+                }
+            });
+        });
+
+        async function showBookingDetail(event) {
+            const booking = event.extendedProps;
+            const detail = document.getElementById('bookingDetail');
+            const actions = document.getElementById('bookingActions');
+
+            detail.innerHTML = `
+                <div class="mb-2"><strong>顧客：</strong>${escapeHtml(booking.customerName || '-')}</div>
+                <div class="mb-2"><strong>服務：</strong>${escapeHtml(booking.serviceName || '-')}</div>
+                <div class="mb-2"><strong>員工：</strong>${escapeHtml(booking.staffName || '未指定')}</div>
+                <div class="mb-2"><strong>時間：</strong>${booking.startTime?.substring(0, 5) || '-'} - ${booking.endTime?.substring(0, 5) || '-'}</div>
+                <div class="mb-2"><strong>狀態：</strong>${getBookingStatusBadge(booking.status)}</div>
+            `;
+
+            let actionButtons = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>';
+            actionButtons += `<a href="/tenant/bookings?id=${booking.id}" class="btn btn-primary">查看詳情</a>`;
+
+            if (booking.status === 'PENDING') {
+                actionButtons += `<button class="btn btn-success" onclick="confirmBookingFromCalendar('${booking.id}')">確認</button>`;
+            }
+            actions.innerHTML = actionButtons;
+
+            const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            modal.show();
+        }
+
+        async function confirmBookingFromCalendar(bookingId) {
+            try {
+                await api.put(`/api/bookings/${bookingId}/confirm`);
+                showSuccess('預約已確認');
+                bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+                calendar.refetchEvents();
+            } catch (error) {
+                console.error('確認預約失敗:', error);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

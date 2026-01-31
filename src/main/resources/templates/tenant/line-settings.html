@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>LINE 設定 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header">
+                    <h1 class="page-title">LINE 設定</h1>
+                    <p class="page-subtitle">設定 LINE Official Account 與 Bot 整合</p>
+                </div>
+
+                <div class="row">
+                    <!-- 左側設定表單 -->
+                    <div class="col-lg-8">
+                        <!-- LINE 帳號設定 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-chat-dots me-2"></i>LINE Official Account 設定</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- 設定步驟說明 -->
+                                <div class="alert alert-light mb-4">
+                                    <strong><i class="bi bi-lightbulb me-1"></i>設定步驟：</strong>
+                                    <ol class="mb-0 mt-2 ps-3">
+                                        <li>前往 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a></li>
+                                        <li>建立或選擇您的 Provider 和 Messaging API Channel</li>
+                                        <li>複製 Channel ID、Channel Secret 和 Access Token 填入下方</li>
+                                        <li>將下方的 Webhook URL 設定到 LINE Developers Console</li>
+                                        <li>儲存設定並測試連線</li>
+                                    </ol>
+                                </div>
+
+                                <form id="lineForm" novalidate>
+                                    <div class="mb-3">
+                                        <label class="form-label">Channel ID <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="channelId" placeholder="輸入 Channel ID" maxlength="50">
+                                        <div class="invalid-feedback">請輸入 Channel ID</div>
+                                        <div class="form-text">在 LINE Developers Console 的 Basic settings 可找到</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Channel Secret <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="channelSecret" placeholder="輸入 Channel Secret" maxlength="100">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('channelSecret')">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="invalid-feedback">請輸入 Channel Secret</div>
+                                        <div class="form-text">在 Basic settings 的 Channel secret 欄位</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Channel Access Token <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="channelAccessToken" placeholder="輸入 Channel Access Token" maxlength="500">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('channelAccessToken')">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="invalid-feedback">請輸入 Channel Access Token</div>
+                                        <div class="form-text">在 Messaging API 頁面點擊「Issue」產生長期 Token</div>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Webhook URL</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="webhookUrl" readonly style="background-color: #f8f9fa;">
+                                            <button class="btn btn-outline-primary" type="button" onclick="copyWebhookUrl()" title="複製">
+                                                <i class="bi bi-clipboard"></i> 複製
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="bi bi-arrow-right me-1"></i>請將此 URL 設定到 LINE Developers Console 的 Webhook URL
+                                        </div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary" onclick="saveLineSettings()" id="saveLineBtn">
+                                        <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存設定</span>
+                                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- 自動回覆設定 -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="m-0"><i class="bi bi-reply me-2"></i>自動回覆設定</h6>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="autoReplyEnabled">
+                                    <label class="form-check-label" for="autoReplyEnabled">啟用自動回覆</label>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="autoReplyFields">
+                                    <div class="mb-3">
+                                        <label class="form-label">歡迎訊息</label>
+                                        <textarea class="form-control" id="welcomeMessage" rows="3" maxlength="500"
+                                                  placeholder="用戶加入好友時自動發送的歡迎訊息..."></textarea>
+                                        <div class="form-text d-flex justify-content-between">
+                                            <span>當顧客加入 LINE 好友時自動發送</span>
+                                            <span><span id="welcomeCount">0</span>/500</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">預設回覆</label>
+                                        <textarea class="form-control" id="defaultReply" rows="3" maxlength="500"
+                                                  placeholder="無法識別訊息時的預設回覆..."></textarea>
+                                        <div class="form-text d-flex justify-content-between">
+                                            <span>當 Bot 無法理解顧客訊息時的回覆</span>
+                                            <span><span id="defaultCount">0</span>/500</span>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary" onclick="saveAutoReplySettings()" id="saveAutoReplyBtn">
+                                        <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存設定</span>
+                                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側狀態卡片 -->
+                    <div class="col-lg-4">
+                        <!-- 連線狀態 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-activity me-2"></i>連線狀態</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="connectionStatus" class="mb-3">
+                                    <i class="bi bi-question-circle text-secondary" style="font-size: 4rem;"></i>
+                                    <p class="mt-2 mb-0 text-muted">尚未設定</p>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" onclick="testConnection()" id="testConnectionBtn">
+                                    <span class="btn-text"><i class="bi bi-plug me-1"></i>測試連線</span>
+                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>測試中...</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 使用說明 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-question-circle me-2"></i>使用說明</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="small fw-bold">LINE Bot 可以做什麼？</h6>
+                                <ul class="small text-muted mb-3">
+                                    <li>接收顧客預約訊息</li>
+                                    <li>自動回覆預約確認</li>
+                                    <li>發送預約提醒通知</li>
+                                    <li>行銷訊息推播</li>
+                                </ul>
+
+                                <h6 class="small fw-bold">常見問題</h6>
+                                <div class="small text-muted">
+                                    <p class="mb-2"><strong>Q: 連線失敗怎麼辦？</strong><br>
+                                    請確認 Channel ID、Secret 和 Token 是否正確，並確保 Webhook URL 已設定。</p>
+                                    <p class="mb-0"><strong>Q: 訊息沒有收到？</strong><br>
+                                    請檢查 LINE Developers Console 中 Webhook 是否啟用。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'line-settings';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLineSettings();
+
+            // 字數統計
+            document.getElementById('welcomeMessage').addEventListener('input', function() {
+                document.getElementById('welcomeCount').textContent = this.value.length;
+            });
+            document.getElementById('defaultReply').addEventListener('input', function() {
+                document.getElementById('defaultCount').textContent = this.value.length;
+            });
+
+            // 自動回覆開關
+            document.getElementById('autoReplyEnabled').addEventListener('change', function() {
+                document.getElementById('autoReplyFields').style.opacity = this.checked ? '1' : '0.5';
+            });
+        });
+
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.parentElement.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+
+        async function loadLineSettings() {
+            try {
+                const r = await api.get('/api/settings/line');
+                if (r.success && r.data) {
+                    document.getElementById('channelId').value = r.data.channelId || '';
+                    // Secret 和 Token 不回傳，保持空白讓用戶重新輸入
+                    document.getElementById('webhookUrl').value = r.data.webhookUrl || (window.location.origin + '/api/line/webhook/' + (r.data.tenantCode || 'YOUR_CODE'));
+                    document.getElementById('autoReplyEnabled').checked = r.data.autoReplyEnabled || false;
+                    document.getElementById('welcomeMessage').value = r.data.welcomeMessage || '';
+                    document.getElementById('defaultReply').value = r.data.defaultReply || '';
+                    document.getElementById('welcomeCount').textContent = (r.data.welcomeMessage || '').length;
+                    document.getElementById('defaultCount').textContent = (r.data.defaultReply || '').length;
+
+                    // 更新連線狀態
+                    updateConnectionStatus(r.data.status);
+
+                    // 更新自動回覆區域
+                    document.getElementById('autoReplyFields').style.opacity = r.data.autoReplyEnabled ? '1' : '0.5';
+                }
+            } catch (e) {
+                console.error('載入 LINE 設定失敗:', e);
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const el = document.getElementById('connectionStatus');
+            if (status === 'ACTIVE') {
+                el.innerHTML = `
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <p class="mt-2 mb-0 text-success fw-bold">已連線</p>
+                    <small class="text-muted">LINE Bot 正常運作中</small>
+                `;
+            } else if (status === 'INVALID') {
+                el.innerHTML = `
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                    <p class="mt-2 mb-0 text-danger fw-bold">連線失敗</p>
+                    <small class="text-muted">請檢查設定是否正確</small>
+                `;
+            } else {
+                el.innerHTML = `
+                    <i class="bi bi-question-circle text-secondary" style="font-size: 4rem;"></i>
+                    <p class="mt-2 mb-0 text-muted">尚未設定</p>
+                    <small class="text-muted">請填寫 LINE 帳號資訊</small>
+                `;
+            }
+        }
+
+        async function saveLineSettings() {
+            const channelIdEl = document.getElementById('channelId');
+            const secretEl = document.getElementById('channelSecret');
+            const tokenEl = document.getElementById('channelAccessToken');
+
+            let isValid = true;
+
+            // Channel ID 驗證
+            if (!channelIdEl.value.trim()) {
+                channelIdEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                channelIdEl.classList.remove('is-invalid');
+            }
+
+            // 如果有填寫 Secret 或 Token，則兩個都必填（編輯模式可能只改其中一個）
+            // 這裡我們讓用戶自行決定要不要更新
+
+            if (!isValid) {
+                showError('請填寫 Channel ID');
+                return;
+            }
+
+            const data = {
+                channelId: channelIdEl.value.trim()
+            };
+
+            // 只有有值時才送出
+            if (secretEl.value.trim()) {
+                data.channelSecret = secretEl.value.trim();
+            }
+            if (tokenEl.value.trim()) {
+                data.channelAccessToken = tokenEl.value.trim();
+            }
+
+            const btn = document.getElementById('saveLineBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                await api.put('/api/settings/line', data);
+                showSuccess('LINE 設定已儲存');
+                // 清空敏感欄位
+                secretEl.value = '';
+                tokenEl.value = '';
+                loadLineSettings();
+            } catch (e) {
+                showError('儲存失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        async function saveAutoReplySettings() {
+            const data = {
+                autoReplyEnabled: document.getElementById('autoReplyEnabled').checked,
+                welcomeMessage: document.getElementById('welcomeMessage').value.trim() || null,
+                defaultReply: document.getElementById('defaultReply').value.trim() || null
+            };
+
+            const btn = document.getElementById('saveAutoReplyBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                await api.put('/api/settings/line', data);
+                showSuccess('自動回覆設定已儲存');
+            } catch (e) {
+                showError('儲存失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        function copyWebhookUrl() {
+            const url = document.getElementById('webhookUrl').value;
+            if (!url) {
+                showError('Webhook URL 尚未產生');
+                return;
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                showSuccess('已複製到剪貼簿');
+            }).catch(() => {
+                // Fallback
+                const input = document.getElementById('webhookUrl');
+                input.select();
+                document.execCommand('copy');
+                showSuccess('已複製到剪貼簿');
+            });
+        }
+
+        async function testConnection() {
+            const btn = document.getElementById('testConnectionBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const r = await api.post('/api/settings/line/test');
+                if (r.success) {
+                    if (r.data && r.data.connected) {
+                        updateConnectionStatus('ACTIVE');
+                        showSuccess('連線測試成功！');
+                    } else {
+                        updateConnectionStatus('INVALID');
+                        showError('連線測試失敗：' + (r.data?.message || '請檢查設定'));
+                    }
+                }
+            } catch (e) {
+                updateConnectionStatus('INVALID');
+                showError('連線測試失敗：' + (e.message || '請檢查設定是否正確'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        function setButtonLoading(btn, loading) {
+            if (loading) {
+                btn.querySelector('.btn-text').classList.add('d-none');
+                btn.querySelector('.btn-loading').classList.remove('d-none');
+                btn.disabled = true;
+            } else {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

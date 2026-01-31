@@ -34,18 +34,27 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // 列表查詢
     // ========================================
 
-    @Query("""
-            SELECT b FROM Booking b
-            WHERE b.tenantId = :tenantId
-            AND b.deletedAt IS NULL
-            AND (:status IS NULL OR b.status = :status)
-            AND (:date IS NULL OR b.bookingDate = :date)
-            AND (:staffId IS NULL OR b.staffId = :staffId)
-            ORDER BY b.bookingDate DESC, b.startTime ASC
-            """)
+    @Query(value = """
+            SELECT * FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.deleted_at IS NULL
+            AND (CAST(:status AS VARCHAR) IS NULL OR b.status = CAST(:status AS VARCHAR))
+            AND (CAST(:date AS DATE) IS NULL OR b.booking_date = CAST(:date AS DATE))
+            AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
+            ORDER BY b.booking_date DESC, b.start_time ASC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.deleted_at IS NULL
+            AND (CAST(:status AS VARCHAR) IS NULL OR b.status = CAST(:status AS VARCHAR))
+            AND (CAST(:date AS DATE) IS NULL OR b.booking_date = CAST(:date AS DATE))
+            AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
+            """,
+            nativeQuery = true)
     Page<Booking> findByTenantIdAndFilters(
             @Param("tenantId") String tenantId,
-            @Param("status") BookingStatus status,
+            @Param("status") String status,
             @Param("date") LocalDate date,
             @Param("staffId") String staffId,
             Pageable pageable
@@ -230,5 +239,42 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime,
             @Param("limit") int limit
+    );
+
+    // ========================================
+    // 行事曆查詢
+    // ========================================
+
+    /**
+     * 查詢日期區間內的預約（行事曆用）
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            ORDER BY b.bookingDate ASC, b.startTime ASC
+            """)
+    List<Booking> findByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    // ========================================
+    // 全平台統計（超級管理員用）
+    // ========================================
+
+    /**
+     * 統計日期區間內全平台的預約數
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.deletedAt IS NULL
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            """)
+    long countByBookingDateBetween(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }

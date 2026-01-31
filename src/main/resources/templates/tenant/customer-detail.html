@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    顧客詳情頁面
+
+    路徑：GET /tenant/customers/{id}
+    功能：查看顧客詳細資訊、預約記錄、點數記錄
+-->
+<head th:replace="~{tenant/layout :: head}">
+    <title>顧客詳情 - 店家後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-1">
+                                <li class="breadcrumb-item"><a href="/tenant/customers">顧客管理</a></li>
+                                <li class="breadcrumb-item active" id="breadcrumbName">顧客詳情</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title" id="customerName">載入中...</h1>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-secondary me-2" onclick="openEditModal()">
+                            <i class="bi bi-pencil me-1"></i>編輯資料
+                        </button>
+                        <button class="btn btn-primary" onclick="openBookingModal()">
+                            <i class="bi bi-calendar-plus me-1"></i>建立預約
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- 左側：顧客資訊 -->
+                    <div class="col-md-4">
+                        <!-- 基本資訊卡片 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">基本資訊</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <div class="avatar-circle mx-auto mb-3" id="customerAvatar">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <h5 class="mb-1" id="displayName">-</h5>
+                                    <span class="badge" id="membershipBadge">-</span>
+                                </div>
+
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted"><i class="bi bi-telephone me-2"></i>電話</span>
+                                        <span id="phone">-</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted"><i class="bi bi-envelope me-2"></i>Email</span>
+                                        <span id="email">-</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted"><i class="bi bi-gender-ambiguous me-2"></i>性別</span>
+                                        <span id="gender">-</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted"><i class="bi bi-cake me-2"></i>生日</span>
+                                        <span id="birthday">-</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between py-2 border-bottom">
+                                        <span class="text-muted"><i class="bi bi-geo-alt me-2"></i>地址</span>
+                                        <span id="address">-</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between py-2">
+                                        <span class="text-muted"><i class="bi bi-calendar me-2"></i>加入日期</span>
+                                        <span id="createdAt">-</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 統計卡片 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">消費統計</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6 border-end">
+                                        <div class="h3 mb-0 text-primary" id="totalBookings">0</div>
+                                        <small class="text-muted">總預約次數</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h3 mb-0 text-success" id="totalSpent">$0</div>
+                                        <small class="text-muted">累計消費</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row text-center">
+                                    <div class="col-6 border-end">
+                                        <div class="h5 mb-0 text-info" id="completedBookings">0</div>
+                                        <small class="text-muted">完成預約</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h5 mb-0 text-warning" id="cancelledBookings">0</div>
+                                        <small class="text-muted">取消預約</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 點數卡片 -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">會員點數</h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openAdjustPointsModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>調整點數
+                                </button>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="h2 mb-1 text-primary" id="pointBalance">0</div>
+                                <small class="text-muted">目前點數</small>
+                            </div>
+                        </div>
+
+                        <!-- 備註 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">備註</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0 text-muted" id="note">無備註</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側：預約記錄 -->
+                    <div class="col-md-8">
+                        <!-- 預約記錄 -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">預約記錄</h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">全部</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-filter="upcoming">即將到來</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-filter="completed">已完成</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>日期時間</th>
+                                                <th>服務項目</th>
+                                                <th>服務人員</th>
+                                                <th>金額</th>
+                                                <th>狀態</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="bookingsTable">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">載入中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <nav id="bookingsPagination"></nav>
+                            </div>
+                        </div>
+
+                        <!-- 點數記錄 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">點數記錄</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>時間</th>
+                                                <th>類型</th>
+                                                <th>點數</th>
+                                                <th>餘額</th>
+                                                <th>說明</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pointsTable">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">載入中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <nav id="pointsPagination"></nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div class="loading-overlay" style="display: none;"><div class="loading-spinner"></div></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <!-- 編輯顧客 Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">編輯顧客資料</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhone" class="form-label">電話</label>
+                                <input type="tel" class="form-control" id="editPhone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">電子郵件</label>
+                                <input type="email" class="form-control" id="editEmail">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editGender" class="form-label">性別</label>
+                                <select class="form-select" id="editGender">
+                                    <option value="">未指定</option>
+                                    <option value="MALE">男</option>
+                                    <option value="FEMALE">女</option>
+                                    <option value="OTHER">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editBirthday" class="form-label">生日</label>
+                                <input type="date" class="form-control" id="editBirthday">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editAddress" class="form-label">地址</label>
+                                <input type="text" class="form-control" id="editAddress">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNote" class="form-label">備註</label>
+                            <textarea class="form-control" id="editNote" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCustomer()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 調整點數 Modal -->
+    <div class="modal fade" id="adjustPointsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">調整點數</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adjustPointsForm">
+                        <div class="mb-3">
+                            <label for="adjustType" class="form-label">調整類型</label>
+                            <select class="form-select" id="adjustType">
+                                <option value="add">增加點數</option>
+                                <option value="deduct">扣除點數</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adjustPoints" class="form-label">點數 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="adjustPoints" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adjustReason" class="form-label">原因</label>
+                            <input type="text" class="form-control" id="adjustReason" placeholder="輸入調整原因">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="adjustPoints()">確認調整</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+
+    <style>
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentPage = 'customers';
+        let customerId = null;
+        let customerData = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 從 URL 取得顧客 ID
+            const pathParts = window.location.pathname.split('/');
+            customerId = pathParts[pathParts.length - 1];
+
+            if (customerId) {
+                loadCustomerDetail();
+                loadBookings();
+                loadPointTransactions();
+            }
+        });
+
+        async function loadCustomerDetail() {
+            try {
+                const result = await api.get(`/api/customers/${customerId}`);
+                if (result.success && result.data) {
+                    customerData = result.data;
+                    renderCustomerDetail(result.data);
+                }
+            } catch (error) {
+                console.error('載入顧客詳情失敗:', error);
+                showError('載入顧客詳情失敗');
+            }
+        }
+
+        function renderCustomerDetail(c) {
+            document.getElementById('breadcrumbName').textContent = c.name;
+            document.getElementById('customerName').textContent = c.name;
+            document.getElementById('displayName').textContent = c.name;
+            document.getElementById('phone').textContent = c.phone || '-';
+            document.getElementById('email').textContent = c.email || '-';
+            document.getElementById('gender').textContent = formatGender(c.gender);
+            document.getElementById('birthday').textContent = c.birthday ? formatDate(c.birthday) : '-';
+            document.getElementById('address').textContent = c.address || '-';
+            document.getElementById('createdAt').textContent = formatDate(c.createdAt);
+            document.getElementById('note').textContent = c.note || '無備註';
+
+            // 會員等級
+            const badge = document.getElementById('membershipBadge');
+            if (c.membershipLevelName) {
+                badge.textContent = c.membershipLevelName;
+                badge.className = 'badge bg-primary';
+            } else {
+                badge.textContent = '一般會員';
+                badge.className = 'badge bg-secondary';
+            }
+
+            // 統計
+            document.getElementById('totalBookings').textContent = formatNumber(c.totalBookings || 0);
+            document.getElementById('totalSpent').textContent = formatMoney(c.totalSpent || 0);
+            document.getElementById('completedBookings').textContent = formatNumber(c.completedBookings || 0);
+            document.getElementById('cancelledBookings').textContent = formatNumber(c.cancelledBookings || 0);
+            document.getElementById('pointBalance').textContent = formatNumber(c.pointBalance || 0);
+        }
+
+        async function loadBookings(page = 0) {
+            try {
+                const result = await api.get(`/api/bookings`, { customerId, page, size: 5 });
+                if (result.success && result.data) {
+                    renderBookings(result.data.content);
+                }
+            } catch (error) {
+                console.error('載入預約記錄失敗:', error);
+            }
+        }
+
+        function renderBookings(bookings) {
+            const tbody = document.getElementById('bookingsTable');
+            if (!bookings || bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">暫無預約記錄</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => `
+                <tr>
+                    <td>
+                        <div>${formatDate(b.bookingDate)}</div>
+                        <small class="text-muted">${b.startTime} - ${b.endTime}</small>
+                    </td>
+                    <td>${escapeHtml(b.serviceName || '-')}</td>
+                    <td>${escapeHtml(b.staffName || '-')}</td>
+                    <td>${formatMoney(b.totalPrice || 0)}</td>
+                    <td>${getBookingStatusBadge(b.status)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadPointTransactions(page = 0) {
+            try {
+                // TODO: 呼叫顧客點數記錄 API
+                document.getElementById('pointsTable').innerHTML =
+                    '<tr><td colspan="5" class="text-center text-muted py-4">暫無點數記錄</td></tr>';
+            } catch (error) {
+                console.error('載入點數記錄失敗:', error);
+            }
+        }
+
+        function openEditModal() {
+            if (!customerData) return;
+
+            document.getElementById('editName').value = customerData.name || '';
+            document.getElementById('editPhone').value = customerData.phone || '';
+            document.getElementById('editEmail').value = customerData.email || '';
+            document.getElementById('editGender').value = customerData.gender || '';
+            document.getElementById('editBirthday').value = customerData.birthday || '';
+            document.getElementById('editAddress').value = customerData.address || '';
+            document.getElementById('editNote').value = customerData.note || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+
+        async function saveCustomer() {
+            const data = {
+                name: document.getElementById('editName').value,
+                phone: document.getElementById('editPhone').value || null,
+                email: document.getElementById('editEmail').value || null,
+                gender: document.getElementById('editGender').value || null,
+                birthday: document.getElementById('editBirthday').value || null,
+                address: document.getElementById('editAddress').value || null,
+                note: document.getElementById('editNote').value || null
+            };
+
+            try {
+                const result = await api.put(`/api/customers/${customerId}`, data);
+                if (result.success) {
+                    showSuccess('顧客資料更新成功');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    loadCustomerDetail();
+                }
+            } catch (error) {
+                console.error('儲存顧客失敗:', error);
+            }
+        }
+
+        function openAdjustPointsModal() {
+            document.getElementById('adjustPointsForm').reset();
+            const modal = new bootstrap.Modal(document.getElementById('adjustPointsModal'));
+            modal.show();
+        }
+
+        async function adjustPoints() {
+            const type = document.getElementById('adjustType').value;
+            const points = parseInt(document.getElementById('adjustPoints').value);
+            const reason = document.getElementById('adjustReason').value;
+
+            if (!points || points <= 0) {
+                showError('請輸入有效的點數');
+                return;
+            }
+
+            const data = {
+                customerId: customerId,
+                points: type === 'deduct' ? -points : points,
+                description: reason || (type === 'add' ? '手動增加點數' : '手動扣除點數')
+            };
+
+            try {
+                const result = await api.post('/api/customers/points/adjust', data);
+                if (result.success) {
+                    showSuccess('點數調整成功');
+                    bootstrap.Modal.getInstance(document.getElementById('adjustPointsModal')).hide();
+                    loadCustomerDetail();
+                    loadPointTransactions();
+                }
+            } catch (error) {
+                console.error('調整點數失敗:', error);
+            }
+        }
+
+        function openBookingModal() {
+            // TODO: 開啟建立預約 Modal 或跳轉到預約頁面
+            window.location.href = '/tenant/bookings?customerId=' + customerId;
+        }
+
+        function formatGender(gender) {
+            const map = { 'MALE': '男', 'FEMALE': '女', 'OTHER': '其他' };
+            return map[gender] || '-';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

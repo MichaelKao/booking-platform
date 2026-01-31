@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    Admin 儀表板頁面
+
+    路徑：GET /admin/dashboard
+    功能：顯示平台總覽統計數據
+-->
+<head th:replace="~{admin/layout :: head}">
+    <title>儀表板 - 預約平台管理後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-admin :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{admin/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header">
+                    <h1 class="page-title">儀表板</h1>
+                    <p class="page-subtitle">平台總覽與統計數據</p>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row dashboard-stats">
+                    <!-- 總店家數 -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-primary h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-primary">總店家數</div>
+                                        <div class="stat-value" id="tenantCount">-</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="stat-icon-circle primary">
+                                            <i class="bi bi-building"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 活躍店家 -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-success h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-success">活躍店家</div>
+                                        <div class="stat-value" id="activeTenantCount">-</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="stat-icon-circle success">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 待審核儲值 -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-warning h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-warning">待審核儲值</div>
+                                        <div class="stat-value" id="pendingTopupCount">-</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="stat-icon-circle warning">
+                                            <i class="bi bi-hourglass-split"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 本月營收 -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card border-info h-100">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="stat-label text-info">本月營收</div>
+                                        <div class="stat-value" id="monthlyRevenue">-</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="stat-icon-circle info">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 內容區塊 -->
+                <div class="row">
+                    <!-- 最近店家 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="m-0">最近註冊店家</h6>
+                                <a href="/admin/tenants" class="btn btn-sm btn-primary">查看全部</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>店家名稱</th>
+                                                <th>狀態</th>
+                                                <th>註冊時間</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentTenantsTable">
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-4">
+                                                    載入中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 待審核儲值 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="m-0">待審核儲值申請</h6>
+                                <a href="/admin/point-topups" class="btn btn-sm btn-warning">查看全部</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>店家</th>
+                                                <th>金額</th>
+                                                <th>申請時間</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pendingTopupsTable">
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-4">
+                                                    載入中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能使用統計 -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="m-0">功能使用統計</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>功能名稱</th>
+                                                <th>類型</th>
+                                                <th>訂閱數</th>
+                                                <th>狀態</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="featureStatsTable">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-4">
+                                                    載入中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{admin/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div th:replace="~{admin/layout :: confirm-modal}"></div>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{admin/layout :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 設定當前頁面
+        const currentPage = 'dashboard';
+
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            loadRecentTenants();
+            loadPendingTopups();
+            loadFeatureStats();
+        });
+
+        /**
+         * 載入最近註冊店家
+         */
+        async function loadRecentTenants() {
+            try {
+                const result = await api.get('/api/admin/tenants', { size: 5, sort: 'createdAt,desc' });
+                if (result.success && result.data && result.data.content) {
+                    renderRecentTenants(result.data.content);
+                }
+            } catch (error) {
+                console.error('載入店家失敗:', error);
+                document.getElementById('recentTenantsTable').innerHTML =
+                    '<tr><td colspan="3" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染最近店家表格
+         */
+        function renderRecentTenants(tenants) {
+            const tbody = document.getElementById('recentTenantsTable');
+
+            if (!tenants || tenants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">暫無資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = tenants.map(tenant => `
+                <tr>
+                    <td>
+                        <a href="/admin/tenants/${tenant.id}">${escapeHtml(tenant.name)}</a>
+                        <div class="small text-muted">${escapeHtml(tenant.code)}</div>
+                    </td>
+                    <td>${getTenantStatusBadge(tenant.status)}</td>
+                    <td class="small">${formatDateTime(tenant.createdAt)}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 載入待審核儲值
+         */
+        async function loadPendingTopups() {
+            try {
+                const result = await api.get('/api/admin/point-topups', { status: 'PENDING', size: 5 });
+                if (result.success && result.data && result.data.content) {
+                    renderPendingTopups(result.data.content);
+                }
+            } catch (error) {
+                console.error('載入儲值申請失敗:', error);
+                document.getElementById('pendingTopupsTable').innerHTML =
+                    '<tr><td colspan="3" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染待審核儲值表格
+         */
+        function renderPendingTopups(topups) {
+            const tbody = document.getElementById('pendingTopupsTable');
+
+            if (!topups || topups.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">暫無待審核申請</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = topups.map(topup => `
+                <tr>
+                    <td>${escapeHtml(topup.tenantName || '-')}</td>
+                    <td class="text-primary fw-bold">${formatMoney(topup.amount)}</td>
+                    <td class="small">${formatDateTime(topup.createdAt)}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 載入功能統計
+         */
+        async function loadFeatureStats() {
+            try {
+                const result = await api.get('/api/admin/features');
+                if (result.success && result.data) {
+                    renderFeatureStats(result.data);
+                }
+            } catch (error) {
+                console.error('載入功能統計失敗:', error);
+                document.getElementById('featureStatsTable').innerHTML =
+                    '<tr><td colspan="4" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染功能統計表格
+         */
+        function renderFeatureStats(features) {
+            const tbody = document.getElementById('featureStatsTable');
+
+            if (!features || features.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">暫無功能資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = features.map(feature => {
+                const isFree = feature.isFree;
+                const typeClass = isFree ? 'bg-success' : 'bg-primary';
+                const typeLabel = isFree ? '免費' : '付費';
+
+                return `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(feature.name)}</strong>
+                        <div class="small text-muted">${escapeHtml(feature.code)}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${typeClass}">${typeLabel}</span>
+                        ${!isFree ? `<span class="ms-1 small text-muted">${formatNumber(feature.monthlyPoints || 0)} 點/月</span>` : ''}
+                    </td>
+                    <td>${formatNumber(feature.subscriptionCount || 0)}</td>
+                    <td>
+                        ${feature.isActive ?
+                            '<span class="badge bg-success">啟用中</span>' :
+                            '<span class="badge bg-secondary">停用中</span>'}
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        /**
+         * HTML 跳脫
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

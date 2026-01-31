@@ -41,6 +41,16 @@ public class ReportSummaryResponse {
     private Long totalBookings;
 
     /**
+     * 今日預約數（Dashboard 用）
+     */
+    private Long todayBookings;
+
+    /**
+     * 待確認預約數（Dashboard 用）
+     */
+    private Long pendingBookings;
+
+    /**
      * 已完成預約數
      */
     private Long completedBookings;
@@ -79,6 +89,11 @@ public class ReportSummaryResponse {
      */
     private Long totalServedCustomers;
 
+    /**
+     * 總顧客數（Dashboard 用）
+     */
+    private Long totalCustomers;
+
     // ========================================
     // 營收統計
     // ========================================
@@ -87,6 +102,11 @@ public class ReportSummaryResponse {
      * 總營收
      */
     private BigDecimal totalRevenue;
+
+    /**
+     * 本月營收（Dashboard 用）
+     */
+    private BigDecimal monthlyRevenue;
 
     /**
      * 服務營收

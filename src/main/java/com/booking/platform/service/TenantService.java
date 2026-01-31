@@ -12,6 +12,8 @@ import com.booking.platform.dto.response.TenantResponse;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.TenantStatus;
 import com.booking.platform.mapper.TenantMapper;
+import com.booking.platform.repository.CustomerRepository;
+import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class TenantService {
     // ========================================
 
     private final TenantRepository tenantRepository;
+    private final StaffRepository staffRepository;
+    private final CustomerRepository customerRepository;
     private final TenantMapper tenantMapper;
 
     // ========================================
@@ -90,10 +94,26 @@ public class TenantService {
                 ));
 
         // ========================================
-        // 2. 返回結果
+        // 2. 轉換為回應物件
         // ========================================
 
-        return tenantMapper.toDetailResponse(entity);
+        TenantDetailResponse response = tenantMapper.toDetailResponse(entity);
+
+        // ========================================
+        // 3. 查詢統計資料
+        // ========================================
+
+        long staffCount = staffRepository.countByTenantIdAndDeletedAtIsNull(id);
+        long customerCount = customerRepository.countByTenantIdAndDeletedAtIsNull(id);
+
+        response.setStaffCount(staffCount);
+        response.setCustomerCount(customerCount);
+
+        // ========================================
+        // 4. 返回結果
+        // ========================================
+
+        return response;
     }
 
     /**

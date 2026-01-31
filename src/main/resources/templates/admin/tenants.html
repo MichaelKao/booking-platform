@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    店家列表頁面
+
+    路徑：GET /admin/tenants
+    功能：顯示所有店家列表，支援搜尋、篩選、分頁
+-->
+<head th:replace="~{admin/layout :: head}">
+    <title>店家管理 - 預約平台管理後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-admin :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{admin/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">店家管理</h1>
+                        <p class="page-subtitle">管理平台所有店家帳號</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateTenantModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增店家
+                    </button>
+                </div>
+
+                <!-- 資料表格容器 -->
+                <div class="data-table-container">
+                    <!-- 表格標題與操作 -->
+                    <div class="data-table-header">
+                        <h6 class="data-table-title">店家列表</h6>
+                        <div class="data-table-actions">
+                            <!-- 搜尋 -->
+                            <div class="input-group" style="width: 250px;">
+                                <input type="text"
+                                       class="form-control form-control-sm"
+                                       id="searchKeyword"
+                                       placeholder="搜尋店家名稱或代碼..."
+                                       onkeyup="debounceSearch()">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="loadTenants()">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+
+                            <!-- 狀態篩選 -->
+                            <select class="form-select form-select-sm" id="statusFilter" style="width: 130px;" onchange="loadTenants()">
+                                <option value="">全部狀態</option>
+                                <option value="PENDING">待審核</option>
+                                <option value="ACTIVE">啟用中</option>
+                                <option value="SUSPENDED">已停權</option>
+                                <option value="FROZEN">已凍結</option>
+                                <option value="CANCELLED">已取消</option>
+                            </select>
+
+                            <!-- 匯出 -->
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportTenants()">
+                                <i class="bi bi-download me-1"></i>匯出
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 表格內容 -->
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>店家資訊</th>
+                                        <th>聯絡方式</th>
+                                        <th>狀態</th>
+                                        <th>點數餘額</th>
+                                        <th>註冊時間</th>
+                                        <th class="text-center" style="width: 120px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tenantsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-5">
+                                            <div class="spinner-border spinner-border-sm me-2"></div>
+                                            載入中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 表格頁尾：分頁 -->
+                    <div class="data-table-footer">
+                        <div class="data-table-info" id="tableInfo">-</div>
+                        <nav id="pagination"></nav>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{admin/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div th:replace="~{admin/layout :: confirm-modal}"></div>
+
+    <!-- 新增/編輯店家 Modal -->
+    <div class="modal fade" id="tenantModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tenantModalTitle">新增店家</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="tenantForm">
+                        <input type="hidden" id="tenantId">
+
+                        <div class="row">
+                            <!-- 店家代碼 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantCode" class="form-label">店家代碼 <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="tenantCode"
+                                       placeholder="例如：beauty_salon_01"
+                                       pattern="^[a-z0-9_]+$"
+                                       required>
+                                <div class="form-text">只能使用小寫英文、數字和底線</div>
+                            </div>
+
+                            <!-- 店家名稱 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantName" class="form-label">店家名稱 <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="tenantName"
+                                       placeholder="例如：美麗沙龍"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- 聯絡電話 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantPhone" class="form-label">聯絡電話</label>
+                                <input type="tel"
+                                       class="form-control"
+                                       id="tenantPhone"
+                                       placeholder="例如：02-12345678">
+                            </div>
+
+                            <!-- 電子郵件 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantEmail" class="form-label">電子郵件</label>
+                                <input type="email"
+                                       class="form-control"
+                                       id="tenantEmail"
+                                       placeholder="例如：contact@example.com">
+                            </div>
+                        </div>
+
+                        <!-- 地址 -->
+                        <div class="mb-3">
+                            <label for="tenantAddress" class="form-label">地址</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="tenantAddress"
+                                   placeholder="例如：台北市信義區...">
+                        </div>
+
+                        <!-- 描述 -->
+                        <div class="mb-3">
+                            <label for="tenantDescription" class="form-label">描述</label>
+                            <textarea class="form-control"
+                                      id="tenantDescription"
+                                      rows="3"
+                                      placeholder="店家簡介..."></textarea>
+                        </div>
+
+                        <!-- 管理員帳號（新增時顯示） -->
+                        <div id="adminAccountSection">
+                            <hr>
+                            <h6 class="mb-3">管理員帳號</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="adminUsername" class="form-label">帳號 <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="adminUsername"
+                                           placeholder="登入帳號">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="adminPassword" class="form-label">密碼 <span class="text-danger">*</span></label>
+                                    <input type="password"
+                                           class="form-control"
+                                           id="adminPassword"
+                                           placeholder="登入密碼">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTenant()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{admin/layout :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 設定當前頁面
+        const currentPage = 'tenants';
+
+        // 分頁參數
+        let currentPageNum = 0;
+        const pageSize = 10;
+
+        // 搜尋防抖
+        let searchTimeout = null;
+
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTenants();
+        });
+
+        /**
+         * 搜尋防抖
+         */
+        function debounceSearch() {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPageNum = 0;
+                loadTenants();
+            }, 300);
+        }
+
+        /**
+         * 載入店家列表
+         */
+        async function loadTenants(page = 0) {
+            currentPageNum = page;
+
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            const status = document.getElementById('statusFilter').value;
+
+            const params = {
+                page: page,
+                size: pageSize,
+                sort: 'createdAt,desc'
+            };
+
+            if (keyword) params.keyword = keyword;
+            if (status) params.status = status;
+
+            try {
+                const result = await api.get('/api/admin/tenants', params);
+                if (result.success && result.data) {
+                    renderTenants(result.data.content);
+                    renderTableInfo(result.data);
+                    renderPagination(result.data, loadTenants);
+                }
+            } catch (error) {
+                console.error('載入店家失敗:', error);
+                document.getElementById('tenantsTable').innerHTML =
+                    '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗，請重試</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染店家表格
+         */
+        function renderTenants(tenants) {
+            const tbody = document.getElementById('tenantsTable');
+
+            if (!tenants || tenants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-building text-gray-300"></i>
+                                <h5>尚無店家資料</h5>
+                                <p>點擊「新增店家」建立第一個店家</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = tenants.map(tenant => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${escapeHtml(tenant.name)}</div>
+                        <div class="small text-muted">${escapeHtml(tenant.code)}</div>
+                    </td>
+                    <td>
+                        ${tenant.phone ? `<div><i class="bi bi-telephone me-1"></i>${escapeHtml(tenant.phone)}</div>` : ''}
+                        ${tenant.email ? `<div class="small"><i class="bi bi-envelope me-1"></i>${escapeHtml(tenant.email)}</div>` : ''}
+                        ${!tenant.phone && !tenant.email ? '<span class="text-muted">-</span>' : ''}
+                    </td>
+                    <td>${getTenantStatusBadge(tenant.status)}</td>
+                    <td class="fw-bold text-primary">${formatNumber(tenant.pointBalance || 0)}</td>
+                    <td class="small">${formatDateTime(tenant.createdAt)}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="/admin/tenants/${tenant.id}" class="btn btn-outline-primary" title="查看詳情">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="openEditTenantModal('${tenant.id}')" title="編輯">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                                    data-bs-toggle="dropdown">
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                ${tenant.status === 'PENDING' ?
+                                    `<li><a class="dropdown-item" href="#" onclick="activateTenant('${tenant.id}')">
+                                        <i class="bi bi-check-circle text-success me-2"></i>啟用
+                                    </a></li>` : ''}
+                                ${tenant.status === 'ACTIVE' ?
+                                    `<li><a class="dropdown-item" href="#" onclick="suspendTenant('${tenant.id}')">
+                                        <i class="bi bi-pause-circle text-warning me-2"></i>停權
+                                    </a></li>` : ''}
+                                ${tenant.status === 'SUSPENDED' ?
+                                    `<li><a class="dropdown-item" href="#" onclick="activateTenant('${tenant.id}')">
+                                        <i class="bi bi-play-circle text-success me-2"></i>恢復啟用
+                                    </a></li>` : ''}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 渲染表格資訊
+         */
+        function renderTableInfo(pageData) {
+            const start = pageData.number * pageData.size + 1;
+            const end = Math.min(start + pageData.numberOfElements - 1, pageData.totalElements);
+            document.getElementById('tableInfo').textContent =
+                `顯示 ${start} - ${end} 筆，共 ${pageData.totalElements} 筆`;
+        }
+
+        /**
+         * 開啟新增店家 Modal
+         */
+        function openCreateTenantModal() {
+            document.getElementById('tenantModalTitle').textContent = '新增店家';
+            document.getElementById('tenantForm').reset();
+            document.getElementById('tenantId').value = '';
+            document.getElementById('tenantCode').disabled = false;
+            document.getElementById('adminAccountSection').style.display = 'block';
+
+            const modal = new bootstrap.Modal(document.getElementById('tenantModal'));
+            modal.show();
+        }
+
+        /**
+         * 開啟編輯店家 Modal
+         */
+        async function openEditTenantModal(tenantId) {
+            try {
+                const result = await api.get(`/api/admin/tenants/${tenantId}`);
+                if (result.success && result.data) {
+                    const tenant = result.data;
+
+                    document.getElementById('tenantModalTitle').textContent = '編輯店家';
+                    document.getElementById('tenantId').value = tenant.id;
+                    document.getElementById('tenantCode').value = tenant.code;
+                    document.getElementById('tenantCode').disabled = true;
+                    document.getElementById('tenantName').value = tenant.name;
+                    document.getElementById('tenantPhone').value = tenant.phone || '';
+                    document.getElementById('tenantEmail').value = tenant.email || '';
+                    document.getElementById('tenantAddress').value = tenant.address || '';
+                    document.getElementById('tenantDescription').value = tenant.description || '';
+                    document.getElementById('adminAccountSection').style.display = 'none';
+
+                    const modal = new bootstrap.Modal(document.getElementById('tenantModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('載入店家資料失敗:', error);
+            }
+        }
+
+        /**
+         * 儲存店家
+         */
+        async function saveTenant() {
+            const tenantId = document.getElementById('tenantId').value;
+            const isEdit = !!tenantId;
+
+            const data = {
+                code: document.getElementById('tenantCode').value,
+                name: document.getElementById('tenantName').value,
+                phone: document.getElementById('tenantPhone').value || null,
+                email: document.getElementById('tenantEmail').value || null,
+                address: document.getElementById('tenantAddress').value || null,
+                description: document.getElementById('tenantDescription').value || null
+            };
+
+            // 新增時需要管理員帳號
+            if (!isEdit) {
+                data.adminUsername = document.getElementById('adminUsername').value;
+                data.adminPassword = document.getElementById('adminPassword').value;
+
+                if (!data.adminUsername || !data.adminPassword) {
+                    showError('請填寫管理員帳號和密碼');
+                    return;
+                }
+            }
+
+            try {
+                let result;
+                if (isEdit) {
+                    result = await api.put(`/api/admin/tenants/${tenantId}`, data);
+                } else {
+                    result = await api.post('/api/admin/tenants', data);
+                }
+
+                if (result.success) {
+                    showSuccess(isEdit ? '店家更新成功' : '店家建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('tenantModal')).hide();
+                    loadTenants(currentPageNum);
+                }
+            } catch (error) {
+                console.error('儲存店家失敗:', error);
+            }
+        }
+
+        /**
+         * HTML 跳脫
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

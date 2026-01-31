@@ -41,15 +41,31 @@ spring:
   # ========================================
   data:
     redis:
-      host: 127.0.0.1
+      host: localhost
       port: 6379
-      timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 20
-          max-idle: 10
-          min-idle: 5
-          max-wait: 3000ms
+      database: 0
+      connect-timeout: 5000ms
+      timeout: 5000ms
+
+  # ========================================
+  # 郵件設定（Gmail SMTP）
+  # ========================================
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
 
   # ========================================
   # Jackson 設定
@@ -99,11 +115,37 @@ line:
   bot:
     channel-token: ${LINE_CHANNEL_TOKEN:your-channel-token}
     channel-secret: ${LINE_CHANNEL_SECRET:your-channel-secret}
+    # API 端點
+    api-endpoint: https://api.line.me
+    # Webhook 驗證
+    webhook-verify-enabled: true
+  # 對話設定
+  conversation:
+    # 對話狀態 TTL（秒）
+    ttl: 1800
+    # Redis Key 前綴
+    key-prefix: "line:conversation:"
+
+# ========================================
+# 加密設定
+# ========================================
+encryption:
+  # AES-256-GCM 加密金鑰（32 bytes = 256 bits，Base64 編碼）
+  # 正式環境請使用環境變數
+  secret-key: ${ENCRYPTION_SECRET_KEY:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=}
 
 # ========================================
 # 應用程式自訂設定
 # ========================================
 app:
+  # 基礎 URL（用於郵件中的連結）
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+  # 郵件設定
+  email:
+    from: ${MAIL_USERNAME:your-email@gmail.com}
+    from-name: 預約平台
+
   # 分頁設定
   pagination:
     default-size: 20

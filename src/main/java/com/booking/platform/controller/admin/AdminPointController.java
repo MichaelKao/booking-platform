@@ -68,6 +68,15 @@ public class AdminPointController {
     }
 
     /**
+     * 取得儲值統計資料
+     */
+    @GetMapping("/point-topups/stats")
+    public ApiResponse<java.util.Map<String, Object>> getStats() {
+        java.util.Map<String, Object> stats = pointTopUpService.getStats();
+        return ApiResponse.ok(stats);
+    }
+
+    /**
      * 取得儲值申請詳情
      */
     @GetMapping("/point-topups/{id}")

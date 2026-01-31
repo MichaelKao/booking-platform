@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>服務項目 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div><h1 class="page-title">服務項目</h1><p class="page-subtitle">管理服務項目與價格</p></div>
+                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增服務</button>
+                </div>
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">服務列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>服務名稱</th><th>分類</th><th>價格</th><th>時長</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <tbody id="dataTable"><tr><td colspan="6" class="text-center text-muted py-5">載入中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="modalTitle">新增服務</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="dataForm" novalidate>
+                    <input type="hidden" id="dataId">
+                    <div class="mb-3">
+                        <label class="form-label">服務名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required maxlength="100">
+                        <div class="invalid-feedback">請輸入服務名稱</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分類</label>
+                        <select class="form-select" id="categoryId">
+                            <option value="">請選擇分類</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">價格 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="price" required min="0" step="1">
+                            </div>
+                            <div class="invalid-feedback">請輸入有效的價格（不可為負數）</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">時長 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="duration" required min="5" max="480" step="5">
+                                <span class="input-group-text">分鐘</span>
+                            </div>
+                            <div class="invalid-feedback">請輸入時長（5-480分鐘）</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="description" rows="3" maxlength="500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
+            </div>
+        </div></div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'services';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            loadCategories();
+        });
+
+        async function loadCategories() {
+            try {
+                const r = await api.get('/api/service-categories');
+                const categories = r.data || [];
+                document.getElementById('categoryId').innerHTML = '<option value="">請選擇分類</option>' +
+                    categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            } catch (e) {
+                console.error('載入分類失敗:', e);
+            }
+        }
+
+        async function loadData() {
+            try {
+                const r = await api.get('/api/services');
+                const items = r.data || [];
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無服務項目</td></tr>'
+                    : items.map(s => `<tr>
+                        <td><strong>${escapeHtml(s.name)}</strong></td>
+                        <td>${escapeHtml(s.categoryName) || '-'}</td>
+                        <td>${formatMoney(s.price)}</td>
+                        <td>${s.duration} 分鐘</td>
+                        <td>${s.status === 'ACTIVE' ? '<span class="badge bg-success">啟用</span>' : '<span class="badge bg-secondary">停用</span>'}</td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                console.error('載入服務失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('modalTitle').textContent = '新增服務';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/services/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('categoryId').value = d.categoryId || '';
+                    document.getElementById('price').value = d.price || 0;
+                    document.getElementById('duration').value = d.duration || 30;
+                    document.getElementById('description').value = d.description || '';
+                    document.getElementById('modalTitle').textContent = '編輯服務';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入服務詳情失敗:', e);
+                showError('載入服務詳情失敗');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameEl = document.getElementById('name');
+            const priceEl = document.getElementById('price');
+            const durationEl = document.getElementById('duration');
+
+            let isValid = true;
+
+            // 名稱必填
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                nameEl.classList.remove('is-invalid');
+            }
+
+            // 價格驗證
+            const price = parseInt(priceEl.value);
+            if (isNaN(price) || price < 0) {
+                priceEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                priceEl.classList.remove('is-invalid');
+            }
+
+            // 時長驗證
+            const duration = parseInt(durationEl.value);
+            if (isNaN(duration) || duration < 5 || duration > 480) {
+                durationEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                durationEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查表單欄位');
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const data = {
+                name: nameEl.value.trim(),
+                categoryId: document.getElementById('categoryId').value || null,
+                price: price,
+                duration: duration,
+                description: document.getElementById('description').value.trim() || null
+            };
+
+            try {
+                const r = id ? await api.put(`/api/services/${id}`, data) : await api.post('/api/services', data);
+                if (r.success) {
+                    showSuccess(id ? '服務更新成功' : '服務建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('儲存服務失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            }
+        }
+
+        async function deleteData(id) {
+            if (!await showConfirm('確定要刪除此服務嗎？')) return;
+            try {
+                const r = await api.delete(`/api/services/${id}`);
+                if (r.success) {
+                    showSuccess('服務已刪除');
+                    loadData();
+                }
+            } catch (e) {
+                console.error('刪除服務失敗:', e);
+                showError('刪除失敗');
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

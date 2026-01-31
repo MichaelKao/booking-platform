@@ -1,45 +1,49 @@
 # Controller 規範
 
-## 必要標註
+## 標註
+
 ```java
-@RestController
+@RestController  // API
+@Controller      // 頁面
 @RequestMapping("/api/xxx")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class XxxController {
 ```
+
+## 目錄
+
+| 目錄 | 用途 |
+|------|------|
+| admin/ | 超管 API：AdminTenantController, AdminFeatureController |
+| auth/ | 認證：AuthController |
+| page/ | 頁面路由：AdminPageController, TenantPageController |
+| line/ | LINE Webhook |
 
 ## 回應格式
 
-所有方法回傳 `ApiResponse` 包裝：
 ```java
-@GetMapping
-public ApiResponse<PageResponse<XxxResponse>> getList(...) {
-    return ApiResponse.ok(xxxService.getList(...));
-}
+return ApiResponse.ok(data);
+return ApiResponse.ok("訊息", data);
+return ApiResponse.error("CODE", "訊息");
 ```
 
-## 參數驗證
+## 分頁
 
-- 使用 `@Valid` 驗證 RequestBody
-- 使用 `@Validated` 啟用方法參數驗證
-- 使用 JSR-303 註解（@NotBlank, @Size 等）
-
-## 日誌記錄
-
-寫入操作要記錄日誌：
 ```java
-@PostMapping
-public ApiResponse<XxxResponse> create(@Valid @RequestBody CreateXxxRequest request) {
-    log.info("收到建立 Xxx 請求：{}", request);
-    return ApiResponse.ok(xxxService.create(request));
-}
+size = Math.min(size, 100);  // 限制最大 100
 ```
 
-## 分頁處理
+## 頁面 Controller
 
-限制最大分頁大小為 100：
 ```java
-size = Math.min(size, 100);
+@Controller
+@RequestMapping("/tenant")
+public class TenantPageController {
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("currentPage", "dashboard");
+        return "tenant/dashboard";
+    }
+}
 ```

@@ -111,6 +111,26 @@ public class CustomerController {
     // ========================================
 
     /**
+     * 調整顧客點數（統一端點）
+     */
+    @PostMapping("/points/adjust")
+    public ApiResponse<CustomerResponse> adjustPoints(@RequestBody java.util.Map<String, Object> request) {
+        String customerId = (String) request.get("customerId");
+        Integer points = request.get("points") instanceof Number ? ((Number) request.get("points")).intValue() : 0;
+        String description = (String) request.get("description");
+
+        CustomerResponse result;
+        if (points > 0) {
+            result = customerService.addPoints(customerId, points, description);
+        } else if (points < 0) {
+            result = customerService.deductPoints(customerId, -points, description);
+        } else {
+            return ApiResponse.ok("點數無變動", customerService.getDetail(customerId));
+        }
+        return ApiResponse.ok("點數調整成功", result);
+    }
+
+    /**
      * 增加顧客點數
      */
     @PostMapping("/{id}/points/add")

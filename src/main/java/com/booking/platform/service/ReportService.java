@@ -47,6 +47,30 @@ public class ReportService {
     public ReportSummaryResponse getSummary(LocalDate startDate, LocalDate endDate) {
         String tenantId = TenantContext.getTenantId();
 
+        // 如果沒有租戶上下文，返回空報表
+        if (tenantId == null) {
+            log.warn("產生報表摘要時沒有租戶上下文");
+            return ReportSummaryResponse.builder()
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .totalBookings(0L)
+                    .completedBookings(0L)
+                    .cancelledBookings(0L)
+                    .noShowBookings(0L)
+                    .completionRate(java.math.BigDecimal.ZERO)
+                    .newCustomers(0L)
+                    .returningCustomers(0L)
+                    .totalServedCustomers(0L)
+                    .totalRevenue(java.math.BigDecimal.ZERO)
+                    .serviceRevenue(java.math.BigDecimal.ZERO)
+                    .productRevenue(java.math.BigDecimal.ZERO)
+                    .averageOrderValue(java.math.BigDecimal.ZERO)
+                    .issuedCoupons(0L)
+                    .usedCoupons(0L)
+                    .couponDiscountAmount(java.math.BigDecimal.ZERO)
+                    .build();
+        }
+
         log.info("產生報表摘要，租戶：{}，期間：{} ~ {}", tenantId, startDate, endDate);
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
@@ -249,11 +273,50 @@ public class ReportService {
     // ========================================
 
     /**
-     * 取得今日統計
+     * 取得今日統計（含 Dashboard 所需欄位）
      */
     public ReportSummaryResponse getTodaySummary() {
+        String tenantId = TenantContext.getTenantId();
         LocalDate today = LocalDate.now();
-        return getSummary(today, today);
+
+        // 如果沒有租戶上下文，返回空報表
+        if (tenantId == null) {
+            log.warn("取得今日統計時沒有租戶上下文");
+            return ReportSummaryResponse.builder()
+                    .startDate(today)
+                    .endDate(today)
+                    .totalBookings(0L)
+                    .todayBookings(0L)
+                    .pendingBookings(0L)
+                    .completedBookings(0L)
+                    .totalCustomers(0L)
+                    .monthlyRevenue(BigDecimal.ZERO)
+                    .build();
+        }
+
+        // 取得基本報表
+        ReportSummaryResponse summary = getSummary(today, today);
+
+        // 補充 Dashboard 所需欄位
+        // 今日預約數
+        summary.setTodayBookings(summary.getTotalBookings());
+
+        // 待確認預約數
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        long pendingCount = bookingRepository.countByTenantIdAndStatusAndDateRange(
+                tenantId, BookingStatus.PENDING, startOfDay, endOfDay
+        );
+        summary.setPendingBookings(pendingCount);
+
+        // 總顧客數
+        long totalCustomers = customerRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
+        summary.setTotalCustomers(totalCustomers);
+
+        // 本月營收（目前設為 0，需要訂單系統支援）
+        summary.setMonthlyRevenue(BigDecimal.ZERO);
+
+        return summary;
     }
 
     /**

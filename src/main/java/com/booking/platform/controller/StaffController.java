@@ -24,7 +24,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/api/staffs")
+@RequestMapping("/api/staff")
 @RequiredArgsConstructor
 @Validated
 @Slf4j

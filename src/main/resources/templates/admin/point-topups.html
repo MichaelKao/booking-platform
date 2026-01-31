@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    儲值審核頁面
+
+    路徑：GET /admin/point-topups
+    功能：審核店家的點數儲值申請
+-->
+<head th:replace="~{admin/layout :: head}">
+    <title>儲值審核 - 預約平台管理後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-admin :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{admin/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header">
+                    <h1 class="page-title">儲值審核</h1>
+                    <p class="page-subtitle">審核店家的點數儲值申請</p>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-warning">
+                            <div class="card-body">
+                                <div class="stat-label text-warning">待審核</div>
+                                <div class="stat-value" id="pendingCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-success">
+                            <div class="card-body">
+                                <div class="stat-label text-success">本月已核准</div>
+                                <div class="stat-value" id="approvedCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-danger">
+                            <div class="card-body">
+                                <div class="stat-label text-danger">本月已拒絕</div>
+                                <div class="stat-value" id="rejectedCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card border-primary">
+                            <div class="card-body">
+                                <div class="stat-label text-primary">本月總金額</div>
+                                <div class="stat-value" id="totalAmount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 資料表格 -->
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <h6 class="data-table-title">儲值申請列表</h6>
+                        <div class="data-table-actions">
+                            <!-- 狀態篩選 -->
+                            <select class="form-select form-select-sm" id="statusFilter" style="width: 130px;" onchange="loadTopups()">
+                                <option value="">全部狀態</option>
+                                <option value="PENDING" selected>待審核</option>
+                                <option value="APPROVED">已核准</option>
+                                <option value="REJECTED">已拒絕</option>
+                                <option value="CANCELLED">已取消</option>
+                            </select>
+
+                            <!-- 日期範圍 -->
+                            <input type="date" class="form-control form-control-sm" id="startDate" style="width: 140px;" onchange="loadTopups()">
+                            <span class="mx-1">~</span>
+                            <input type="date" class="form-control form-control-sm" id="endDate" style="width: 140px;" onchange="loadTopups()">
+                        </div>
+                    </div>
+
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>申請編號</th>
+                                        <th>店家</th>
+                                        <th>金額</th>
+                                        <th>點數</th>
+                                        <th>付款資訊</th>
+                                        <th>狀態</th>
+                                        <th>申請時間</th>
+                                        <th class="text-center" style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topupsTable">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-5">
+                                            <div class="spinner-border spinner-border-sm me-2"></div>
+                                            載入中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="data-table-footer">
+                        <div class="data-table-info" id="tableInfo">-</div>
+                        <nav id="pagination"></nav>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{admin/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div th:replace="~{admin/layout :: confirm-modal}"></div>
+
+    <!-- 審核詳情 Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">儲值申請詳情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>申請編號：</strong><span id="detailId">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>狀態：</strong><span id="detailStatus">-</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>店家名稱：</strong><span id="detailTenant">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>申請時間：</strong><span id="detailTime">-</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="text-muted small">儲值金額</div>
+                            <div class="h4 text-primary" id="detailAmount">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">獲得點數</div>
+                            <div class="h4 text-success" id="detailPoints">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">匯率</div>
+                            <div class="h4" id="detailRate">-</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <strong>付款資訊：</strong>
+                        <div class="bg-light p-3 rounded mt-2" id="detailPaymentInfo">-</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>備註：</strong>
+                        <div id="detailRemark">-</div>
+                    </div>
+
+                    <!-- 審核區（待審核時顯示） -->
+                    <div id="reviewSection" style="display: none;">
+                        <hr>
+                        <h6>審核處理</h6>
+                        <div class="mb-3">
+                            <label class="form-label">審核備註</label>
+                            <textarea class="form-control" id="reviewRemark" rows="2" placeholder="可填寫審核備註..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-danger" id="rejectBtn" style="display: none;" onclick="rejectTopupFromModal()">
+                        <i class="bi bi-x-circle me-1"></i>拒絕
+                    </button>
+                    <button type="button" class="btn btn-success" id="approveBtn" style="display: none;" onclick="approveTopupFromModal()">
+                        <i class="bi bi-check-circle me-1"></i>核准
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 拒絕原因 Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">拒絕儲值申請</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">拒絕原因 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejectReason" rows="3" placeholder="請輸入拒絕原因..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmReject()">確認拒絕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{admin/layout :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 設定當前頁面
+        const currentPage = 'point-topups';
+
+        // 分頁參數
+        let currentPageNum = 0;
+        const pageSize = 10;
+
+        // 當前選中的儲值申請
+        let currentTopupId = null;
+
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // 設定預設日期（本月）
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('startDate').value = formatDateValue(firstDay);
+            document.getElementById('endDate').value = formatDateValue(today);
+
+            loadStats();
+            loadTopups();
+        });
+
+        /**
+         * 格式化日期為 input[date] 格式
+         */
+        function formatDateValue(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        /**
+         * 載入統計資料
+         */
+        async function loadStats() {
+            try {
+                const result = await api.get('/api/admin/point-topups/stats');
+                if (result.success && result.data) {
+                    document.getElementById('pendingCount').textContent = formatNumber(result.data.pendingCount || 0);
+                    document.getElementById('approvedCount').textContent = formatNumber(result.data.approvedCount || 0);
+                    document.getElementById('rejectedCount').textContent = formatNumber(result.data.rejectedCount || 0);
+                    document.getElementById('totalAmount').textContent = formatMoney(result.data.totalAmount || 0);
+                }
+            } catch (error) {
+                console.error('載入統計失敗:', error);
+            }
+        }
+
+        /**
+         * 載入儲值申請列表
+         */
+        async function loadTopups(page = 0) {
+            currentPageNum = page;
+
+            const status = document.getElementById('statusFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            const params = {
+                page: page,
+                size: pageSize,
+                sort: 'createdAt,desc'
+            };
+
+            if (status) params.status = status;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+
+            try {
+                const result = await api.get('/api/admin/point-topups', params);
+                if (result.success && result.data) {
+                    renderTopups(result.data.content);
+                    renderTableInfo(result.data);
+                    renderPagination(result.data, loadTopups);
+                }
+            } catch (error) {
+                console.error('載入儲值申請失敗:', error);
+                document.getElementById('topupsTable').innerHTML =
+                    '<tr><td colspan="8" class="text-center text-danger py-5">載入失敗，請重試</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染儲值申請表格
+         */
+        function renderTopups(topups) {
+            const tbody = document.getElementById('topupsTable');
+
+            if (!topups || topups.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-cash-stack text-gray-300"></i>
+                                <h5>尚無儲值申請</h5>
+                                <p>目前沒有符合條件的儲值申請</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = topups.map(topup => `
+                <tr>
+                    <td>
+                        <a href="#" onclick="openDetailModal('${topup.id}')" class="fw-bold">
+                            #${topup.id.substring(0, 8)}
+                        </a>
+                    </td>
+                    <td>
+                        ${escapeHtml(topup.tenantName || '-')}
+                        <div class="small text-muted">${escapeHtml(topup.tenantCode || '')}</div>
+                    </td>
+                    <td class="fw-bold text-primary">${formatMoney(topup.amount)}</td>
+                    <td class="text-success">${formatNumber(topup.points)}</td>
+                    <td class="small">
+                        ${topup.paymentMethod ? escapeHtml(topup.paymentMethod) : '-'}
+                        ${topup.paymentAccount ? `<div class="text-muted">${escapeHtml(topup.paymentAccount)}</div>` : ''}
+                    </td>
+                    <td>${getTopupStatusBadge(topup.status)}</td>
+                    <td class="small">${formatDateTime(topup.createdAt)}</td>
+                    <td class="text-center">
+                        ${topup.status === 'PENDING' ? `
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-success" onclick="approveTopup('${topup.id}')" title="核准">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="openRejectModal('${topup.id}')" title="拒絕">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        ` : `
+                            <button class="btn btn-sm btn-outline-secondary" onclick="openDetailModal('${topup.id}')">
+                                <i class="bi bi-eye"></i> 查看
+                            </button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 渲染表格資訊
+         */
+        function renderTableInfo(pageData) {
+            const start = pageData.number * pageData.size + 1;
+            const end = Math.min(start + pageData.numberOfElements - 1, pageData.totalElements);
+            document.getElementById('tableInfo').textContent =
+                `顯示 ${start} - ${end} 筆，共 ${pageData.totalElements} 筆`;
+        }
+
+        /**
+         * 開啟詳情 Modal
+         */
+        async function openDetailModal(topupId) {
+            currentTopupId = topupId;
+
+            try {
+                const result = await api.get(`/api/admin/point-topups/${topupId}`);
+                if (result.success && result.data) {
+                    const topup = result.data;
+
+                    document.getElementById('detailId').textContent = topup.id;
+                    document.getElementById('detailStatus').innerHTML = getTopupStatusBadge(topup.status);
+                    document.getElementById('detailTenant').textContent = topup.tenantName || '-';
+                    document.getElementById('detailTime').textContent = formatDateTime(topup.createdAt);
+                    document.getElementById('detailAmount').textContent = formatMoney(topup.amount);
+                    document.getElementById('detailPoints').textContent = formatNumber(topup.points);
+                    document.getElementById('detailRate').textContent = `1:${topup.rate || 1}`;
+                    document.getElementById('detailPaymentInfo').innerHTML =
+                        topup.paymentInfo ? escapeHtml(topup.paymentInfo).replace(/\n/g, '<br>') : '-';
+                    document.getElementById('detailRemark').textContent = topup.remark || '-';
+
+                    // 審核區顯示控制
+                    const isPending = topup.status === 'PENDING';
+                    document.getElementById('reviewSection').style.display = isPending ? 'block' : 'none';
+                    document.getElementById('approveBtn').style.display = isPending ? 'inline-block' : 'none';
+                    document.getElementById('rejectBtn').style.display = isPending ? 'inline-block' : 'none';
+
+                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('載入詳情失敗:', error);
+            }
+        }
+
+        /**
+         * 核准儲值（從列表）
+         */
+        async function approveTopup(topupId) {
+            const confirmed = await showConfirm('確定要核准此儲值申請嗎？');
+            if (!confirmed) return;
+
+            try {
+                const result = await api.post(`/api/admin/point-topups/${topupId}/approve`);
+                if (result.success) {
+                    showSuccess('儲值申請已核准');
+                    loadStats();
+                    loadTopups(currentPageNum);
+                }
+            } catch (error) {
+                console.error('核准失敗:', error);
+            }
+        }
+
+        /**
+         * 核准儲值（從 Modal）
+         */
+        async function approveTopupFromModal() {
+            if (!currentTopupId) return;
+
+            const remark = document.getElementById('reviewRemark').value;
+
+            try {
+                const result = await api.post(`/api/admin/point-topups/${currentTopupId}/approve`, { remark });
+                if (result.success) {
+                    showSuccess('儲值申請已核准');
+                    bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+                    loadStats();
+                    loadTopups(currentPageNum);
+                }
+            } catch (error) {
+                console.error('核准失敗:', error);
+            }
+        }
+
+        /**
+         * 開啟拒絕 Modal
+         */
+        function openRejectModal(topupId) {
+            currentTopupId = topupId;
+            document.getElementById('rejectReason').value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            modal.show();
+        }
+
+        /**
+         * 拒絕儲值（從 Modal）
+         */
+        function rejectTopupFromModal() {
+            openRejectModal(currentTopupId);
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+        }
+
+        /**
+         * 確認拒絕
+         */
+        async function confirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                showError('請輸入拒絕原因');
+                return;
+            }
+
+            try {
+                const result = await api.post(`/api/admin/point-topups/${currentTopupId}/reject`, { reason });
+                if (result.success) {
+                    showSuccess('儲值申請已拒絕');
+                    bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                    loadStats();
+                    loadTopups(currentPageNum);
+                }
+            } catch (error) {
+                console.error('拒絕失敗:', error);
+            }
+        }
+
+        /**
+         * HTML 跳脫
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

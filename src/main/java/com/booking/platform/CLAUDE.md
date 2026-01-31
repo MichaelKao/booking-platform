@@ -1,45 +1,61 @@
 # Java 程式碼規範
 
-## 總體原則
+## 必要標註
 
-1. 所有程式碼使用繁體中文註解
-2. 註解寫在程式碼上方，不要寫在後面
-3. 使用分區註解標示邏輯流程
-4. 參考 `.claude/examples/` 的範例風格
+```java
+@Service/@Controller/@Repository
+@RequiredArgsConstructor
+@Transactional(readOnly = true)  // Service 用
+@Slf4j
+```
 
 ## 套件結構
-```
-com.booking.platform
-├── common/          # 共用元件
-├── controller/      # API 控制器
-├── service/         # 業務邏輯
-├── repository/      # 資料存取
-├── entity/          # 資料庫實體
-├── dto/             # 資料傳輸物件
-├── enums/           # 列舉
-├── mapper/          # 物件轉換
-└── scheduler/       # 排程任務
-```
 
-## 依賴注入
+| 套件 | 內容 |
+|------|------|
+| common/config | Security, Redis, Jackson, Async |
+| common/exception | BusinessException, ErrorCode |
+| common/security | JwtTokenProvider, Filter |
+| common/tenant | TenantContext |
+| controller/admin | 超管 API |
+| controller/auth | 認證 API |
+| controller/page | 頁面路由 |
+| service | 業務邏輯 |
 
-使用 `@RequiredArgsConstructor` + `private final`：
+## 多租戶
+
 ```java
-@Service
-@RequiredArgsConstructor
-public class BookingService {
-    private final BookingRepository bookingRepository;
-    private final NotificationService notificationService;
+String tenantId = TenantContext.getTenantId();
+// Repository 查詢必須包含 tenantId
+```
+
+## 例外
+
+```java
+throw new BusinessException(ErrorCode.XXX, "訊息");
+throw new ResourceNotFoundException(ErrorCode.XXX_NOT_FOUND, "找不到");
+```
+
+## 方法結構
+
+```java
+@Transactional
+public XxxResponse create(CreateXxxRequest request) {
+    // ========================================
+    // 1. 取得租戶
+    // ========================================
+    String tenantId = TenantContext.getTenantId();
+
+    // ========================================
+    // 2. 驗證
+    // ========================================
+
+    // ========================================
+    // 3. 執行
+    // ========================================
 }
 ```
 
-## 交易管理
+## 加密
 
-- 類別層級：`@Transactional(readOnly = true)`
-- 寫入方法：單獨加 `@Transactional`
-
-## 例外處理
-
-- 業務例外：`BusinessException`
-- 找不到資源：`ResourceNotFoundException`
-- 權限不足：`AccessDeniedException`
+LINE Token 用 `EncryptionService` AES-256-GCM 加密儲存

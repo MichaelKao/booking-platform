@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>顧客管理 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <!-- 頁面標題與操作提示 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">顧客管理</h1>
+                        <p class="page-subtitle">管理所有顧客資料，可搜尋、編輯顧客資訊</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增顧客
+                    </button>
+                </div>
+
+                <!-- 操作提示卡片（首次使用） -->
+                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert" id="helpTip">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>提示：</strong>您可以透過搜尋欄位快速找到顧客，點擊「新增顧客」建立新的顧客資料。
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <h6 class="data-table-title">顧客列表</h6>
+                        <div class="data-table-actions">
+                            <div class="input-group" style="width: 280px;">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="searchKeyword"
+                                       placeholder="輸入姓名或電話搜尋..."
+                                       onkeyup="debounceSearch()"
+                                       aria-label="搜尋顧客">
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()" title="清除搜尋">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>顧客資訊</th>
+                                        <th>聯絡方式</th>
+                                        <th>會員等級</th>
+                                        <th class="text-center">預約次數</th>
+                                        <th class="text-end">消費金額</th>
+                                        <th class="text-center">狀態</th>
+                                        <th class="text-center" style="width: 120px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                    <tr><td colspan="7" class="text-center text-muted py-5">
+                                        <div class="spinner-border spinner-border-sm me-2"></div>載入中...
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="data-table-footer">
+                        <div class="data-table-info" id="tableInfo">-</div>
+                        <nav id="pagination"></nav>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <!-- 新增/編輯顧客 Modal -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增顧客</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 表單說明 -->
+                    <div class="alert alert-light mb-4">
+                        <small><i class="bi bi-info-circle me-1"></i>標示 <span class="text-danger">*</span> 的欄位為必填項目</small>
+                    </div>
+
+                    <form id="dataForm" novalidate>
+                        <input type="hidden" id="dataId">
+
+                        <!-- 基本資料區塊 -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-person me-1"></i>基本資料</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" required maxlength="50"
+                                       placeholder="請輸入顧客姓名">
+                                <div class="invalid-feedback">請輸入顧客姓名</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">電話 <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" required maxlength="20"
+                                       placeholder="例如：0912-345-678" pattern="[0-9\-\+\s\(\)]*">
+                                <div class="invalid-feedback">請輸入有效的電話號碼</div>
+                                <div class="form-text">用於預約通知和聯繫</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">電子郵件</label>
+                                <input type="email" class="form-control" id="email" maxlength="100"
+                                       placeholder="example@email.com">
+                                <div class="invalid-feedback">請輸入有效的電子郵件格式</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">性別</label>
+                                <select class="form-select" id="gender">
+                                    <option value="">未指定</option>
+                                    <option value="MALE">男</option>
+                                    <option value="FEMALE">女</option>
+                                    <option value="OTHER">其他</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">生日</label>
+                                <input type="date" class="form-control" id="birthday">
+                                <div class="form-text">用於生日優惠活動通知</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- 備註區塊 -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-card-text me-1"></i>備註資訊</h6>
+                        <div class="mb-3">
+                            <label class="form-label">備註</label>
+                            <textarea class="form-control" id="note" rows="3" maxlength="500"
+                                      placeholder="記錄顧客的特殊需求、偏好或注意事項..."></textarea>
+                            <div class="form-text d-flex justify-content-between">
+                                <span>可記錄顧客偏好、過敏資訊等</span>
+                                <span><span id="noteCount">0</span>/500</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>取消
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()" id="saveBtn">
+                        <span class="btn-text"><i class="bi bi-check me-1"></i>儲存</span>
+                        <span class="btn-loading d-none">
+                            <span class="spinner-border spinner-border-sm me-1"></span>儲存中...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'customers';
+        let currentPageNum = 0;
+        const pageSize = 10;
+        let searchTimeout = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+
+            // 字數計算
+            document.getElementById('note').addEventListener('input', function() {
+                document.getElementById('noteCount').textContent = this.value.length;
+            });
+
+            // 檢查是否需要顯示提示
+            if (localStorage.getItem('customers_tip_dismissed')) {
+                document.getElementById('helpTip')?.remove();
+            }
+            document.getElementById('helpTip')?.addEventListener('closed.bs.alert', () => {
+                localStorage.setItem('customers_tip_dismissed', 'true');
+            });
+        });
+
+        function debounceSearch() {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => { currentPageNum = 0; loadData(); }, 300);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchKeyword').value = '';
+            currentPageNum = 0;
+            loadData();
+        }
+
+        async function loadData(page = 0) {
+            currentPageNum = page;
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            const params = { page, size: pageSize, sort: 'createdAt,desc' };
+            if (keyword) params.keyword = keyword;
+
+            try {
+                const r = await api.get('/api/customers', params);
+                if (r.success && r.data) {
+                    renderData(r.data.content || []);
+                    renderTableInfo(r.data);
+                    renderPagination(r.data, loadData);
+                }
+            } catch (e) {
+                console.error('載入顧客失敗:', e);
+                document.getElementById('dataTable').innerHTML =
+                    '<tr><td colspan="7" class="text-center py-5"><i class="bi bi-exclamation-triangle text-danger me-2"></i>載入失敗，請重新整理頁面</td></tr>';
+            }
+        }
+
+        function renderData(items) {
+            const tbody = document.getElementById('dataTable');
+            if (!items || items.length === 0) {
+                const keyword = document.getElementById('searchKeyword').value.trim();
+                tbody.innerHTML = keyword
+                    ? `<tr><td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-search me-2"></i>找不到符合「${escapeHtml(keyword)}」的顧客
+                        <br><button class="btn btn-link btn-sm" onclick="clearSearch()">清除搜尋</button>
+                       </td></tr>`
+                    : `<tr><td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-people" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">尚無顧客資料</p>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="openCreateModal()">
+                            <i class="bi bi-plus me-1"></i>新增第一位顧客
+                        </button>
+                       </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map(c => `<tr>
+                <td>
+                    <div class="fw-bold">${escapeHtml(c.name)}</div>
+                    ${c.gender ? `<small class="text-muted">${{MALE:'男',FEMALE:'女',OTHER:'其他'}[c.gender] || ''}</small>` : ''}
+                </td>
+                <td>
+                    <div><i class="bi bi-telephone me-1 text-muted"></i>${escapeHtml(c.phone || '-')}</div>
+                    ${c.email ? `<div class="small text-muted"><i class="bi bi-envelope me-1"></i>${escapeHtml(c.email)}</div>` : ''}
+                </td>
+                <td>${c.membershipLevelName ? `<span class="badge bg-primary">${escapeHtml(c.membershipLevelName)}</span>` : '<span class="text-muted">-</span>'}</td>
+                <td class="text-center">${formatNumber(c.totalBookings || 0)}</td>
+                <td class="text-end">${formatMoney(c.totalSpent || 0)}</td>
+                <td class="text-center">${getCustomerStatusBadge(c.status || 'ACTIVE')}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/tenant/customers/${c.id}" class="btn btn-outline-primary" title="查看詳情">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="editData('${c.id}')" title="編輯資料">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`).join('');
+        }
+
+        function renderTableInfo(pageData) {
+            if (pageData.totalElements === 0) {
+                document.getElementById('tableInfo').textContent = '共 0 筆資料';
+                return;
+            }
+            const start = pageData.number * pageData.size + 1;
+            const end = Math.min(start + pageData.numberOfElements - 1, pageData.totalElements);
+            document.getElementById('tableInfo').textContent = `顯示第 ${start} - ${end} 筆，共 ${pageData.totalElements} 筆`;
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('noteCount').textContent = '0';
+            document.getElementById('modalTitle').textContent = '新增顧客';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/customers/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('phone').value = d.phone || '';
+                    document.getElementById('email').value = d.email || '';
+                    document.getElementById('gender').value = d.gender || '';
+                    document.getElementById('birthday').value = d.birthday || '';
+                    document.getElementById('note').value = d.note || '';
+                    document.getElementById('noteCount').textContent = (d.note || '').length;
+                    document.getElementById('modalTitle').textContent = '編輯顧客';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入顧客詳情失敗:', e);
+                showError('載入顧客詳情失敗');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameEl = document.getElementById('name');
+            const phoneEl = document.getElementById('phone');
+            const emailEl = document.getElementById('email');
+
+            let isValid = true;
+            let firstInvalid = null;
+
+            // 姓名驗證
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = nameEl;
+            } else {
+                nameEl.classList.remove('is-invalid');
+            }
+
+            // 電話驗證
+            const phoneValue = phoneEl.value.trim();
+            if (!phoneValue) {
+                phoneEl.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = phoneEl;
+            } else if (!/^[0-9\-\+\s\(\)]+$/.test(phoneValue)) {
+                phoneEl.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = phoneEl;
+            } else {
+                phoneEl.classList.remove('is-invalid');
+            }
+
+            // Email 驗證
+            const emailValue = emailEl.value.trim();
+            if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+                emailEl.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = emailEl;
+            } else {
+                emailEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查標示紅色的欄位');
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const data = {
+                name: nameEl.value.trim(),
+                phone: phoneValue,
+                email: emailValue || null,
+                gender: document.getElementById('gender').value || null,
+                birthday: document.getElementById('birthday').value || null,
+                note: document.getElementById('note').value.trim() || null
+            };
+
+            const btn = document.getElementById('saveBtn');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const r = id ? await api.put(`/api/customers/${id}`, data) : await api.post('/api/customers', data);
+                if (r.success) {
+                    showSuccess(id ? '顧客資料已更新' : '顧客建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData(currentPageNum);
+                }
+            } catch (e) {
+                console.error('儲存顧客失敗:', e);
+                if (e.message && e.message.includes('手機號碼已存在')) {
+                    phoneEl.classList.add('is-invalid');
+                    showError('此電話號碼已被其他顧客使用');
+                } else {
+                    showError('儲存失敗: ' + (e.message || '請稍後再試'));
+                }
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    Tenant 店家後台登入頁面
+
+    路徑：GET /tenant/login
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>登入 - 店家後台</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts - Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- 共用樣式 -->
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <!-- Tenant 樣式 -->
+    <link th:href="@{/css/tenant.css}" rel="stylesheet">
+</head>
+
+<body class="login-page">
+
+    <!-- 登入卡片 -->
+    <div class="login-card">
+        <!-- 標題區 -->
+        <div class="login-header">
+            <h1>
+                <i class="bi bi-calendar-check me-2"></i>預約平台
+            </h1>
+            <p>店家後台管理系統</p>
+        </div>
+
+        <!-- 表單區 -->
+        <div class="login-body">
+            <form id="loginForm" onsubmit="tenantLogin(event)">
+                <!-- 帳號 -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">帳號</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control"
+                               id="username"
+                               name="username"
+                               placeholder="請輸入帳號"
+                               required
+                               autocomplete="username">
+                    </div>
+                </div>
+
+                <!-- 密碼 -->
+                <div class="mb-4">
+                    <label for="password" class="form-label">密碼</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password"
+                               class="form-control"
+                               id="password"
+                               name="password"
+                               placeholder="請輸入密碼"
+                               required
+                               autocomplete="current-password">
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                onclick="togglePasswordVisibility()">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 忘記密碼連結 -->
+                <div class="mb-3 text-end">
+                    <a th:href="@{/tenant/forgot-password}" class="text-decoration-none small">
+                        忘記密碼？
+                    </a>
+                </div>
+
+                <!-- 登入按鈕 -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                        <span class="btn-text">登入</span>
+                        <span class="btn-loading d-none">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            登入中...
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- 註冊連結（移出表單外） -->
+            <div class="text-center mt-3">
+                <span>還沒有帳號？</span>
+                <a href="/tenant/register" class="text-decoration-none">立即註冊</a>
+            </div>
+        </div>
+
+        <!-- 頁尾 -->
+        <div class="login-footer">
+            <span>Copyright &copy; 預約平台 2024</span>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 共用 JS -->
+    <script th:src="@{/js/common.js?v=3}"></script>
+    <!-- Tenant JS -->
+    <script th:src="@{/js/tenant.js?v=4}"></script>
+
+    <script>
+        /**
+         * 切換密碼顯示/隱藏
+         */
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+
+        /**
+         * 頁面載入時檢查是否已登入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            if (isLoggedIn()) {
+                window.location.href = '/tenant/dashboard';
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>點數管理 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">點數管理</h1>
+                        <p class="page-subtitle">管理店家點數餘額與儲值</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openTopupModal()">
+                        <i class="bi bi-plus-lg me-1"></i>申請儲值
+                    </button>
+                </div>
+
+                <!-- 說明提示 -->
+                <div class="alert alert-light mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>點數用途：</strong>點數可用於訂閱付費功能（如 LINE Bot 整合、進階報表等）。儲值後需等待管理員審核通過才會入帳。
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card border-primary h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-primary">目前餘額</div>
+                                <div class="stat-value" id="currentBalance">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                                <small class="text-muted">可用於訂閱功能</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card border-success h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-success">本月消費</div>
+                                <div class="stat-value" id="monthlyUsed">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                                <small class="text-muted">功能訂閱扣除</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card border-warning h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-warning">待審核儲值</div>
+                                <div class="stat-value" id="pendingTopup">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                                <small class="text-muted">等待管理員審核</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 點數異動記錄 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="m-0">點數異動記錄</h6>
+                        <small class="text-muted">顯示最近 20 筆</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>時間</th>
+                                        <th>類型</th>
+                                        <th class="text-end">異動點數</th>
+                                        <th class="text-end">餘額</th>
+                                        <th>說明</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionTable">
+                                    <tr><td colspan="5" class="text-center text-muted py-4">
+                                        <div class="spinner-border spinner-border-sm me-2"></div>載入中...
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <!-- 儲值申請 Modal -->
+    <div class="modal fade" id="topupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">申請儲值</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="topupForm" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label">儲值方案 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="topupAmount" required>
+                                <option value="">請選擇儲值方案</option>
+                                <option value="1000">NT$ 1,000（獲得 1,000 點）</option>
+                                <option value="3000">NT$ 3,000（獲得 3,300 點，贈送 10%）</option>
+                                <option value="5000">NT$ 5,000（獲得 5,750 點，贈送 15%）</option>
+                                <option value="10000">NT$ 10,000（獲得 12,000 點，贈送 20%）</option>
+                            </select>
+                            <div class="invalid-feedback">請選擇儲值方案</div>
+                            <div class="form-text">儲值越多，贈送越多！</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">付款方式 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="BANK_TRANSFER">銀行轉帳</option>
+                                <option value="ATM">ATM 轉帳</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info small mb-3">
+                            <strong><i class="bi bi-bank me-1"></i>轉帳資訊：</strong><br>
+                            <div class="mt-2">
+                                <div>銀行：台北富邦銀行（012）</div>
+                                <div>帳號：1234-5678-9012-3456</div>
+                                <div>戶名：預約平台有限公司</div>
+                            </div>
+                            <hr class="my-2">
+                            <small class="text-muted">請於轉帳後填寫帳號後五碼，以利對帳</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">付款帳號後五碼</label>
+                            <input type="text" class="form-control" id="paymentAccount" maxlength="5"
+                                   pattern="[0-9]{5}" placeholder="例如：12345" inputmode="numeric">
+                            <div class="invalid-feedback">請輸入 5 位數字</div>
+                            <div class="form-text">轉帳後填寫您的帳號後五碼，方便管理員對帳</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">備註</label>
+                            <textarea class="form-control" id="topupRemark" rows="2" maxlength="200"
+                                      placeholder="如有特殊需求可在此說明..."></textarea>
+                            <div class="form-text d-flex justify-content-end"><span id="remarkCount">0</span>/200</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitTopup()" id="submitTopupBtn">
+                        <span class="btn-text">送出申請</span>
+                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>處理中...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'points';
+        const TYPE_MAP = {
+            TOPUP: { label: '儲值', class: 'bg-success' },
+            USAGE: { label: '消費', class: 'bg-danger' },
+            REFUND: { label: '退款', class: 'bg-info' },
+            EXPIRE: { label: '過期', class: 'bg-secondary' },
+            BONUS: { label: '贈送', class: 'bg-primary' }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBalance();
+            loadTransactions();
+
+            // 備註字數統計
+            document.getElementById('topupRemark').addEventListener('input', function() {
+                document.getElementById('remarkCount').textContent = this.value.length;
+            });
+
+            // 帳號後五碼只允許數字
+            document.getElementById('paymentAccount').addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 5);
+            });
+        });
+
+        async function loadBalance() {
+            try {
+                const r = await api.get('/api/points/balance');
+                if (r.success && r.data) {
+                    document.getElementById('currentBalance').textContent = formatNumber(r.data.balance || 0) + ' 點';
+                    document.getElementById('monthlyUsed').textContent = formatNumber(r.data.monthlyUsed || 0) + ' 點';
+                    document.getElementById('pendingTopup').textContent = formatNumber(r.data.pendingTopUp || 0) + ' 點';
+                }
+            } catch (e) {
+                console.error('載入餘額失敗:', e);
+                document.getElementById('currentBalance').textContent = '載入失敗';
+                document.getElementById('monthlyUsed').textContent = '載入失敗';
+                document.getElementById('pendingTopup').textContent = '載入失敗';
+            }
+        }
+
+        async function loadTransactions() {
+            try {
+                const r = await api.get('/api/points/transactions', { size: 20 });
+                const items = r.data?.content || r.data || [];
+                const tbody = document.getElementById('transactionTable');
+
+                if (items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">
+                        <i class="bi bi-journal-x" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">暫無點數異動記錄</p>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="openTopupModal()">
+                            <i class="bi bi-plus me-1"></i>立即儲值
+                        </button>
+                    </td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = items.map(t => {
+                    const typeInfo = TYPE_MAP[t.type] || { label: t.type, class: 'bg-secondary' };
+                    const amountClass = t.amount > 0 ? 'text-success fw-bold' : 'text-danger';
+                    const amountPrefix = t.amount > 0 ? '+' : '';
+                    return `<tr>
+                        <td class="small">${formatDateTime(t.createdAt)}</td>
+                        <td><span class="badge ${typeInfo.class}">${typeInfo.label}</span></td>
+                        <td class="text-end ${amountClass}">${amountPrefix}${formatNumber(t.amount)}</td>
+                        <td class="text-end">${formatNumber(t.balanceAfter)}</td>
+                        <td class="small text-muted">${escapeHtml(t.description || '-')}</td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                console.error('載入異動記錄失敗:', e);
+                document.getElementById('transactionTable').innerHTML =
+                    '<tr><td colspan="5" class="text-center text-danger py-4">載入失敗，請重新整理頁面</td></tr>';
+            }
+        }
+
+        function openTopupModal() {
+            document.getElementById('topupForm').reset();
+            document.getElementById('topupForm').classList.remove('was-validated');
+            document.getElementById('remarkCount').textContent = '0';
+            document.querySelectorAll('#topupForm .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            new bootstrap.Modal(document.getElementById('topupModal')).show();
+        }
+
+        async function submitTopup() {
+            const form = document.getElementById('topupForm');
+            const amountEl = document.getElementById('topupAmount');
+            const accountEl = document.getElementById('paymentAccount');
+
+            let isValid = true;
+
+            // 方案驗證
+            if (!amountEl.value) {
+                amountEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                amountEl.classList.remove('is-invalid');
+            }
+
+            // 帳號後五碼驗證（如果有填寫）
+            if (accountEl.value && !/^\d{5}$/.test(accountEl.value)) {
+                accountEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                accountEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查表單欄位');
+                return;
+            }
+
+            const amountValue = parseInt(amountEl.value);
+            const pointsMap = { 1000: 1000, 3000: 3300, 5000: 5750, 10000: 12000 };
+            const points = pointsMap[amountValue] || amountValue;
+
+            const data = {
+                points: points,
+                amount: amountValue,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                paymentAccount: accountEl.value || null,
+                requestNote: document.getElementById('topupRemark').value.trim() || null
+            };
+
+            const btn = document.getElementById('submitTopupBtn');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const r = await api.post('/api/points/topup', data);
+                if (r.success) {
+                    showSuccess('儲值申請已送出，請完成轉帳並等待管理員審核');
+                    bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+                    loadBalance();
+                    loadTransactions();
+                }
+            } catch (e) {
+                console.error('申請失敗:', e);
+                showError('申請失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

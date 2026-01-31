@@ -1,0 +1,150 @@
+# ========================================
+# Railway 生產環境設定
+# ========================================
+
+spring:
+  application:
+    name: booking-platform
+
+  # ========================================
+  # 資料庫設定（Railway PostgreSQL）
+  # ========================================
+  datasource:
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # ========================================
+  # JPA 設定
+  # ========================================
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: Asia/Taipei
+    open-in-view: false
+
+  # ========================================
+  # Redis 設定（Railway Redis）
+  # ========================================
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      connect-timeout: 5000ms
+      timeout: 5000ms
+
+  # ========================================
+  # 郵件設定
+  # ========================================
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    default-encoding: UTF-8
+
+  # ========================================
+  # Jackson 設定
+  # ========================================
+  jackson:
+    time-zone: Asia/Taipei
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# ========================================
+# 伺服器設定
+# ========================================
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+
+# ========================================
+# Logging 設定（生產環境減少日誌）
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.booking.platform: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+
+# ========================================
+# JWT 設定
+# ========================================
+jwt:
+  secret: ${JWT_SECRET:booking-platform-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+# ========================================
+# LINE Bot 設定
+# ========================================
+line:
+  bot:
+    channel-token: ${LINE_CHANNEL_TOKEN:}
+    channel-secret: ${LINE_CHANNEL_SECRET:}
+    api-endpoint: https://api.line.me
+    webhook-verify-enabled: true
+  conversation:
+    ttl: 1800
+    key-prefix: "line:conversation:"
+
+# ========================================
+# 加密設定
+# ========================================
+encryption:
+  secret-key: ${ENCRYPTION_SECRET_KEY:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=}
+
+# ========================================
+# 應用程式設定
+# ========================================
+app:
+  base-url: ${RAILWAY_PUBLIC_DOMAIN:https://your-app.railway.app}
+  email:
+    from: ${MAIL_USERNAME:noreply@example.com}
+    from-name: 預約平台
+  pagination:
+    default-size: 20
+    max-size: 100
+  cache:
+    default-ttl: 1800
+
+# ========================================
+# Actuator 設定
+# ========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    redis:
+      enabled: true

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    Tenant 店家後台主版面配置
+
+    使用方式：
+    在子頁面使用 th:replace 引入各區塊
+    - th:replace="~{tenant/layout :: head}"
+    - th:replace="~{fragments/sidebar-tenant :: sidebar}"
+-->
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title th:text="${pageTitle} ? ${pageTitle} + ' - 店家後台' : '店家後台'">店家後台</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts - Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- 共用樣式 -->
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <!-- Tenant 樣式 -->
+    <link th:href="@{/css/tenant.css}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- 完整頁面結構（供參考，實際使用時在子頁面組合） -->
+
+    <!-- 包裝層 -->
+    <div id="wrapper">
+
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+
+            <!-- 頂部導航 -->
+            <header th:fragment="topbar" class="topbar">
+                <div class="topbar-left">
+                    <!-- 手機版選單切換 -->
+                    <button class="btn-sidebar-toggle d-md-none" id="sidebarToggleMobile">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- 點數餘額 -->
+                    <div class="points-badge">
+                        <i class="bi bi-coin"></i>
+                        <span id="pointsBalance">-</span>
+                    </div>
+
+                    <!-- 用戶下拉選單 -->
+                    <div class="dropdown">
+                        <div class="user-dropdown" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="user-avatar">U</span>
+                            <span class="user-name d-none d-md-inline">使用者</span>
+                            <span class="tenant-name d-none d-lg-inline"></span>
+                            <i class="bi bi-chevron-down ms-1"></i>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="/tenant/settings">
+                                    <i class="bi bi-gear me-2"></i>店家設定
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="tenantLogout()">
+                                    <i class="bi bi-box-arrow-right me-2"></i>登出
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 主要內容區 -->
+            <main id="content">
+                <!-- 子頁面內容會放在這裡 -->
+                <th:block th:replace="${content}"></th:block>
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:fragment="footer" class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <span>Copyright &copy; 預約平台 2024</span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+        <!-- End Content Wrapper -->
+
+    </div>
+    <!-- End Wrapper -->
+
+    <!-- 側邊欄遮罩（手機版） -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 Modal -->
+    <div th:fragment="confirm-modal" class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage">確定要執行此操作嗎？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmOkBtn">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <th:block th:fragment="scripts">
+        <!-- Bootstrap 5 JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- 共用 JS -->
+        <script th:src="@{/js/common.js?v=8}"></script>
+        <!-- Tenant JS -->
+        <script th:src="@{/js/tenant.js?v=8}"></script>
+    </th:block>
+
+    <!-- Scripts with FullCalendar -->
+    <th:block th:fragment="scripts-with-calendar">
+        <!-- Bootstrap 5 JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- FullCalendar -->
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+        <!-- 共用 JS -->
+        <script th:src="@{/js/common.js?v=8}"></script>
+        <!-- Tenant JS -->
+        <script th:src="@{/js/tenant.js?v=8}"></script>
+    </th:block>
+
+</body>
+</html>

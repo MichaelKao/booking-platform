@@ -64,6 +64,13 @@ public class TenantDetailResponse {
     private Integer monthlyPushRemaining;
 
     // ========================================
+    // 統計資料
+    // ========================================
+
+    private Long staffCount;
+    private Long customerCount;
+
+    // ========================================
     // 時間欄位
     // ========================================
 

@@ -4,6 +4,7 @@ import com.booking.platform.common.exception.BusinessException;
 import com.booking.platform.common.exception.ErrorCode;
 import com.booking.platform.common.exception.ResourceNotFoundException;
 import com.booking.platform.dto.request.EnableFeatureRequest;
+import com.booking.platform.dto.request.UpdateFeatureRequest;
 import com.booking.platform.dto.response.FeatureResponse;
 import com.booking.platform.dto.response.TenantFeatureResponse;
 import com.booking.platform.entity.system.Feature;
@@ -83,6 +84,68 @@ public class FeatureService {
                 .stream()
                 .map(featureMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 依功能代碼取得功能
+     */
+    public FeatureResponse getFeatureByCode(FeatureCode code) {
+        Feature feature = featureRepository.findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.FEATURE_NOT_FOUND, "找不到指定的功能：" + code
+                ));
+        return featureMapper.toResponse(feature);
+    }
+
+    /**
+     * 更新功能定義
+     */
+    @Transactional
+    public FeatureResponse updateFeature(FeatureCode code, UpdateFeatureRequest request) {
+        log.info("更新功能定義，功能代碼：{}", code);
+
+        Feature feature = featureRepository.findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.FEATURE_NOT_FOUND, "找不到指定的功能：" + code
+                ));
+
+        // ========================================
+        // 更新功能屬性
+        // ========================================
+
+        if (request.getName() != null) {
+            feature.setName(request.getName());
+        }
+
+        if (request.getDescription() != null) {
+            feature.setDescription(request.getDescription());
+        }
+
+        if (request.getIsActive() != null) {
+            feature.setIsActive(request.getIsActive());
+        }
+
+        if (request.getMonthlyPoints() != null) {
+            feature.setMonthlyPoints(request.getMonthlyPoints());
+        }
+
+        if (request.getIcon() != null) {
+            feature.setIcon(request.getIcon());
+        }
+
+        if (request.getCategory() != null) {
+            feature.setCategory(request.getCategory());
+        }
+
+        if (request.getSortOrder() != null) {
+            feature.setSortOrder(request.getSortOrder());
+        }
+
+        feature = featureRepository.save(feature);
+
+        log.info("功能定義更新成功，功能代碼：{}", code);
+
+        return featureMapper.toResponse(feature);
     }
 
     // ========================================

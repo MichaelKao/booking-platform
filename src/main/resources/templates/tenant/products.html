@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>商品管理 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div><h1 class="page-title">商品管理</h1><p class="page-subtitle">管理販售商品</p></div>
+                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增商品</button>
+                </div>
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">商品列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead><tr><th>商品名稱</th><th>分類</th><th>售價</th><th>庫存</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <tbody id="dataTable"><tr><td colspan="6" class="text-center text-muted py-5">載入中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="modalTitle">新增商品</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="dataForm" novalidate>
+                    <input type="hidden" id="dataId">
+                    <div class="mb-3">
+                        <label class="form-label">商品名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required maxlength="100">
+                        <div class="invalid-feedback">請輸入商品名稱</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分類 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="category" required>
+                            <option value="">請選擇分類</option>
+                            <option value="HAIR_CARE">護髮產品</option>
+                            <option value="STYLING">造型產品</option>
+                            <option value="SKIN_CARE">護膚產品</option>
+                            <option value="NAIL_CARE">美甲產品</option>
+                            <option value="ACCESSORIES">配件</option>
+                            <option value="GIFT_CARD">禮品卡</option>
+                            <option value="OTHER">其他</option>
+                        </select>
+                        <div class="invalid-feedback">請選擇商品分類</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">售價 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="price" required min="0" step="1">
+                            </div>
+                            <div class="invalid-feedback">請輸入有效的價格</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">庫存數量</label>
+                            <input type="number" class="form-control" id="stockQuantity" min="0" step="1">
+                            <div class="form-text">不填則不追蹤庫存</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">商品描述</label>
+                        <textarea class="form-control" id="description" rows="3" maxlength="500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
+            </div>
+        </div></div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'products';
+        const CATEGORY_MAP = {
+            HAIR_CARE: '護髮產品', STYLING: '造型產品', SKIN_CARE: '護膚產品',
+            NAIL_CARE: '美甲產品', ACCESSORIES: '配件', GIFT_CARD: '禮品卡', OTHER: '其他'
+        };
+
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        async function loadData() {
+            try {
+                const r = await api.get('/api/products');
+                const items = r.data?.content || r.data || [];
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無商品</td></tr>'
+                    : items.map(p => `<tr>
+                        <td><strong>${escapeHtml(p.name)}</strong></td>
+                        <td>${CATEGORY_MAP[p.category] || p.category || '-'}</td>
+                        <td>${formatMoney(p.price)}</td>
+                        <td>${p.stockQuantity !== null && p.stockQuantity !== undefined ? p.stockQuantity : '-'}</td>
+                        <td>${getProductStatusBadge(p.status)}</td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editData('${p.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteData('${p.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                console.error('載入商品失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('dataForm').reset();
+            document.getElementById('dataForm').classList.remove('was-validated');
+            document.getElementById('dataId').value = '';
+            document.getElementById('modalTitle').textContent = '新增商品';
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+
+        async function editData(id) {
+            try {
+                const r = await api.get(`/api/products/${id}`);
+                if (r.success && r.data) {
+                    const d = r.data;
+                    document.getElementById('dataForm').classList.remove('was-validated');
+                    document.getElementById('dataId').value = d.id;
+                    document.getElementById('name').value = d.name || '';
+                    document.getElementById('category').value = d.category || '';
+                    document.getElementById('price').value = d.price || 0;
+                    document.getElementById('stockQuantity').value = d.stockQuantity ?? '';
+                    document.getElementById('description').value = d.description || '';
+                    document.getElementById('modalTitle').textContent = '編輯商品';
+                    new bootstrap.Modal(document.getElementById('formModal')).show();
+                }
+            } catch (e) {
+                console.error('載入商品詳情失敗:', e);
+                showError('載入商品詳情失敗');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            const nameEl = document.getElementById('name');
+            const categoryEl = document.getElementById('category');
+            const priceEl = document.getElementById('price');
+
+            let isValid = true;
+
+            // 名稱必填
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                nameEl.classList.remove('is-invalid');
+            }
+
+            // 分類必填
+            if (!categoryEl.value) {
+                categoryEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                categoryEl.classList.remove('is-invalid');
+            }
+
+            // 價格驗證
+            const price = parseInt(priceEl.value);
+            if (isNaN(price) || price < 0) {
+                priceEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                priceEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請檢查表單欄位');
+                return;
+            }
+
+            const id = document.getElementById('dataId').value;
+            const stockVal = document.getElementById('stockQuantity').value;
+            const data = {
+                name: nameEl.value.trim(),
+                category: categoryEl.value,
+                price: price,
+                stockQuantity: stockVal !== '' ? parseInt(stockVal) : null,
+                description: document.getElementById('description').value.trim() || null
+            };
+
+            try {
+                const r = id ? await api.put(`/api/products/${id}`, data) : await api.post('/api/products', data);
+                if (r.success) {
+                    showSuccess(id ? '商品更新成功' : '商品建立成功');
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('儲存商品失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            }
+        }
+
+        async function deleteData(id) {
+            if (!await showConfirm('確定要刪除此商品嗎？')) return;
+            try {
+                const r = await api.delete(`/api/products/${id}`);
+                if (r.success) {
+                    showSuccess('商品已刪除');
+                    loadData();
+                }
+            } catch (e) {
+                console.error('刪除商品失敗:', e);
+                showError('刪除失敗');
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

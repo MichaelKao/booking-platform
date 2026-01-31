@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<!--
+    店家詳情頁面
+
+    路徑：GET /admin/tenants/{id}
+    功能：顯示單一店家的詳細資訊、功能訂閱、操作記錄
+-->
+<head th:replace="~{admin/layout :: head}">
+    <title>店家詳情 - 預約平台管理後台</title>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- 側邊欄 -->
+        <nav th:replace="~{fragments/sidebar-admin :: sidebar}"></nav>
+
+        <!-- 內容包裝層 -->
+        <div id="content-wrapper">
+            <!-- 頂部導航 -->
+            <header th:replace="~{admin/layout :: topbar}"></header>
+
+            <!-- 主要內容 -->
+            <main id="content">
+                <!-- 麵包屑 -->
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard">首頁</a></li>
+                        <li class="breadcrumb-item"><a href="/admin/tenants">店家管理</a></li>
+                        <li class="breadcrumb-item active" id="breadcrumbTenant">店家詳情</li>
+                    </ol>
+                </nav>
+
+                <!-- 詳情標題 -->
+                <div class="detail-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h1 class="detail-title" id="tenantName">-</h1>
+                            <div class="detail-subtitle">
+                                <span class="me-3" id="tenantCode">-</span>
+                                <span id="tenantStatus">-</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary" onclick="openEditModal()">
+                                    <i class="bi bi-pencil me-1"></i>編輯
+                                </button>
+                                <button class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                                        data-bs-toggle="dropdown">
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li id="actionActivate" style="display: none;">
+                                        <a class="dropdown-item" href="#" onclick="changeTenantStatus('ACTIVE')">
+                                            <i class="bi bi-check-circle text-success me-2"></i>啟用店家
+                                        </a>
+                                    </li>
+                                    <li id="actionSuspend" style="display: none;">
+                                        <a class="dropdown-item" href="#" onclick="changeTenantStatus('SUSPENDED')">
+                                            <i class="bi bi-pause-circle text-warning me-2"></i>停權店家
+                                        </a>
+                                    </li>
+                                    <li id="actionFreeze" style="display: none;">
+                                        <a class="dropdown-item" href="#" onclick="changeTenantStatus('FROZEN')">
+                                            <i class="bi bi-snow text-info me-2"></i>凍結店家
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- 左側：基本資訊 -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="detail-section h-100">
+                            <div class="detail-section-header">
+                                <h6 class="detail-section-title">基本資訊</h6>
+                            </div>
+                            <div class="detail-section-body">
+                                <ul class="info-list" id="basicInfo">
+                                    <li>
+                                        <span class="info-label">載入中...</span>
+                                        <span class="info-value"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側：統計資訊 -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="row">
+                            <!-- 點數餘額 -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card stat-card border-primary h-100">
+                                    <div class="card-body">
+                                        <div class="stat-label text-primary">點數餘額</div>
+                                        <div class="stat-value" id="pointBalance">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 員工數 -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card stat-card border-success h-100">
+                                    <div class="card-body">
+                                        <div class="stat-label text-success">員工數</div>
+                                        <div class="stat-value" id="staffCount">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 顧客數 -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card stat-card border-info h-100">
+                                    <div class="card-body">
+                                        <div class="stat-label text-info">顧客數</div>
+                                        <div class="stat-value" id="customerCount">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 功能訂閱 -->
+                        <div class="detail-section">
+                            <div class="detail-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="detail-section-title">功能訂閱</h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openFeatureModal()">
+                                    <i class="bi bi-plus-lg me-1"></i>啟用功能
+                                </button>
+                            </div>
+                            <div class="detail-section-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>功能</th>
+                                                <th>類型</th>
+                                                <th>狀態</th>
+                                                <th class="text-center">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="featureTable">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-4">載入中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 儲值記錄 -->
+                <div class="detail-section mb-4">
+                    <div class="detail-section-header">
+                        <h6 class="detail-section-title">儲值記錄</h6>
+                    </div>
+                    <div class="detail-section-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>申請時間</th>
+                                        <th>金額</th>
+                                        <th>獲得點數</th>
+                                        <th>狀態</th>
+                                        <th>備註</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topupTable">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">載入中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- 頁尾 -->
+            <footer th:replace="~{admin/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container"></div>
+
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 確認對話框 -->
+    <div th:replace="~{admin/layout :: confirm-modal}"></div>
+
+    <!-- 編輯店家 Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">編輯店家資訊</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">店家名稱 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhone" class="form-label">聯絡電話</label>
+                                <input type="tel" class="form-control" id="editPhone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">電子郵件</label>
+                                <input type="email" class="form-control" id="editEmail">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editAddress" class="form-label">地址</label>
+                                <input type="text" class="form-control" id="editAddress">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTenant()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 啟用功能 Modal -->
+    <div class="modal fade" id="featureModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">啟用功能</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="availableFeatures">載入中...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{admin/layout :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 設定當前頁面
+        const currentPage = 'tenants';
+
+        // 從 URL 取得店家 ID
+        const tenantId = window.location.pathname.split('/').pop();
+
+        // 店家資料
+        let tenantData = null;
+
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTenantDetail();
+            loadTenantFeatures();
+            loadTenantTopups();
+        });
+
+        /**
+         * 載入店家詳情
+         */
+        async function loadTenantDetail() {
+            try {
+                const result = await api.get(`/api/admin/tenants/${tenantId}`);
+                if (result.success && result.data) {
+                    tenantData = result.data;
+                    renderTenantDetail(result.data);
+                }
+            } catch (error) {
+                console.error('載入店家詳情失敗:', error);
+                showError('載入店家詳情失敗');
+            }
+        }
+
+        /**
+         * 渲染店家詳情
+         */
+        function renderTenantDetail(tenant) {
+            // 標題
+            document.getElementById('tenantName').textContent = tenant.name;
+            document.getElementById('tenantCode').textContent = tenant.code;
+            document.getElementById('tenantStatus').innerHTML = getTenantStatusBadge(tenant.status);
+            document.getElementById('breadcrumbTenant').textContent = tenant.name;
+
+            // 統計
+            document.getElementById('pointBalance').textContent = formatNumber(tenant.pointBalance || 0);
+            document.getElementById('staffCount').textContent = formatNumber(tenant.staffCount || 0);
+            document.getElementById('customerCount').textContent = formatNumber(tenant.customerCount || 0);
+
+            // 基本資訊
+            document.getElementById('basicInfo').innerHTML = `
+                <li>
+                    <span class="info-label">店家代碼</span>
+                    <span class="info-value">${escapeHtml(tenant.code)}</span>
+                </li>
+                <li>
+                    <span class="info-label">聯絡電話</span>
+                    <span class="info-value">${tenant.phone ? escapeHtml(tenant.phone) : '-'}</span>
+                </li>
+                <li>
+                    <span class="info-label">電子郵件</span>
+                    <span class="info-value">${tenant.email ? escapeHtml(tenant.email) : '-'}</span>
+                </li>
+                <li>
+                    <span class="info-label">地址</span>
+                    <span class="info-value">${tenant.address ? escapeHtml(tenant.address) : '-'}</span>
+                </li>
+                <li>
+                    <span class="info-label">描述</span>
+                    <span class="info-value">${tenant.description ? escapeHtml(tenant.description) : '-'}</span>
+                </li>
+                <li>
+                    <span class="info-label">註冊時間</span>
+                    <span class="info-value">${formatDateTime(tenant.createdAt)}</span>
+                </li>
+            `;
+
+            // 操作按鈕
+            document.getElementById('actionActivate').style.display =
+                ['PENDING', 'SUSPENDED', 'FROZEN'].includes(tenant.status) ? 'block' : 'none';
+            document.getElementById('actionSuspend').style.display =
+                tenant.status === 'ACTIVE' ? 'block' : 'none';
+            document.getElementById('actionFreeze').style.display =
+                tenant.status === 'ACTIVE' ? 'block' : 'none';
+        }
+
+        /**
+         * 載入功能訂閱
+         */
+        async function loadTenantFeatures() {
+            try {
+                const result = await api.get(`/api/admin/tenants/${tenantId}/features`);
+                if (result.success && result.data) {
+                    renderFeatures(result.data);
+                }
+            } catch (error) {
+                console.error('載入功能訂閱失敗:', error);
+                document.getElementById('featureTable').innerHTML =
+                    '<tr><td colspan="4" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染功能表格
+         */
+        function renderFeatures(features) {
+            const tbody = document.getElementById('featureTable');
+
+            if (!features || features.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">尚未訂閱任何功能</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = features.map(f => {
+                // 判斷類型：免費或付費
+                const isFree = f.isFree === true;
+                const typeLabel = isFree ? '免費' : '付費';
+                const typeClass = isFree ? 'bg-success' : 'bg-primary';
+
+                // 判斷狀態：啟用中或停用中
+                const isEnabled = f.status === 'ENABLED' || f.isEffective === true;
+
+                return `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(f.featureName || '')}</strong>
+                        <div class="small text-muted">${escapeHtml(f.featureCode || '')}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${typeClass}">${typeLabel}</span>
+                    </td>
+                    <td>
+                        ${isEnabled ?
+                            '<span class="badge bg-success">啟用中</span>' :
+                            '<span class="badge bg-secondary">停用中</span>'}
+                    </td>
+                    <td class="text-center">
+                        ${isEnabled ?
+                            `<button class="btn btn-sm btn-outline-danger" onclick="disableFeature('${f.featureCode}')">
+                                <i class="bi bi-x-circle"></i> 停用
+                            </button>` :
+                            `<button class="btn btn-sm btn-outline-success" onclick="enableFeature('${f.featureCode}')">
+                                <i class="bi bi-check-circle"></i> 啟用
+                            </button>`}
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        /**
+         * 載入儲值記錄
+         */
+        async function loadTenantTopups() {
+            try {
+                const result = await api.get(`/api/admin/tenants/${tenantId}/topups`, { size: 10 });
+                if (result.success && result.data) {
+                    renderTopups(result.data.content || result.data);
+                }
+            } catch (error) {
+                console.error('載入儲值記錄失敗:', error);
+                document.getElementById('topupTable').innerHTML =
+                    '<tr><td colspan="5" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        /**
+         * 渲染儲值記錄
+         */
+        function renderTopups(topups) {
+            const tbody = document.getElementById('topupTable');
+
+            if (!topups || topups.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">尚無儲值記錄</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = topups.map(t => `
+                <tr>
+                    <td>${formatDateTime(t.createdAt)}</td>
+                    <td class="fw-bold">${formatMoney(t.amount)}</td>
+                    <td class="text-primary">${formatNumber(t.points)}</td>
+                    <td>${getTopupStatusBadge(t.status)}</td>
+                    <td class="small">${t.remark ? escapeHtml(t.remark) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 開啟編輯 Modal
+         */
+        function openEditModal() {
+            if (!tenantData) return;
+
+            document.getElementById('editName').value = tenantData.name;
+            document.getElementById('editPhone').value = tenantData.phone || '';
+            document.getElementById('editEmail').value = tenantData.email || '';
+            document.getElementById('editAddress').value = tenantData.address || '';
+            document.getElementById('editDescription').value = tenantData.description || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+
+        /**
+         * 儲存店家資訊
+         */
+        async function saveTenant() {
+            const data = {
+                name: document.getElementById('editName').value,
+                phone: document.getElementById('editPhone').value || null,
+                email: document.getElementById('editEmail').value || null,
+                address: document.getElementById('editAddress').value || null,
+                description: document.getElementById('editDescription').value || null
+            };
+
+            try {
+                const result = await api.put(`/api/admin/tenants/${tenantId}`, data);
+                if (result.success) {
+                    showSuccess('店家資訊已更新');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    loadTenantDetail();
+                }
+            } catch (error) {
+                console.error('更新店家失敗:', error);
+            }
+        }
+
+        /**
+         * 變更店家狀態
+         */
+        async function changeTenantStatus(status) {
+            const statusLabels = {
+                ACTIVE: '啟用',
+                SUSPENDED: '停權',
+                FROZEN: '凍結'
+            };
+
+            const confirmed = await showConfirm(`確定要${statusLabels[status]}此店家嗎？`);
+            if (!confirmed) return;
+
+            try {
+                const result = await api.put(`/api/admin/tenants/${tenantId}/status`, { status });
+                if (result.success) {
+                    showSuccess(`店家已${statusLabels[status]}`);
+                    loadTenantDetail();
+                }
+            } catch (error) {
+                console.error('變更狀態失敗:', error);
+            }
+        }
+
+        /**
+         * 開啟功能 Modal
+         */
+        async function openFeatureModal() {
+            const container = document.getElementById('availableFeatures');
+            container.innerHTML = '載入中...';
+
+            const modal = new bootstrap.Modal(document.getElementById('featureModal'));
+            modal.show();
+
+            try {
+                const result = await api.get('/api/admin/features');
+                if (result.success && result.data) {
+                    renderAvailableFeatures(result.data);
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-danger">載入失敗</div>';
+            }
+        }
+
+        /**
+         * 渲染可用功能列表
+         */
+        function renderAvailableFeatures(features) {
+            const container = document.getElementById('availableFeatures');
+
+            if (!features || features.length === 0) {
+                container.innerHTML = '<div class="text-muted">暫無可用功能</div>';
+                return;
+            }
+
+            container.innerHTML = features.map(f => `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong>${escapeHtml(f.name)}</strong>
+                        <div class="small text-muted">${escapeHtml(f.description || '')}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="enableFeature('${f.code}')">
+                        啟用
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 啟用功能
+         */
+        async function enableFeature(featureCode) {
+            try {
+                const result = await api.post(`/api/admin/tenants/${tenantId}/features/${featureCode}/enable`);
+                if (result.success) {
+                    showSuccess('功能已啟用');
+                    bootstrap.Modal.getInstance(document.getElementById('featureModal'))?.hide();
+                    loadTenantFeatures();
+                }
+            } catch (error) {
+                console.error('啟用功能失敗:', error);
+            }
+        }
+
+        /**
+         * 停用功能
+         */
+        async function disableFeature(featureCode) {
+            const confirmed = await showConfirm('確定要停用此功能嗎？');
+            if (!confirmed) return;
+
+            try {
+                const result = await api.post(`/api/admin/tenants/${tenantId}/features/${featureCode}/disable`);
+                if (result.success) {
+                    showSuccess('功能已停用');
+                    loadTenantFeatures();
+                }
+            } catch (error) {
+                console.error('停用功能失敗:', error);
+            }
+        }
+
+        /**
+         * HTML 跳脫
+         */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        /*]]>*/
+    </script>
+
+</body>
+</html>

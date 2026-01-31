@@ -1,5 +1,7 @@
 package com.booking.platform.common.config;
 
+import com.booking.platform.common.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,11 +12,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Spring Security 配置
  *
  * <p>配置認證和授權規則
+ *
+ * <p>使用 JWT 進行無狀態認證
  *
  * @author Developer
  * @since 1.0.0
@@ -22,7 +33,14 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    // ========================================
+    // 依賴注入
+    // ========================================
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // ========================================
     // 白名單路徑
@@ -42,25 +60,36 @@ public class SecurityConfig {
             // 公開 API
             "/api/public/**",
 
-            // 登入
-            "/api/auth/login",
-            "/api/auth/refresh",
+            // 認證 API
+            "/api/auth/**",
 
             // Swagger（開發環境）
             "/swagger-ui/**",
             "/v3/api-docs/**",
 
-            // TODO: 開發階段暫時開放，正式環境要移除
-            "/api/admin/**",
-            "/api/staffs/**",
-            "/api/services/**",
-            "/api/bookings/**",
-            "/api/customers/**",
-            "/api/membership-levels/**",
-            "/api/coupons/**",
-            "/api/campaigns/**",
-            "/api/products/**",
-            "/api/reports/**"
+            // 靜態資源
+            "/css/**",
+            "/js/**",
+            "/images/**",
+            "/favicon.ico",
+
+            // 頁面（由頁面 Controller 處理認證）
+            "/admin/**",
+            "/tenant/**",
+
+            // 錯誤頁面
+            "/error/**"
+    };
+
+    /**
+     * 開發階段暫時開放的路徑
+     *
+     * <p>注意：需要 TenantContext 的 API 不能放在這裡
+     * <p>正式環境應該移除這些設定
+     */
+    private static final String[] DEV_OPEN_PATHS = {
+            // 注意：以下 API 需要認證以取得 TenantContext，已移除：
+            // "/api/points/**", "/api/feature-store/**"
     };
 
     // ========================================
@@ -76,6 +105,49 @@ public class SecurityConfig {
     }
 
     /**
+     * CORS 配置
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 允許的來源
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        // 允許的方法
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+
+        // 允許的 Header
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "X-Tenant-Id"
+        ));
+
+        // 暴露的 Header
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "X-Total-Count"
+        ));
+
+        // 允許攜帶 Cookie
+        configuration.setAllowCredentials(true);
+
+        // 預檢請求的快取時間
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    /**
      * 安全過濾鏈
      */
     @Bean
@@ -83,6 +155,9 @@ public class SecurityConfig {
         http
                 // 停用 CSRF（使用 JWT）
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // 啟用 CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 停用 Session（使用 JWT）
                 .sessionManagement(session ->
@@ -94,15 +169,21 @@ public class SecurityConfig {
                         // 白名單路徑
                         .requestMatchers(PUBLIC_PATHS).permitAll()
 
-                        // 超級管理後台需要 ADMIN 角色
+                        // 開發階段暫時開放
+                        .requestMatchers(DEV_OPEN_PATHS).permitAll()
+
+                        // 超級管理後台 API 需要 ADMIN 角色
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // 店家後台 API 需要 TENANT 角色
+                        .requestMatchers("/api/**").hasAnyRole("ADMIN", "TENANT")
 
                         // 其他請求需要認證
                         .anyRequest().authenticated()
-                );
+                )
 
-        // TODO: 加入 JWT 過濾器
-        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // 加入 JWT 過濾器
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

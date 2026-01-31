@@ -78,6 +78,11 @@ public interface ServiceItemRepository extends JpaRepository<ServiceItem, String
             @Param("categoryId") String categoryId
     );
 
+    /**
+     * 根據狀態查詢服務（給 LINE Bot 用）
+     */
+    List<ServiceItem> findByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, ServiceStatus status);
+
     // ========================================
     // 存在性檢查
     // ========================================

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    Admin 側邊欄片段
+
+    使用方式：th:replace="~{fragments/sidebar-admin :: sidebar}"
+-->
+
+<!-- 側邊欄 -->
+<nav th:fragment="sidebar" id="sidebar">
+    <!-- Logo -->
+    <a class="sidebar-brand" href="/admin/dashboard">
+        <i class="bi bi-shop sidebar-brand-icon"></i>
+        <span class="sidebar-brand-text">預約平台</span>
+    </a>
+
+    <hr class="sidebar-divider">
+
+    <!-- 導航選單 -->
+    <ul class="nav flex-column">
+        <!-- 儀表板 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/dashboard"
+               th:classappend="${#strings.equals(currentPage, 'dashboard')} ? 'active' : ''">
+                <i class="bi bi-speedometer2"></i>
+                <span>儀表板</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">店家管理</div>
+
+        <!-- 店家列表 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/tenants"
+               th:classappend="${#strings.equals(currentPage, 'tenants')} ? 'active' : ''">
+                <i class="bi bi-building"></i>
+                <span>店家列表</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">財務管理</div>
+
+        <!-- 儲值審核 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/point-topups"
+               th:classappend="${#strings.equals(currentPage, 'point-topups')} ? 'active' : ''">
+                <i class="bi bi-cash-stack"></i>
+                <span>儲值審核</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">系統管理</div>
+
+        <!-- 功能管理 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/features"
+               th:classappend="${#strings.equals(currentPage, 'features')} ? 'active' : ''">
+                <i class="bi bi-puzzle"></i>
+                <span>功能管理</span>
+            </a>
+        </li>
+    </ul>
+
+    <hr class="sidebar-divider">
+
+    <!-- 摺疊按鈕 -->
+    <div class="text-center d-none d-md-block">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    </div>
+</nav>
+</html>

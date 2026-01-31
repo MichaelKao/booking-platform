@@ -2,6 +2,7 @@ package com.booking.platform.controller.admin;
 
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.dto.request.EnableFeatureRequest;
+import com.booking.platform.dto.request.UpdateFeatureRequest;
 import com.booking.platform.dto.response.FeatureResponse;
 import com.booking.platform.dto.response.TenantFeatureResponse;
 import com.booking.platform.enums.FeatureCode;
@@ -60,6 +61,29 @@ public class AdminFeatureController {
     }
 
     /**
+     * 取得單一功能定義
+     */
+    @GetMapping("/features/{code}")
+    public ApiResponse<FeatureResponse> getFeature(@PathVariable String code) {
+        FeatureCode featureCode = parseFeatureCode(code);
+        FeatureResponse result = featureService.getFeatureByCode(featureCode);
+        return ApiResponse.ok(result);
+    }
+
+    /**
+     * 更新功能定義
+     */
+    @PutMapping("/features/{code}")
+    public ApiResponse<FeatureResponse> updateFeature(
+            @PathVariable String code,
+            @Valid @RequestBody UpdateFeatureRequest request
+    ) {
+        FeatureCode featureCode = parseFeatureCode(code);
+        FeatureResponse result = featureService.updateFeature(featureCode, request);
+        return ApiResponse.ok("功能更新成功", result);
+    }
+
+    /**
      * 初始化功能定義
      */
     @PostMapping("/features/initialize")
@@ -87,9 +111,10 @@ public class AdminFeatureController {
     @GetMapping("/tenants/{tenantId}/features/{featureCode}")
     public ApiResponse<TenantFeatureResponse> getTenantFeature(
             @PathVariable String tenantId,
-            @PathVariable FeatureCode featureCode
+            @PathVariable String featureCode
     ) {
-        TenantFeatureResponse result = featureService.getTenantFeature(tenantId, featureCode);
+        FeatureCode code = parseFeatureCode(featureCode);
+        TenantFeatureResponse result = featureService.getTenantFeature(tenantId, code);
         return ApiResponse.ok(result);
     }
 
@@ -99,14 +124,15 @@ public class AdminFeatureController {
     @PostMapping("/tenants/{tenantId}/features/{featureCode}/enable")
     public ApiResponse<TenantFeatureResponse> enableFeature(
             @PathVariable String tenantId,
-            @PathVariable FeatureCode featureCode,
+            @PathVariable String featureCode,
             @Valid @RequestBody(required = false) EnableFeatureRequest request
     ) {
+        FeatureCode code = parseFeatureCode(featureCode);
         if (request == null) {
             request = new EnableFeatureRequest();
         }
         TenantFeatureResponse result = featureService.enableFeature(
-                tenantId, featureCode, request, OPERATOR_ID
+                tenantId, code, request, OPERATOR_ID
         );
         return ApiResponse.ok("功能已啟用", result);
     }
@@ -117,9 +143,10 @@ public class AdminFeatureController {
     @PostMapping("/tenants/{tenantId}/features/{featureCode}/disable")
     public ApiResponse<TenantFeatureResponse> disableFeature(
             @PathVariable String tenantId,
-            @PathVariable FeatureCode featureCode
+            @PathVariable String featureCode
     ) {
-        TenantFeatureResponse result = featureService.disableFeature(tenantId, featureCode, OPERATOR_ID);
+        FeatureCode code = parseFeatureCode(featureCode);
+        TenantFeatureResponse result = featureService.disableFeature(tenantId, code, OPERATOR_ID);
         return ApiResponse.ok("功能已停用", result);
     }
 
@@ -129,9 +156,10 @@ public class AdminFeatureController {
     @PostMapping("/tenants/{tenantId}/features/{featureCode}/suspend")
     public ApiResponse<TenantFeatureResponse> suspendFeature(
             @PathVariable String tenantId,
-            @PathVariable FeatureCode featureCode
+            @PathVariable String featureCode
     ) {
-        TenantFeatureResponse result = featureService.suspendFeature(tenantId, featureCode, OPERATOR_ID);
+        FeatureCode code = parseFeatureCode(featureCode);
+        TenantFeatureResponse result = featureService.suspendFeature(tenantId, code, OPERATOR_ID);
         return ApiResponse.ok("功能已凍結", result);
     }
 
@@ -141,9 +169,10 @@ public class AdminFeatureController {
     @PostMapping("/tenants/{tenantId}/features/{featureCode}/unsuspend")
     public ApiResponse<TenantFeatureResponse> unsuspendFeature(
             @PathVariable String tenantId,
-            @PathVariable FeatureCode featureCode
+            @PathVariable String featureCode
     ) {
-        TenantFeatureResponse result = featureService.unsuspendFeature(tenantId, featureCode, OPERATOR_ID);
+        FeatureCode code = parseFeatureCode(featureCode);
+        TenantFeatureResponse result = featureService.unsuspendFeature(tenantId, code, OPERATOR_ID);
         return ApiResponse.ok("功能已解凍", result);
     }
 
@@ -156,14 +185,15 @@ public class AdminFeatureController {
      */
     @PostMapping("/tenants/batch/features/{featureCode}/enable")
     public ApiResponse<Void> batchEnableFeature(
-            @PathVariable FeatureCode featureCode,
+            @PathVariable String featureCode,
             @RequestBody List<String> tenantIds,
             @Valid @RequestBody(required = false) EnableFeatureRequest request
     ) {
+        FeatureCode code = parseFeatureCode(featureCode);
         if (request == null) {
             request = new EnableFeatureRequest();
         }
-        featureService.batchEnableFeature(tenantIds, featureCode, request, OPERATOR_ID);
+        featureService.batchEnableFeature(tenantIds, code, request, OPERATOR_ID);
         return ApiResponse.ok("批次啟用成功", null);
     }
 
@@ -172,10 +202,33 @@ public class AdminFeatureController {
      */
     @PostMapping("/tenants/batch/features/{featureCode}/disable")
     public ApiResponse<Void> batchDisableFeature(
-            @PathVariable FeatureCode featureCode,
+            @PathVariable String featureCode,
             @RequestBody List<String> tenantIds
     ) {
-        featureService.batchDisableFeature(tenantIds, featureCode, OPERATOR_ID);
+        FeatureCode code = parseFeatureCode(featureCode);
+        featureService.batchDisableFeature(tenantIds, code, OPERATOR_ID);
         return ApiResponse.ok("批次停用成功", null);
+    }
+
+    // ========================================
+    // 輔助方法
+    // ========================================
+
+    /**
+     * 解析功能代碼字串為 FeatureCode 列舉
+     *
+     * @param code 功能代碼字串
+     * @return FeatureCode 列舉
+     * @throws BusinessException 如果代碼無效
+     */
+    private FeatureCode parseFeatureCode(String code) {
+        try {
+            return FeatureCode.valueOf(code.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new com.booking.platform.common.exception.BusinessException(
+                    com.booking.platform.common.exception.ErrorCode.SYS_PARAM_ERROR,
+                    "無效的功能代碼：" + code
+            );
+        }
     }
 }

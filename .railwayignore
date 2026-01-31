@@ -1,0 +1,23 @@
+# 忽略不需要上傳的檔案
+.git
+.gitignore
+.idea
+*.iml
+.vscode
+.DS_Store
+Thumbs.db
+
+# 本機建構產物
+target/
+*.log
+
+# 測試檔案
+src/test/
+
+# 文件
+*.md
+!README.md
+
+# 其他
+.env.local
+.env.development

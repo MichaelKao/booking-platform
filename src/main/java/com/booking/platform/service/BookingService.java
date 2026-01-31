@@ -9,10 +9,12 @@ import com.booking.platform.dto.request.CreateBookingRequest;
 import com.booking.platform.dto.response.BookingResponse;
 import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.catalog.ServiceItem;
+import com.booking.platform.entity.customer.Customer;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.enums.BookingStatus;
 import com.booking.platform.mapper.BookingMapper;
 import com.booking.platform.repository.BookingRepository;
+import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
+    private final CustomerRepository customerRepository;
     private final BookingMapper bookingMapper;
 
     // ========================================
@@ -56,8 +59,25 @@ public class BookingService {
     ) {
         String tenantId = TenantContext.getTenantId();
 
+        // 如果沒有租戶上下文，返回空結果
+        if (tenantId == null) {
+            log.warn("查詢預約列表時沒有租戶上下文");
+            return PageResponse.<BookingResponse>builder()
+                    .content(List.of())
+                    .page(0)
+                    .size(pageable.getPageSize())
+                    .totalElements(0)
+                    .totalPages(0)
+                    .first(true)
+                    .last(true)
+                    .build();
+        }
+
+        // 將 status 轉為字串供原生查詢使用
+        String statusStr = status != null ? status.name() : null;
+
         Page<Booking> page = bookingRepository.findByTenantIdAndFilters(
-                tenantId, status, date, staffId, pageable
+                tenantId, statusStr, date, staffId, pageable
         );
 
         List<BookingResponse> content = page.getContent().stream()
@@ -90,6 +110,17 @@ public class BookingService {
         String tenantId = TenantContext.getTenantId();
 
         return bookingRepository.findByStaffAndDate(tenantId, staffId, date).stream()
+                .map(bookingMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 取得行事曆資料（日期區間）
+     */
+    public List<BookingResponse> getCalendarData(LocalDate startDate, LocalDate endDate) {
+        String tenantId = TenantContext.getTenantId();
+
+        return bookingRepository.findByTenantIdAndDateRange(tenantId, startDate, endDate).stream()
                 .map(bookingMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -140,14 +171,25 @@ public class BookingService {
         }
 
         // ========================================
-        // 3. 計算結束時間
+        // 3. 查詢顧客（如果有指定）
+        // ========================================
+
+        Customer customer = null;
+        if (request.getCustomerId() != null) {
+            customer = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(
+                            request.getCustomerId(), tenantId)
+                    .orElse(null);
+        }
+
+        // ========================================
+        // 4. 計算結束時間
         // ========================================
 
         LocalTime startTime = request.getStartTime();
         LocalTime endTime = startTime.plusMinutes(service.getTotalDuration());
 
         // ========================================
-        // 4. 檢查時段衝突
+        // 5. 檢查時段衝突
         // ========================================
 
         if (staff != null) {
@@ -168,7 +210,7 @@ public class BookingService {
         }
 
         // ========================================
-        // 5. 建立預約
+        // 6. 建立預約
         // ========================================
 
         Booking entity = Booking.builder()
@@ -176,6 +218,8 @@ public class BookingService {
                 .startTime(startTime)
                 .endTime(endTime)
                 .customerId(request.getCustomerId())
+                .customerName(customer != null ? customer.getName() : null)
+                .customerPhone(customer != null ? customer.getPhone() : null)
                 .staffId(staff != null ? staff.getId() : null)
                 .staffName(staff != null ? staff.getEffectiveDisplayName() : null)
                 .serviceId(service.getId())

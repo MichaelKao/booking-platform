@@ -134,6 +134,7 @@ public enum ErrorCode {
     FEATURE_NOT_FOUND("FEATURE_001", "功能不存在"),
     FEATURE_ALREADY_ENABLED("FEATURE_002", "功能已啟用"),
     FEATURE_NOT_ENABLED("FEATURE_003", "功能未啟用"),
+    FEATURE_NOT_SUBSCRIBED("FEATURE_004", "尚未訂閱此功能"),
 
     // ========================================
     // 票券相關錯誤（COUPON_xxx）
@@ -171,7 +172,16 @@ public enum ErrorCode {
 
     LINE_SEND_FAILED("LINE_001", "LINE 訊息發送失敗"),
     LINE_WEBHOOK_ERROR("LINE_002", "LINE Webhook 處理失敗"),
-    LINE_USER_NOT_FOUND("LINE_003", "找不到 LINE 使用者");
+    LINE_USER_NOT_FOUND("LINE_003", "找不到 LINE 使用者"),
+    LINE_CONFIG_NOT_FOUND("LINE_004", "LINE 設定不存在"),
+    LINE_CONFIG_INVALID("LINE_005", "LINE 設定無效"),
+    LINE_CONFIG_NOT_ACTIVE("LINE_006", "LINE Bot 未啟用"),
+    LINE_SIGNATURE_INVALID("LINE_007", "LINE 簽名驗證失敗"),
+    LINE_CHANNEL_ID_DUPLICATE("LINE_008", "Channel ID 已被其他店家使用"),
+    LINE_PUSH_QUOTA_EXCEEDED("LINE_009", "LINE 推送額度已用完"),
+    LINE_CONVERSATION_EXPIRED("LINE_010", "對話已過期，請重新開始"),
+    LINE_BOOKING_DISABLED("LINE_011", "LINE 預約功能已停用"),
+    LINE_ENCRYPTION_ERROR("LINE_012", "加密處理失敗");
 
     // ========================================
     // 欄位
