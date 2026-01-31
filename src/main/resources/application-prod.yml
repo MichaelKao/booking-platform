@@ -10,9 +10,7 @@ spring:
   # 資料庫設定（Railway PostgreSQL）
   # ========================================
   datasource:
-    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
+    url: ${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
