@@ -40,7 +40,7 @@ spring:
   # ========================================
   data:
     redis:
-      url: ${REDIS_URL:redis://localhost:6379}
+      url: ${REDIS_URL:}
       connect-timeout: 5000ms
       timeout: 5000ms
 
@@ -147,4 +147,4 @@ management:
       show-details: never
   health:
     redis:
-      enabled: true
+      enabled: false
