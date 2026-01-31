@@ -1,36 +1,129 @@
 # Enums 規範
 
-## 命名
+## 命名規範
 
-類別：單數名詞 (`BookingStatus`)
-值：大寫底線 (`PENDING_CONFIRMATION`)
+- **類別**：單數名詞 (`BookingStatus`)
+- **值**：大寫底線 (`PENDING_CONFIRMATION`)
 
-## 主要列舉
+---
+
+## Enum 列表 (19 個)
+
+### 業務狀態
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| BookingStatus | PENDING_CONFIRMATION, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW | 預約狀態 |
+| CustomerStatus | ACTIVE, BLOCKED | 顧客狀態 |
+| StaffStatus | ACTIVE, INACTIVE | 員工狀態 |
+| ServiceStatus | ACTIVE, INACTIVE | 服務狀態 |
+| ProductStatus | ON_SALE, OFF_SHELF, ARCHIVED | 商品狀態 |
+| CouponStatus | DRAFT, PUBLISHED, PAUSED, ENDED | 票券狀態 |
+| CouponInstanceStatus | AVAILABLE, REDEEMED, EXPIRED, REFUNDED | 票券實例狀態 |
+| CampaignStatus | DRAFT, PUBLISHED, PAUSED, ENDED | 行銷活動狀態 |
+
+### 系統狀態
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| TenantStatus | ACTIVE, SUSPENDED, FROZEN | 租戶狀態 |
+| FeatureStatus | ACTIVE, SUSPENDED, EXPIRED, INACTIVE | 功能狀態 |
+| TopUpStatus | PENDING, APPROVED, REJECTED | 儲值狀態 |
+
+### 功能代碼
 
 | Enum | 值 |
 |------|-----|
-| TenantStatus | ACTIVE, SUSPENDED, FROZEN |
-| BookingStatus | PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW |
-| CustomerStatus | ACTIVE, INACTIVE, BLOCKED |
-| StaffStatus | ACTIVE, INACTIVE, ON_LEAVE |
-| CouponStatus | ACTIVE, INACTIVE, EXPIRED |
-| CouponInstanceStatus | AVAILABLE, USED, EXPIRED, CANCELLED |
-| CampaignStatus | DRAFT, SCHEDULED, ACTIVE, PAUSED, ENDED |
-| ProductStatus | ACTIVE, INACTIVE, OUT_OF_STOCK |
-| FeatureCode | LINE_BOT, PUSH_NOTIFICATION, COUPON, CAMPAIGN, REPORT, ... |
-| TopUpStatus | PENDING, APPROVED, REJECTED |
-| LineConfigStatus | PENDING, ACTIVE, INACTIVE |
-| ConversationState | IDLE, SELECTING_SERVICE, SELECTING_STAFF, SELECTING_DATE, SELECTING_TIME, CONFIRMING_BOOKING |
+| FeatureCode | COUPON_MANAGEMENT, CAMPAIGN, ADVANCE_BOOKING, MEMBERSHIP, PRODUCT_SALES, REPORT_ANALYTICS, LINE_NOTIFICATION, SMS_NOTIFICATION, EMAIL_NOTIFICATION, MULTI_STAFF, CUSTOM_BRANDING |
 
-## 結構
+### 分類與類型
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| ProductCategory | VOUCHER, MERCHANDISE, SERVICE | 商品分類 |
+| CampaignType | DISCOUNT, GIFT, LOYALTY, REFERRAL | 活動類型 |
+| Gender | MALE, FEMALE, UNKNOWN | 性別 |
+
+### LINE 相關
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| ConversationState | IDLE, SELECTING_SERVICE, SELECTING_STAFF, SELECTING_DATE, SELECTING_TIME, CONFIRMING_BOOKING | 對話狀態 |
+| LineEventType | MESSAGE, FOLLOW, UNFOLLOW, POSTBACK | LINE 事件類型 |
+| LineConfigStatus | ACTIVE, INACTIVE | LINE 設定狀態 |
+
+---
+
+## 結構範例
 
 ```java
 @Getter
 @RequiredArgsConstructor
-public enum XxxStatus {
-    ACTIVE("啟用"),
-    INACTIVE("停用");
+public enum BookingStatus {
+    PENDING_CONFIRMATION("待確認"),
+    CONFIRMED("已確認"),
+    COMPLETED("已完成"),
+    CANCELLED("已取消"),
+    NO_SHOW("未到場");
 
     private final String description;
+}
+```
+
+---
+
+## 狀態流轉
+
+### 預約狀態流轉
+
+```
+PENDING_CONFIRMATION → CONFIRMED → COMPLETED
+                    ↘          ↘
+                     CANCELLED   NO_SHOW
+```
+
+### 票券狀態流轉
+
+```
+DRAFT → PUBLISHED → PAUSED → ENDED
+              ↓
+           ENDED
+```
+
+### 活動狀態流轉
+
+```
+DRAFT → PUBLISHED → PAUSED → ENDED
+              ↓
+           ENDED
+```
+
+### 票券實例狀態流轉
+
+```
+AVAILABLE → REDEEMED
+         ↘
+          EXPIRED
+         ↘
+          REFUNDED
+```
+
+---
+
+## 使用範例
+
+```java
+// Entity 中使用
+@Enumerated(EnumType.STRING)
+@Column(name = "status")
+private BookingStatus status;
+
+// 查詢中使用
+List<Booking> findByTenantIdAndStatusAndDeletedAtIsNull(
+    String tenantId, BookingStatus status);
+
+// 業務邏輯中使用
+if (booking.getStatus() == BookingStatus.PENDING_CONFIRMATION) {
+    booking.setStatus(BookingStatus.CONFIRMED);
 }
 ```
