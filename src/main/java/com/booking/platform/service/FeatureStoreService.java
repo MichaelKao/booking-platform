@@ -317,8 +317,8 @@ public class FeatureStoreService {
                         ErrorCode.FEATURE_NOT_SUBSCRIBED, "尚未訂閱此功能"
                 ));
 
-        // 設為停用
-        tf.setStatus(FeatureStatus.DISABLED);
+        // 設為已過期（取消訂閱）
+        tf.setStatus(FeatureStatus.EXPIRED);
         tf.setDeletedAt(LocalDateTime.now());
         tenantFeatureRepository.save(tf);
 
