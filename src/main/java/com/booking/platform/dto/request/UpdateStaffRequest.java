@@ -80,5 +80,10 @@ public class UpdateStaffRequest {
     /**
      * 是否接受預約
      */
-    private Boolean acceptBooking;
+    private Boolean isBookable;
+
+    /**
+     * 是否顯示於前台
+     */
+    private Boolean isVisible;
 }

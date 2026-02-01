@@ -328,10 +328,9 @@
             }
 
             try {
-                const r = await api.post(`/api/products/${id}/adjust-stock`, {
-                    adjustment: adjustQty,
-                    reason: reason || null
-                });
+                const params = new URLSearchParams({ adjustment: adjustQty });
+                if (reason) params.append('reason', reason);
+                const r = await api.post(`/api/products/${id}/adjust-stock?${params.toString()}`);
                 if (r.success) {
                     showSuccess('庫存調整成功');
                     bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();

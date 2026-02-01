@@ -42,12 +42,12 @@ public class UpdateCampaignRequest {
     /**
      * 活動開始時間
      */
-    private LocalDateTime startTime;
+    private LocalDateTime startAt;
 
     /**
      * 活動結束時間
      */
-    private LocalDateTime endTime;
+    private LocalDateTime endAt;
 
     /**
      * 活動狀態

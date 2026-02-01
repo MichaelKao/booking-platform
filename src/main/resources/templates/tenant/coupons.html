@@ -163,7 +163,7 @@
                             <td>${TYPE_MAP[c.type] || c.type}</td>
                             <td>${discountText}</td>
                             <td>${validText}</td>
-                            <td>${c.issuedCount || 0} / ${c.totalQuantity || '∞'}</td>
+                            <td>${c.issuedQuantity || 0} / ${c.totalQuantity || '∞'}</td>
                             <td>${getCouponStatusBadge(c.status)}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
