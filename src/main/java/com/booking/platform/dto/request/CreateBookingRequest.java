@@ -29,7 +29,6 @@ public class CreateBookingRequest {
     @NotNull(message = "開始時間不能為空")
     private LocalTime startTime;
 
-    @NotBlank(message = "顧客 ID 不能為空")
     private String customerId;
 
     private String staffId;

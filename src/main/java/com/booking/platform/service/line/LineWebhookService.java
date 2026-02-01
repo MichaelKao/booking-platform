@@ -1,11 +1,15 @@
 package com.booking.platform.service.line;
 
+import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.line.ConversationContext;
+import com.booking.platform.dto.request.CreateBookingRequest;
+import com.booking.platform.dto.response.BookingResponse;
 import com.booking.platform.entity.line.LineUser;
 import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.enums.line.ConversationState;
 import com.booking.platform.enums.line.LineEventType;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
+import com.booking.platform.service.BookingService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +47,7 @@ public class LineWebhookService {
     private final LineMessageService messageService;
     private final LineConversationService conversationService;
     private final LineFlexMessageBuilder flexMessageBuilder;
+    private final BookingService bookingService;
 
     // ========================================
     // 關鍵字
@@ -328,21 +333,50 @@ public class LineWebhookService {
             return;
         }
 
-        // TODO: 實際建立預約（呼叫 BookingService）
-        // 目前先模擬成功
+        try {
+            // ========================================
+            // 設定 TenantContext（因為是 @Async 方法）
+            // ========================================
+            TenantContext.setTenantId(tenantId);
 
-        // 增加預約次數
-        lineUserService.incrementBookingCount(tenantId, userId);
+            // ========================================
+            // 建立預約請求
+            // ========================================
+            CreateBookingRequest request = CreateBookingRequest.builder()
+                    .bookingDate(context.getSelectedDate())
+                    .startTime(context.getSelectedTime())
+                    .serviceId(context.getSelectedServiceId())
+                    .staffId(context.getSelectedStaffId())
+                    .customerId(context.getCustomerId())
+                    .source("LINE")
+                    .build();
 
-        // 回覆成功訊息
-        JsonNode successMessage = flexMessageBuilder.buildBookingSuccess(
-                context,
-                "BK" + System.currentTimeMillis()
-        );
-        messageService.replyFlex(tenantId, replyToken, "預約成功", successMessage);
+            // ========================================
+            // 呼叫 BookingService 建立預約
+            // ========================================
+            BookingResponse booking = bookingService.create(request);
 
-        // 重置對話
-        conversationService.reset(tenantId, userId);
+            log.info("LINE 預約建立成功，租戶：{}，預約 ID：{}", tenantId, booking.getId());
+
+            // 增加預約次數
+            lineUserService.incrementBookingCount(tenantId, userId);
+
+            // 回覆成功訊息
+            JsonNode successMessage = flexMessageBuilder.buildBookingSuccess(
+                    context,
+                    booking.getId()
+            );
+            messageService.replyFlex(tenantId, replyToken, "預約成功", successMessage);
+
+        } catch (Exception e) {
+            log.error("LINE 預約建立失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "預約失敗：" + e.getMessage() + "\n請稍後再試或聯繫店家。");
+        } finally {
+            // 清除 TenantContext
+            TenantContext.clear();
+            // 重置對話
+            conversationService.reset(tenantId, userId);
+        }
     }
 
     /**

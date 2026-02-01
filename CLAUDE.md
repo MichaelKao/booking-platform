@@ -1,15 +1,24 @@
 # Booking Platform - 多租戶預約平台系統
 
+## 線上環境
+
+| 環境 | URL |
+|------|-----|
+| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login |
+| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login |
+| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health |
+
 ## 快速參考
 
 | 項目 | 值 |
 |------|-----|
 | Java | 17 |
 | Spring Boot | 3.2 |
-| 資料庫 | PostgreSQL |
+| 資料庫 | PostgreSQL (Railway) |
 | 快取 | Redis |
 | 前端 | Thymeleaf + Bootstrap 5 |
 | 行事曆 | FullCalendar |
+| 部署 | Railway (Docker) |
 
 ## 三個角色
 

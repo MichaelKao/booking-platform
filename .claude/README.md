@@ -2,9 +2,15 @@
 
 此目錄包含 Claude Code 的輔助資源。
 
+## 線上環境
+
+- **店家後台**: https://booking-platform-production-1e08.up.railway.app/tenant/login
+- **超管後台**: https://booking-platform-production-1e08.up.railway.app/admin/login
+- **健康檢查**: https://booking-platform-production-1e08.up.railway.app/health
+
 ## 專案狀態
 
-**Phase 1-8 已完成，僅剩 Phase 9 整合測試待開發**
+**Phase 1-8 已完成，已部署至 Railway，僅剩 Phase 9 整合測試待開發**
 
 | 階段 | 功能 | 狀態 |
 |-----|------|------|

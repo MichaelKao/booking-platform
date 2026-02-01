@@ -7,8 +7,11 @@
       "Read(**)",
       "Glob(**)",
       "Grep(**)",
-      "WebFetch(**)",
-      "Task(**)"
+      "Task(**)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 自動為租戶建立預設服務資料\n\n- 新增 initTestServices 方法\n- 為啟用的租戶自動建立 4 項預設服務（剪髮、染髮、護髮、洗髮）\n- 只在租戶沒有任何服務時才建立\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 自動為租戶建立預設員工資料\n\n- 新增 initTestStaffs 方法\n- 為啟用的租戶自動建立 3 位預設員工（Michael, Amy, Kevin）\n- 只在租戶沒有任何員工時才建立\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(curl:*)"
     ]
   }
 }
