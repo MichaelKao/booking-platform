@@ -23,6 +23,11 @@ public interface FeatureRepository extends JpaRepository<Feature, String> {
 
     List<Feature> findByIsActiveTrueOrderBySortOrderAsc();
 
+    /**
+     * 查詢所有功能（包含停用的），供管理員使用
+     */
+    List<Feature> findAllByOrderBySortOrderAsc();
+
     @Query("""
             SELECT f FROM Feature f
             WHERE f.isActive = true

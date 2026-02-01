@@ -161,6 +161,20 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("status") BookingStatus status
     );
 
+    /**
+     * 統計顧客的預約次數
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.customerId = :customerId
+            AND b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            """)
+    long countByCustomerIdAndTenantId(
+            @Param("customerId") String customerId,
+            @Param("tenantId") String tenantId
+    );
+
     // ========================================
     // 報表查詢
     // ========================================

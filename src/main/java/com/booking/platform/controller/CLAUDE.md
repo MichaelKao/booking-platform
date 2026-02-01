@@ -11,7 +11,7 @@
 @Slf4j
 ```
 
-## 目錄結構 (23 個 Controller)
+## 目錄結構 (24 個 Controller)
 
 | 目錄 | Controller | 用途 |
 |------|------------|------|
@@ -37,6 +37,7 @@
 | / | ReportController | 報表 |
 | / | SettingsController | 店家設定 |
 | / | FeatureStoreController | 功能商店 |
+| / | NotificationController | SSE 即時通知 |
 | / | FaviconController | Favicon |
 
 ---
@@ -200,6 +201,11 @@ GET /line           # LINE 設定
 PUT /line           # 更新 LINE 設定
 POST /line/activate   # 啟用 LINE Bot
 POST /line/deactivate # 停用 LINE Bot
+```
+
+### 即時通知 (`/api/notifications`)
+```
+GET /stream         # SSE 訂閱（店家後台即時通知）
 ```
 
 ---

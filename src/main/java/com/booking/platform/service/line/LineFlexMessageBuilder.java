@@ -3,9 +3,14 @@ package com.booking.platform.service.line;
 import com.booking.platform.dto.line.ConversationContext;
 import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.catalog.ServiceItem;
+import com.booking.platform.entity.marketing.Coupon;
+import com.booking.platform.entity.marketing.CouponInstance;
+import com.booking.platform.entity.customer.Customer;
+import com.booking.platform.entity.product.Product;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.enums.CouponInstanceStatus;
 import com.booking.platform.enums.ServiceStatus;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.repository.BookingRepository;
@@ -29,6 +34,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -144,6 +150,15 @@ public class LineFlexMessageBuilder {
 
         // 查詢預約按鈕
         footerContents.add(createButton("我的預約", "action=view_bookings", LINK_COLOR));
+
+        // 商品按鈕
+        footerContents.add(createButton("瀏覽商品", "action=start_shopping", "#FF9800"));
+
+        // 票券按鈕
+        footerContents.add(createButton("領取票券", "action=view_coupons", "#FF6B6B"));
+
+        // 會員資訊按鈕
+        footerContents.add(createButton("會員資訊", "action=view_member_info", SECONDARY_COLOR));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
@@ -1374,5 +1389,866 @@ public class LineFlexMessageBuilder {
         ));
 
         return footer;
+    }
+
+    // ========================================
+    // 9. 預約列表（含取消按鈕）
+    // ========================================
+
+    /**
+     * 建構預約列表訊息（含取消按鈕）
+     *
+     * @param bookings 預約列表
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBookingListWithCancel(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
+            return buildBookingList(bookings);
+        }
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        for (Booking booking : bookings) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // Header with status
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", getStatusColor(booking.getStatus()));
+            header.put("paddingAll", "10px");
+
+            ObjectNode statusText = objectMapper.createObjectNode();
+            statusText.put("type", "text");
+            statusText.put("text", getStatusText(booking.getStatus()));
+            statusText.put("size", "sm");
+            statusText.put("color", "#FFFFFF");
+            statusText.put("align", "center");
+            statusText.put("weight", "bold");
+
+            header.set("contents", objectMapper.createArrayNode().add(statusText));
+            bubble.set("header", header);
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "sm");
+            body.put("paddingAll", "15px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            // 服務名稱
+            ObjectNode serviceName = objectMapper.createObjectNode();
+            serviceName.put("type", "text");
+            serviceName.put("text", booking.getServiceName());
+            serviceName.put("size", "lg");
+            serviceName.put("weight", "bold");
+            bodyContents.add(serviceName);
+
+            // 日期時間
+            ObjectNode dateTime = objectMapper.createObjectNode();
+            dateTime.put("type", "text");
+            dateTime.put("text", booking.getBookingDate().format(DateTimeFormatter.ofPattern("M/d (E)")) +
+                    " " + booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+            dateTime.put("size", "md");
+            dateTime.put("color", SECONDARY_COLOR);
+            bodyContents.add(dateTime);
+
+            // 員工
+            if (booking.getStaffName() != null) {
+                ObjectNode staffName = objectMapper.createObjectNode();
+                staffName.put("type", "text");
+                staffName.put("text", "服務人員：" + booking.getStaffName());
+                staffName.put("size", "sm");
+                staffName.put("color", SECONDARY_COLOR);
+                bodyContents.add(staffName);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            // Footer - 可取消的預約顯示取消按鈕
+            if (booking.isCancellable()) {
+                ObjectNode footer = objectMapper.createObjectNode();
+                footer.put("type", "box");
+                footer.put("layout", "vertical");
+                footer.put("paddingAll", "10px");
+
+                footer.set("contents", objectMapper.createArrayNode().add(
+                        createButton("取消預約", "action=cancel_booking_request&bookingId=" + booking.getId(), "#DC3545")
+                ));
+                bubble.set("footer", footer);
+            }
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    // ========================================
+    // 10. 取消預約確認
+    // ========================================
+
+    /**
+     * 建構取消預約確認訊息
+     *
+     * @param booking 預約
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCancelConfirmation(Booking booking) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#DC3545");
+        header.put("paddingAll", "15px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", "確認取消預約？");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("size", "lg");
+        headerText.put("weight", "bold");
+        headerText.put("align", "center");
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        bodyContents.add(createInfoRow("服務項目", booking.getServiceName()));
+        bodyContents.add(createInfoRow("日期",
+                booking.getBookingDate().format(DateTimeFormatter.ofPattern("yyyy年M月d日 (E)"))));
+        bodyContents.add(createInfoRow("時間",
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"))));
+
+        if (booking.getStaffName() != null) {
+            bodyContents.add(createInfoRow("服務人員", booking.getStaffName()));
+        }
+
+        // 警告文字
+        ObjectNode warning = objectMapper.createObjectNode();
+        warning.put("type", "text");
+        warning.put("text", "取消後無法復原，確定要取消嗎？");
+        warning.put("size", "sm");
+        warning.put("color", "#DC3545");
+        warning.put("wrap", true);
+        warning.put("margin", "lg");
+        bodyContents.add(warning);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("返回", "action=view_bookings", SECONDARY_COLOR));
+        footerContents.add(createButton("確認取消", "action=confirm_cancel_booking&bookingId=" + booking.getId(), "#DC3545"));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    // ========================================
+    // 11. 票券相關
+    // ========================================
+
+    /**
+     * 建構可領取票券列表
+     *
+     * @param coupons 票券列表
+     * @return Flex Message 內容
+     */
+    public JsonNode buildAvailableCouponList(List<Coupon> coupons) {
+        if (coupons == null || coupons.isEmpty()) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("paddingAll", "20px");
+
+            ObjectNode text = objectMapper.createObjectNode();
+            text.put("type", "text");
+            text.put("text", "目前沒有可領取的票券");
+            text.put("align", "center");
+            text.put("color", SECONDARY_COLOR);
+
+            body.set("contents", objectMapper.createArrayNode().add(text));
+            bubble.set("body", body);
+
+            return bubble;
+        }
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        for (Coupon coupon : coupons) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // Header
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", "#FF6B6B");
+            header.put("paddingAll", "10px");
+
+            ObjectNode headerText = objectMapper.createObjectNode();
+            headerText.put("type", "text");
+            headerText.put("text", "\uD83C\uDF81 優惠券");
+            headerText.put("size", "sm");
+            headerText.put("color", "#FFFFFF");
+            headerText.put("align", "center");
+
+            header.set("contents", objectMapper.createArrayNode().add(headerText));
+            bubble.set("header", header);
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "sm");
+            body.put("paddingAll", "15px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            // 票券名稱
+            ObjectNode nameText = objectMapper.createObjectNode();
+            nameText.put("type", "text");
+            nameText.put("text", coupon.getName());
+            nameText.put("size", "lg");
+            nameText.put("weight", "bold");
+            nameText.put("wrap", true);
+            bodyContents.add(nameText);
+
+            // 票券描述
+            if (coupon.getDescription() != null) {
+                ObjectNode descText = objectMapper.createObjectNode();
+                descText.put("type", "text");
+                descText.put("text", coupon.getDescription());
+                descText.put("size", "sm");
+                descText.put("color", SECONDARY_COLOR);
+                descText.put("wrap", true);
+                bodyContents.add(descText);
+            }
+
+            // 有效期限
+            if (coupon.getValidEndAt() != null) {
+                ObjectNode dateText = objectMapper.createObjectNode();
+                dateText.put("type", "text");
+                dateText.put("text", "有效期限：" + coupon.getValidEndAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+                dateText.put("size", "xs");
+                dateText.put("color", SECONDARY_COLOR);
+                bodyContents.add(dateText);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            // Footer
+            ObjectNode footer = objectMapper.createObjectNode();
+            footer.put("type", "box");
+            footer.put("layout", "vertical");
+            footer.put("paddingAll", "10px");
+
+            footer.set("contents", objectMapper.createArrayNode().add(
+                    createButton("領取", "action=receive_coupon&couponId=" + coupon.getId(), PRIMARY_COLOR)
+            ));
+            bubble.set("footer", footer);
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構已領取票券列表
+     *
+     * @param instances   票券實例列表
+     * @param couponNames 票券 ID 對應名稱
+     * @return Flex Message 內容
+     */
+    public JsonNode buildMyCouponList(List<CouponInstance> instances, Map<String, String> couponNames) {
+        if (instances == null || instances.isEmpty()) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("paddingAll", "20px");
+
+            ObjectNode text = objectMapper.createObjectNode();
+            text.put("type", "text");
+            text.put("text", "您目前沒有票券");
+            text.put("align", "center");
+            text.put("color", SECONDARY_COLOR);
+
+            body.set("contents", objectMapper.createArrayNode().add(text));
+            bubble.set("body", body);
+
+            ObjectNode footer = objectMapper.createObjectNode();
+            footer.put("type", "box");
+            footer.put("layout", "vertical");
+            footer.put("paddingAll", "15px");
+
+            footer.set("contents", objectMapper.createArrayNode().add(
+                    createButton("領取票券", "action=view_coupons", PRIMARY_COLOR)
+            ));
+            bubble.set("footer", footer);
+
+            return bubble;
+        }
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        for (CouponInstance instance : instances) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // 狀態顏色
+            String statusColor = switch (instance.getStatus()) {
+                case UNUSED -> PRIMARY_COLOR;
+                case USED -> SECONDARY_COLOR;
+                case EXPIRED -> "#9E9E9E";
+                case VOIDED -> "#9E9E9E";
+            };
+
+            // Header
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", statusColor);
+            header.put("paddingAll", "10px");
+
+            ObjectNode headerText = objectMapper.createObjectNode();
+            headerText.put("type", "text");
+            headerText.put("text", getCouponStatusText(instance.getStatus()));
+            headerText.put("size", "sm");
+            headerText.put("color", "#FFFFFF");
+            headerText.put("align", "center");
+
+            header.set("contents", objectMapper.createArrayNode().add(headerText));
+            bubble.set("header", header);
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "sm");
+            body.put("paddingAll", "15px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            // 票券名稱
+            ObjectNode nameText = objectMapper.createObjectNode();
+            nameText.put("type", "text");
+            String couponName = couponNames.getOrDefault(instance.getCouponId(), "票券");
+            nameText.put("text", couponName);
+            nameText.put("size", "lg");
+            nameText.put("weight", "bold");
+            nameText.put("wrap", true);
+            bodyContents.add(nameText);
+
+            // 票券代碼
+            ObjectNode codeText = objectMapper.createObjectNode();
+            codeText.put("type", "text");
+            codeText.put("text", "序號：" + instance.getCode());
+            codeText.put("size", "sm");
+            codeText.put("color", SECONDARY_COLOR);
+            bodyContents.add(codeText);
+
+            // 有效期限
+            if (instance.getExpiresAt() != null) {
+                ObjectNode expiryText = objectMapper.createObjectNode();
+                expiryText.put("type", "text");
+                expiryText.put("text", "有效至：" + instance.getExpiresAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+                expiryText.put("size", "xs");
+                expiryText.put("color", SECONDARY_COLOR);
+                bodyContents.add(expiryText);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 取得票券狀態文字
+     */
+    private String getCouponStatusText(CouponInstanceStatus status) {
+        return switch (status) {
+            case UNUSED -> "可使用";
+            case USED -> "已使用";
+            case EXPIRED -> "已過期";
+            case VOIDED -> "已作廢";
+        };
+    }
+
+    // ========================================
+    // 12. 會員資訊
+    // ========================================
+
+    /**
+     * 建構會員資訊訊息
+     *
+     * @param customer            顧客
+     * @param bookingCount        預約次數
+     * @param membershipLevelName 會員等級名稱（可為 null）
+     * @return Flex Message 內容
+     */
+    public JsonNode buildMemberInfo(Customer customer, long bookingCount, String membershipLevelName) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode icon = objectMapper.createObjectNode();
+        icon.put("type", "text");
+        icon.put("text", "\uD83D\uDC64");
+        icon.put("size", "3xl");
+        icon.put("align", "center");
+        headerContents.add(icon);
+
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", customer.getName());
+        nameText.put("size", "xl");
+        nameText.put("weight", "bold");
+        nameText.put("color", "#FFFFFF");
+        nameText.put("align", "center");
+        headerContents.add(nameText);
+
+        // 會員等級
+        if (membershipLevelName != null) {
+            ObjectNode levelText = objectMapper.createObjectNode();
+            levelText.put("type", "text");
+            levelText.put("text", membershipLevelName);
+            levelText.put("size", "sm");
+            levelText.put("color", "#FFFFFF");
+            levelText.put("align", "center");
+            headerContents.add(levelText);
+        }
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 點數
+        ObjectNode pointsBox = objectMapper.createObjectNode();
+        pointsBox.put("type", "box");
+        pointsBox.put("layout", "horizontal");
+        pointsBox.put("paddingAll", "15px");
+        pointsBox.put("backgroundColor", "#F5F5F5");
+        pointsBox.put("cornerRadius", "10px");
+
+        ArrayNode pointsContents = objectMapper.createArrayNode();
+
+        ObjectNode pointsLabel = objectMapper.createObjectNode();
+        pointsLabel.put("type", "text");
+        pointsLabel.put("text", "\uD83D\uDCB0 點數餘額");
+        pointsLabel.put("flex", 2);
+        pointsContents.add(pointsLabel);
+
+        ObjectNode pointsValue = objectMapper.createObjectNode();
+        pointsValue.put("type", "text");
+        pointsValue.put("text", String.format("%d 點", customer.getPointBalance() != null ? customer.getPointBalance() : 0));
+        pointsValue.put("weight", "bold");
+        pointsValue.put("align", "end");
+        pointsValue.put("flex", 1);
+        pointsContents.add(pointsValue);
+
+        pointsBox.set("contents", pointsContents);
+        bodyContents.add(pointsBox);
+
+        // 預約次數
+        bodyContents.add(createInfoRow("累計預約", bookingCount + " 次"));
+
+        // 電話
+        if (customer.getPhone() != null) {
+            bodyContents.add(createInfoRow("聯絡電話", customer.getPhone()));
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("開始預約", "action=start_booking", PRIMARY_COLOR));
+        footerContents.add(createButton("我的票券", "action=view_my_coupons", LINK_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    // ========================================
+    // 13. 商品相關
+    // ========================================
+
+    /**
+     * 建構商品選單（Carousel）
+     *
+     * @param products 商品列表
+     * @return Flex Message 內容
+     */
+    public JsonNode buildProductMenu(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("paddingAll", "20px");
+
+            ObjectNode text = objectMapper.createObjectNode();
+            text.put("type", "text");
+            text.put("text", "目前沒有上架商品");
+            text.put("align", "center");
+            text.put("color", SECONDARY_COLOR);
+
+            body.set("contents", objectMapper.createArrayNode().add(text));
+            bubble.set("body", body);
+
+            return bubble;
+        }
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        for (Product product : products) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "sm");
+            body.put("paddingAll", "15px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            // 商品名稱
+            ObjectNode nameText = objectMapper.createObjectNode();
+            nameText.put("type", "text");
+            nameText.put("text", product.getName());
+            nameText.put("size", "lg");
+            nameText.put("weight", "bold");
+            nameText.put("wrap", true);
+            bodyContents.add(nameText);
+
+            // 商品描述
+            if (product.getDescription() != null) {
+                ObjectNode descText = objectMapper.createObjectNode();
+                descText.put("type", "text");
+                descText.put("text", product.getDescription());
+                descText.put("size", "sm");
+                descText.put("color", SECONDARY_COLOR);
+                descText.put("wrap", true);
+                descText.put("maxLines", 2);
+                bodyContents.add(descText);
+            }
+
+            // 價格
+            ObjectNode priceText = objectMapper.createObjectNode();
+            priceText.put("type", "text");
+            priceText.put("text", String.format("NT$ %d", product.getPrice().intValue()));
+            priceText.put("size", "lg");
+            priceText.put("weight", "bold");
+            priceText.put("color", PRIMARY_COLOR);
+            bodyContents.add(priceText);
+
+            // 庫存
+            if (product.getStockQuantity() != null && product.getStockQuantity() <= 10) {
+                ObjectNode stockText = objectMapper.createObjectNode();
+                stockText.put("type", "text");
+                stockText.put("text", "僅剩 " + product.getStockQuantity() + " 件");
+                stockText.put("size", "xs");
+                stockText.put("color", "#FF6B6B");
+                bodyContents.add(stockText);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            // Footer
+            ObjectNode footer = objectMapper.createObjectNode();
+            footer.put("type", "box");
+            footer.put("layout", "vertical");
+            footer.put("paddingAll", "10px");
+
+            String postbackData = String.format(
+                    "action=select_product&productId=%s&productName=%s&price=%d",
+                    product.getId(),
+                    product.getName(),
+                    product.getPrice().intValue()
+            );
+
+            footer.set("contents", objectMapper.createArrayNode().add(
+                    createButton("選購", postbackData, PRIMARY_COLOR)
+            ));
+            bubble.set("footer", footer);
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構數量選擇選單
+     *
+     * @param productName 商品名稱
+     * @param price       單價
+     * @return Flex Message 內容
+     */
+    public JsonNode buildQuantityMenu(String productName, Integer price) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("paddingAll", "15px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", "選擇數量");
+        headerText.put("size", "lg");
+        headerText.put("weight", "bold");
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 商品資訊
+        ObjectNode productInfo = objectMapper.createObjectNode();
+        productInfo.put("type", "text");
+        productInfo.put("text", productName);
+        productInfo.put("weight", "bold");
+        productInfo.put("wrap", true);
+        bodyContents.add(productInfo);
+
+        ObjectNode priceInfo = objectMapper.createObjectNode();
+        priceInfo.put("type", "text");
+        priceInfo.put("text", String.format("單價：NT$ %d", price));
+        priceInfo.put("size", "sm");
+        priceInfo.put("color", SECONDARY_COLOR);
+        bodyContents.add(priceInfo);
+
+        // 數量按鈕
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "lg");
+        bodyContents.add(separator);
+
+        // 數量選項（1-5）
+        for (int i = 1; i <= 5; i++) {
+            int total = price * i;
+            ObjectNode quantityBtn = createQuantityButton(i, total);
+            bodyContents.add(quantityBtn);
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        bubble.set("footer", createBackFooter());
+
+        return bubble;
+    }
+
+    /**
+     * 建構數量按鈕
+     */
+    private ObjectNode createQuantityButton(int quantity, int total) {
+        ObjectNode button = objectMapper.createObjectNode();
+        button.put("type", "button");
+        button.put("style", "secondary");
+        button.put("height", "sm");
+        button.put("margin", "sm");
+
+        ObjectNode action = objectMapper.createObjectNode();
+        action.put("type", "postback");
+        action.put("label", String.format("%d 件 - NT$ %d", quantity, total));
+        action.put("data", "action=select_quantity&quantity=" + quantity);
+
+        button.set("action", action);
+        return button;
+    }
+
+    /**
+     * 建構購買確認訊息
+     *
+     * @param context 對話上下文
+     * @return Flex Message 內容
+     */
+    public JsonNode buildPurchaseConfirmation(ConversationContext context) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "15px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", "確認購買");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("size", "lg");
+        headerText.put("weight", "bold");
+        headerText.put("align", "center");
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 商品名稱
+        bodyContents.add(createInfoRow("商品", context.getSelectedProductName()));
+
+        // 數量
+        bodyContents.add(createInfoRow("數量", context.getSelectedQuantity() + " 件"));
+
+        // 單價
+        bodyContents.add(createInfoRow("單價", "NT$ " + context.getSelectedProductPrice()));
+
+        // 總金額
+        int total = context.getSelectedProductPrice() * context.getSelectedQuantity();
+        ObjectNode totalRow = objectMapper.createObjectNode();
+        totalRow.put("type", "box");
+        totalRow.put("layout", "horizontal");
+        totalRow.put("spacing", "md");
+        totalRow.put("margin", "lg");
+
+        ArrayNode totalContents = objectMapper.createArrayNode();
+
+        ObjectNode totalLabel = objectMapper.createObjectNode();
+        totalLabel.put("type", "text");
+        totalLabel.put("text", "總金額");
+        totalLabel.put("size", "lg");
+        totalLabel.put("weight", "bold");
+        totalLabel.put("flex", 2);
+        totalContents.add(totalLabel);
+
+        ObjectNode totalValue = objectMapper.createObjectNode();
+        totalValue.put("type", "text");
+        totalValue.put("text", "NT$ " + total);
+        totalValue.put("size", "xl");
+        totalValue.put("weight", "bold");
+        totalValue.put("color", PRIMARY_COLOR);
+        totalValue.put("flex", 3);
+        totalValue.put("align", "end");
+        totalContents.add(totalValue);
+
+        totalRow.set("contents", totalContents);
+        bodyContents.add(totalRow);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("取消", "action=main_menu", SECONDARY_COLOR));
+        footerContents.add(createButton("確認購買", "action=confirm_purchase", PRIMARY_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
     }
 }

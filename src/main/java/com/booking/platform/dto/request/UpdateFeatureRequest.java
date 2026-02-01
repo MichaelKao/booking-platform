@@ -36,6 +36,11 @@ public class UpdateFeatureRequest {
     private Boolean isActive;
 
     /**
+     * 是否免費功能
+     */
+    private Boolean isFree;
+
+    /**
      * 每月消耗點數
      */
     private Integer monthlyPoints;

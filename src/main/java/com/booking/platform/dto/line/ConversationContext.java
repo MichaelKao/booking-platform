@@ -111,6 +111,49 @@ public class ConversationContext implements Serializable {
      */
     private LocalTime selectedTime;
 
+    /**
+     * 待取消的預約 ID
+     */
+    private String cancelBookingId;
+
+    // ========================================
+    // 商品暫存資料
+    // ========================================
+
+    /**
+     * 選擇的商品 ID
+     */
+    private String selectedProductId;
+
+    /**
+     * 選擇的商品名稱
+     */
+    private String selectedProductName;
+
+    /**
+     * 選擇的商品價格
+     */
+    private Integer selectedProductPrice;
+
+    /**
+     * 選擇的購買數量
+     */
+    private Integer selectedQuantity;
+
+    // ========================================
+    // 票券暫存資料
+    // ========================================
+
+    /**
+     * 選擇的票券 ID
+     */
+    private String selectedCouponId;
+
+    /**
+     * 選擇的票券名稱
+     */
+    private String selectedCouponName;
+
     // ========================================
     // 回溯資訊
     // ========================================
@@ -153,7 +196,7 @@ public class ConversationContext implements Serializable {
         this.state = ConversationState.IDLE;
         this.previousState = null;
         this.stateChangedAt = LocalDateTime.now();
-        clearBookingData();
+        clearAllData();
     }
 
     /**
@@ -168,6 +211,34 @@ public class ConversationContext implements Serializable {
         this.selectedStaffName = null;
         this.selectedDate = null;
         this.selectedTime = null;
+        this.cancelBookingId = null;
+    }
+
+    /**
+     * 清除商品暫存資料
+     */
+    public void clearProductData() {
+        this.selectedProductId = null;
+        this.selectedProductName = null;
+        this.selectedProductPrice = null;
+        this.selectedQuantity = null;
+    }
+
+    /**
+     * 清除票券暫存資料
+     */
+    public void clearCouponData() {
+        this.selectedCouponId = null;
+        this.selectedCouponName = null;
+    }
+
+    /**
+     * 清除所有暫存資料
+     */
+    public void clearAllData() {
+        clearBookingData();
+        clearProductData();
+        clearCouponData();
     }
 
     /**
@@ -205,6 +276,57 @@ public class ConversationContext implements Serializable {
     public void setDateTime(LocalDate date, LocalTime time) {
         this.selectedDate = date;
         this.selectedTime = time;
+    }
+
+    /**
+     * 設定商品資訊
+     *
+     * @param productId   商品 ID
+     * @param productName 商品名稱
+     * @param price       商品價格
+     */
+    public void setProduct(String productId, String productName, Integer price) {
+        this.selectedProductId = productId;
+        this.selectedProductName = productName;
+        this.selectedProductPrice = price;
+    }
+
+    /**
+     * 設定購買數量
+     *
+     * @param quantity 數量
+     */
+    public void setQuantity(Integer quantity) {
+        this.selectedQuantity = quantity;
+    }
+
+    /**
+     * 設定票券資訊
+     *
+     * @param couponId   票券 ID
+     * @param couponName 票券名稱
+     */
+    public void setCoupon(String couponId, String couponName) {
+        this.selectedCouponId = couponId;
+        this.selectedCouponName = couponName;
+    }
+
+    /**
+     * 設定待取消的預約 ID
+     *
+     * @param bookingId 預約 ID
+     */
+    public void setCancelBookingId(String bookingId) {
+        this.cancelBookingId = bookingId;
+    }
+
+    /**
+     * 檢查是否可以確認購買
+     *
+     * @return true 表示可以確認
+     */
+    public boolean canConfirmPurchase() {
+        return this.selectedProductId != null && this.selectedQuantity != null && this.selectedQuantity > 0;
     }
 
     /**

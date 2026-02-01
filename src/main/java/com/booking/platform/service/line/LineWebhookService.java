@@ -10,8 +10,21 @@ import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.enums.line.ConversationState;
 import com.booking.platform.enums.line.LineEventType;
 import com.booking.platform.repository.BookingRepository;
+import com.booking.platform.repository.CouponRepository;
+import com.booking.platform.repository.CouponInstanceRepository;
+import com.booking.platform.repository.CustomerRepository;
+import com.booking.platform.repository.MembershipLevelRepository;
+import com.booking.platform.repository.ProductRepository;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.BookingService;
+import com.booking.platform.service.CouponService;
+import com.booking.platform.entity.marketing.Coupon;
+import com.booking.platform.entity.marketing.CouponInstance;
+import com.booking.platform.entity.customer.Customer;
+import com.booking.platform.entity.product.Product;
+import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.enums.CouponStatus;
+import com.booking.platform.enums.ProductStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +68,12 @@ public class LineWebhookService {
     private final LineFlexMessageBuilder flexMessageBuilder;
     private final BookingService bookingService;
     private final BookingRepository bookingRepository;
+    private final CouponRepository couponRepository;
+    private final CouponInstanceRepository couponInstanceRepository;
+    private final CustomerRepository customerRepository;
+    private final MembershipLevelRepository membershipLevelRepository;
+    private final ProductRepository productRepository;
+    private final CouponService couponService;
 
     // ========================================
     // 關鍵字
@@ -63,6 +82,9 @@ public class LineWebhookService {
     private static final String[] BOOKING_KEYWORDS = {"預約", "訂位", "預訂", "book", "booking"};
     private static final String[] CANCEL_KEYWORDS = {"取消", "cancel"};
     private static final String[] HELP_KEYWORDS = {"幫助", "help", "說明"};
+    private static final String[] COUPON_KEYWORDS = {"票券", "優惠券", "coupon"};
+    private static final String[] PRODUCT_KEYWORDS = {"商品", "購買", "product", "shop"};
+    private static final String[] MEMBER_KEYWORDS = {"會員", "點數", "member", "points"};
 
     // ========================================
     // 公開方法
@@ -154,6 +176,24 @@ public class LineWebhookService {
             return;
         }
 
+        // 檢查是否為票券關鍵字
+        if (matchesKeyword(text, COUPON_KEYWORDS)) {
+            handleViewCoupons(tenantId, userId, replyToken);
+            return;
+        }
+
+        // 檢查是否為商品關鍵字
+        if (matchesKeyword(text, PRODUCT_KEYWORDS)) {
+            handleStartShopping(tenantId, userId, replyToken);
+            return;
+        }
+
+        // 檢查是否為會員關鍵字
+        if (matchesKeyword(text, MEMBER_KEYWORDS)) {
+            handleViewMemberInfo(tenantId, userId, replyToken);
+            return;
+        }
+
         // 根據當前對話狀態處理
         ConversationContext context = conversationService.getContext(tenantId, userId);
         handleContextualMessage(tenantId, userId, replyToken, text, context);
@@ -192,6 +232,20 @@ public class LineWebhookService {
             case "go_back" -> handleGoBack(tenantId, userId, replyToken);
             case "view_bookings" -> handleViewBookings(tenantId, userId, replyToken);
             case "main_menu" -> replyMainMenu(tenantId, userId, replyToken);
+            // 取消預約功能
+            case "cancel_booking_request" -> handleCancelBookingRequest(tenantId, userId, replyToken, params);
+            case "confirm_cancel_booking" -> handleConfirmCancelBooking(tenantId, userId, replyToken, params);
+            // 票券功能
+            case "view_coupons" -> handleViewCoupons(tenantId, userId, replyToken);
+            case "receive_coupon" -> handleReceiveCoupon(tenantId, userId, replyToken, params);
+            case "view_my_coupons" -> handleViewMyCoupons(tenantId, userId, replyToken);
+            // 會員資訊
+            case "view_member_info" -> handleViewMemberInfo(tenantId, userId, replyToken);
+            // 商品功能
+            case "start_shopping" -> handleStartShopping(tenantId, userId, replyToken);
+            case "select_product" -> handleSelectProduct(tenantId, userId, replyToken, params);
+            case "select_quantity" -> handleSelectQuantity(tenantId, userId, replyToken, params);
+            case "confirm_purchase" -> handleConfirmPurchase(tenantId, userId, replyToken);
             default -> log.debug("未處理的 action：{}", action);
         }
     }
@@ -460,13 +514,378 @@ public class LineWebhookService {
 
             List<Booking> bookings = bookingsPage.getContent();
 
-            // 建構預約列表訊息
-            JsonNode bookingList = flexMessageBuilder.buildBookingList(bookings);
+            // 建構預約列表訊息（帶取消按鈕）
+            JsonNode bookingList = flexMessageBuilder.buildBookingListWithCancel(bookings);
             messageService.replyFlex(tenantId, replyToken, "我的預約", bookingList);
 
         } catch (Exception e) {
             log.error("查詢預約失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
             messageService.replyText(tenantId, replyToken, "查詢預約失敗，請稍後再試。");
+        }
+    }
+
+    // ========================================
+    // 取消預約處理
+    // ========================================
+
+    /**
+     * 處理取消預約請求
+     */
+    private void handleCancelBookingRequest(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String bookingId = params.get("bookingId");
+        log.info("處理取消預約請求，租戶：{}，預約 ID：{}", tenantId, bookingId);
+
+        try {
+            // 查詢預約
+            Optional<Booking> bookingOpt = bookingRepository.findByIdAndTenantIdAndDeletedAtIsNull(bookingId, tenantId);
+            if (bookingOpt.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "找不到此預約記錄。");
+                return;
+            }
+
+            Booking booking = bookingOpt.get();
+
+            // 檢查是否可取消
+            if (!booking.isCancellable()) {
+                messageService.replyText(tenantId, replyToken, "此預約狀態無法取消。");
+                return;
+            }
+
+            // 儲存待取消的預約 ID
+            ConversationContext context = conversationService.getContext(tenantId, userId);
+            context.setCancelBookingId(bookingId);
+            context.transitionTo(ConversationState.CONFIRMING_CANCEL_BOOKING);
+            conversationService.saveContext(context);
+
+            // 顯示確認訊息
+            JsonNode confirmMessage = flexMessageBuilder.buildCancelConfirmation(booking);
+            messageService.replyFlex(tenantId, replyToken, "確認取消預約", confirmMessage);
+
+        } catch (Exception e) {
+            log.error("處理取消預約請求失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "處理失敗，請稍後再試。");
+        }
+    }
+
+    /**
+     * 處理確認取消預約
+     */
+    private void handleConfirmCancelBooking(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String bookingId = params.get("bookingId");
+        log.info("確認取消預約，租戶：{}，預約 ID：{}", tenantId, bookingId);
+
+        try {
+            // 設定 TenantContext
+            TenantContext.setTenantId(tenantId);
+
+            // 取消預約
+            bookingService.cancel(bookingId, "顧客透過 LINE 取消");
+
+            // 回覆成功訊息
+            messageService.replyText(tenantId, replyToken, "預約已取消成功。如需重新預約，請點選「開始預約」。");
+
+        } catch (Exception e) {
+            log.error("取消預約失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "取消預約失敗：" + e.getMessage());
+        } finally {
+            TenantContext.clear();
+            conversationService.reset(tenantId, userId);
+        }
+    }
+
+    // ========================================
+    // 票券處理
+    // ========================================
+
+    /**
+     * 處理查看可領取票券
+     */
+    private void handleViewCoupons(String tenantId, String userId, String replyToken) {
+        log.info("處理查看可領取票券，租戶：{}，用戶：{}", tenantId, userId);
+
+        try {
+            // 查詢可領取的票券（已發布且未過期）
+            List<Coupon> coupons = couponRepository.findByTenantIdAndStatusAndDeletedAtIsNull(
+                    tenantId, CouponStatus.PUBLISHED
+            );
+
+            if (coupons.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "目前沒有可領取的票券。");
+                return;
+            }
+
+            // 建構票券列表訊息
+            JsonNode couponList = flexMessageBuilder.buildAvailableCouponList(coupons);
+            messageService.replyFlex(tenantId, replyToken, "可領取票券", couponList);
+
+        } catch (Exception e) {
+            log.error("查詢票券失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "查詢票券失敗，請稍後再試。");
+        }
+    }
+
+    /**
+     * 處理領取票券
+     */
+    private void handleReceiveCoupon(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String couponId = params.get("couponId");
+        log.info("處理領取票券，租戶：{}，票券 ID：{}", tenantId, couponId);
+
+        try {
+            TenantContext.setTenantId(tenantId);
+
+            // 取得顧客 ID
+            String customerId = lineUserService.getOrCreateCustomerId(tenantId, userId);
+            if (customerId == null) {
+                messageService.replyText(tenantId, replyToken, "無法建立顧客資料，請稍後再試。");
+                return;
+            }
+
+            // 查詢票券
+            Optional<Coupon> couponOpt = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(couponId, tenantId);
+            if (couponOpt.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "找不到此票券。");
+                return;
+            }
+
+            Coupon coupon = couponOpt.get();
+
+            // 檢查是否已領取過
+            Optional<CouponInstance> existingInstance = couponInstanceRepository.findByCustomerIdAndCouponId(customerId, couponId);
+            if (existingInstance.isPresent()) {
+                messageService.replyText(tenantId, replyToken, "您已經領取過此票券了。");
+                return;
+            }
+
+            // 發放票券
+            couponService.issueToCustomer(couponId, customerId);
+
+            messageService.replyText(tenantId, replyToken,
+                    "恭喜！成功領取「" + coupon.getName() + "」票券。\n" +
+                    "可在「我的票券」中查看。");
+
+        } catch (Exception e) {
+            log.error("領取票券失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "領取票券失敗：" + e.getMessage());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    /**
+     * 處理查看已領取票券
+     */
+    private void handleViewMyCoupons(String tenantId, String userId, String replyToken) {
+        log.info("處理查看已領取票券，租戶：{}，用戶：{}", tenantId, userId);
+
+        try {
+            // 取得顧客 ID
+            String customerId = lineUserService.getCustomerId(tenantId, userId);
+            if (customerId == null) {
+                messageService.replyText(tenantId, replyToken, "您目前沒有票券。");
+                return;
+            }
+
+            // 查詢已領取的票券
+            List<CouponInstance> instances = couponInstanceRepository.findByCustomerIdAndTenantId(customerId, tenantId);
+
+            if (instances.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "您目前沒有票券。\n請點選「領取票券」領取新票券。");
+                return;
+            }
+
+            // 取得票券名稱對應
+            Map<String, String> couponNames = new HashMap<>();
+            for (CouponInstance instance : instances) {
+                couponRepository.findById(instance.getCouponId())
+                        .ifPresent(coupon -> couponNames.put(coupon.getId(), coupon.getName()));
+            }
+
+            // 建構已領取票券列表
+            JsonNode myCouponList = flexMessageBuilder.buildMyCouponList(instances, couponNames);
+            messageService.replyFlex(tenantId, replyToken, "我的票券", myCouponList);
+
+        } catch (Exception e) {
+            log.error("查詢已領取票券失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "查詢失敗，請稍後再試。");
+        }
+    }
+
+    // ========================================
+    // 會員資訊處理
+    // ========================================
+
+    /**
+     * 處理查看會員資訊
+     */
+    private void handleViewMemberInfo(String tenantId, String userId, String replyToken) {
+        log.info("處理查看會員資訊，租戶：{}，用戶：{}", tenantId, userId);
+
+        try {
+            // 取得顧客 ID
+            String customerId = lineUserService.getCustomerId(tenantId, userId);
+            if (customerId == null) {
+                messageService.replyText(tenantId, replyToken, "您尚未成為會員。\n完成首次預約即可成為會員。");
+                return;
+            }
+
+            // 查詢顧客資料
+            Optional<Customer> customerOpt = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId);
+            if (customerOpt.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "找不到會員資料。");
+                return;
+            }
+
+            Customer customer = customerOpt.get();
+
+            // 查詢預約統計
+            long bookingCount = bookingRepository.countByCustomerIdAndTenantId(customerId, tenantId);
+
+            // 查詢會員等級名稱
+            String membershipLevelName = null;
+            if (customer.getMembershipLevelId() != null) {
+                membershipLevelName = membershipLevelRepository
+                        .findById(customer.getMembershipLevelId())
+                        .map(level -> level.getName())
+                        .orElse(null);
+            }
+
+            // 建構會員資訊訊息
+            JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount, membershipLevelName);
+            messageService.replyFlex(tenantId, replyToken, "會員資訊", memberInfo);
+
+        } catch (Exception e) {
+            log.error("查詢會員資訊失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "查詢失敗，請稍後再試。");
+        }
+    }
+
+    // ========================================
+    // 商品購買處理
+    // ========================================
+
+    /**
+     * 處理開始購物
+     */
+    private void handleStartShopping(String tenantId, String userId, String replyToken) {
+        log.info("處理開始購物，租戶：{}，用戶：{}", tenantId, userId);
+
+        try {
+            // 查詢上架中的商品
+            List<Product> products = productRepository.findByTenantIdAndStatusAndDeletedAtIsNull(
+                    tenantId, ProductStatus.ON_SALE
+            );
+
+            if (products.isEmpty()) {
+                messageService.replyText(tenantId, replyToken, "目前沒有上架商品。");
+                return;
+            }
+
+            // 轉換狀態
+            ConversationContext context = conversationService.getContext(tenantId, userId);
+            context.transitionTo(ConversationState.BROWSING_PRODUCTS);
+            conversationService.saveContext(context);
+
+            // 建構商品列表訊息
+            JsonNode productList = flexMessageBuilder.buildProductMenu(products);
+            messageService.replyFlex(tenantId, replyToken, "商品列表", productList);
+
+        } catch (Exception e) {
+            log.error("查詢商品失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "查詢商品失敗，請稍後再試。");
+        }
+    }
+
+    /**
+     * 處理選擇商品
+     */
+    private void handleSelectProduct(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String productId = params.get("productId");
+        String productName = params.get("productName");
+        String priceStr = params.get("price");
+
+        log.info("處理選擇商品，租戶：{}，商品 ID：{}", tenantId, productId);
+
+        try {
+            Integer price = priceStr != null ? Integer.parseInt(priceStr) : null;
+
+            // 儲存選擇的商品
+            ConversationContext context = conversationService.getContext(tenantId, userId);
+            context.setProduct(productId, productName, price);
+            context.transitionTo(ConversationState.SELECTING_QUANTITY);
+            conversationService.saveContext(context);
+
+            // 顯示數量選擇
+            JsonNode quantityMenu = flexMessageBuilder.buildQuantityMenu(productName, price);
+            messageService.replyFlex(tenantId, replyToken, "選擇數量", quantityMenu);
+
+        } catch (Exception e) {
+            log.error("選擇商品失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "處理失敗，請稍後再試。");
+        }
+    }
+
+    /**
+     * 處理選擇數量
+     */
+    private void handleSelectQuantity(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String quantityStr = params.get("quantity");
+        log.info("處理選擇數量，租戶：{}，數量：{}", tenantId, quantityStr);
+
+        try {
+            int quantity = Integer.parseInt(quantityStr);
+
+            ConversationContext context = conversationService.getContext(tenantId, userId);
+            context.setQuantity(quantity);
+            context.transitionTo(ConversationState.CONFIRMING_PURCHASE);
+            conversationService.saveContext(context);
+
+            // 顯示確認購買
+            JsonNode confirmMessage = flexMessageBuilder.buildPurchaseConfirmation(context);
+            messageService.replyFlex(tenantId, replyToken, "確認購買", confirmMessage);
+
+        } catch (Exception e) {
+            log.error("選擇數量失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "處理失敗，請稍後再試。");
+        }
+    }
+
+    /**
+     * 處理確認購買
+     */
+    private void handleConfirmPurchase(String tenantId, String userId, String replyToken) {
+        log.info("處理確認購買，租戶：{}，用戶：{}", tenantId, userId);
+
+        try {
+            ConversationContext context = conversationService.getContext(tenantId, userId);
+
+            if (!context.canConfirmPurchase()) {
+                messageService.replyText(tenantId, replyToken, "購買資訊不完整，請重新選擇。");
+                conversationService.reset(tenantId, userId);
+                return;
+            }
+
+            // 這裡僅記錄購買意向，實際付款需線下處理或整合金流
+            String productName = context.getSelectedProductName();
+            int quantity = context.getSelectedQuantity();
+            int totalPrice = context.getSelectedProductPrice() * quantity;
+
+            // 回覆成功訊息
+            String successMessage = String.format(
+                    "感謝您的訂購！\n\n" +
+                    "商品：%s\n" +
+                    "數量：%d\n" +
+                    "金額：NT$ %d\n\n" +
+                    "請至店家完成付款取貨。",
+                    productName, quantity, totalPrice
+            );
+            messageService.replyText(tenantId, replyToken, successMessage);
+
+        } catch (Exception e) {
+            log.error("確認購買失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "處理失敗，請稍後再試。");
+        } finally {
+            conversationService.reset(tenantId, userId);
         }
     }
 

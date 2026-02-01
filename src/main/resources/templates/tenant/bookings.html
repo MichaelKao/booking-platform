@@ -176,6 +176,77 @@
         </div>
     </div>
 
+    <!-- 編輯預約 Modal -->
+    <div class="modal fade" id="editBookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">編輯預約</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light mb-4">
+                        <small><i class="bi bi-info-circle me-1"></i>修改預約資訊後，系統將自動發送 LINE 通知給顧客。</small>
+                    </div>
+                    <form id="editBookingForm" novalidate>
+                        <input type="hidden" id="editBookingId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">顧客</label>
+                                <input type="text" class="form-control" id="editBookingCustomer" readonly>
+                                <div class="form-text text-muted">顧客資訊無法修改</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">服務項目 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editBookingService" required onchange="onEditServiceChange()">
+                                    <option value="">請選擇服務</option>
+                                </select>
+                                <div class="invalid-feedback">請選擇服務項目</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">服務人員</label>
+                                <select class="form-select" id="editBookingStaff">
+                                    <option value="">不指定（系統自動分配）</option>
+                                </select>
+                                <div class="form-text">可選擇指定服務人員或由系統自動分配</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">預約日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="editBookingDate" required>
+                                <div class="invalid-feedback">請選擇預約日期</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">開始時間 <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="editBookingTime" required>
+                                <div class="invalid-feedback">請選擇開始時間</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">服務時長</label>
+                                <input type="text" class="form-control" id="editBookingDuration" readonly placeholder="由服務項目決定">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">給顧客的備註</label>
+                            <textarea class="form-control" id="editBookingNoteToCustomer" rows="2" maxlength="500" placeholder="此備註會透過 LINE 通知顧客..."></textarea>
+                            <div class="form-text d-flex justify-content-end"><span id="editNoteCount">0</span>/500</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBookingEdit()" id="saveEditBookingBtn">
+                        <span class="btn-text">儲存變更</span>
+                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
     <script>
         const currentPage = 'bookings';
@@ -272,10 +343,12 @@
                     <div class="btn-group btn-group-sm">
                         ${b.status === 'PENDING' ? `
                             <button class="btn btn-success" onclick="confirmBooking('${b.id}')" title="確認預約"><i class="bi bi-check"></i></button>
+                            <button class="btn btn-outline-primary" onclick="openEditBookingModal('${b.id}')" title="編輯預約"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消預約"><i class="bi bi-x"></i></button>
                         ` : ''}
                         ${b.status === 'CONFIRMED' ? `
                             <button class="btn btn-primary" onclick="completeBooking('${b.id}')" title="標記完成"><i class="bi bi-check-circle"></i></button>
+                            <button class="btn btn-outline-primary" onclick="openEditBookingModal('${b.id}')" title="編輯預約"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消預約"><i class="bi bi-x"></i></button>
                         ` : ''}
                         <button class="btn btn-outline-secondary" onclick="openDetailModal('${b.id}')" title="查看詳情"><i class="bi bi-eye"></i></button>
@@ -470,10 +543,12 @@
 
                     let actionButtons = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>';
                     if (b.status === 'PENDING') {
+                        actionButtons += `<button class="btn btn-outline-primary" onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();openEditBookingModal('${b.id}');">編輯預約</button>`;
                         actionButtons += `<button class="btn btn-success" onclick="confirmBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">確認預約</button>`;
                         actionButtons += `<button class="btn btn-danger" onclick="cancelBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">取消預約</button>`;
                     }
                     if (b.status === 'CONFIRMED') {
+                        actionButtons += `<button class="btn btn-outline-primary" onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();openEditBookingModal('${b.id}');">編輯預約</button>`;
                         actionButtons += `<button class="btn btn-primary" onclick="completeBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">標記完成</button>`;
                         actionButtons += `<button class="btn btn-danger" onclick="cancelBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">取消預約</button>`;
                     }
@@ -514,6 +589,159 @@
             d.textContent = t;
             return d.innerHTML;
         }
+
+        // ========================================
+        // 編輯預約功能
+        // ========================================
+
+        let editBookingData = null;
+
+        async function openEditBookingModal(bookingId) {
+            const form = document.getElementById('editBookingForm');
+            form.reset();
+            form.classList.remove('was-validated');
+            document.querySelectorAll('#editBookingForm .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.getElementById('editNoteCount').textContent = '0';
+
+            // 載入下拉選單
+            await loadEditServices();
+            await loadEditStaff();
+
+            // 載入預約資料
+            try {
+                const r = await api.get(`/api/bookings/${bookingId}`);
+                if (r.success && r.data) {
+                    editBookingData = r.data;
+                    populateEditForm(r.data);
+                    new bootstrap.Modal(document.getElementById('editBookingModal')).show();
+                }
+            } catch (e) {
+                showError('載入預約資料失敗：' + (e.message || ''));
+            }
+        }
+
+        async function loadEditServices() {
+            try {
+                const r = await api.get('/api/services');
+                if (r.success && r.data) {
+                    const services = r.data?.content || r.data || [];
+                    document.getElementById('editBookingService').innerHTML = '<option value="">請選擇服務</option>' +
+                        services.map(s => `<option value="${s.id}" data-duration="${s.duration}" data-price="${s.price}">${escapeHtml(s.name)} (${s.duration}分鐘 / ${formatMoney(s.price)})</option>`).join('');
+                }
+            } catch (e) { console.error('載入服務失敗:', e); }
+        }
+
+        async function loadEditStaff() {
+            try {
+                const r = await api.get('/api/staff', { status: 'ACTIVE' });
+                if (r.success && r.data) {
+                    const staffList = r.data?.content || r.data || [];
+                    document.getElementById('editBookingStaff').innerHTML = '<option value="">不指定（系統自動分配）</option>' +
+                        staffList.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+                }
+            } catch (e) { console.error('載入員工失敗:', e); }
+        }
+
+        function populateEditForm(booking) {
+            document.getElementById('editBookingId').value = booking.id;
+            document.getElementById('editBookingCustomer').value = booking.customerName + (booking.customerPhone ? ` (${booking.customerPhone})` : '');
+            document.getElementById('editBookingService').value = booking.serviceId || '';
+            document.getElementById('editBookingStaff').value = booking.staffId || '';
+            document.getElementById('editBookingDate').value = booking.bookingDate;
+            document.getElementById('editBookingTime').value = booking.startTime?.substring(0, 5) || '';
+            document.getElementById('editBookingNoteToCustomer').value = '';
+
+            // 設定日期最小值
+            document.getElementById('editBookingDate').min = new Date().toISOString().split('T')[0];
+
+            // 更新服務時長顯示
+            onEditServiceChange();
+        }
+
+        function onEditServiceChange() {
+            const select = document.getElementById('editBookingService');
+            const option = select.options[select.selectedIndex];
+            document.getElementById('editBookingDuration').value = option.dataset.duration ? `${option.dataset.duration} 分鐘` : '';
+        }
+
+        async function saveBookingEdit() {
+            const form = document.getElementById('editBookingForm');
+            const serviceEl = document.getElementById('editBookingService');
+            const dateEl = document.getElementById('editBookingDate');
+            const timeEl = document.getElementById('editBookingTime');
+
+            let isValid = true;
+
+            // 服務驗證
+            if (!serviceEl.value) {
+                serviceEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                serviceEl.classList.remove('is-invalid');
+            }
+
+            // 日期驗證
+            if (!dateEl.value) {
+                dateEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                dateEl.classList.remove('is-invalid');
+            }
+
+            // 時間驗證
+            if (!timeEl.value) {
+                timeEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                timeEl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                form.classList.add('was-validated');
+                showError('請填寫所有必填欄位');
+                return;
+            }
+
+            const bookingId = document.getElementById('editBookingId').value;
+            const data = {
+                serviceItemId: serviceEl.value,
+                staffId: document.getElementById('editBookingStaff').value || null,
+                bookingDate: dateEl.value,
+                startTime: timeEl.value,
+                storeNoteToCustomer: document.getElementById('editBookingNoteToCustomer').value.trim() || null
+            };
+
+            const btn = document.getElementById('saveEditBookingBtn');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const r = await api.put(`/api/bookings/${bookingId}`, data);
+                if (r.success) {
+                    showSuccess('預約已更新，已發送通知給顧客');
+                    bootstrap.Modal.getInstance(document.getElementById('editBookingModal')).hide();
+                    loadBookings(currentPageNum);
+                }
+            } catch (e) {
+                console.error('更新預約失敗:', e);
+                showError('更新預約失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        // 備註字數統計
+        document.addEventListener('DOMContentLoaded', () => {
+            const editNoteEl = document.getElementById('editBookingNoteToCustomer');
+            if (editNoteEl) {
+                editNoteEl.addEventListener('input', function() {
+                    document.getElementById('editNoteCount').textContent = this.value.length;
+                });
+            }
+        });
     </script>
 </body>
 </html>

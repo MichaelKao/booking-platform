@@ -28,9 +28,11 @@
                         <h1 class="page-title">功能管理</h1>
                         <p class="page-subtitle">管理平台所有功能項目和訂閱</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openCreateFeatureModal()">
-                        <i class="bi bi-plus-lg me-1"></i>新增功能
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" onclick="initializeFeatures()" title="同步系統功能定義">
+                            <i class="bi bi-arrow-repeat me-1"></i>同步功能
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 統計卡片 -->
@@ -322,7 +324,10 @@
                             <div class="empty-state">
                                 <i class="bi bi-puzzle text-gray-300"></i>
                                 <h5>尚無功能資料</h5>
-                                <p>點擊「新增功能」建立第一個功能</p>
+                                <p>點擊下方按鈕初始化系統功能</p>
+                                <button class="btn btn-primary mt-3" onclick="initializeFeatures()">
+                                    <i class="bi bi-gear me-1"></i>初始化功能
+                                </button>
                             </div>
                         </td>
                     </tr>`;
@@ -391,6 +396,25 @@
             document.getElementById('freeFeatures').textContent = formatNumber(free);
             document.getElementById('paidFeatures').textContent = formatNumber(paid);
             document.getElementById('totalSubscriptions').textContent = formatNumber(subs);
+        }
+
+        /**
+         * 初始化系統功能
+         */
+        async function initializeFeatures() {
+            const confirmed = await showConfirm('確定要初始化系統功能嗎？這將從系統設定建立所有功能定義。');
+            if (!confirmed) return;
+
+            try {
+                const result = await api.post('/api/admin/features/initialize');
+                if (result.success) {
+                    showSuccess('功能初始化成功');
+                    loadFeatures();
+                }
+            } catch (error) {
+                console.error('初始化功能失敗:', error);
+                showError('初始化功能失敗');
+            }
         }
 
         /**
@@ -464,11 +488,13 @@
             }
 
             // 編輯模式 - 調用 PUT API
+            const featureType = document.getElementById('featureType').value;
             const data = {
                 name: document.getElementById('featureName').value,
                 description: document.getElementById('featureDescription').value,
                 isActive: document.getElementById('featureEnabled').checked,
-                monthlyPoints: parseInt(document.getElementById('monthlyPoints').value) || 0,
+                isFree: featureType === 'FREE',
+                monthlyPoints: featureType === 'PAID' ? (parseInt(document.getElementById('monthlyPoints').value) || 0) : 0,
                 sortOrder: parseInt(document.getElementById('featureSort').value) || 0
             };
 

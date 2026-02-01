@@ -8,10 +8,13 @@ static/
 │   ├── common.css   # 共用樣式、CSS 變數
 │   ├── admin.css    # 超管後台樣式
 │   └── tenant.css   # 店家後台樣式
-└── js/
-    ├── common.js    # 共用函式（API、Token、通知）
-    ├── admin.js     # 超管後台 JS
-    └── tenant.js    # 店家後台 JS
+├── js/
+│   ├── common.js    # 共用函式（API、Token、通知）
+│   ├── admin.js     # 超管後台 JS
+│   ├── tenant.js    # 店家後台 JS
+│   └── notification.js  # SSE 即時通知
+└── sounds/
+    └── notification.mp3  # 通知音效
 ```
 
 ---
@@ -90,6 +93,30 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAdminAuth();  // 檢查管理員登入
     loadDashboardData();
 });
+```
+
+---
+
+## notification.js 即時通知
+
+### SSE 事件類型
+
+| 事件 | 說明 |
+|------|------|
+| new_booking | 新預約通知 |
+| booking_updated | 預約更新通知 |
+| booking_status_changed | 預約狀態變更 |
+| booking_cancelled | 預約取消通知 |
+
+### 使用方式
+
+notification.js 已在 tenant/layout.html 引入，自動連接 SSE 端點。
+
+```javascript
+// 收到新預約時
+// 1. 播放通知音效
+// 2. 顯示 Toast 通知
+// 3. 刷新預約列表（如在預約頁面）
 ```
 
 ---

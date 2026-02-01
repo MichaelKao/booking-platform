@@ -47,9 +47,19 @@ public class FeatureService {
     // ========================================
 
     /**
-     * 取得所有功能定義
+     * 取得所有功能定義（包含停用的），供管理員使用
      */
     public List<FeatureResponse> getAllFeatures() {
+        return featureRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(featureMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 取得啟用中的功能定義
+     */
+    public List<FeatureResponse> getActiveFeatures() {
         return featureRepository.findByIsActiveTrueOrderBySortOrderAsc()
                 .stream()
                 .map(featureMapper::toResponse)
@@ -123,6 +133,14 @@ public class FeatureService {
 
         if (request.getIsActive() != null) {
             feature.setIsActive(request.getIsActive());
+        }
+
+        if (request.getIsFree() != null) {
+            feature.setIsFree(request.getIsFree());
+            // 如果設為免費，清除月費
+            if (request.getIsFree()) {
+                feature.setMonthlyPoints(0);
+            }
         }
 
         if (request.getMonthlyPoints() != null) {

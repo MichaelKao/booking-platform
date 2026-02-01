@@ -19,6 +19,7 @@ import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.service.line.LineNotificationService;
+import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -50,6 +51,7 @@ public class BookingService {
     private final CustomerRepository customerRepository;
     private final BookingMapper bookingMapper;
     private final LineNotificationService lineNotificationService;
+    private final SseNotificationService sseNotificationService;
 
     // ========================================
     // 查詢方法
@@ -240,7 +242,13 @@ public class BookingService {
 
         log.info("預約建立成功，ID：{}", entity.getId());
 
-        return bookingMapper.toResponse(entity);
+        // ========================================
+        // 7. 推送 SSE 通知到後台
+        // ========================================
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyNewBooking(tenantId, response);
+
+        return response;
     }
 
     /**
@@ -430,7 +438,13 @@ public class BookingService {
             lineNotificationService.sendBookingModificationNotification(entity, changeDescription.toString());
         }
 
-        return bookingMapper.toResponse(entity);
+        // ========================================
+        // 11. 推送 SSE 通知到後台
+        // ========================================
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyBookingUpdated(tenantId, response);
+
+        return response;
     }
 
     // ========================================
@@ -463,7 +477,11 @@ public class BookingService {
         // 發送 LINE 通知
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.CONFIRMED, null);
 
-        return bookingMapper.toResponse(entity);
+        // 推送 SSE 通知到後台
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyBookingStatusChanged(tenantId, response, "CONFIRMED");
+
+        return response;
     }
 
     @Transactional
@@ -485,7 +503,11 @@ public class BookingService {
         // 發送 LINE 通知
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.COMPLETED, "感謝您的光臨，期待下次再見！");
 
-        return bookingMapper.toResponse(entity);
+        // 推送 SSE 通知到後台
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyBookingStatusChanged(tenantId, response, "COMPLETED");
+
+        return response;
     }
 
     @Transactional
@@ -515,7 +537,11 @@ public class BookingService {
         String message = reason != null ? "取消原因：" + reason : null;
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.CANCELLED, message);
 
-        return bookingMapper.toResponse(entity);
+        // 推送 SSE 通知到後台
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyBookingCancelled(tenantId, response);
+
+        return response;
     }
 
     @Transactional
@@ -537,6 +563,10 @@ public class BookingService {
         // 發送 LINE 通知
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.NO_SHOW, null);
 
-        return bookingMapper.toResponse(entity);
+        // 推送 SSE 通知到後台
+        BookingResponse response = bookingMapper.toResponse(entity);
+        sseNotificationService.notifyBookingStatusChanged(tenantId, response, "NO_SHOW");
+
+        return response;
     }
 }

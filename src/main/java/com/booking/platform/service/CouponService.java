@@ -331,6 +331,80 @@ public class CouponService {
         return couponMapper.toInstanceResponse(instance, coupon, customer.getDisplayName());
     }
 
+    /**
+     * 發放票券給顧客（簡化版，供 LINE Bot 使用）
+     *
+     * @param couponId   票券 ID
+     * @param customerId 顧客 ID
+     * @return 票券實例
+     */
+    @Transactional
+    public CouponInstance issueToCustomer(String couponId, String customerId) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("發放票券給顧客，票券ID：{}，顧客ID：{}", couponId, customerId);
+
+        // 取得票券定義
+        Coupon coupon = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(couponId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.COUPON_NOT_FOUND, "找不到指定的票券"
+                ));
+
+        // 檢查是否可發放
+        if (!coupon.canIssue()) {
+            throw new BusinessException(ErrorCode.COUPON_CANNOT_ISSUE, "此票券無法發放");
+        }
+
+        // 檢查每人限領數量
+        if (coupon.getLimitPerCustomer() != null) {
+            long issuedCount = couponInstanceRepository.countByCustomerAndCoupon(
+                    tenantId, couponId, customerId
+            );
+            if (issuedCount >= coupon.getLimitPerCustomer()) {
+                throw new BusinessException(ErrorCode.COUPON_LIMIT_EXCEEDED, "已達領取上限");
+            }
+        }
+
+        // 計算有效期
+        LocalDateTime validFrom = LocalDateTime.now();
+        LocalDateTime expiresAt = null;
+
+        if (coupon.getValidDays() != null) {
+            expiresAt = validFrom.plusDays(coupon.getValidDays());
+        } else if (coupon.getValidEndAt() != null) {
+            expiresAt = coupon.getValidEndAt();
+            if (coupon.getValidStartAt() != null) {
+                validFrom = coupon.getValidStartAt();
+            }
+        }
+
+        // 生成票券代碼
+        String code = generateCouponCode(tenantId);
+
+        // 建立票券實例
+        CouponInstance instance = CouponInstance.builder()
+                .couponId(couponId)
+                .customerId(customerId)
+                .code(code)
+                .status(CouponInstanceStatus.UNUSED)
+                .source("LINE")
+                .sourceDescription("透過 LINE Bot 領取")
+                .validFrom(validFrom)
+                .expiresAt(expiresAt)
+                .build();
+        instance.setTenantId(tenantId);
+
+        instance = couponInstanceRepository.save(instance);
+
+        // 更新票券已發出數量
+        coupon.issue();
+        couponRepository.save(coupon);
+
+        log.info("票券發放成功，票券實例ID：{}，代碼：{}", instance.getId(), code);
+
+        return instance;
+    }
+
     // ========================================
     // 票券核銷
     // ========================================

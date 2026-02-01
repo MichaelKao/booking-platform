@@ -59,6 +59,13 @@ public interface CouponRepository extends JpaRepository<Coupon, String> {
             String tenantId, CouponStatus status
     );
 
+    /**
+     * 查詢指定狀態的票券
+     */
+    List<Coupon> findByTenantIdAndStatusAndDeletedAtIsNull(
+            String tenantId, CouponStatus status
+    );
+
     long countByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, CouponStatus status);
 
     boolean existsByTenantIdAndNameAndDeletedAtIsNull(String tenantId, String name);

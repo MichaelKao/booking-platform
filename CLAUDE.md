@@ -150,6 +150,12 @@ POST /api/auth/logout             # 登出
 POST /api/line/webhook/{tenantCode}
 ```
 
+### 即時通知 (SSE)
+
+```
+GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
+```
+
 ---
 
 ## 頁面路由
@@ -208,6 +214,7 @@ POST /api/line/webhook/{tenantCode}
 
 ## LINE Bot 對話狀態機
 
+### 預約流程
 ```
 IDLE（閒置）
   ↓ 用戶說「預約」
@@ -222,6 +229,27 @@ SELECTING_TIME（選擇時段）
 CONFIRMING_BOOKING（確認預約）
   ↓ 確認
 IDLE（完成，回到閒置）
+```
+
+### 取消預約流程
+```
+IDLE → CONFIRMING_CANCEL_BOOKING → IDLE
+```
+
+### 商品購買流程
+```
+IDLE → BROWSING_PRODUCTS → VIEWING_PRODUCT_DETAIL → SELECTING_QUANTITY → CONFIRMING_PURCHASE → IDLE
+```
+
+### 票券領取流程
+```
+IDLE → BROWSING_COUPONS → IDLE
+IDLE → VIEWING_MY_COUPONS → IDLE
+```
+
+### 會員資訊
+```
+IDLE → VIEWING_MEMBER_INFO → IDLE
 ```
 
 Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
@@ -248,12 +276,12 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 23 |
-| Service | 25 |
+| Controller | 24 |
+| Service | 26 |
 | Entity | 18 |
 | Repository | 18 |
 | DTO | 60+ |
 | Enum | 19 |
 | HTML 頁面 | 33 |
 | CSS 檔案 | 3 |
-| JS 檔案 | 3 |
+| JS 檔案 | 4 |

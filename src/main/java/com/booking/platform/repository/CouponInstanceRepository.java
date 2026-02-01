@@ -127,6 +127,26 @@ public interface CouponInstanceRepository extends JpaRepository<CouponInstance, 
 
     boolean existsByTenantIdAndCodeAndDeletedAtIsNull(String tenantId, String code);
 
+    /**
+     * 查詢顧客是否已領取某票券
+     */
+    Optional<CouponInstance> findByCustomerIdAndCouponId(String customerId, String couponId);
+
+    /**
+     * 查詢顧客的所有票券
+     */
+    @Query("""
+            SELECT ci FROM CouponInstance ci
+            WHERE ci.customerId = :customerId
+            AND ci.tenantId = :tenantId
+            AND ci.deletedAt IS NULL
+            ORDER BY ci.createdAt DESC
+            """)
+    List<CouponInstance> findByCustomerIdAndTenantId(
+            @Param("customerId") String customerId,
+            @Param("tenantId") String tenantId
+    );
+
     // ========================================
     // 報表查詢
     // ========================================

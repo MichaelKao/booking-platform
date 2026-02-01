@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (25 個)
+## Service 列表 (26 個)
 
 ### 核心服務
 
@@ -50,7 +50,7 @@ public XxxResponse create(...) { }
 
 | Service | 說明 |
 |---------|------|
-| FeatureService | 功能定義與租戶功能訂閱 |
+| FeatureService | 功能定義與租戶功能訂閱 (getAllFeatures, getActiveFeatures, initializeFeatures, updateFeature 含 isFree) |
 | FeatureStoreService | 功能商店 (店家申請功能) |
 
 ### 報表與分析
@@ -84,6 +84,7 @@ public XxxResponse create(...) { }
 | Service | 說明 |
 |---------|------|
 | EmailService | Email 通知發送 |
+| SseNotificationService | SSE 即時通知 (新預約推送) |
 | EncryptionService | 加密服務 (AES-256-GCM) |
 
 ---
@@ -104,7 +105,8 @@ service/
 │   ├── LineFlexMessageBuilder
 │   └── LineConversationService
 ├── notification/       # 通知服務
-│   └── EmailService
+│   ├── EmailService
+│   └── SseNotificationService
 └── /                   # 核心服務
     ├── AuthService
     ├── BookingService

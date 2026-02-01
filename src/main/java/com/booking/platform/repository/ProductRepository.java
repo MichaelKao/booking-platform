@@ -101,4 +101,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      * 依 SKU 查詢商品
      */
     Optional<Product> findByTenantIdAndSkuAndDeletedAtIsNull(String tenantId, String sku);
+
+    /**
+     * 依狀態查詢商品
+     */
+    List<Product> findByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, ProductStatus status);
 }

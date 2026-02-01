@@ -19,7 +19,7 @@
 | ServiceStatus | ACTIVE, INACTIVE | 服務狀態 |
 | ProductStatus | ON_SALE, OFF_SHELF, ARCHIVED | 商品狀態 |
 | CouponStatus | DRAFT, PUBLISHED, PAUSED, ENDED | 票券狀態 |
-| CouponInstanceStatus | AVAILABLE, REDEEMED, EXPIRED, REFUNDED | 票券實例狀態 |
+| CouponInstanceStatus | UNUSED, USED, EXPIRED, VOIDED | 票券實例狀態 |
 | CampaignStatus | DRAFT, PUBLISHED, PAUSED, ENDED | 行銷活動狀態 |
 
 ### 系統狀態
@@ -48,7 +48,7 @@
 
 | Enum | 值 | 說明 |
 |------|-----|------|
-| ConversationState | IDLE, SELECTING_SERVICE, SELECTING_STAFF, SELECTING_DATE, SELECTING_TIME, CONFIRMING_BOOKING | 對話狀態 |
+| ConversationState | IDLE, SELECTING_SERVICE, SELECTING_STAFF, SELECTING_DATE, SELECTING_TIME, CONFIRMING_BOOKING, CONFIRMING_CANCEL_BOOKING, BROWSING_PRODUCTS, VIEWING_PRODUCT_DETAIL, SELECTING_QUANTITY, CONFIRMING_PURCHASE, BROWSING_COUPONS, VIEWING_MY_COUPONS, VIEWING_MEMBER_INFO | 對話狀態 |
 | LineEventType | MESSAGE, FOLLOW, UNFOLLOW, POSTBACK | LINE 事件類型 |
 | LineConfigStatus | ACTIVE, INACTIVE | LINE 設定狀態 |
 
@@ -101,11 +101,11 @@ DRAFT → PUBLISHED → PAUSED → ENDED
 ### 票券實例狀態流轉
 
 ```
-AVAILABLE → REDEEMED
-         ↘
-          EXPIRED
-         ↘
-          REFUNDED
+UNUSED → USED
+      ↘
+       EXPIRED
+      ↘
+       VOIDED
 ```
 
 ---

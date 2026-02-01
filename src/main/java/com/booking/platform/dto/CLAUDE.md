@@ -149,7 +149,7 @@ public class CreateXxxRequest {
 | DTO | 說明 |
 |-----|------|
 | ApplyFeatureRequest | 申請功能訂閱 |
-| UpdateFeatureRequest | 更新功能 |
+| UpdateFeatureRequest | 更新功能 (name, description, isActive, isFree, monthlyPoints, icon, category, sortOrder) |
 | FeatureResponse | 功能定義 |
 | TenantFeatureResponse | 租戶功能訂閱狀態 |
 | FeatureStoreItemResponse | 功能商店項目 |
@@ -176,7 +176,34 @@ public class CreateXxxRequest {
 
 | DTO | 說明 |
 |-----|------|
-| ConversationContext | 對話上下文 |
+| ConversationContext | 對話上下文（詳見下方） |
+
+#### ConversationContext 欄位
+
+**預約相關**
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| selectedServiceId | String | 選擇的服務 ID |
+| selectedServiceName | String | 選擇的服務名稱 |
+| selectedStaffId | String | 選擇的員工 ID |
+| selectedStaffName | String | 選擇的員工名稱 |
+| selectedDate | String | 選擇的日期 (YYYY-MM-DD) |
+| selectedTime | String | 選擇的時間 (HH:mm) |
+| cancelBookingId | String | 欲取消的預約 ID |
+
+**商品相關**
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| selectedProductId | String | 選擇的商品 ID |
+| selectedProductName | String | 選擇的商品名稱 |
+| selectedProductPrice | Integer | 選擇的商品價格 |
+| selectedQuantity | Integer | 選擇的數量 |
+
+**票券相關**
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| selectedCouponId | String | 選擇的票券 ID |
+| selectedCouponName | String | 選擇的票券名稱 |
 
 ---
 
