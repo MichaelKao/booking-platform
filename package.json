@@ -1,0 +1,22 @@
+{
+  "name": "booking-platform",
+  "version": "1.0.0",
+  "description": "Multi-tenant Booking Platform with LINE Bot Integration",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:report": "npx playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKao/booking-platform.git"
+  },
+  "keywords": ["booking", "platform", "line-bot", "spring-boot"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.1"
+  }
+}

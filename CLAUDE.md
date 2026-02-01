@@ -160,6 +160,15 @@ POST /api/line/webhook/{tenantCode}
 GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 ```
 
+**SSE 事件類型：**
+| 事件 | 觸發時機 | 說明 |
+|------|----------|------|
+| `connected` | 連線建立 | 確認 SSE 連線成功 |
+| `new_booking` | 新預約建立 | 顯示通知、播放音效、刷新列表 |
+| `booking_updated` | 預約編輯 | 刷新列表 |
+| `booking_status_changed` | 狀態變更 | 確認/完成/爽約時觸發 |
+| `booking_cancelled` | 預約取消 | 刷新列表 |
+
 ---
 
 ## 頁面路由
@@ -283,6 +292,31 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 ---
 
+## E2E 測試
+
+使用 Playwright 進行端對端測試：
+
+```bash
+# 執行所有測試
+npx playwright test
+
+# 執行特定測試
+npx playwright test tests/06-sse-notifications.spec.ts
+```
+
+**測試套件 (73 tests)：**
+| 檔案 | 說明 |
+|------|------|
+| `00-setup.spec.ts` | 環境檢查 |
+| `01-auth.spec.ts` | 認證功能 |
+| `02-admin.spec.ts` | 超管後台 |
+| `03-tenant-dashboard.spec.ts` | 店家後台 |
+| `04-tenant-features.spec.ts` | API 測試 |
+| `05-feature-store.spec.ts` | 功能商店 |
+| `06-sse-notifications.spec.ts` | SSE 即時通知 |
+
+---
+
 ## 統計數據
 
 | 項目 | 數量 |
@@ -296,3 +330,4 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 | HTML 頁面 | 34 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
+| E2E 測試 | 73 |

@@ -63,12 +63,21 @@ function initNotificationService() {
  */
 function initNotificationSound() {
     try {
+        // 嘗試載入音效檔案
         notificationSound = new Audio(NotificationConfig.soundFile);
         notificationSound.volume = 0.5;
+
+        // 檢查音效是否可用，如果不可用則使用 Web Audio API
+        notificationSound.onerror = () => {
+            console.log('使用 Web Audio API 作為通知音效');
+            notificationSound = null;
+        };
+
         // 預載音效
         notificationSound.load();
     } catch (e) {
-        console.warn('無法初始化通知音效:', e);
+        console.warn('無法初始化通知音效，將使用 Web Audio API:', e);
+        notificationSound = null;
     }
 }
 
@@ -340,16 +349,69 @@ function getStatusText(status) {
  * 播放通知音效
  */
 function playNotificationSound() {
-    if (!soundEnabled || !notificationSound) return;
+    if (!soundEnabled) return;
 
+    // 如果有音效檔案，使用它
+    if (notificationSound) {
+        try {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(e => {
+                console.debug('無法播放音效（可能需要使用者互動）:', e);
+                // 嘗試使用 Web Audio API 作為備用
+                playBeepSound();
+            });
+            return;
+        } catch (e) {
+            console.debug('播放音效失敗:', e);
+        }
+    }
+
+    // 使用 Web Audio API 播放簡單的提示音
+    playBeepSound();
+}
+
+/**
+ * 使用 Web Audio API 播放簡單的提示音
+ */
+function playBeepSound() {
     try {
-        // 重設播放位置
-        notificationSound.currentTime = 0;
-        notificationSound.play().catch(e => {
-            console.debug('無法播放音效（可能需要使用者互動）:', e);
-        });
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // 建立振盪器
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // 設定音調（較高的頻率，聽起來像通知聲）
+        oscillator.frequency.value = 880; // A5 音符
+        oscillator.type = 'sine';
+
+        // 設定音量漸變
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        // 播放
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+
+        // 第二個音（形成雙音提示）
+        setTimeout(() => {
+            const osc2 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioContext.destination);
+            osc2.frequency.value = 1100; // 更高的音
+            osc2.type = 'sine';
+            gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            osc2.start(audioContext.currentTime);
+            osc2.stop(audioContext.currentTime + 0.2);
+        }, 150);
+
     } catch (e) {
-        console.debug('播放音效失敗:', e);
+        console.debug('Web Audio API 不可用:', e);
     }
 }
 
