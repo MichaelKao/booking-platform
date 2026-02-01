@@ -296,7 +296,7 @@
             try {
                 const r = await api.get('/api/customers', { size: 200 });
                 if (r.success && r.data) {
-                    const customers = r.data.content || r.data || [];
+                    const customers = r.data?.content || r.data || [];
                     document.getElementById('bookingCustomer').innerHTML = '<option value="">請選擇顧客</option>' +
                         customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.phone ? ` (${c.phone})` : ''}</option>`).join('');
                 }
@@ -318,7 +318,7 @@
             try {
                 const r = await api.get('/api/staff', { status: 'ACTIVE' });
                 if (r.success && r.data) {
-                    const staffList = r.data.content || r.data || [];
+                    const staffList = r.data?.content || r.data || [];
                     document.getElementById('bookingStaff').innerHTML = '<option value="">不指定（系統自動分配）</option>' +
                         staffList.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
                 }

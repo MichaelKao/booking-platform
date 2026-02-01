@@ -214,7 +214,7 @@
             try {
                 const r = await api.get('/api/customers', params);
                 if (r.success && r.data) {
-                    renderData(r.data.content || []);
+                    renderData(r.data?.content || r.data || []);
                     renderTableInfo(r.data);
                     renderPagination(r.data, loadData);
                 }
