@@ -295,10 +295,10 @@
                     document.getElementById('descCount').textContent = (r.data.description || '').length;
 
                     // 營業設定
-                    if (r.data.businessStartTime) document.getElementById('businessStart').value = r.data.businessStartTime;
-                    if (r.data.businessEndTime) document.getElementById('businessEnd').value = r.data.businessEndTime;
-                    if (r.data.slotInterval) document.getElementById('slotInterval').value = r.data.slotInterval;
-                    if (r.data.advanceBookingDays) document.getElementById('advanceBookingDays').value = r.data.advanceBookingDays;
+                    if (r.data.businessStartTime) document.getElementById('businessStart').value = r.data.businessStartTime.substring(0, 5);
+                    if (r.data.businessEndTime) document.getElementById('businessEnd').value = r.data.businessEndTime.substring(0, 5);
+                    if (r.data.bookingInterval) document.getElementById('slotInterval').value = r.data.bookingInterval;
+                    if (r.data.maxAdvanceBookingDays) document.getElementById('advanceBookingDays').value = r.data.maxAdvanceBookingDays;
 
                     // 通知設定
                     if (r.data.notifyNewBooking !== undefined) document.getElementById('notifyNewBooking').checked = r.data.notifyNewBooking;
@@ -391,8 +391,8 @@
             const data = {
                 businessStartTime: startEl.value,
                 businessEndTime: endEl.value,
-                slotInterval: parseInt(document.getElementById('slotInterval').value),
-                advanceBookingDays: days
+                bookingInterval: parseInt(document.getElementById('slotInterval').value),
+                maxAdvanceBookingDays: days
             };
 
             const btn = document.getElementById('saveBusinessBtn');
