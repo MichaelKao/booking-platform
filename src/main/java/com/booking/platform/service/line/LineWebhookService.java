@@ -4,10 +4,12 @@ import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.line.ConversationContext;
 import com.booking.platform.dto.request.CreateBookingRequest;
 import com.booking.platform.dto.response.BookingResponse;
+import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.line.LineUser;
 import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.enums.line.ConversationState;
 import com.booking.platform.enums.line.LineEventType;
+import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.BookingService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,10 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,6 +54,7 @@ public class LineWebhookService {
     private final LineConversationService conversationService;
     private final LineFlexMessageBuilder flexMessageBuilder;
     private final BookingService bookingService;
+    private final BookingRepository bookingRepository;
 
     // ========================================
     // 關鍵字
@@ -430,8 +437,30 @@ public class LineWebhookService {
      * 處理查看預約
      */
     private void handleViewBookings(String tenantId, String userId, String replyToken) {
-        // TODO: 實際查詢預約列表
-        messageService.replyText(tenantId, replyToken, "此功能開發中，敬請期待！");
+        try {
+            // 取得顧客 ID
+            String customerId = lineUserService.getCustomerId(tenantId, userId);
+
+            if (customerId == null) {
+                messageService.replyText(tenantId, replyToken, "您目前沒有預約記錄。");
+                return;
+            }
+
+            // 查詢預約（最近 10 筆）
+            Page<Booking> bookingsPage = bookingRepository.findByCustomerId(
+                    tenantId, customerId, PageRequest.of(0, 10)
+            );
+
+            List<Booking> bookings = bookingsPage.getContent();
+
+            // 建構預約列表訊息
+            JsonNode bookingList = flexMessageBuilder.buildBookingList(bookings);
+            messageService.replyFlex(tenantId, replyToken, "我的預約", bookingList);
+
+        } catch (Exception e) {
+            log.error("查詢預約失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            messageService.replyText(tenantId, replyToken, "查詢預約失敗，請稍後再試。");
+        }
     }
 
     // ========================================

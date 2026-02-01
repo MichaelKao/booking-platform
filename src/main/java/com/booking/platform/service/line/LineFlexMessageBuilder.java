@@ -1,9 +1,11 @@
 package com.booking.platform.service.line;
 
 import com.booking.platform.dto.line.ConversationContext;
+import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.catalog.ServiceItem;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.tenant.Tenant;
+import com.booking.platform.enums.BookingStatus;
 import com.booking.platform.enums.ServiceStatus;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.repository.ServiceItemRepository;
@@ -840,6 +842,261 @@ public class LineFlexMessageBuilder {
         bubble.set("footer", footer);
 
         return bubble;
+    }
+
+    /**
+     * 建構預約列表訊息
+     *
+     * @param bookings 預約列表
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBookingList(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
+            // 無預約時顯示空狀態
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "md");
+            body.put("paddingAll", "20px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            ObjectNode emptyIcon = objectMapper.createObjectNode();
+            emptyIcon.put("type", "text");
+            emptyIcon.put("text", "\uD83D\uDCC5");
+            emptyIcon.put("size", "3xl");
+            emptyIcon.put("align", "center");
+            bodyContents.add(emptyIcon);
+
+            ObjectNode emptyText = objectMapper.createObjectNode();
+            emptyText.put("type", "text");
+            emptyText.put("text", "目前沒有預約");
+            emptyText.put("size", "lg");
+            emptyText.put("align", "center");
+            emptyText.put("color", SECONDARY_COLOR);
+            emptyText.put("margin", "lg");
+            bodyContents.add(emptyText);
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            // Footer
+            ObjectNode footer = objectMapper.createObjectNode();
+            footer.put("type", "box");
+            footer.put("layout", "vertical");
+            footer.put("paddingAll", "15px");
+
+            footer.set("contents", objectMapper.createArrayNode().add(
+                    createButton("立即預約", "action=start_booking", PRIMARY_COLOR)
+            ));
+            bubble.set("footer", footer);
+
+            return bubble;
+        }
+
+        // 有預約時顯示列表
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        for (Booking booking : bookings) {
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // Header with status
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", getStatusColor(booking.getStatus()));
+            header.put("paddingAll", "10px");
+
+            ObjectNode statusText = objectMapper.createObjectNode();
+            statusText.put("type", "text");
+            statusText.put("text", getStatusText(booking.getStatus()));
+            statusText.put("size", "sm");
+            statusText.put("color", "#FFFFFF");
+            statusText.put("align", "center");
+            statusText.put("weight", "bold");
+
+            header.set("contents", objectMapper.createArrayNode().add(statusText));
+            bubble.set("header", header);
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "sm");
+            body.put("paddingAll", "15px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            // 服務名稱
+            ObjectNode serviceName = objectMapper.createObjectNode();
+            serviceName.put("type", "text");
+            serviceName.put("text", booking.getServiceName());
+            serviceName.put("size", "lg");
+            serviceName.put("weight", "bold");
+            bodyContents.add(serviceName);
+
+            // 日期時間
+            ObjectNode dateTime = objectMapper.createObjectNode();
+            dateTime.put("type", "text");
+            dateTime.put("text", booking.getBookingDate().format(DateTimeFormatter.ofPattern("M/d (E)")) +
+                    " " + booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+            dateTime.put("size", "md");
+            dateTime.put("color", SECONDARY_COLOR);
+            bodyContents.add(dateTime);
+
+            // 員工
+            if (booking.getStaffName() != null) {
+                ObjectNode staffName = objectMapper.createObjectNode();
+                staffName.put("type", "text");
+                staffName.put("text", "服務人員：" + booking.getStaffName());
+                staffName.put("size", "sm");
+                staffName.put("color", SECONDARY_COLOR);
+                bodyContents.add(staffName);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構預約狀態通知訊息
+     *
+     * @param booking   預約
+     * @param newStatus 新狀態
+     * @param message   附加訊息
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBookingStatusNotification(Booking booking, BookingStatus newStatus, String message) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", getStatusColor(newStatus));
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode title = objectMapper.createObjectNode();
+        title.put("type", "text");
+        title.put("text", getNotificationTitle(newStatus));
+        title.put("size", "lg");
+        title.put("weight", "bold");
+        title.put("color", "#FFFFFF");
+        title.put("align", "center");
+        headerContents.add(title);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 預約詳情
+        bodyContents.add(createInfoRow("服務項目", booking.getServiceName()));
+        bodyContents.add(createInfoRow("日期",
+                booking.getBookingDate().format(DateTimeFormatter.ofPattern("yyyy年M月d日 (E)"))));
+        bodyContents.add(createInfoRow("時間",
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
+                        booking.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"))));
+
+        if (booking.getStaffName() != null) {
+            bodyContents.add(createInfoRow("服務人員", booking.getStaffName()));
+        }
+
+        // 附加訊息
+        if (message != null && !message.isEmpty()) {
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "lg");
+            bodyContents.add(separator);
+
+            ObjectNode messageText = objectMapper.createObjectNode();
+            messageText.put("type", "text");
+            messageText.put("text", message);
+            messageText.put("size", "sm");
+            messageText.put("color", SECONDARY_COLOR);
+            messageText.put("wrap", true);
+            messageText.put("margin", "lg");
+            bodyContents.add(messageText);
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("查看我的預約", "action=view_bookings", LINK_COLOR)
+        ));
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 取得狀態顏色
+     */
+    private String getStatusColor(BookingStatus status) {
+        return switch (status) {
+            case PENDING -> "#FFA500";       // 橙色 - 待確認
+            case CONFIRMED -> PRIMARY_COLOR; // 綠色 - 已確認
+            case COMPLETED -> "#4CAF50";     // 綠色 - 已完成
+            case CANCELLED -> "#9E9E9E";     // 灰色 - 已取消
+            case NO_SHOW -> "#F44336";       // 紅色 - 未到
+        };
+    }
+
+    /**
+     * 取得狀態文字
+     */
+    private String getStatusText(BookingStatus status) {
+        return switch (status) {
+            case PENDING -> "待確認";
+            case CONFIRMED -> "已確認";
+            case COMPLETED -> "已完成";
+            case CANCELLED -> "已取消";
+            case NO_SHOW -> "未到";
+        };
+    }
+
+    /**
+     * 取得通知標題
+     */
+    private String getNotificationTitle(BookingStatus status) {
+        return switch (status) {
+            case CONFIRMED -> "預約已確認 ✓";
+            case CANCELLED -> "預約已取消";
+            case COMPLETED -> "服務已完成";
+            case NO_SHOW -> "預約標記為未到";
+            default -> "預約狀態更新";
+        };
     }
 
     // ========================================

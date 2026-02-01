@@ -17,6 +17,7 @@ import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
+import com.booking.platform.service.line.LineNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ public class BookingService {
     private final StaffRepository staffRepository;
     private final CustomerRepository customerRepository;
     private final BookingMapper bookingMapper;
+    private final LineNotificationService lineNotificationService;
 
     // ========================================
     // 查詢方法
@@ -266,6 +268,9 @@ public class BookingService {
 
         log.info("預約確認成功，ID：{}", entity.getId());
 
+        // 發送 LINE 通知
+        lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.CONFIRMED, null);
+
         return bookingMapper.toResponse(entity);
     }
 
@@ -284,6 +289,9 @@ public class BookingService {
         entity = bookingRepository.save(entity);
 
         log.info("預約完成，ID：{}", entity.getId());
+
+        // 發送 LINE 通知
+        lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.COMPLETED, "感謝您的光臨，期待下次再見！");
 
         return bookingMapper.toResponse(entity);
     }
@@ -311,6 +319,10 @@ public class BookingService {
 
         log.info("預約取消成功，ID：{}", entity.getId());
 
+        // 發送 LINE 通知
+        String message = reason != null ? "取消原因：" + reason : null;
+        lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.CANCELLED, message);
+
         return bookingMapper.toResponse(entity);
     }
 
@@ -329,6 +341,9 @@ public class BookingService {
         entity = bookingRepository.save(entity);
 
         log.info("已標記爽約，ID：{}", entity.getId());
+
+        // 發送 LINE 通知
+        lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.NO_SHOW, null);
 
         return bookingMapper.toResponse(entity);
     }
