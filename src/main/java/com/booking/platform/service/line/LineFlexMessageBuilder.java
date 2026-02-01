@@ -752,13 +752,22 @@ public class LineFlexMessageBuilder {
             effectiveEnd = effectiveEnd.isAfter(staffEnd) ? staffEnd : effectiveEnd;
         }
 
-        // 如果是今天，從下一個時段開始
+        // 如果是今天，過濾掉已過去的時段（加上 30 分鐘緩衝）
         if (date.equals(LocalDate.now())) {
             LocalTime now = LocalTime.now();
-            // 計算下一個可用時段
-            int minutesPastStart = (now.getHour() * 60 + now.getMinute()) - (effectiveStart.getHour() * 60 + effectiveStart.getMinute());
-            if (minutesPastStart >= 0) {
-                int slotsToSkip = (minutesPastStart / interval) + 1;
+            LocalTime minBookingTime = now.plusMinutes(30); // 至少要 30 分鐘後才能預約
+
+            // 如果最早可預約時間已經超過營業結束時間，返回空
+            if (minBookingTime.isAfter(effectiveEnd) || minBookingTime.equals(effectiveEnd)) {
+                return slots;
+            }
+
+            // 調整開始時間為下一個可用時段
+            if (minBookingTime.isAfter(effectiveStart)) {
+                // 計算需要跳過幾個時段
+                int minutesPastStart = (minBookingTime.getHour() * 60 + minBookingTime.getMinute())
+                        - (effectiveStart.getHour() * 60 + effectiveStart.getMinute());
+                int slotsToSkip = (int) Math.ceil((double) minutesPastStart / interval);
                 effectiveStart = effectiveStart.plusMinutes((long) slotsToSkip * interval);
             }
         }

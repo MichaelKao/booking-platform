@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initUserDropdown();
     checkAuth();
     loadPointsBalance();
+    checkFeatureSubscriptions();
 });
 
 /**
@@ -31,6 +32,41 @@ function checkAuth() {
     // 檢查是否有 Token
     if (!isLoggedIn()) {
         window.location.href = '/tenant/login';
+    }
+}
+
+/**
+ * 檢查功能訂閱狀態，隱藏未訂閱的選單項目
+ */
+async function checkFeatureSubscriptions() {
+    // 如果未登入，不檢查
+    if (!isLoggedIn()) return;
+
+    try {
+        const result = await api.get('/api/feature-store');
+        if (result.success && result.data) {
+            // 建立已啟用功能的 Set
+            const enabledFeatures = new Set();
+            result.data.forEach(feature => {
+                if (feature.isEnabled) {
+                    enabledFeatures.add(feature.code);
+                }
+            });
+
+            // 檢查側邊欄中需要功能訂閱的選單項目
+            document.querySelectorAll('[data-feature]').forEach(el => {
+                const requiredFeature = el.getAttribute('data-feature');
+                if (!enabledFeatures.has(requiredFeature)) {
+                    // 未訂閱此功能，隱藏選單項目
+                    el.style.display = 'none';
+                } else {
+                    // 已訂閱，確保顯示
+                    el.style.display = '';
+                }
+            });
+        }
+    } catch (error) {
+        console.error('檢查功能訂閱失敗:', error);
     }
 }
 

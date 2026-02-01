@@ -219,15 +219,16 @@ public class FeatureStoreService {
         // 5. 建立或更新訂閱
         // ========================================
 
+        // 查詢功能訂閱記錄（包含已刪除的，用於重新訂閱）
         TenantFeature tf = tenantFeatureRepository
-                .findByTenantIdAndFeatureCodeAndDeletedAtIsNull(tenantId, featureCode)
+                .findByTenantIdAndFeatureCode(tenantId, featureCode)
                 .orElse(null);
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiry;
 
         if (tf == null) {
-            // 新訂閱
+            // 全新訂閱
             expiry = isFree ? null : now.plusMonths(months);
             tf = TenantFeature.builder()
                     .featureCode(featureCode)
@@ -236,8 +237,15 @@ public class FeatureStoreService {
                     .expiresAt(expiry)
                     .build();
             tf.setTenantId(tenantId);
+        } else if (tf.getDeletedAt() != null) {
+            // 重新訂閱（之前取消過）
+            expiry = isFree ? null : now.plusMonths(months);
+            tf.setDeletedAt(null);  // 清除刪除標記
+            tf.setStatus(FeatureStatus.ENABLED);
+            tf.setEnabledAt(now);
+            tf.setExpiresAt(expiry);
         } else {
-            // 續訂
+            // 續訂（目前訂閱中）
             LocalDateTime baseDate = tf.getExpiresAt() != null && tf.getExpiresAt().isAfter(now)
                     ? tf.getExpiresAt() : now;
             expiry = isFree ? null : baseDate.plusMonths(months);

@@ -259,17 +259,22 @@ public class FeatureService {
 
         validateTenantExists(tenantId);
 
-        // 取得或建立租戶功能記錄
+        // 取得或建立租戶功能記錄（包含已刪除的，用於重新啟用）
         TenantFeature tenantFeature = tenantFeatureRepository
-                .findByTenantIdAndFeatureCodeAndDeletedAtIsNull(tenantId, featureCode)
-                .orElseGet(() -> {
-                    TenantFeature newTf = TenantFeature.builder()
-                            .featureCode(featureCode)
-                            .status(FeatureStatus.AVAILABLE)
-                            .build();
-                    newTf.setTenantId(tenantId);
-                    return newTf;
-                });
+                .findByTenantIdAndFeatureCode(tenantId, featureCode)
+                .orElse(null);
+
+        if (tenantFeature == null) {
+            // 全新記錄
+            tenantFeature = TenantFeature.builder()
+                    .featureCode(featureCode)
+                    .status(FeatureStatus.AVAILABLE)
+                    .build();
+            tenantFeature.setTenantId(tenantId);
+        } else if (tenantFeature.getDeletedAt() != null) {
+            // 重新啟用已刪除的記錄
+            tenantFeature.setDeletedAt(null);
+        }
 
         // 啟用功能
         tenantFeature.enable(operatorId, request.getExpiresAt());

@@ -34,9 +34,20 @@ public class ReportController {
      */
     @GetMapping("/summary")
     public ApiResponse<ReportSummaryResponse> getSummary(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range
     ) {
+        // 如果沒有提供日期，根據 range 計算
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1); // month
+            }
+        }
         ReportSummaryResponse result = reportService.getSummary(startDate, endDate);
         return ApiResponse.ok(result);
     }
@@ -86,9 +97,20 @@ public class ReportController {
      */
     @GetMapping("/daily")
     public ApiResponse<List<DailyReportResponse>> getDailyReport(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range
     ) {
+        // 如果沒有提供日期，根據 range 計算
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1); // month
+            }
+        }
         List<DailyReportResponse> result = reportService.getDailyReport(startDate, endDate);
         return ApiResponse.ok(result);
     }
@@ -102,10 +124,21 @@ public class ReportController {
      */
     @GetMapping("/top-services")
     public ApiResponse<List<TopItemResponse>> getTopServices(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range,
             @RequestParam(defaultValue = "10") int limit
     ) {
+        // 如果沒有提供日期，根據 range 計算
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1); // month
+            }
+        }
         List<TopItemResponse> result = reportService.getTopServices(startDate, endDate, limit);
         return ApiResponse.ok(result);
     }
@@ -115,10 +148,21 @@ public class ReportController {
      */
     @GetMapping("/top-staff")
     public ApiResponse<List<TopItemResponse>> getTopStaff(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range,
             @RequestParam(defaultValue = "10") int limit
     ) {
+        // 如果沒有提供日期，根據 range 計算
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1); // month
+            }
+        }
         List<TopItemResponse> result = reportService.getTopStaff(startDate, endDate, limit);
         return ApiResponse.ok(result);
     }

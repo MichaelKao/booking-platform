@@ -237,6 +237,10 @@
                     showSuccess(`「${name}」功能已開通！`);
                     loadFeatures();
                     loadPointBalance();
+                    // 更新側邊欄顯示
+                    if (typeof checkFeatureSubscriptions === 'function') {
+                        checkFeatureSubscriptions();
+                    }
                 }
             } catch (e) {
                 console.error('訂閱失敗:', e);
@@ -270,6 +274,10 @@
                     showSuccess(`已取消訂閱「${name}」功能`);
                     loadFeatures();
                     loadPointBalance();
+                    // 更新側邊欄顯示
+                    if (typeof checkFeatureSubscriptions === 'function') {
+                        checkFeatureSubscriptions();
+                    }
                 }
             } catch (e) {
                 console.error('取消訂閱失敗:', e);
