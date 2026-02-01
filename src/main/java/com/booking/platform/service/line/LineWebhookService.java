@@ -340,6 +340,15 @@ public class LineWebhookService {
             TenantContext.setTenantId(tenantId);
 
             // ========================================
+            // 取得或建立顧客 ID
+            // ========================================
+            String customerId = lineUserService.getOrCreateCustomerId(tenantId, userId);
+            if (customerId == null) {
+                messageService.replyText(tenantId, replyToken, "無法建立顧客資料，請稍後再試或聯繫店家。");
+                return;
+            }
+
+            // ========================================
             // 建立預約請求
             // ========================================
             CreateBookingRequest request = CreateBookingRequest.builder()
@@ -347,7 +356,7 @@ public class LineWebhookService {
                     .startTime(context.getSelectedTime())
                     .serviceId(context.getSelectedServiceId())
                     .staffId(context.getSelectedStaffId())
-                    .customerId(context.getCustomerId())
+                    .customerId(customerId)
                     .source("LINE")
                     .build();
 

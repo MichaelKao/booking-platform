@@ -251,6 +251,36 @@ public class LineUserService {
                 .orElse(null);
     }
 
+    /**
+     * 取得或建立 LINE 用戶的顧客 ID
+     *
+     * <p>如果 LINE 用戶沒有關聯的顧客，則自動建立一個
+     *
+     * @param tenantId   租戶 ID
+     * @param lineUserId LINE User ID
+     * @return 顧客 ID
+     */
+    @Transactional
+    public String getOrCreateCustomerId(String tenantId, String lineUserId) {
+        LineUser lineUser = lineUserRepository
+                .findByTenantIdAndLineUserIdAndDeletedAtIsNull(tenantId, lineUserId)
+                .orElse(null);
+
+        if (lineUser == null) {
+            log.warn("找不到 LINE 用戶，租戶：{}，LINE User：{}", tenantId, lineUserId);
+            return null;
+        }
+
+        // 如果已有顧客 ID，直接返回
+        if (lineUser.getCustomerId() != null) {
+            return lineUser.getCustomerId();
+        }
+
+        // 否則建立顧客
+        createCustomerForLineUser(tenantId, lineUser);
+        return lineUser.getCustomerId();
+    }
+
     // ========================================
     // 私有方法
     // ========================================
