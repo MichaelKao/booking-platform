@@ -158,6 +158,20 @@ public class SettingsService {
         }
 
         // ========================================
+        // 3.2 更新通知設定
+        // ========================================
+
+        if (request.getNotifyNewBooking() != null) {
+            tenant.setNotifyNewBooking(request.getNotifyNewBooking());
+        }
+        if (request.getNotifyBookingReminder() != null) {
+            tenant.setNotifyBookingReminder(request.getNotifyBookingReminder());
+        }
+        if (request.getNotifyBookingCancel() != null) {
+            tenant.setNotifyBookingCancel(request.getNotifyBookingCancel());
+        }
+
+        // ========================================
         // 4. 儲存更新
         // ========================================
 
@@ -209,6 +223,10 @@ public class SettingsService {
                 .closedDays(tenant.getClosedDays())
                 .breakStartTime(tenant.getBreakStartTime())
                 .breakEndTime(tenant.getBreakEndTime())
+                // 通知設定
+                .notifyNewBooking(tenant.getNotifyNewBooking())
+                .notifyBookingReminder(tenant.getNotifyBookingReminder())
+                .notifyBookingCancel(tenant.getNotifyBookingCancel())
                 .build();
     }
 }

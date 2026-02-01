@@ -175,4 +175,23 @@ public class SettingsResponse {
      * 休息結束時間（午休）
      */
     private LocalTime breakEndTime;
+
+    // ========================================
+    // 通知設定
+    // ========================================
+
+    /**
+     * 新預約通知
+     */
+    private Boolean notifyNewBooking;
+
+    /**
+     * 預約提醒通知
+     */
+    private Boolean notifyBookingReminder;
+
+    /**
+     * 取消預約通知
+     */
+    private Boolean notifyBookingCancel;
 }

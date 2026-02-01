@@ -265,6 +265,31 @@ public class Tenant extends BaseEntity {
     private LocalTime breakEndTime;
 
     // ========================================
+    // 通知設定
+    // ========================================
+
+    /**
+     * 新預約通知
+     */
+    @Column(name = "notify_new_booking")
+    @Builder.Default
+    private Boolean notifyNewBooking = true;
+
+    /**
+     * 預約提醒通知
+     */
+    @Column(name = "notify_booking_reminder")
+    @Builder.Default
+    private Boolean notifyBookingReminder = true;
+
+    /**
+     * 取消預約通知
+     */
+    @Column(name = "notify_booking_cancel")
+    @Builder.Default
+    private Boolean notifyBookingCancel = false;
+
+    // ========================================
     // 業務方法
     // ========================================
 
