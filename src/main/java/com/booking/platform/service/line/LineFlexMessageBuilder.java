@@ -1064,6 +1064,7 @@ public class LineFlexMessageBuilder {
      * 取得狀態顏色
      */
     private String getStatusColor(BookingStatus status) {
+        if (status == null) return SECONDARY_COLOR;
         return switch (status) {
             case PENDING -> "#FFA500";       // 橙色 - 待確認
             case CONFIRMED -> PRIMARY_COLOR; // 綠色 - 已確認
@@ -1077,6 +1078,7 @@ public class LineFlexMessageBuilder {
      * 取得狀態文字
      */
     private String getStatusText(BookingStatus status) {
+        if (status == null) return "未知";
         return switch (status) {
             case PENDING -> "待確認";
             case CONFIRMED -> "已確認";
