@@ -170,6 +170,98 @@
         </div>
     </div>
 
+    <!-- 請假管理 Modal -->
+    <div class="modal fade" id="leaveModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="bi bi-calendar-x me-2"></i>請假管理 - <span id="leaveStaffName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="leaveStaffId">
+
+                    <!-- 新增請假區塊 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-plus-circle me-2"></i>新增請假</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">請假日期 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="leaveDate" min="">
+                                    <div class="form-text">可選擇單一日期或使用下方快速選擇</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">請假類型</label>
+                                    <select class="form-select" id="leaveType">
+                                        <option value="PERSONAL">事假</option>
+                                        <option value="SICK">病假</option>
+                                        <option value="VACATION">休假</option>
+                                        <option value="ANNUAL">特休</option>
+                                        <option value="OTHER">其他</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">請假原因（選填）</label>
+                                    <input type="text" class="form-control" id="leaveReason" maxlength="200" placeholder="例如：家中有事、身體不適等">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">快速選擇</label>
+                                    <div class="btn-group flex-wrap" role="group">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectQuickDate('tomorrow')">明天</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectQuickDate('nextWeek')">下週一~五</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectQuickDate('thisWeekend')">本週末</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectQuickDate('nextWeekend')">下週末</button>
+                                    </div>
+                                </div>
+                                <div class="col-12" id="selectedDatesContainer" style="display: none;">
+                                    <label class="form-label">已選擇日期</label>
+                                    <div class="d-flex flex-wrap gap-2" id="selectedDatesList"></div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-warning" onclick="addLeave()">
+                                        <i class="bi bi-plus-lg me-1"></i>新增請假
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 已排定請假列表 -->
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-list-check me-2"></i>已排定請假</h6>
+                            <small class="text-muted">顯示未來 60 天內的請假</small>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>日期</th>
+                                            <th>星期</th>
+                                            <th>類型</th>
+                                            <th>原因</th>
+                                            <th class="text-center" style="width: 80px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaveTable">
+                                        <tr><td colspan="5" class="text-center text-muted py-4">載入中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
     <script>
         const currentPage = 'staff';
@@ -204,6 +296,7 @@
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-info" onclick="openScheduleModal('${s.id}', '${escapeHtml(s.name)}')" title="排班設定"><i class="bi bi-calendar-week"></i></button>
+                                <button class="btn btn-outline-warning" onclick="openLeaveModal('${s.id}', '${escapeHtml(s.name)}')" title="請假管理"><i class="bi bi-calendar-x"></i></button>
                                 <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
                             </div>
@@ -443,6 +536,201 @@
                 btn.querySelector('.btn-text').classList.remove('d-none');
                 btn.querySelector('.btn-loading').classList.add('d-none');
                 btn.disabled = false;
+            }
+        }
+
+        // ========================================
+        // 請假管理功能
+        // ========================================
+
+        let selectedLeaveDates = [];
+        const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+
+        async function openLeaveModal(staffId, staffName) {
+            document.getElementById('leaveStaffId').value = staffId;
+            document.getElementById('leaveStaffName').textContent = staffName;
+
+            // 設定日期選擇器最小值為今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('leaveDate').min = today;
+            document.getElementById('leaveDate').value = '';
+            document.getElementById('leaveReason').value = '';
+            document.getElementById('leaveType').value = 'PERSONAL';
+
+            // 清空已選日期
+            selectedLeaveDates = [];
+            updateSelectedDatesDisplay();
+
+            // 載入請假列表
+            await loadLeaves(staffId);
+
+            new bootstrap.Modal(document.getElementById('leaveModal')).show();
+        }
+
+        async function loadLeaves(staffId) {
+            try {
+                const r = await api.get(`/api/staff/${staffId}/leaves`);
+                const leaves = r.data || [];
+
+                document.getElementById('leaveTable').innerHTML = leaves.length === 0
+                    ? '<tr><td colspan="5" class="text-center text-muted py-4">目前沒有排定的請假</td></tr>'
+                    : leaves.map(l => {
+                        const date = new Date(l.leaveDate);
+                        const dayOfWeek = dayNames[date.getDay()];
+                        return `<tr>
+                            <td><span class="fw-bold">${l.leaveDate}</span></td>
+                            <td>週${dayOfWeek}</td>
+                            <td><span class="badge bg-${getLeaveTypeBadgeColor(l.leaveType)}">${l.leaveTypeDescription}</span></td>
+                            <td>${l.reason || '-'}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteLeave('${l.id}')" title="刪除">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                    }).join('');
+            } catch (e) {
+                console.error('載入請假列表失敗:', e);
+                document.getElementById('leaveTable').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">載入失敗</td></tr>';
+            }
+        }
+
+        function getLeaveTypeBadgeColor(type) {
+            const colors = {
+                'PERSONAL': 'secondary',
+                'SICK': 'danger',
+                'VACATION': 'success',
+                'ANNUAL': 'primary',
+                'OTHER': 'info'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        function selectQuickDate(type) {
+            const today = new Date();
+            selectedLeaveDates = [];
+
+            switch (type) {
+                case 'tomorrow':
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    selectedLeaveDates.push(formatDate(tomorrow));
+                    break;
+                case 'nextWeek':
+                    // 找到下週一
+                    const nextMonday = new Date(today);
+                    nextMonday.setDate(nextMonday.getDate() + (8 - nextMonday.getDay()) % 7);
+                    if (nextMonday <= today) nextMonday.setDate(nextMonday.getDate() + 7);
+                    for (let i = 0; i < 5; i++) {
+                        const d = new Date(nextMonday);
+                        d.setDate(d.getDate() + i);
+                        selectedLeaveDates.push(formatDate(d));
+                    }
+                    break;
+                case 'thisWeekend':
+                    const thisSat = new Date(today);
+                    thisSat.setDate(thisSat.getDate() + (6 - thisSat.getDay()));
+                    if (thisSat > today) {
+                        selectedLeaveDates.push(formatDate(thisSat));
+                        const thisSun = new Date(thisSat);
+                        thisSun.setDate(thisSun.getDate() + 1);
+                        selectedLeaveDates.push(formatDate(thisSun));
+                    }
+                    break;
+                case 'nextWeekend':
+                    const nextSat = new Date(today);
+                    nextSat.setDate(nextSat.getDate() + (6 - nextSat.getDay()) + 7);
+                    selectedLeaveDates.push(formatDate(nextSat));
+                    const nextSun = new Date(nextSat);
+                    nextSun.setDate(nextSun.getDate() + 1);
+                    selectedLeaveDates.push(formatDate(nextSun));
+                    break;
+            }
+
+            updateSelectedDatesDisplay();
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function updateSelectedDatesDisplay() {
+            const container = document.getElementById('selectedDatesContainer');
+            const list = document.getElementById('selectedDatesList');
+
+            if (selectedLeaveDates.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            list.innerHTML = selectedLeaveDates.map(d => {
+                const date = new Date(d);
+                const dayOfWeek = dayNames[date.getDay()];
+                return `<span class="badge bg-warning text-dark">${d} (週${dayOfWeek}) <i class="bi bi-x" style="cursor:pointer" onclick="removeSelectedDate('${d}')"></i></span>`;
+            }).join('');
+        }
+
+        function removeSelectedDate(date) {
+            selectedLeaveDates = selectedLeaveDates.filter(d => d !== date);
+            updateSelectedDatesDisplay();
+        }
+
+        async function addLeave() {
+            const staffId = document.getElementById('leaveStaffId').value;
+            const singleDate = document.getElementById('leaveDate').value;
+            const leaveType = document.getElementById('leaveType').value;
+            const reason = document.getElementById('leaveReason').value.trim();
+
+            // 決定使用單一日期還是多選日期
+            let dates = [];
+            if (selectedLeaveDates.length > 0) {
+                dates = [...selectedLeaveDates];
+            } else if (singleDate) {
+                dates = [singleDate];
+            } else {
+                showError('請選擇請假日期');
+                return;
+            }
+
+            try {
+                const r = await api.post(`/api/staff/${staffId}/leaves`, {
+                    leaveDates: dates,
+                    leaveType: leaveType,
+                    reason: reason || null,
+                    isFullDay: true
+                });
+
+                if (r.success) {
+                    showSuccess(`成功新增 ${dates.length} 筆請假`);
+                    // 清空選擇
+                    selectedLeaveDates = [];
+                    document.getElementById('leaveDate').value = '';
+                    document.getElementById('leaveReason').value = '';
+                    updateSelectedDatesDisplay();
+                    // 重新載入列表
+                    await loadLeaves(staffId);
+                }
+            } catch (e) {
+                console.error('新增請假失敗:', e);
+                showError('新增失敗: ' + (e.message || '請稍後再試'));
+            }
+        }
+
+        async function deleteLeave(leaveId) {
+            if (!await showConfirm('確定要刪除此請假記錄嗎？')) return;
+
+            const staffId = document.getElementById('leaveStaffId').value;
+
+            try {
+                const r = await api.delete(`/api/staff/${staffId}/leaves/${leaveId}`);
+                if (r.success) {
+                    showSuccess('請假記錄已刪除');
+                    await loadLeaves(staffId);
+                }
+            } catch (e) {
+                console.error('刪除請假失敗:', e);
+                showError('刪除失敗: ' + (e.message || '請稍後再試'));
             }
         }
     </script>

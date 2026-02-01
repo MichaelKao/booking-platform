@@ -2,8 +2,10 @@ package com.booking.platform.controller;
 
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.common.response.PageResponse;
+import com.booking.platform.dto.request.CreateStaffLeaveRequest;
 import com.booking.platform.dto.request.CreateStaffRequest;
 import com.booking.platform.dto.request.StaffScheduleRequest;
+import com.booking.platform.dto.response.StaffLeaveResponse;
 import com.booking.platform.dto.response.StaffResponse;
 import com.booking.platform.dto.response.StaffScheduleResponse;
 import com.booking.platform.enums.StaffStatus;
@@ -13,10 +15,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -102,5 +106,61 @@ public class StaffController {
     ) {
         log.info("收到更新員工排班請求，ID：{}", id);
         return ApiResponse.ok(staffService.updateSchedule(id, request));
+    }
+
+    // ========================================
+    // 請假管理 API
+    // ========================================
+
+    /**
+     * 取得員工請假記錄
+     */
+    @GetMapping("/{id}/leaves")
+    public ApiResponse<List<StaffLeaveResponse>> getLeaves(
+            @PathVariable String id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        log.info("取得員工請假記錄，ID：{}，日期範圍：{} ~ {}", id, startDate, endDate);
+        return ApiResponse.ok(staffService.getLeaves(id, startDate, endDate));
+    }
+
+    /**
+     * 新增員工請假
+     */
+    @PostMapping("/{id}/leaves")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<List<StaffLeaveResponse>> createLeaves(
+            @PathVariable String id,
+            @Valid @RequestBody CreateStaffLeaveRequest request
+    ) {
+        log.info("新增員工請假，ID：{}，日期：{}", id, request.getLeaveDates());
+        return ApiResponse.ok(staffService.createLeaves(id, request));
+    }
+
+    /**
+     * 刪除員工請假
+     */
+    @DeleteMapping("/{id}/leaves/{leaveId}")
+    public ApiResponse<Void> deleteLeave(
+            @PathVariable String id,
+            @PathVariable String leaveId
+    ) {
+        log.info("刪除員工請假，員工ID：{}，請假ID：{}", id, leaveId);
+        staffService.deleteLeave(id, leaveId);
+        return ApiResponse.ok();
+    }
+
+    /**
+     * 批次刪除員工請假（按日期）
+     */
+    @DeleteMapping("/{id}/leaves")
+    public ApiResponse<Void> deleteLeavesByDate(
+            @PathVariable String id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        log.info("刪除員工請假，員工ID：{}，日期：{}", id, date);
+        staffService.deleteLeaveByDate(id, date);
+        return ApiResponse.ok();
     }
 }

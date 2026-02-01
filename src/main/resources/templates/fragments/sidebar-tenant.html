@@ -48,6 +48,15 @@
             </a>
         </li>
 
+        <!-- 營運報表 -->
+        <li class="nav-item">
+            <a class="nav-link" href="/tenant/reports"
+               th:classappend="${#strings.equals(currentPage, 'reports')} ? 'active' : ''">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>營運報表</span>
+            </a>
+        </li>
+
         <hr class="sidebar-divider">
         <div class="sidebar-heading">顧客管理</div>
 

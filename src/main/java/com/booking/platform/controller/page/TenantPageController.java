@@ -219,4 +219,14 @@ public class TenantPageController {
         model.addAttribute("pageTitle", "點數管理");
         return "tenant/points";
     }
+
+    /**
+     * 營運報表頁面
+     */
+    @GetMapping("/reports")
+    public String reports(Model model) {
+        model.addAttribute("currentPage", "reports");
+        model.addAttribute("pageTitle", "營運報表");
+        return "tenant/reports";
+    }
 }

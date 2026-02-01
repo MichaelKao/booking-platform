@@ -417,16 +417,127 @@ public class LineFlexMessageBuilder {
     // ========================================
 
     /**
-     * 建構日期選單
+     * 建構日期選單（支援完整可預約天數）
      *
      * @param tenantId 租戶 ID
-     * @return Flex Message 內容
+     * @return Flex Message 內容（Carousel 格式）
      */
     public JsonNode buildDateMenu(String tenantId) {
         // 取得店家設定
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
         int maxAdvanceDays = tenantOpt.map(Tenant::getMaxAdvanceBookingDays).orElse(30);
         List<Integer> closedDays = parseClosedDays(tenantOpt.map(Tenant::getClosedDays).orElse(null));
+
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)", java.util.Locale.TAIWAN);
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        // 收集所有可用日期
+        List<LocalDate> availableDates = new java.util.ArrayList<>();
+        int dayOffset = 0;
+
+        while (availableDates.size() < maxAdvanceDays && dayOffset < maxAdvanceDays + 30) {
+            LocalDate date = today.plusDays(dayOffset);
+            int dayOfWeek = date.getDayOfWeek().getValue() % 7;
+
+            if (!closedDays.contains(dayOfWeek)) {
+                availableDates.add(date);
+            }
+            dayOffset++;
+        }
+
+        // 如果日期少於等於 10 個，使用單一 Bubble
+        if (availableDates.size() <= 10) {
+            return buildSingleDateBubble(availableDates, today, displayFormatter, dataFormatter);
+        }
+
+        // 日期多於 10 個，使用 Carousel（每個 Bubble 顯示 7 天）
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+        int datesPerBubble = 7;
+        int totalBubbles = (int) Math.ceil((double) availableDates.size() / datesPerBubble);
+
+        for (int bubbleIndex = 0; bubbleIndex < totalBubbles && bubbleIndex < 10; bubbleIndex++) {
+            int startIdx = bubbleIndex * datesPerBubble;
+            int endIdx = Math.min(startIdx + datesPerBubble, availableDates.size());
+            List<LocalDate> bubbleDates = availableDates.subList(startIdx, endIdx);
+
+            ObjectNode bubble = objectMapper.createObjectNode();
+            bubble.put("type", "bubble");
+            bubble.put("size", "kilo");
+
+            // Header
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", PRIMARY_COLOR);
+            header.put("paddingAll", "12px");
+
+            ArrayNode headerContents = objectMapper.createArrayNode();
+
+            ObjectNode headerText = objectMapper.createObjectNode();
+            headerText.put("type", "text");
+            headerText.put("text", bubbleIndex == 0 ? "📅 選擇日期" : "📅 更多日期");
+            headerText.put("size", "md");
+            headerText.put("weight", "bold");
+            headerText.put("color", "#FFFFFF");
+            headerText.put("align", "center");
+            headerContents.add(headerText);
+
+            // 顯示日期範圍
+            if (!bubbleDates.isEmpty()) {
+                LocalDate firstDate = bubbleDates.get(0);
+                LocalDate lastDate = bubbleDates.get(bubbleDates.size() - 1);
+                ObjectNode rangeText = objectMapper.createObjectNode();
+                rangeText.put("type", "text");
+                rangeText.put("text", firstDate.format(DateTimeFormatter.ofPattern("M/d")) + " - " + lastDate.format(DateTimeFormatter.ofPattern("M/d")));
+                rangeText.put("size", "xs");
+                rangeText.put("color", "#FFFFFF");
+                rangeText.put("align", "center");
+                headerContents.add(rangeText);
+            }
+
+            header.set("contents", headerContents);
+            bubble.set("header", header);
+
+            // Body
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "xs");
+            body.put("paddingAll", "12px");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            for (LocalDate date : bubbleDates) {
+                String displayDate = date.format(displayFormatter);
+                String dataDate = date.format(dataFormatter);
+                String label = date.equals(today) ? "今天 " + displayDate : displayDate;
+                bodyContents.add(createDateButton(label, dataDate));
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+
+            // 只在第一個 Bubble 顯示返回按鈕
+            if (bubbleIndex == 0) {
+                bubble.set("footer", createBackFooter());
+            }
+
+            bubbles.add(bubble);
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構單一日期選擇 Bubble
+     */
+    private JsonNode buildSingleDateBubble(List<LocalDate> dates, LocalDate today,
+                                           DateTimeFormatter displayFormatter, DateTimeFormatter dataFormatter) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
@@ -434,13 +545,16 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
         header.put("paddingAll", "15px");
 
         ObjectNode headerText = objectMapper.createObjectNode();
         headerText.put("type", "text");
-        headerText.put("text", "請選擇日期");
+        headerText.put("text", "📅 選擇日期");
         headerText.put("size", "lg");
         headerText.put("weight", "bold");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("align", "center");
 
         header.set("contents", objectMapper.createArrayNode().add(headerText));
         bubble.set("header", header);
@@ -454,38 +568,17 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        LocalDate today = LocalDate.now();
-        DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)");
-        DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
-
-        // 限制顯示天數，最多 7 天但不超過 maxAdvanceDays
-        int daysToShow = Math.min(7, maxAdvanceDays);
-        int daysAdded = 0;
-        int dayOffset = 0;
-
-        while (daysAdded < daysToShow && dayOffset < maxAdvanceDays) {
-            LocalDate date = today.plusDays(dayOffset);
-            int dayOfWeek = date.getDayOfWeek().getValue() % 7; // 轉換為 0=週日
-
-            // 檢查是否為公休日
-            if (!closedDays.contains(dayOfWeek)) {
-                String displayDate = date.format(displayFormatter);
-                String dataDate = date.format(dataFormatter);
-
-                String label = dayOffset == 0 ? "今天 " + displayDate : displayDate;
-
-                bodyContents.add(createDateButton(label, dataDate));
-                daysAdded++;
-            }
-            dayOffset++;
+        for (LocalDate date : dates) {
+            String displayDate = date.format(displayFormatter);
+            String dataDate = date.format(dataFormatter);
+            String label = date.equals(today) ? "今天 " + displayDate : displayDate;
+            bodyContents.add(createDateButton(label, dataDate));
         }
 
         body.set("contents", bodyContents);
         bubble.set("body", body);
 
-        // Footer - 返回按鈕
         bubble.set("footer", createBackFooter());
-
         return bubble;
     }
 
