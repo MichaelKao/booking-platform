@@ -10,6 +10,7 @@ import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.AuthService;
+import com.booking.platform.service.FeatureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -36,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
     // ========================================
 
     private final AuthService authService;
+    private final FeatureService featureService;
     private final TenantRepository tenantRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
@@ -52,6 +54,9 @@ public class DataInitializer implements CommandLineRunner {
 
         // 初始化預設超級管理員帳號
         initAdminUser();
+
+        // 初始化功能定義
+        initFeatures();
 
         // 初始化測試服務資料
         initTestServices();
@@ -72,6 +77,18 @@ public class DataInitializer implements CommandLineRunner {
             authService.initDefaultAdminUser();
         } catch (Exception e) {
             log.error("初始化超級管理員帳號失敗：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 初始化功能定義
+     */
+    private void initFeatures() {
+        try {
+            featureService.initializeFeatures();
+            log.info("功能定義初始化完成");
+        } catch (Exception e) {
+            log.error("初始化功能定義失敗：{}", e.getMessage());
         }
     }
 

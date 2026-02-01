@@ -30,6 +30,7 @@ public class PointTopUpMapper {
                 .amount(entity.getAmount())
                 .status(entity.getStatus())
                 .paymentMethod(entity.getPaymentMethod())
+                .paymentAccount(entity.getPaymentAccount())
                 .paymentProofUrl(entity.getPaymentProofUrl())
                 .requestNote(entity.getRequestNote())
                 .reviewNote(entity.getReviewNote())

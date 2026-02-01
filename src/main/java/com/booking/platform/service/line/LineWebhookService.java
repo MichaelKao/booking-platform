@@ -807,16 +807,35 @@ public class LineWebhookService {
         log.info("處理選擇商品，租戶：{}，商品 ID：{}", tenantId, productId);
 
         try {
-            Integer price = priceStr != null ? Integer.parseInt(priceStr) : null;
+            // 檢查商品庫存
+            Product product = productRepository.findByIdAndTenantIdAndDeletedAtIsNull(productId, tenantId)
+                    .orElse(null);
+
+            if (product == null) {
+                messageService.replyText(tenantId, replyToken, "找不到該商品，請重新選擇。");
+                return;
+            }
+
+            if (product.getStockQuantity() != null && product.getStockQuantity() <= 0) {
+                messageService.replyText(tenantId, replyToken, "抱歉，「" + product.getName() + "」已售完。");
+                return;
+            }
+
+            Integer price = priceStr != null ? Integer.parseInt(priceStr) : (product.getPrice() != null ? product.getPrice().intValue() : 0);
 
             // 儲存選擇的商品
             ConversationContext context = conversationService.getContext(tenantId, userId);
-            context.setProduct(productId, productName, price);
+            context.setProduct(productId, productName != null ? productName : product.getName(), price);
             context.transitionTo(ConversationState.SELECTING_QUANTITY);
             conversationService.saveContext(context);
 
-            // 顯示數量選擇
-            JsonNode quantityMenu = flexMessageBuilder.buildQuantityMenu(productName, price);
+            // 顯示數量選擇（限制最大數量為庫存數）
+            int maxQuantity = product.getStockQuantity() != null ? Math.min(product.getStockQuantity(), 10) : 10;
+            JsonNode quantityMenu = flexMessageBuilder.buildQuantityMenu(
+                    productName != null ? productName : product.getName(),
+                    price,
+                    maxQuantity
+            );
             messageService.replyFlex(tenantId, replyToken, "選擇數量", quantityMenu);
 
         } catch (Exception e) {
@@ -867,8 +886,17 @@ public class LineWebhookService {
 
             // 這裡僅記錄購買意向，實際付款需線下處理或整合金流
             String productName = context.getSelectedProductName();
-            int quantity = context.getSelectedQuantity();
-            int totalPrice = context.getSelectedProductPrice() * quantity;
+            Integer quantity = context.getSelectedQuantity();
+            Integer unitPrice = context.getSelectedProductPrice();
+
+            // 防禦性空值檢查
+            if (quantity == null || unitPrice == null) {
+                messageService.replyText(tenantId, replyToken, "購買資訊不完整，請重新選擇。");
+                conversationService.reset(tenantId, userId);
+                return;
+            }
+
+            int totalPrice = unitPrice * quantity;
 
             // 回覆成功訊息
             String successMessage = String.format(

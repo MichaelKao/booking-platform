@@ -29,6 +29,7 @@ public class PointTopUpResponse {
     private BigDecimal amount;
     private TopUpStatus status;
     private String paymentMethod;
+    private String paymentAccount;
     private String paymentProofUrl;
     private String requestNote;
     private String reviewNote;

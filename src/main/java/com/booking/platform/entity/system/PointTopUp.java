@@ -58,6 +58,12 @@ public class PointTopUp extends BaseEntity {
     private String paymentMethod;
 
     /**
+     * 付款帳號後五碼
+     */
+    @Column(name = "payment_account", length = 5)
+    private String paymentAccount;
+
+    /**
      * 付款證明圖片 URL
      */
     @Column(name = "payment_proof_url", length = 500)

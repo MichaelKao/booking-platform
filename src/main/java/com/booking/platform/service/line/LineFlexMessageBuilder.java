@@ -2072,6 +2072,18 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildQuantityMenu(String productName, Integer price) {
+        return buildQuantityMenu(productName, price, 5);
+    }
+
+    /**
+     * 建構數量選擇選單（指定最大數量）
+     *
+     * @param productName 商品名稱
+     * @param price       單價
+     * @param maxQuantity 最大數量
+     * @return Flex Message 內容
+     */
+    public JsonNode buildQuantityMenu(String productName, Integer price, int maxQuantity) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
@@ -2120,8 +2132,9 @@ public class LineFlexMessageBuilder {
         separator.put("margin", "lg");
         bodyContents.add(separator);
 
-        // 數量選項（1-5）
-        for (int i = 1; i <= 5; i++) {
+        // 數量選項（1-maxQuantity，最多顯示 5 個按鈕）
+        int displayCount = Math.min(maxQuantity, 5);
+        for (int i = 1; i <= displayCount; i++) {
             int total = price * i;
             ObjectNode quantityBtn = createQuantityButton(i, total);
             bodyContents.add(quantityBtn);

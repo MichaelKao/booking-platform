@@ -32,6 +32,12 @@ public class CreatePointTopUpRequest {
     @Size(max = 50, message = "付款方式長度不能超過 50 字")
     private String paymentMethod;
 
+    /**
+     * 付款帳號後五碼
+     */
+    @Size(max = 5, message = "帳號後五碼長度不能超過 5 字")
+    private String paymentAccount;
+
     @Size(max = 500, message = "付款證明 URL 長度不能超過 500 字")
     private String paymentProofUrl;
 

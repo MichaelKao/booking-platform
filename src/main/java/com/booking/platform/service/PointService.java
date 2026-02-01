@@ -146,6 +146,7 @@ public class PointService {
                 .points(request.getPoints())
                 .amount(request.getAmount())
                 .paymentMethod(request.getPaymentMethod())
+                .paymentAccount(request.getPaymentAccount())
                 .paymentProofUrl(request.getPaymentProofUrl())
                 .requestNote(request.getRequestNote())
                 .status(TopUpStatus.PENDING)
