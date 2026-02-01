@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -31,35 +30,32 @@ import java.net.URI;
 @Slf4j
 public class RedisConfig {
 
-    @Value("${spring.data.redis.url:}")
-    private String redisUrl;
-
-    @Value("${spring.data.redis.host:localhost}")
-    private String redisHost;
-
-    @Value("${spring.data.redis.port:6379}")
-    private int redisPort;
-
-    @Value("${spring.data.redis.password:}")
-    private String redisPassword;
-
     /**
      * 配置 Redis 連線工廠
      *
-     * <p>優先使用 REDIS_URL（完整 URL 格式），否則使用 host/port
+     * <p>優先從環境變數 REDIS_URL 讀取（Railway 格式）
      */
     @Bean
+    @Primary
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
 
-        // 優先解析 REDIS_URL
+        // 直接從環境變數讀取 REDIS_URL
+        String redisUrl = System.getenv("REDIS_URL");
+        log.info("========================================");
+        log.info("Redis 配置初始化");
+        log.info("REDIS_URL 環境變數：{}", redisUrl != null ? redisUrl.replaceAll(":[^:@]+@", ":****@") : "null");
+        log.info("========================================");
+
         if (redisUrl != null && !redisUrl.isEmpty()) {
             try {
-                log.info("使用 REDIS_URL 連線：{}", redisUrl.replaceAll(":[^:@]+@", ":****@"));
                 URI uri = new URI(redisUrl);
 
-                config.setHostName(uri.getHost());
-                config.setPort(uri.getPort() > 0 ? uri.getPort() : 6379);
+                String host = uri.getHost();
+                int port = uri.getPort() > 0 ? uri.getPort() : 6379;
+
+                config.setHostName(host);
+                config.setPort(port);
 
                 // 解析密碼（格式：redis://username:password@host:port）
                 String userInfo = uri.getUserInfo();
@@ -69,19 +65,17 @@ public class RedisConfig {
                     log.info("Redis 密碼已設定");
                 }
 
-                log.info("Redis 連線配置：host={}, port={}", uri.getHost(), uri.getPort());
+                log.info("Redis 連線配置：host={}, port={}", host, port);
             } catch (Exception e) {
-                log.error("解析 REDIS_URL 失敗：{}，使用預設配置", e.getMessage());
-                config.setHostName(redisHost);
-                config.setPort(redisPort);
+                log.error("解析 REDIS_URL 失敗：{}", e.getMessage());
+                log.info("使用預設配置：localhost:6379");
+                config.setHostName("localhost");
+                config.setPort(6379);
             }
         } else {
-            log.info("使用預設 Redis 配置：host={}, port={}", redisHost, redisPort);
-            config.setHostName(redisHost);
-            config.setPort(redisPort);
-            if (redisPassword != null && !redisPassword.isEmpty()) {
-                config.setPassword(redisPassword);
-            }
+            log.warn("REDIS_URL 環境變數未設定，使用預設配置：localhost:6379");
+            config.setHostName("localhost");
+            config.setPort(6379);
         }
 
         return new LettuceConnectionFactory(config);
