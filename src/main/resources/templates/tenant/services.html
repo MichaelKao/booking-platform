@@ -100,7 +100,7 @@
         async function loadData() {
             try {
                 const r = await api.get('/api/services');
-                const items = r.data || [];
+                const items = r.data?.content || r.data || [];
                 document.getElementById('dataTable').innerHTML = items.length === 0
                     ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無服務項目</td></tr>'
                     : items.map(s => `<tr>

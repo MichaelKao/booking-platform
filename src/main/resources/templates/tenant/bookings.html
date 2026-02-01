@@ -307,7 +307,7 @@
             try {
                 const r = await api.get('/api/services');
                 if (r.success && r.data) {
-                    const services = r.data || [];
+                    const services = r.data?.content || r.data || [];
                     document.getElementById('bookingService').innerHTML = '<option value="">請選擇服務</option>' +
                         services.map(s => `<option value="${s.id}" data-duration="${s.duration}" data-price="${s.price}">${escapeHtml(s.name)} (${s.duration}分鐘 / ${formatMoney(s.price)})</option>`).join('');
                 }
