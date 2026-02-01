@@ -90,6 +90,29 @@ test.describe('店家後台 API 測試', () => {
     });
   });
 
+  test.describe('點數 API 測試', () => {
+    test('點數餘額 API', async ({ request }) => {
+      const response = await request.get('/api/points/balance', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+    });
+
+    test('點數異動記錄 API', async ({ request }) => {
+      const response = await request.get('/api/points/transactions?size=20', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      if (response.ok()) {
+        const data = await response.json();
+        console.log('點數異動記錄 API 回應:', data.success ? '成功' : '失敗');
+        if (data.data?.content) {
+          console.log('記錄數量:', data.data.content.length);
+        }
+      }
+    });
+  });
+
   test.describe('報表 API 測試', () => {
     test('報表摘要 API - 使用 range 參數', async ({ request }) => {
       // 測試 range=week
