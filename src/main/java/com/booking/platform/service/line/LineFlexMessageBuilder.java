@@ -2264,4 +2264,54 @@ public class LineFlexMessageBuilder {
 
         return bubble;
     }
+
+    // ========================================
+    // 通用提示訊息
+    // ========================================
+
+    /**
+     * 建構取消操作提示
+     *
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCancelPrompt() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode text = objectMapper.createObjectNode();
+        text.put("type", "text");
+        text.put("text", "請點選上方選項繼續操作");
+        text.put("size", "md");
+        text.put("align", "center");
+        text.put("color", SECONDARY_COLOR);
+        bodyContents.add(text);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("取消目前操作", "action=cancel_booking", "#FF6B6B"));
+        footerContents.add(createButton("返回主選單", "action=main_menu", SECONDARY_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
 }

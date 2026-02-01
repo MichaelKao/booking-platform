@@ -943,13 +943,13 @@ public class LineWebhookService {
      */
     private void handleContextualMessage(String tenantId, String userId, String replyToken,
                                          String text, ConversationContext context) {
-        // 如果不在對話中，回覆預設訊息
+        // 如果不在對話中，顯示主選單
         if (context.getState() == ConversationState.IDLE) {
             replyDefaultMessage(tenantId, replyToken);
         } else {
-            // 在對話中但收到非 Postback 訊息，提示用戶
-            messageService.replyText(tenantId, replyToken,
-                    "請點選上方選項繼續操作，或輸入「取消」取消預約。");
+            // 在對話中但收到非 Postback 訊息，提示用戶並顯示取消按鈕
+            JsonNode cancelMessage = flexMessageBuilder.buildCancelPrompt();
+            messageService.replyFlex(tenantId, replyToken, "請點選上方選項繼續操作", cancelMessage);
         }
     }
 
@@ -966,15 +966,12 @@ public class LineWebhookService {
     }
 
     /**
-     * 回覆預設訊息
+     * 回覆預設訊息（顯示主選單）
      */
     private void replyDefaultMessage(String tenantId, String replyToken) {
-        Optional<TenantLineConfig> configOpt = lineConfigRepository.findByTenantId(tenantId);
-
-        if (configOpt.isPresent() && configOpt.get().getAutoReplyEnabled()) {
-            String defaultReply = configOpt.get().getDefaultReply();
-            messageService.replyText(tenantId, replyToken, defaultReply);
-        }
+        // 無論如何都顯示主選單，讓用戶可以點選操作
+        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "請選擇您需要的服務", mainMenu);
     }
 
     /**
@@ -986,19 +983,12 @@ public class LineWebhookService {
     }
 
     /**
-     * 回覆幫助訊息
+     * 回覆幫助訊息（顯示主選單）
      */
     private void replyHelpMessage(String tenantId, String replyToken) {
-        String helpText = """
-                使用說明：
-
-                1. 輸入「預約」開始預約服務
-                2. 依照提示選擇服務、人員、日期和時段
-                3. 確認預約資訊後即可完成預約
-
-                如需取消目前操作，請輸入「取消」
-                """;
-        messageService.replyText(tenantId, replyToken, helpText);
+        // 顯示主選單讓用戶直接點選
+        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "使用說明：點選下方按鈕開始使用", mainMenu);
     }
 
     /**
