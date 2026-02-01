@@ -1068,6 +1068,7 @@ public class LineFlexMessageBuilder {
         return switch (status) {
             case PENDING -> "#FFA500";       // 橙色 - 待確認
             case CONFIRMED -> PRIMARY_COLOR; // 綠色 - 已確認
+            case IN_PROGRESS -> "#2196F3";   // 藍色 - 進行中
             case COMPLETED -> "#4CAF50";     // 綠色 - 已完成
             case CANCELLED -> "#9E9E9E";     // 灰色 - 已取消
             case NO_SHOW -> "#F44336";       // 紅色 - 未到
@@ -1082,6 +1083,7 @@ public class LineFlexMessageBuilder {
         return switch (status) {
             case PENDING -> "待確認";
             case CONFIRMED -> "已確認";
+            case IN_PROGRESS -> "進行中";
             case COMPLETED -> "已完成";
             case CANCELLED -> "已取消";
             case NO_SHOW -> "未到";
