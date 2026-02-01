@@ -145,4 +145,13 @@ public interface PointTopUpRepository extends JpaRepository<PointTopUp, String> 
             AND p.status = 'PENDING'
             """)
     BigDecimal sumPendingAmountByTenantId(@Param("tenantId") String tenantId);
+
+    /**
+     * 查詢店家的儲值記錄（多狀態篩選）
+     */
+    Page<PointTopUp> findByTenantIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
+            String tenantId,
+            List<TopUpStatus> statuses,
+            Pageable pageable
+    );
 }

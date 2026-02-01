@@ -8,13 +8,12 @@ import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.request.CreatePointTopUpRequest;
 import com.booking.platform.dto.response.PointBalanceResponse;
 import com.booking.platform.dto.response.PointTopUpResponse;
-import com.booking.platform.dto.response.PointTransactionResponse;
+import com.booking.platform.dto.response.TenantPointTransactionResponse;
 import com.booking.platform.entity.system.PointTopUp;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.TopUpStatus;
 import com.booking.platform.mapper.PointTopUpMapper;
 import com.booking.platform.repository.PointTopUpRepository;
-import com.booking.platform.repository.PointTransactionRepository;
 import com.booking.platform.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,6 @@ public class PointService {
 
     private final TenantRepository tenantRepository;
     private final PointTopUpRepository pointTopUpRepository;
-    private final PointTransactionRepository pointTransactionRepository;
     private final PointTopUpMapper pointTopUpMapper;
 
     // ========================================
@@ -210,30 +208,76 @@ public class PointService {
     // ========================================
 
     /**
-     * 查詢點數交易記錄
+     * 查詢店家點數交易記錄
+     *
+     * <p>返回已審核通過的儲值記錄作為交易記錄
      *
      * @param pageable 分頁參數
      * @return 分頁結果
      */
-    public PageResponse<PointTransactionResponse> getTransactionList(Pageable pageable) {
+    public PageResponse<TenantPointTransactionResponse> getTransactionList(Pageable pageable) {
         // ========================================
         // 1. 取得當前租戶
         // ========================================
 
         String tenantId = TenantContext.getTenantId();
-        log.debug("查詢點數交易記錄，租戶 ID：{}", tenantId);
+        log.debug("查詢店家點數交易記錄，租戶 ID：{}", tenantId);
 
         // ========================================
-        // 2. 查詢資料
+        // 2. 查詢已審核的儲值記錄
         // ========================================
 
-        Page<PointTransactionResponse> page = pointTransactionRepository
-                .findTransactionsByTenantId(tenantId, pageable);
+        Page<PointTopUp> page = pointTopUpRepository.findByTenantIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
+                tenantId,
+                java.util.List.of(TopUpStatus.APPROVED, TopUpStatus.REJECTED, TopUpStatus.CANCELLED),
+                pageable
+        );
 
         // ========================================
-        // 3. 返回結果
+        // 3. 轉換為交易記錄格式
         // ========================================
 
-        return PageResponse.from(page);
+        Page<TenantPointTransactionResponse> responsePage = page.map(topup -> {
+            String type;
+            int amount;
+
+            switch (topup.getStatus()) {
+                case APPROVED:
+                    type = "TOPUP";
+                    amount = topup.getPoints();
+                    break;
+                case REJECTED:
+                    type = "REJECTED";
+                    amount = 0;
+                    break;
+                case CANCELLED:
+                    type = "CANCELLED";
+                    amount = 0;
+                    break;
+                default:
+                    type = "PENDING";
+                    amount = 0;
+            }
+
+            String description = topup.getPaymentMethod() != null
+                    ? "儲值 NT$ " + topup.getAmount().intValue() + " (" + topup.getPaymentMethod() + ")"
+                    : "儲值 NT$ " + topup.getAmount().intValue();
+
+            if (topup.getStatus() == TopUpStatus.REJECTED && topup.getReviewNote() != null) {
+                description = "申請被駁回：" + topup.getReviewNote();
+            }
+
+            return TenantPointTransactionResponse.builder()
+                    .id(topup.getId())
+                    .type(type)
+                    .amount(amount)
+                    .balanceAfter(topup.getBalanceAfter() != null ? topup.getBalanceAfter() : 0)
+                    .description(description)
+                    .createdAt(topup.getStatus() == TopUpStatus.APPROVED && topup.getReviewedAt() != null
+                            ? topup.getReviewedAt() : topup.getCreatedAt())
+                    .build();
+        });
+
+        return PageResponse.from(responsePage);
     }
 }

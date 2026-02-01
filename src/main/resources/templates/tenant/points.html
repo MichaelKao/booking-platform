@@ -172,7 +172,10 @@
             USAGE: { label: '消費', class: 'bg-danger' },
             REFUND: { label: '退款', class: 'bg-info' },
             EXPIRE: { label: '過期', class: 'bg-secondary' },
-            BONUS: { label: '贈送', class: 'bg-primary' }
+            BONUS: { label: '贈送', class: 'bg-primary' },
+            REJECTED: { label: '駁回', class: 'bg-danger' },
+            CANCELLED: { label: '取消', class: 'bg-secondary' },
+            PENDING: { label: '待審', class: 'bg-warning' }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -225,13 +228,15 @@
 
                 tbody.innerHTML = items.map(t => {
                     const typeInfo = TYPE_MAP[t.type] || { label: t.type, class: 'bg-secondary' };
-                    const amountClass = t.amount > 0 ? 'text-success fw-bold' : 'text-danger';
-                    const amountPrefix = t.amount > 0 ? '+' : '';
+                    const amount = t.points || t.amount || 0;
+                    const balance = t.balance || t.balanceAfter || 0;
+                    const amountClass = amount > 0 ? 'text-success fw-bold' : 'text-danger';
+                    const amountPrefix = amount > 0 ? '+' : '';
                     return `<tr>
                         <td class="small">${formatDateTime(t.createdAt)}</td>
                         <td><span class="badge ${typeInfo.class}">${typeInfo.label}</span></td>
-                        <td class="text-end ${amountClass}">${amountPrefix}${formatNumber(t.amount)}</td>
-                        <td class="text-end">${formatNumber(t.balanceAfter)}</td>
+                        <td class="text-end ${amountClass}">${amountPrefix}${formatNumber(amount)}</td>
+                        <td class="text-end">${formatNumber(balance)}</td>
                         <td class="small text-muted">${escapeHtml(t.description || '-')}</td>
                     </tr>`;
                 }).join('');

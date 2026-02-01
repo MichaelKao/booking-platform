@@ -5,7 +5,7 @@ import com.booking.platform.common.response.PageResponse;
 import com.booking.platform.dto.request.CreatePointTopUpRequest;
 import com.booking.platform.dto.response.PointBalanceResponse;
 import com.booking.platform.dto.response.PointTopUpResponse;
-import com.booking.platform.dto.response.PointTransactionResponse;
+import com.booking.platform.dto.response.TenantPointTransactionResponse;
 import com.booking.platform.enums.TopUpStatus;
 import com.booking.platform.service.PointService;
 import jakarta.validation.Valid;
@@ -110,7 +110,7 @@ public class PointController {
      * @return 分頁結果
      */
     @GetMapping("/transactions")
-    public ApiResponse<PageResponse<PointTransactionResponse>> getTransactionList(
+    public ApiResponse<PageResponse<TenantPointTransactionResponse>> getTransactionList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
