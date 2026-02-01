@@ -10,7 +10,7 @@
 
 ---
 
-## Repository 列表 (18 個)
+## Repository 列表 (19 個)
 
 ### 租戶相關
 
@@ -19,13 +19,20 @@
 | TenantRepository | Tenant | 店家查詢 |
 | AdminUserRepository | AdminUser | 超級管理員查詢 |
 
+### 員工相關
+
+| Repository | Entity | 說明 |
+|------------|--------|------|
+| StaffRepository | Staff | 員工查詢 |
+| StaffScheduleRepository | StaffSchedule | 員工每週排班查詢 |
+| StaffLeaveRepository | StaffLeave | 員工特定日期請假查詢 |
+
 ### 業務相關
 
 | Repository | Entity | 說明 |
 |------------|--------|------|
 | BookingRepository | Booking | 預約查詢 |
 | CustomerRepository | Customer | 顧客查詢 |
-| StaffRepository | Staff | 員工查詢 |
 | ServiceCategoryRepository | ServiceCategory | 服務分類查詢 |
 | ServiceItemRepository | ServiceItem | 服務項目查詢 |
 | ProductRepository | Product | 商品查詢 |
@@ -71,6 +78,27 @@ existsByTenantIdAndNameAndDeletedAtIsNull(tenantId, name)
 
 // 計數
 countByTenantIdAndStatusAndDeletedAtIsNull(tenantId, status)
+countByTenantIdAndDeletedAtIsNull(tenantId)
+```
+
+---
+
+## 員工請假查詢
+
+```java
+// 查詢員工特定日期請假
+Optional<StaffLeave> findByStaffIdAndLeaveDateAndDeletedAtIsNull(String staffId, LocalDate date);
+
+// 查詢日期範圍內的請假
+@Query("SELECT sl FROM StaffLeave sl WHERE sl.staffId = :staffId " +
+       "AND sl.leaveDate BETWEEN :startDate AND :endDate " +
+       "AND sl.deletedAt IS NULL ORDER BY sl.leaveDate")
+List<StaffLeave> findByStaffIdAndDateRange(String staffId, LocalDate startDate, LocalDate endDate);
+
+// 檢查是否請假
+@Query("SELECT COUNT(sl) > 0 FROM StaffLeave sl WHERE sl.staffId = :staffId " +
+       "AND sl.leaveDate = :date AND sl.isFullDay = true AND sl.deletedAt IS NULL")
+boolean isStaffOnLeave(String staffId, LocalDate date);
 ```
 
 ---

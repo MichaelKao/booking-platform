@@ -6,12 +6,14 @@
 |------|------|
 | Thymeleaf | 伺服器端模板引擎 |
 | Bootstrap 5 | UI 框架 |
+| Bootstrap Icons | 圖示 |
 | 原生 JavaScript | 前端邏輯 (Fetch API) |
 | FullCalendar | 行事曆元件 |
+| Chart.js | 圖表元件 |
 
 ---
 
-## 頁面結構 (33 個 HTML 檔案)
+## 頁面結構 (34 個 HTML 檔案)
 
 ### 超級管理後台 (`admin/`)
 
@@ -37,6 +39,7 @@
 | dashboard.html | 儀表板 | /tenant/dashboard |
 | bookings.html | 預約管理 | /tenant/bookings |
 | calendar.html | 行事曆 | /tenant/calendar |
+| reports.html | 營運報表 | /tenant/reports |
 | customers.html | 顧客列表 | /tenant/customers |
 | customer-detail.html | 顧客詳情 | /tenant/customers/{id} |
 | staff.html | 員工管理 | /tenant/staff |
@@ -181,6 +184,26 @@ renderPagination(result.data, (page) => {
 | common.css | 共用樣式 (字體、顏色、佈局) |
 | admin.css | 超管後台專用樣式 |
 | tenant.css | 店家後台專用樣式 |
+
+---
+
+## 員工管理頁面功能
+
+`staff.html` 包含：
+- 員工 CRUD Modal
+- 排班設定 Modal（每週 7 天工作時間）
+- 請假管理 Modal（特定日期請假、快速選擇）
+
+---
+
+## 報表頁面
+
+`reports.html` 使用 Chart.js：
+- 統計卡片（總預約、總營收、完成率、新客戶）
+- 每日趨勢折線圖（雙 Y 軸：預約數 + 營收）
+- 服務分布圓餅圖
+- 熱門服務 TOP 5 表格
+- 員工業績 TOP 5 表格
 
 ---
 

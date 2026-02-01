@@ -10,7 +10,7 @@
 
 ## 專案狀態
 
-**Phase 1-8 已完成，已部署至 Railway，僅剩 Phase 9 整合測試待開發**
+**Phase 1-8 已完成，已部署至 Railway**
 
 | 階段 | 功能 | 狀態 |
 |-----|------|------|
@@ -22,125 +22,83 @@
 | Phase 6 | LINE Bot 整合 | ✅ 完成 |
 | Phase 7 | 超級管理後台頁面 | ✅ 完成 |
 | Phase 8 | 店家後台頁面 | ✅ 完成 |
-| Phase 9 | 整合測試 | ⬜ 待開發 |
 
 ## 已完成功能
 
-### Phase 6 - LINE Bot 整合 ✅
-- [x] TenantLineConfig、LineUser Entity
-- [x] LINE Webhook Controller（簽章驗證）
-- [x] EncryptionService（AES-256-GCM 加密）
-- [x] LineConfigService、LineUserService
-- [x] LineConversationService（Redis 對話狀態）
-- [x] LineMessageService、LineWebhookService
-- [x] LineFlexMessageBuilder（7 種 Flex Message）
-- [x] ConversationState 對話狀態機
+### LINE Bot 功能 ✅
+- [x] 主選單（預約、商品、票券、會員資訊）
+- [x] 預約流程（服務 → 員工 → 日期 → 時段 → 確認）
+- [x] 日期選擇支援 Carousel（完整可預約天數）
+- [x] 商品瀏覽與購買意向
+- [x] 票券領取與查看
+- [x] 會員資訊查詢
+- [x] 取消預約功能
 
-### Phase 7 - 超級管理後台頁面 ✅
-- [x] 共用 CSS/JS（common.css、common.js）
-- [x] Admin 專用 CSS/JS（admin.css、admin.js）
-- [x] 登入頁（login.html）
-- [x] 儀表板（dashboard.html）
-- [x] 店家管理（tenants.html、tenant-detail.html）
-- [x] 儲值審核（point-topups.html）
-- [x] 功能管理（features.html）
-- [x] 側邊欄片段（sidebar-admin.html）
-- [x] 錯誤頁面（404.html、500.html）
-- [x] AdminPageController
+### 員工管理功能 ✅
+- [x] 每週排班設定（7 天工作時間）
+- [x] 特定日期請假（事假、病假、休假、特休）
+- [x] 快速選擇（明天、下週、週末）
+- [x] 請假列表管理
 
-### Phase 8 - 店家後台頁面 ✅
-- [x] Tenant 專用 CSS/JS（tenant.css、tenant.js）
-- [x] 登入頁（login.html）
-- [x] 儀表板（dashboard.html）
-- [x] 預約管理（bookings.html）
-- [x] 行事曆（calendar.html）
-- [x] 顧客管理（customers.html）
-- [x] 員工管理（staff.html）
-- [x] 服務項目（services.html）
-- [x] 商品管理（products.html）
-- [x] 票券管理（coupons.html）
-- [x] 行銷活動（campaigns.html）
-- [x] 店家設定（settings.html）
-- [x] LINE 設定（line-settings.html）
-- [x] 功能商店（feature-store.html）
-- [x] 點數管理（points.html）
-- [x] 側邊欄片段（sidebar-tenant.html）
-- [x] TenantPageController
-
-## 待實作功能
-
-### Phase 9 - 整合測試
-- [ ] 端對端測試
-- [ ] 效能測試
-- [ ] LINE Bot 流程測試
+### 後台功能 ✅
+- [x] 營運報表頁面（統計、趨勢圖、排名）
+- [x] 預約管理（編輯、狀態變更）
+- [x] 即時通知（SSE 新預約推送）
+- [x] 功能商店
 
 ## 目錄結構
 
-- `examples/` - 範例程式碼，Claude 會參考這些風格
 - `templates/` - 開發模板，建立新功能時使用
   - `crud-module.md` - CRUD 模組建立模板
   - `line-flex-message.md` - LINE Flex Message 模板
   - `page-template.md` - 前端頁面模板
-- `snippets/` - 常用程式碼片段，可直接複用
 
 ## 使用方式
 
 ### 建立新模組
 ```
-請參考 .claude/examples/ 的範例風格，建立 [模組名稱] 模組
+請參考 .claude/templates/crud-module.md 的模板，建立 [模組名稱] 的完整 CRUD
 ```
 
-### 使用模板
+### 使用 LINE 模板
 ```
-請依照 .claude/templates/crud-module.md 的模板，建立 [模組名稱] 的完整 CRUD
-```
-
-### 使用程式碼片段
-```
-請參考 .claude/snippets/cache-pattern.java 的快取模式，加入快取功能
+請參考 .claude/templates/line-flex-message.md 建立新的 Flex Message
 ```
 
 ## 資料表清單
 
-### Phase 1
+### 租戶與系統
 - `tenants` - 租戶/店家
-- `tenant_configs` - 店家設定
+- `admin_users` - 超級管理員
+- `features` - 功能定義
+- `tenant_features` - 功能訂閱
+- `point_topups` - 點數儲值申請
 
-### Phase 2
-- `staff` - 員工
-- `staff_schedules` - 員工班表
-- `staff_leaves` - 員工請假
+### 員工與排班
+- `staffs` - 員工
+- `staff_schedules` - 每週排班
+- `staff_leaves` - 特定日期請假
+
+### 服務與預約
 - `service_categories` - 服務分類
 - `service_items` - 服務項目
 - `bookings` - 預約
-- `booking_histories` - 預約歷史
 
-### Phase 3
+### 顧客
 - `customers` - 顧客
-- `memberships` - 會員資格
 - `membership_levels` - 會員等級
+- `point_transactions` - 點數交易
 
-### Phase 4
-- `features` - 功能定義
-- `feature_subscriptions` - 功能訂閱
-- `point_accounts` - 點數帳戶
-- `point_transactions` - 點數異動
-- `point_top_ups` - 點數儲值申請
-
-### Phase 5
+### 商品與行銷
+- `products` - 商品
 - `coupons` - 票券定義
 - `coupon_instances` - 票券實例
 - `campaigns` - 行銷活動
-- `product_categories` - 商品分類
-- `products` - 商品
 
-### Phase 6
+### LINE
 - `tenant_line_configs` - 店家 LINE 設定
 - `line_users` - LINE 用戶
 - 對話狀態使用 Redis 儲存（Key: `line:conversation:{tenantId}:{lineUserId}`）
-
-### 系統相關
-- `audit_logs` - 稽核日誌
 
 ## 前端頁面清單
 
@@ -161,6 +119,7 @@
 | /tenant/dashboard | tenant/dashboard.html | 儀表板 |
 | /tenant/bookings | tenant/bookings.html | 預約管理 |
 | /tenant/calendar | tenant/calendar.html | 行事曆 |
+| /tenant/reports | tenant/reports.html | 營運報表 |
 | /tenant/customers | tenant/customers.html | 顧客列表 |
 | /tenant/staff | tenant/staff.html | 員工管理 |
 | /tenant/services | tenant/services.html | 服務項目 |

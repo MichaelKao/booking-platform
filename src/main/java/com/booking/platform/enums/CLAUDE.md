@@ -7,7 +7,7 @@
 
 ---
 
-## Enum 列表 (19 個)
+## Enum 列表 (20 個)
 
 ### 業務狀態
 
@@ -22,6 +22,12 @@
 | CouponInstanceStatus | UNUSED, USED, EXPIRED, VOIDED | 票券實例狀態 |
 | CampaignStatus | DRAFT, PUBLISHED, PAUSED, ENDED | 行銷活動狀態 |
 
+### 員工相關
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| LeaveType | PERSONAL, SICK, VACATION, ANNUAL, OTHER | 請假類型（事假、病假、休假、特休、其他） |
+
 ### 系統狀態
 
 | Enum | 值 | 說明 |
@@ -34,7 +40,7 @@
 
 | Enum | 值 |
 |------|-----|
-| FeatureCode | COUPON_MANAGEMENT, CAMPAIGN, ADVANCE_BOOKING, MEMBERSHIP, PRODUCT_SALES, REPORT_ANALYTICS, LINE_NOTIFICATION, SMS_NOTIFICATION, EMAIL_NOTIFICATION, MULTI_STAFF, CUSTOM_BRANDING |
+| FeatureCode | BASIC_REPORT, LINE_BOOKING, COUPON_MANAGEMENT, CAMPAIGN, ADVANCE_BOOKING, MEMBERSHIP, PRODUCT_SALES, ADVANCED_REPORT, LINE_NOTIFICATION, SMS_NOTIFICATION, EMAIL_NOTIFICATION, MULTI_STAFF, CUSTOM_BRANDING |
 
 ### 分類與類型
 

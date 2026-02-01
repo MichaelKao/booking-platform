@@ -18,6 +18,7 @@
 | 快取 | Redis |
 | 前端 | Thymeleaf + Bootstrap 5 |
 | 行事曆 | FullCalendar |
+| 圖表 | Chart.js |
 | 部署 | Railway (Docker) |
 
 ## 三個角色
@@ -26,7 +27,7 @@
 |------|------|
 | ADMIN | 超級管理員，管理所有店家、審核儲值、控制功能開關 |
 | TENANT | 店家，管理自己的預約/顧客/員工/服務/商品 |
-| 顧客 | 透過 LINE Bot 預約服務 |
+| 顧客 | 透過 LINE Bot 預約服務、購買商品、領取票券 |
 
 ---
 
@@ -40,24 +41,25 @@ com.booking.platform
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (23 個)
+├── controller/                # 控制器 (24 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
 │   ├── line/                 # LINE Webhook (1 個)
 │   ├── page/                 # 頁面路由 (2 個)
-│   └── tenant/               # 店家 API (14 個)
-├── service/                   # 服務層 (25 個)
+│   └── tenant/               # 店家 API (15 個)
+├── service/                   # 服務層 (27 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
 │   └── notification/         # 通知服務
-├── repository/                # 資料存取層 (18 個)
-├── entity/                    # 資料庫實體 (18 個)
+├── repository/                # 資料存取層 (19 個)
+├── entity/                    # 資料庫實體 (19 個)
 │   ├── system/               # 系統實體
+│   ├── staff/                # 員工實體
 │   └── tenant/               # 租戶實體
-├── dto/                       # 資料傳輸物件 (60+ 個)
+├── dto/                       # 資料傳輸物件 (65+ 個)
 │   ├── request/              # 請求 DTO
 │   └── response/             # 回應 DTO
-├── enums/                     # 列舉 (19 個)
+├── enums/                     # 列舉 (20 個)
 └── mapper/                    # 轉換器
 ```
 
@@ -124,11 +126,13 @@ POST /api/auth/logout             # 登出
 
 | 資源 | 端點 |
 |------|------|
-| 預約 | `GET/POST /bookings`, `GET /bookings/{id}`, `POST /bookings/{id}/confirm\|complete\|cancel\|no-show` |
+| 預約 | `GET/POST /bookings`, `GET/PUT /bookings/{id}`, `POST /bookings/{id}/confirm\|complete\|cancel\|no-show` |
 | 預約行事曆 | `GET /bookings/calendar`, `GET /bookings/staff/{staffId}/date/{date}` |
 | 顧客 | `GET/POST /customers`, `GET/PUT/DELETE /customers/{id}` |
 | 顧客操作 | `POST /customers/{id}/points/add\|deduct`, `POST /customers/{id}/block\|unblock` |
 | 員工 | `GET/POST /staff`, `GET/PUT/DELETE /staff/{id}`, `GET /staff/bookable` |
+| 員工排班 | `GET/PUT /staff/{id}/schedule` |
+| 員工請假 | `GET/POST /staff/{id}/leaves`, `DELETE /staff/{id}/leaves/{leaveId}` |
 | 服務 | `GET/POST /services`, `GET/PUT/DELETE /services/{id}`, `GET /services/bookable` |
 | 服務分類 | `GET /service-categories` |
 | 商品 | `GET/POST /products`, `GET/PUT/DELETE /products/{id}` |
@@ -182,6 +186,7 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | /tenant/dashboard | 儀表板 |
 | /tenant/bookings | 預約管理 |
 | /tenant/calendar | 行事曆 |
+| /tenant/reports | 營運報表 |
 | /tenant/customers | 顧客列表 |
 | /tenant/customers/{id} | 顧客詳情 |
 | /tenant/staff | 員工管理 |
@@ -201,7 +206,7 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | 類別 | 表名 |
 |------|------|
 | 租戶 | `tenants`, `admin_users` |
-| 員工 | `staff`, `staff_schedules`, `staff_leaves` |
+| 員工 | `staffs`, `staff_schedules`, `staff_leaves` |
 | 服務 | `service_categories`, `service_items` |
 | 預約 | `bookings`, `booking_histories` |
 | 顧客 | `customers`, `membership_levels`, `point_transactions` |
@@ -212,17 +217,25 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 
 ---
 
-## LINE Bot 對話狀態機
+## LINE Bot 功能
+
+### 主選單
+用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
+- 開始預約
+- 我的預約
+- 瀏覽商品
+- 領取票券
+- 會員資訊
 
 ### 預約流程
 ```
 IDLE（閒置）
-  ↓ 用戶說「預約」
+  ↓ 點選「開始預約」
 SELECTING_SERVICE（選擇服務）
   ↓ 選擇服務
 SELECTING_STAFF（選擇員工）
   ↓ 選擇員工（或不指定）
-SELECTING_DATE（選擇日期）
+SELECTING_DATE（選擇日期）- 支援 Carousel 顯示完整可預約天數
   ↓ 選擇日期
 SELECTING_TIME（選擇時段）
   ↓ 選擇時段
@@ -231,28 +244,26 @@ CONFIRMING_BOOKING（確認預約）
 IDLE（完成，回到閒置）
 ```
 
-### 取消預約流程
-```
-IDLE → CONFIRMING_CANCEL_BOOKING → IDLE
-```
-
-### 商品購買流程
-```
-IDLE → BROWSING_PRODUCTS → VIEWING_PRODUCT_DETAIL → SELECTING_QUANTITY → CONFIRMING_PURCHASE → IDLE
-```
-
-### 票券領取流程
-```
-IDLE → BROWSING_COUPONS → IDLE
-IDLE → VIEWING_MY_COUPONS → IDLE
-```
-
-### 會員資訊
-```
-IDLE → VIEWING_MEMBER_INFO → IDLE
-```
+### 其他流程
+- 取消預約：`IDLE → CONFIRMING_CANCEL_BOOKING → IDLE`
+- 商品購買：`IDLE → BROWSING_PRODUCTS → VIEWING_PRODUCT_DETAIL → SELECTING_QUANTITY → CONFIRMING_PURCHASE → IDLE`
+- 票券領取：`IDLE → BROWSING_COUPONS → IDLE`
+- 會員資訊：`IDLE → VIEWING_MEMBER_INFO → IDLE`
 
 Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
+
+---
+
+## 員工管理功能
+
+### 排班設定
+- 每週 7 天的上班設定
+- 每天可設：上班開關、開始/結束時間、休息時段
+
+### 請假管理
+- 支援特定日期請假（事假、病假、休假、特休、其他）
+- 快速選擇：明天、下週一~五、本週末、下週末
+- 請假原因備註
 
 ---
 
@@ -277,11 +288,11 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 | 項目 | 數量 |
 |------|------|
 | Controller | 24 |
-| Service | 26 |
-| Entity | 18 |
-| Repository | 18 |
-| DTO | 60+ |
-| Enum | 19 |
-| HTML 頁面 | 33 |
+| Service | 27 |
+| Entity | 19 |
+| Repository | 19 |
+| DTO | 65+ |
+| Enum | 20 |
+| HTML 頁面 | 34 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |

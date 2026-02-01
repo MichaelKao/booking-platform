@@ -49,7 +49,7 @@ public class Xxx extends BaseEntity {
 
 ---
 
-## Entity 列表 (18 個)
+## Entity 列表 (19 個)
 
 ### 租戶相關
 
@@ -58,11 +58,13 @@ public class Xxx extends BaseEntity {
 | Tenant | tenants | 店家資訊 |
 | AdminUser | admin_users | 超級管理員 |
 
-### 人員相關
+### 員工相關
 
 | Entity | 表名 | 說明 |
 |--------|------|------|
-| Staff | staff | 員工資訊 |
+| Staff | staffs | 員工資訊 |
+| StaffSchedule | staff_schedules | 員工每週排班 |
+| StaffLeave | staff_leaves | 員工特定日期請假 |
 
 ### 預約相關
 
@@ -124,23 +126,60 @@ entity/
 │   ├── Feature
 │   ├── TenantFeature
 │   └── PointTopUp
+├── staff/               # 員工實體
+│   ├── Staff
+│   ├── StaffSchedule
+│   └── StaffLeave
 ├── tenant/              # 租戶實體
 │   └── Tenant
-└── /                    # 業務實體
-    ├── AdminUser
-    ├── Booking
-    ├── Campaign
-    ├── Coupon
-    ├── CouponInstance
-    ├── Customer
-    ├── LineUser
-    ├── MembershipLevel
-    ├── PointTransaction
-    ├── Product
-    ├── ServiceCategory
-    ├── ServiceItem
-    ├── Staff
-    └── TenantLineConfig
+├── booking/             # 預約實體
+│   └── Booking
+├── customer/            # 顧客實體
+│   ├── Customer
+│   └── MembershipLevel
+├── catalog/             # 服務/商品實體
+│   ├── ServiceCategory
+│   ├── ServiceItem
+│   └── Product
+├── marketing/           # 行銷實體
+│   ├── Coupon
+│   ├── CouponInstance
+│   └── Campaign
+└── line/                # LINE 實體
+    ├── TenantLineConfig
+    └── LineUser
+```
+
+---
+
+## 員工排班與請假
+
+```java
+// StaffSchedule - 每週固定排班
+@Entity
+@Table(name = "staff_schedules")
+public class StaffSchedule extends BaseEntity {
+    private String staffId;
+    private Integer dayOfWeek;      // 0=週日, 1=週一...6=週六
+    private Boolean isWorkingDay;   // 是否上班
+    private String startTime;       // 上班時間 HH:mm
+    private String endTime;         // 下班時間 HH:mm
+    private String breakStartTime;  // 休息開始
+    private String breakEndTime;    // 休息結束
+}
+
+// StaffLeave - 特定日期請假
+@Entity
+@Table(name = "staff_leaves")
+public class StaffLeave extends BaseEntity {
+    private String staffId;
+    private LocalDate leaveDate;    // 請假日期
+    private LeaveType leaveType;    // PERSONAL/SICK/VACATION/ANNUAL/OTHER
+    private String reason;          // 請假原因
+    private Boolean isFullDay;      // 是否全天
+    private String startTime;       // 半天假開始
+    private String endTime;         // 半天假結束
+}
 ```
 
 ---

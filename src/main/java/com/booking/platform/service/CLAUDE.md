@@ -18,15 +18,15 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (26 個)
+## Service 列表 (27 個)
 
 ### 核心服務
 
 | Service | 說明 |
 |---------|------|
-| BookingService | 預約業務 (建立、確認、取消、完成) |
+| BookingService | 預約業務 (建立、確認、取消、完成、編輯) |
 | CustomerService | 顧客管理 (建立、更新、點數、狀態) |
-| StaffService | 員工管理 (建立、更新、班表) |
+| StaffService | 員工管理 (建立、更新、排班、請假) |
 | ServiceItemService | 服務項目管理 |
 
 ### 行銷與商品
@@ -50,7 +50,7 @@ public XxxResponse create(...) { }
 
 | Service | 說明 |
 |---------|------|
-| FeatureService | 功能定義與租戶功能訂閱 (getAllFeatures, getActiveFeatures, initializeFeatures, updateFeature 含 isFree) |
+| FeatureService | 功能定義與租戶功能訂閱 |
 | FeatureStoreService | 功能商店 (店家申請功能) |
 
 ### 報表與分析
@@ -76,7 +76,7 @@ public XxxResponse create(...) { }
 | LineUserService | LINE 用戶管理 |
 | LineWebhookService | LINE Webhook 事件處理 |
 | LineMessageService | LINE 訊息發送 |
-| LineFlexMessageBuilder | Flex Message 構建 |
+| LineFlexMessageBuilder | Flex Message 構建（主選單、服務選單、日期Carousel等） |
 | LineConversationService | 對話狀態管理 |
 
 ### 通知與共用
@@ -95,8 +95,7 @@ public XxxResponse create(...) { }
 service/
 ├── admin/              # 超管服務
 │   ├── AdminDashboardService
-│   ├── AdminFeatureService (整合至 FeatureService)
-│   └── AdminPointService (整合至 PointTopUpService)
+│   └── AdminPointService
 ├── line/               # LINE 相關
 │   ├── LineConfigService
 │   ├── LineUserService
@@ -130,6 +129,23 @@ service/
 
 ---
 
+## StaffService 員工管理
+
+```java
+// 排班管理
+StaffScheduleResponse getSchedule(String staffId);
+StaffScheduleResponse updateSchedule(String staffId, StaffScheduleRequest request);
+
+// 請假管理
+List<StaffLeaveResponse> getLeaves(String staffId, LocalDate startDate, LocalDate endDate);
+List<StaffLeaveResponse> createLeaves(String staffId, CreateStaffLeaveRequest request);
+void deleteLeave(String staffId, String leaveId);
+void deleteLeaveByDate(String staffId, LocalDate date);
+boolean isStaffOnLeave(String staffId, LocalDate date);
+```
+
+---
+
 ## 方法模板
 
 ```java
@@ -153,19 +169,9 @@ public XxxResponse create(CreateXxxRequest request) {
     xxxRepository.save(entity);
 
     // ========================================
-    // 4. 記錄 AuditLog（重要操作）
+    // 4. 記錄日誌
     // ========================================
     log.info("建立 Xxx，租戶：{}，ID：{}", tenantId, entity.getId());
-
-    // ========================================
-    // 5. 清快取（如有）
-    // ========================================
-    cacheService.evict("xxx:" + tenantId);
-
-    // ========================================
-    // 6. 發通知（如需）
-    // ========================================
-    notificationService.sendXxxNotification(entity);
 
     return mapper.toResponse(entity);
 }
@@ -180,13 +186,16 @@ public XxxResponse create(CreateXxxRequest request) {
 // TTL: 30 分鐘
 
 // 取得狀態
-ConversationContext context = lineConversationService.getState(tenantId, lineUserId);
+ConversationContext context = lineConversationService.getContext(tenantId, lineUserId);
 
-// 設定狀態
-lineConversationService.setState(tenantId, lineUserId, ConversationState.SELECTING_SERVICE, context);
+// 開始預約
+lineConversationService.startBooking(tenantId, lineUserId);
 
-// 清除狀態
-lineConversationService.clearState(tenantId, lineUserId);
+// 設定選擇的服務
+lineConversationService.setSelectedService(tenantId, userId, serviceId, serviceName, duration, price);
+
+// 重置狀態
+lineConversationService.reset(tenantId, lineUserId);
 ```
 
 ---
