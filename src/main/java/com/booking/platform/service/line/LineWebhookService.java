@@ -282,6 +282,11 @@ public class LineWebhookService {
         String staffId = params.get("staffId");
         String staffName = params.get("staffName");
 
+        // 空字串視為 null（不指定員工）
+        if (staffId != null && staffId.isEmpty()) {
+            staffId = null;
+        }
+
         conversationService.setSelectedStaff(tenantId, userId, staffId, staffName);
 
         // 回覆日期選單
