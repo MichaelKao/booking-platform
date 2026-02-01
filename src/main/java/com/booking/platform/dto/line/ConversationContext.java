@@ -1,6 +1,8 @@
 package com.booking.platform.dto.line;
 
 import com.booking.platform.enums.line.ConversationState;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +28,7 @@ import java.time.LocalTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConversationContext implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -220,6 +223,7 @@ public class ConversationContext implements Serializable {
      *
      * @return 預約開始時間
      */
+    @JsonIgnore
     public LocalDateTime getBookingStartTime() {
         if (this.selectedDate == null || this.selectedTime == null) {
             return null;
@@ -232,6 +236,7 @@ public class ConversationContext implements Serializable {
      *
      * @return 預約結束時間
      */
+    @JsonIgnore
     public LocalDateTime getBookingEndTime() {
         LocalDateTime startTime = getBookingStartTime();
         if (startTime == null || this.selectedServiceDuration == null) {
