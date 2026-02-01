@@ -38,6 +38,9 @@ public class BookingMapper {
                 .cancelReason(entity.getCancelReason())
                 .cancelledAt(entity.getCancelledAt())
                 .source(entity.getSource())
+                .storeNoteToCustomer(entity.getStoreNoteToCustomer())
+                .lastModifiedAt(entity.getLastModifiedAt())
+                .lastModifiedBy(entity.getLastModifiedBy())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

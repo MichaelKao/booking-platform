@@ -290,7 +290,7 @@ public class LineWebhookService {
         conversationService.setSelectedStaff(tenantId, userId, staffId, staffName);
 
         // 回覆日期選單
-        JsonNode dateMenu = flexMessageBuilder.buildDateMenu();
+        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
         messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
     }
 
@@ -416,7 +416,7 @@ public class LineWebhookService {
                 messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
             }
             case SELECTING_DATE -> {
-                JsonNode dateMenu = flexMessageBuilder.buildDateMenu();
+                JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
                 messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
             }
             case SELECTING_TIME -> {

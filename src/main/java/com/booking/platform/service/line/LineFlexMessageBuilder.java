@@ -8,9 +8,12 @@ import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.BookingStatus;
 import com.booking.platform.enums.ServiceStatus;
 import com.booking.platform.enums.StaffStatus;
+import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
+import com.booking.platform.repository.StaffScheduleRepository;
 import com.booking.platform.repository.TenantRepository;
+import com.booking.platform.entity.staff.StaffSchedule;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -18,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -60,6 +64,8 @@ public class LineFlexMessageBuilder {
     private final TenantRepository tenantRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
+    private final StaffScheduleRepository staffScheduleRepository;
+    private final BookingRepository bookingRepository;
 
     // ========================================
     // 顏色常數
@@ -398,9 +404,14 @@ public class LineFlexMessageBuilder {
     /**
      * 建構日期選單
      *
+     * @param tenantId 租戶 ID
      * @return Flex Message 內容
      */
-    public JsonNode buildDateMenu() {
+    public JsonNode buildDateMenu(String tenantId) {
+        // 取得店家設定
+        Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
+        int maxAdvanceDays = tenantOpt.map(Tenant::getMaxAdvanceBookingDays).orElse(30);
+        List<Integer> closedDays = parseClosedDays(tenantOpt.map(Tenant::getClosedDays).orElse(null));
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
@@ -432,14 +443,26 @@ public class LineFlexMessageBuilder {
         DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)");
         DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
-        for (int i = 0; i < 7; i++) {
-            LocalDate date = today.plusDays(i);
-            String displayDate = date.format(displayFormatter);
-            String dataDate = date.format(dataFormatter);
+        // 限制顯示天數，最多 7 天但不超過 maxAdvanceDays
+        int daysToShow = Math.min(7, maxAdvanceDays);
+        int daysAdded = 0;
+        int dayOffset = 0;
 
-            String label = i == 0 ? "今天 " + displayDate : displayDate;
+        while (daysAdded < daysToShow && dayOffset < maxAdvanceDays) {
+            LocalDate date = today.plusDays(dayOffset);
+            int dayOfWeek = date.getDayOfWeek().getValue() % 7; // 轉換為 0=週日
 
-            bodyContents.add(createDateButton(label, dataDate));
+            // 檢查是否為公休日
+            if (!closedDays.contains(dayOfWeek)) {
+                String displayDate = date.format(displayFormatter);
+                String dataDate = date.format(dataFormatter);
+
+                String label = dayOffset == 0 ? "今天 " + displayDate : displayDate;
+
+                bodyContents.add(createDateButton(label, dataDate));
+                daysAdded++;
+            }
+            dayOffset++;
         }
 
         body.set("contents", bodyContents);
@@ -483,8 +506,8 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildTimeMenu(String tenantId, String staffId, LocalDate date, Integer duration) {
-        // TODO: 實際查詢可用時段
-        List<LocalTime> availableSlots = generateAvailableSlots(date);
+        // 根據店家營業時間、員工排班、已有預約產生可用時段
+        List<LocalTime> availableSlots = generateAvailableSlots(tenantId, staffId, date, duration);
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -561,28 +584,142 @@ public class LineFlexMessageBuilder {
     }
 
     /**
-     * 產生可用時段（模擬）
+     * 產生可用時段
+     *
+     * @param tenantId 租戶 ID
+     * @param staffId  員工 ID（可為 null）
+     * @param date     日期
+     * @param duration 服務時長（分鐘）
+     * @return 可用時段列表
      */
-    private List<LocalTime> generateAvailableSlots(LocalDate date) {
+    private List<LocalTime> generateAvailableSlots(String tenantId, String staffId, LocalDate date, Integer duration) {
         List<LocalTime> slots = new ArrayList<>();
 
-        LocalTime start = LocalTime.of(10, 0);
-        LocalTime end = LocalTime.of(18, 0);
+        // 取得店家設定
+        Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
+        if (tenantOpt.isEmpty()) {
+            return slots;
+        }
 
-        // 如果是今天，從下一個整點開始
-        if (date.equals(LocalDate.now())) {
-            LocalTime now = LocalTime.now();
-            if (now.isAfter(start)) {
-                start = now.plusHours(1).withMinute(0).withSecond(0);
+        Tenant tenant = tenantOpt.get();
+        LocalTime businessStart = tenant.getBusinessStartTime() != null ? tenant.getBusinessStartTime() : LocalTime.of(9, 0);
+        LocalTime businessEnd = tenant.getBusinessEndTime() != null ? tenant.getBusinessEndTime() : LocalTime.of(21, 0);
+        int interval = tenant.getBookingInterval() != null ? tenant.getBookingInterval() : 30;
+        LocalTime breakStart = tenant.getBreakStartTime();
+        LocalTime breakEnd = tenant.getBreakEndTime();
+
+        // 如果有指定員工，取得員工排班
+        LocalTime staffStart = null;
+        LocalTime staffEnd = null;
+        LocalTime staffBreakStart = null;
+        LocalTime staffBreakEnd = null;
+
+        if (staffId != null && !staffId.isEmpty()) {
+            int dayOfWeek = date.getDayOfWeek().getValue() % 7; // 轉換為 0=週日
+            Optional<StaffSchedule> scheduleOpt = staffScheduleRepository.findByStaffIdAndDayOfWeek(staffId, tenantId, dayOfWeek);
+
+            if (scheduleOpt.isPresent()) {
+                StaffSchedule schedule = scheduleOpt.get();
+
+                // 如果員工當天不上班，返回空
+                if (!Boolean.TRUE.equals(schedule.getIsWorkingDay())) {
+                    return slots;
+                }
+
+                staffStart = schedule.getStartTime();
+                staffEnd = schedule.getEndTime();
+                staffBreakStart = schedule.getBreakStartTime();
+                staffBreakEnd = schedule.getBreakEndTime();
             }
         }
 
-        while (!start.isAfter(end.minusHours(1))) {
-            slots.add(start);
-            start = start.plusMinutes(30);
+        // 確定可用時間範圍（取交集）
+        LocalTime effectiveStart = businessStart;
+        LocalTime effectiveEnd = businessEnd;
+
+        if (staffStart != null) {
+            effectiveStart = effectiveStart.isBefore(staffStart) ? staffStart : effectiveStart;
+        }
+        if (staffEnd != null) {
+            effectiveEnd = effectiveEnd.isAfter(staffEnd) ? staffEnd : effectiveEnd;
+        }
+
+        // 如果是今天，從下一個時段開始
+        if (date.equals(LocalDate.now())) {
+            LocalTime now = LocalTime.now();
+            // 計算下一個可用時段
+            int minutesPastStart = (now.getHour() * 60 + now.getMinute()) - (effectiveStart.getHour() * 60 + effectiveStart.getMinute());
+            if (minutesPastStart >= 0) {
+                int slotsToSkip = (minutesPastStart / interval) + 1;
+                effectiveStart = effectiveStart.plusMinutes((long) slotsToSkip * interval);
+            }
+        }
+
+        // 服務時長
+        int serviceDuration = duration != null ? duration : 60;
+
+        // 產生時段
+        LocalTime current = effectiveStart;
+        while (!current.plusMinutes(serviceDuration).isAfter(effectiveEnd)) {
+            boolean isAvailable = true;
+
+            // 檢查是否在店家休息時間
+            if (breakStart != null && breakEnd != null) {
+                if (isTimeOverlapping(current, current.plusMinutes(serviceDuration), breakStart, breakEnd)) {
+                    isAvailable = false;
+                }
+            }
+
+            // 檢查是否在員工休息時間
+            if (isAvailable && staffBreakStart != null && staffBreakEnd != null) {
+                if (isTimeOverlapping(current, current.plusMinutes(serviceDuration), staffBreakStart, staffBreakEnd)) {
+                    isAvailable = false;
+                }
+            }
+
+            // 檢查是否有衝突預約（如有指定員工）
+            if (isAvailable && staffId != null && !staffId.isEmpty()) {
+                boolean hasConflict = bookingRepository.existsConflictingBooking(
+                        tenantId, staffId, date, current, current.plusMinutes(serviceDuration)
+                );
+                if (hasConflict) {
+                    isAvailable = false;
+                }
+            }
+
+            if (isAvailable) {
+                slots.add(current);
+            }
+
+            current = current.plusMinutes(interval);
         }
 
         return slots;
+    }
+
+    /**
+     * 檢查兩個時間區間是否重疊
+     */
+    private boolean isTimeOverlapping(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
+        return start1.isBefore(end2) && end1.isAfter(start2);
+    }
+
+    /**
+     * 解析公休日設定
+     *
+     * @param closedDaysJson JSON 格式的公休日（例如：[0,6]）
+     * @return 公休日列表
+     */
+    private List<Integer> parseClosedDays(String closedDaysJson) {
+        if (closedDaysJson == null || closedDaysJson.isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(closedDaysJson, new TypeReference<List<Integer>>() {});
+        } catch (Exception e) {
+            log.warn("解析公休日失敗：{}", closedDaysJson, e);
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -1101,6 +1238,103 @@ public class LineFlexMessageBuilder {
             case NO_SHOW -> "預約標記為未到";
             default -> "預約狀態更新";
         };
+    }
+
+    // ========================================
+    // 8. 預約修改通知
+    // ========================================
+
+    /**
+     * 建構預約修改通知訊息
+     *
+     * @param booking           預約
+     * @param changeDescription 變更描述
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBookingModificationNotification(Booking booking, String changeDescription) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#FF9800");  // 橙色 - 表示修改
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode title = objectMapper.createObjectNode();
+        title.put("type", "text");
+        title.put("text", "預約資訊已更新");
+        title.put("size", "lg");
+        title.put("weight", "bold");
+        title.put("color", "#FFFFFF");
+        title.put("align", "center");
+        headerContents.add(title);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 預約詳情
+        bodyContents.add(createInfoRow("服務項目", booking.getServiceName()));
+        bodyContents.add(createInfoRow("日期",
+                booking.getBookingDate().format(DateTimeFormatter.ofPattern("yyyy年M月d日 (E)"))));
+        bodyContents.add(createInfoRow("時間",
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
+                        booking.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"))));
+
+        if (booking.getStaffName() != null) {
+            bodyContents.add(createInfoRow("服務人員", booking.getStaffName()));
+        }
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "lg");
+        bodyContents.add(separator);
+
+        // 變更說明
+        ObjectNode changeLabel = objectMapper.createObjectNode();
+        changeLabel.put("type", "text");
+        changeLabel.put("text", "變更內容");
+        changeLabel.put("size", "sm");
+        changeLabel.put("color", SECONDARY_COLOR);
+        changeLabel.put("margin", "lg");
+        bodyContents.add(changeLabel);
+
+        ObjectNode changeText = objectMapper.createObjectNode();
+        changeText.put("type", "text");
+        changeText.put("text", changeDescription);
+        changeText.put("size", "sm");
+        changeText.put("wrap", true);
+        changeText.put("margin", "sm");
+        bodyContents.add(changeText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("查看我的預約", "action=view_bookings", LINK_COLOR)
+        ));
+        bubble.set("footer", footer);
+
+        return bubble;
     }
 
     // ========================================

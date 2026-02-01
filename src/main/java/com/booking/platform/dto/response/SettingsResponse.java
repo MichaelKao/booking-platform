@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 店家設定回應
@@ -135,4 +136,43 @@ public class SettingsResponse {
      * 建立時間
      */
     private LocalDateTime createdAt;
+
+    // ========================================
+    // 營業設定
+    // ========================================
+
+    /**
+     * 營業開始時間
+     */
+    private LocalTime businessStartTime;
+
+    /**
+     * 營業結束時間
+     */
+    private LocalTime businessEndTime;
+
+    /**
+     * 預約時段間隔（分鐘）
+     */
+    private Integer bookingInterval;
+
+    /**
+     * 最大預約提前天數
+     */
+    private Integer maxAdvanceBookingDays;
+
+    /**
+     * 公休日（JSON 格式）
+     */
+    private String closedDays;
+
+    /**
+     * 休息開始時間（午休）
+     */
+    private LocalTime breakStartTime;
+
+    /**
+     * 休息結束時間（午休）
+     */
+    private LocalTime breakEndTime;
 }

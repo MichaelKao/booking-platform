@@ -16,6 +16,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 租戶（店家）
@@ -212,6 +213,56 @@ public class Tenant extends BaseEntity {
      */
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;
+
+    // ========================================
+    // 營業設定
+    // ========================================
+
+    /**
+     * 營業開始時間
+     */
+    @Column(name = "business_start_time")
+    @Builder.Default
+    private LocalTime businessStartTime = LocalTime.of(9, 0);
+
+    /**
+     * 營業結束時間
+     */
+    @Column(name = "business_end_time")
+    @Builder.Default
+    private LocalTime businessEndTime = LocalTime.of(21, 0);
+
+    /**
+     * 預約時段間隔（分鐘）
+     */
+    @Column(name = "booking_interval")
+    @Builder.Default
+    private Integer bookingInterval = 30;
+
+    /**
+     * 最大預約提前天數
+     */
+    @Column(name = "max_advance_booking_days")
+    @Builder.Default
+    private Integer maxAdvanceBookingDays = 30;
+
+    /**
+     * 公休日（JSON 格式，例如：[0,6] 表示週日和週六）
+     */
+    @Column(name = "closed_days", length = 50)
+    private String closedDays;
+
+    /**
+     * 休息開始時間（午休）
+     */
+    @Column(name = "break_start_time")
+    private LocalTime breakStartTime;
+
+    /**
+     * 休息結束時間（午休）
+     */
+    @Column(name = "break_end_time")
+    private LocalTime breakEndTime;
 
     // ========================================
     // 業務方法

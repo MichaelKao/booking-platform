@@ -193,6 +193,28 @@ public class Booking extends BaseEntity {
     private String source = "LINE";
 
     // ========================================
+    // 修改相關
+    // ========================================
+
+    /**
+     * 給顧客的店家備註
+     */
+    @Column(name = "store_note_to_customer", length = 500)
+    private String storeNoteToCustomer;
+
+    /**
+     * 最後修改時間
+     */
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
+
+    /**
+     * 最後修改者
+     */
+    @Column(name = "last_modified_by", length = 36)
+    private String lastModifiedBy;
+
+    // ========================================
     // 業務方法
     // ========================================
 

@@ -3,7 +3,9 @@ package com.booking.platform.controller;
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.common.response.PageResponse;
 import com.booking.platform.dto.request.CreateStaffRequest;
+import com.booking.platform.dto.request.StaffScheduleRequest;
 import com.booking.platform.dto.response.StaffResponse;
+import com.booking.platform.dto.response.StaffScheduleResponse;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.service.StaffService;
 import jakarta.validation.Valid;
@@ -75,5 +77,30 @@ public class StaffController {
         log.info("收到刪除員工請求，ID：{}", id);
         staffService.delete(id);
         return ApiResponse.ok();
+    }
+
+    // ========================================
+    // 排班 API
+    // ========================================
+
+    /**
+     * 取得員工排班
+     */
+    @GetMapping("/{id}/schedule")
+    public ApiResponse<StaffScheduleResponse> getSchedule(@PathVariable String id) {
+        log.info("收到取得員工排班請求，ID：{}", id);
+        return ApiResponse.ok(staffService.getSchedule(id));
+    }
+
+    /**
+     * 更新員工排班（批次 7 天）
+     */
+    @PutMapping("/{id}/schedule")
+    public ApiResponse<StaffScheduleResponse> updateSchedule(
+            @PathVariable String id,
+            @Valid @RequestBody StaffScheduleRequest request
+    ) {
+        log.info("收到更新員工排班請求，ID：{}", id);
+        return ApiResponse.ok(staffService.updateSchedule(id, request));
     }
 }

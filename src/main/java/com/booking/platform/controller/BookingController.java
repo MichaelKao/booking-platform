@@ -3,6 +3,7 @@ package com.booking.platform.controller;
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.common.response.PageResponse;
 import com.booking.platform.dto.request.CreateBookingRequest;
+import com.booking.platform.dto.request.UpdateBookingRequest;
 import com.booking.platform.dto.response.BookingResponse;
 import com.booking.platform.enums.BookingStatus;
 import com.booking.platform.service.BookingService;
@@ -85,6 +86,18 @@ public class BookingController {
     public ApiResponse<BookingResponse> create(@Valid @RequestBody CreateBookingRequest request) {
         log.info("收到建立預約請求：{}", request);
         return ApiResponse.ok(bookingService.create(request));
+    }
+
+    /**
+     * 更新預約
+     */
+    @PutMapping("/{id}")
+    public ApiResponse<BookingResponse> update(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateBookingRequest request
+    ) {
+        log.info("收到更新預約請求，ID：{}", id);
+        return ApiResponse.ok(bookingService.update(id, request));
     }
 
     // ========================================

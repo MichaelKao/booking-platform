@@ -16,7 +16,7 @@
                     <div class="data-table-body">
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead><tr><th>商品名稱</th><th>分類</th><th>售價</th><th>庫存</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <thead><tr><th>商品名稱</th><th>分類</th><th>售價</th><th>庫存</th><th>狀態</th><th class="text-center" style="width: 200px;">操作</th></tr></thead>
                                 <tbody id="dataTable"><tr><td colspan="6" class="text-center text-muted py-5">載入中...</td></tr></tbody>
                             </table>
                         </div>
@@ -82,6 +82,37 @@
         </div></div>
     </div>
 
+    <!-- 庫存調整 Modal -->
+    <div class="modal fade" id="stockModal" tabindex="-1">
+        <div class="modal-dialog modal-sm"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">調整庫存</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="stockProductId">
+                <div class="mb-3">
+                    <label class="form-label">商品名稱</label>
+                    <p id="stockProductName" class="mb-0 fw-bold"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">目前庫存</label>
+                    <p id="stockCurrentQty" class="mb-0 fw-bold text-primary"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">調整數量 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="stockAdjustQty" placeholder="正數增加，負數減少">
+                    <div class="form-text">例如：+10 增加 10 個，-5 減少 5 個</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">原因（選填）</label>
+                    <input type="text" class="form-control" id="stockReason" placeholder="例如：進貨、盤點調整">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">確認調整</button>
+            </div>
+        </div></div>
+    </div>
+
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
     <script>
         const currentPage = 'products';
@@ -98,19 +129,40 @@
                 const items = r.data?.content || r.data || [];
                 document.getElementById('dataTable').innerHTML = items.length === 0
                     ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無商品</td></tr>'
-                    : items.map(p => `<tr>
-                        <td><strong>${escapeHtml(p.name)}</strong></td>
-                        <td>${CATEGORY_MAP[p.category] || p.category || '-'}</td>
-                        <td>${formatMoney(p.price)}</td>
-                        <td>${p.stockQuantity !== null && p.stockQuantity !== undefined ? p.stockQuantity : '-'}</td>
-                        <td>${getProductStatusBadge(p.status)}</td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="editData('${p.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-outline-danger" onclick="deleteData('${p.id}')" title="刪除"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>`).join('');
+                    : items.map(p => {
+                        const isLowStock = p.stockQuantity !== null && p.safetyStock !== null && p.stockQuantity <= p.safetyStock;
+                        const stockDisplay = p.stockQuantity !== null && p.stockQuantity !== undefined
+                            ? (isLowStock ? `<span class="text-danger fw-bold">${p.stockQuantity} <i class="bi bi-exclamation-triangle-fill"></i></span>` : p.stockQuantity)
+                            : '-';
+                        const isOnSale = p.status === 'ON_SALE';
+                        const toggleBtnClass = isOnSale ? 'btn-success' : 'btn-outline-secondary';
+                        const toggleBtnIcon = isOnSale ? 'bi-toggle-on' : 'bi-toggle-off';
+                        const toggleBtnTitle = isOnSale ? '點擊下架' : '點擊上架';
+
+                        return `<tr>
+                            <td><strong>${escapeHtml(p.name)}</strong></td>
+                            <td>${CATEGORY_MAP[p.category] || p.category || '-'}</td>
+                            <td>${formatMoney(p.price)}</td>
+                            <td>${stockDisplay}</td>
+                            <td>${getProductStatusBadge(p.status)}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn ${toggleBtnClass}" onclick="toggleStatus('${p.id}', '${p.status}')" title="${toggleBtnTitle}">
+                                        <i class="bi ${toggleBtnIcon}"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="openStockModal('${p.id}', '${escapeHtml(p.name)}', ${p.stockQuantity ?? 'null'})" title="調整庫存">
+                                        <i class="bi bi-box-seam"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="editData('${p.id}')" title="編輯">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteData('${p.id}')" title="刪除">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
             } catch (e) {
                 console.error('載入商品失敗:', e);
                 document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
@@ -227,6 +279,68 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        // ========================================
+        // 狀態切換
+        // ========================================
+
+        async function toggleStatus(id, currentStatus) {
+            const isOnSale = currentStatus === 'ON_SALE';
+            const action = isOnSale ? 'off-shelf' : 'on-sale';
+            const actionText = isOnSale ? '下架' : '上架';
+
+            if (!await showConfirm(`確定要將此商品${actionText}嗎？`)) return;
+
+            try {
+                const r = await api.post(`/api/products/${id}/${action}`);
+                if (r.success) {
+                    showSuccess(`商品已${actionText}`);
+                    loadData();
+                }
+            } catch (e) {
+                console.error(`${actionText}商品失敗:`, e);
+                showError(`${actionText}失敗: ` + (e.message || '請稍後再試'));
+            }
+        }
+
+        // ========================================
+        // 庫存調整
+        // ========================================
+
+        function openStockModal(id, name, currentQty) {
+            document.getElementById('stockProductId').value = id;
+            document.getElementById('stockProductName').textContent = name;
+            document.getElementById('stockCurrentQty').textContent = currentQty !== null ? currentQty : '未追蹤';
+            document.getElementById('stockAdjustQty').value = '';
+            document.getElementById('stockReason').value = '';
+            new bootstrap.Modal(document.getElementById('stockModal')).show();
+        }
+
+        async function saveStockAdjustment() {
+            const id = document.getElementById('stockProductId').value;
+            const adjustQty = parseInt(document.getElementById('stockAdjustQty').value);
+            const reason = document.getElementById('stockReason').value.trim();
+
+            if (isNaN(adjustQty) || adjustQty === 0) {
+                showError('請輸入有效的調整數量');
+                return;
+            }
+
+            try {
+                const r = await api.post(`/api/products/${id}/adjust-stock`, {
+                    adjustment: adjustQty,
+                    reason: reason || null
+                });
+                if (r.success) {
+                    showSuccess('庫存調整成功');
+                    bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+                    loadData();
+                }
+            } catch (e) {
+                console.error('調整庫存失敗:', e);
+                showError('調整失敗: ' + (e.message || '請稍後再試'));
+            }
         }
     </script>
 </body>

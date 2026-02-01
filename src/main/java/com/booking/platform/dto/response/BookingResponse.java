@@ -60,6 +60,13 @@ public class BookingResponse {
 
     private String source;
 
+    private String storeNoteToCustomer;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastModifiedAt;
+
+    private String lastModifiedBy;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 

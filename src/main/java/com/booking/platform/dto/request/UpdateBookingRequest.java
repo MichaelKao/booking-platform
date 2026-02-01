@@ -58,5 +58,11 @@ public class UpdateBookingRequest {
      * 店家備註（內部使用）
      */
     @Size(max = 500, message = "店家備註長度不能超過 500 字")
-    private String staffNote;
+    private String internalNote;
+
+    /**
+     * 給顧客的店家備註（會顯示在通知中）
+     */
+    @Size(max = 500, message = "給顧客的備註長度不能超過 500 字")
+    private String storeNoteToCustomer;
 }

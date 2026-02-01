@@ -74,6 +74,49 @@ public class LineNotificationService {
     }
 
     /**
+     * 發送預約修改通知
+     *
+     * @param booking           預約
+     * @param changeDescription 變更描述
+     */
+    @Async
+    public void sendBookingModificationNotification(Booking booking, String changeDescription) {
+        try {
+            String tenantId = booking.getTenantId();
+            String customerId = booking.getCustomerId();
+
+            // 查詢顧客的 LINE User
+            Optional<LineUser> lineUserOpt = lineUserRepository
+                    .findByTenantIdAndCustomerIdAndDeletedAtIsNull(tenantId, customerId);
+
+            if (lineUserOpt.isEmpty()) {
+                log.debug("顧客沒有關聯的 LINE 用戶，跳過通知。顧客 ID：{}", customerId);
+                return;
+            }
+
+            LineUser lineUser = lineUserOpt.get();
+
+            // 檢查是否可以接收訊息
+            if (!lineUser.canReceiveMessage()) {
+                log.debug("LINE 用戶無法接收訊息（未追蹤或已刪除）。LINE User ID：{}", lineUser.getLineUserId());
+                return;
+            }
+
+            // 建構通知訊息
+            JsonNode notification = flexMessageBuilder.buildBookingModificationNotification(booking, changeDescription);
+
+            // 發送推播
+            messageService.pushFlex(tenantId, lineUser.getLineUserId(), "您的預約資訊已更新", notification);
+
+            log.info("已發送預約修改通知，租戶：{}，預約 ID：{}",
+                    tenantId, booking.getId());
+
+        } catch (Exception e) {
+            log.error("發送預約修改通知失敗，預約 ID：{}，錯誤：{}", booking.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
      * 取得通知替代文字（用於無法顯示 Flex Message 時）
      */
     private String getNotificationAltText(BookingStatus status) {

@@ -132,6 +132,32 @@ public class SettingsService {
         }
 
         // ========================================
+        // 3.1 更新營業設定
+        // ========================================
+
+        if (request.getBusinessStartTime() != null) {
+            tenant.setBusinessStartTime(request.getBusinessStartTime());
+        }
+        if (request.getBusinessEndTime() != null) {
+            tenant.setBusinessEndTime(request.getBusinessEndTime());
+        }
+        if (request.getBookingInterval() != null) {
+            tenant.setBookingInterval(request.getBookingInterval());
+        }
+        if (request.getMaxAdvanceBookingDays() != null) {
+            tenant.setMaxAdvanceBookingDays(request.getMaxAdvanceBookingDays());
+        }
+        if (request.getClosedDays() != null) {
+            tenant.setClosedDays(request.getClosedDays());
+        }
+        if (request.getBreakStartTime() != null) {
+            tenant.setBreakStartTime(request.getBreakStartTime());
+        }
+        if (request.getBreakEndTime() != null) {
+            tenant.setBreakEndTime(request.getBreakEndTime());
+        }
+
+        // ========================================
         // 4. 儲存更新
         // ========================================
 
@@ -175,6 +201,14 @@ public class SettingsService {
                 .activatedAt(tenant.getActivatedAt())
                 .expiredAt(tenant.getExpiredAt())
                 .createdAt(tenant.getCreatedAt())
+                // 營業設定
+                .businessStartTime(tenant.getBusinessStartTime())
+                .businessEndTime(tenant.getBusinessEndTime())
+                .bookingInterval(tenant.getBookingInterval())
+                .maxAdvanceBookingDays(tenant.getMaxAdvanceBookingDays())
+                .closedDays(tenant.getClosedDays())
+                .breakStartTime(tenant.getBreakStartTime())
+                .breakEndTime(tenant.getBreakEndTime())
                 .build();
     }
 }

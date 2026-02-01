@@ -1,10 +1,14 @@
 package com.booking.platform.dto.request;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalTime;
 
 /**
  * 更新店家設定請求
@@ -67,23 +71,42 @@ public class UpdateSettingsRequest {
     // ========================================
 
     /**
-     * 營業時間（JSON 格式）
+     * 營業開始時間
      */
-    @Size(max = 1000, message = "營業時間設定長度不能超過 1000 字")
-    private String businessHours;
+    private LocalTime businessStartTime;
+
+    /**
+     * 營業結束時間
+     */
+    private LocalTime businessEndTime;
 
     /**
      * 預約間隔（分鐘）
      */
+    @Min(value = 5, message = "預約間隔最少 5 分鐘")
+    @Max(value = 120, message = "預約間隔最多 120 分鐘")
     private Integer bookingInterval;
 
     /**
      * 預約提前天數上限
      */
+    @Min(value = 1, message = "預約提前天數最少 1 天")
+    @Max(value = 365, message = "預約提前天數最多 365 天")
     private Integer maxAdvanceBookingDays;
 
     /**
-     * 預約取消時限（小時）
+     * 公休日（JSON 格式，例如：[0,6] 表示週日和週六）
      */
-    private Integer cancelBeforeHours;
+    @Size(max = 50, message = "公休日設定長度不能超過 50 字")
+    private String closedDays;
+
+    /**
+     * 休息開始時間（午休）
+     */
+    private LocalTime breakStartTime;
+
+    /**
+     * 休息結束時間（午休）
+     */
+    private LocalTime breakEndTime;
 }
