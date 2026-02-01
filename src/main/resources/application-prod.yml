@@ -40,9 +40,12 @@ spring:
   # ========================================
   data:
     redis:
-      url: ${REDIS_URL:}
+      url: ${REDIS_URL:redis://localhost:6379}
       connect-timeout: 5000ms
       timeout: 5000ms
+      lettuce:
+        pool:
+          enabled: false
 
   # ========================================
   # 郵件設定
