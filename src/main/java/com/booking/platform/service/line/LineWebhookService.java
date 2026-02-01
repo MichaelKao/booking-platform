@@ -167,7 +167,7 @@ public class LineWebhookService {
         String userId = event.path("source").path("userId").asText();
         String data = event.path("postback").path("data").asText();
 
-        log.debug("Postback 事件，租戶：{}，用戶：{}，資料：{}", tenantId, userId, data);
+        log.info("Postback 事件，租戶：{}，用戶：{}，資料：{}", tenantId, userId, data);
 
         // 確保用戶存在
         ensureUserExists(tenantId, userId, event);
@@ -437,9 +437,11 @@ public class LineWebhookService {
      * 處理查看預約
      */
     private void handleViewBookings(String tenantId, String userId, String replyToken) {
+        log.info("處理查看預約，租戶：{}，用戶：{}", tenantId, userId);
         try {
             // 取得顧客 ID
             String customerId = lineUserService.getCustomerId(tenantId, userId);
+            log.info("顧客 ID：{}", customerId);
 
             if (customerId == null) {
                 messageService.replyText(tenantId, replyToken, "您目前沒有預約記錄。");
