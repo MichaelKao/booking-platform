@@ -1,10 +1,13 @@
 package com.booking.platform.common.config;
 
 import com.booking.platform.entity.catalog.ServiceItem;
+import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.ServiceStatus;
+import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.enums.TenantStatus;
 import com.booking.platform.repository.ServiceItemRepository;
+import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class DataInitializer implements CommandLineRunner {
     private final AuthService authService;
     private final TenantRepository tenantRepository;
     private final ServiceItemRepository serviceItemRepository;
+    private final StaffRepository staffRepository;
 
     // ========================================
     // 初始化
@@ -51,6 +55,9 @@ public class DataInitializer implements CommandLineRunner {
 
         // 初始化測試服務資料
         initTestServices();
+
+        // 初始化測試員工資料
+        initTestStaffs();
 
         log.info("========================================");
         log.info("資料初始化完成");
@@ -159,5 +166,76 @@ public class DataInitializer implements CommandLineRunner {
         serviceItemRepository.save(shampoo);
 
         log.info("已為租戶建立 4 項預設服務");
+    }
+
+    /**
+     * 初始化測試員工資料
+     */
+    private void initTestStaffs() {
+        try {
+            // 查詢所有啟用的租戶
+            List<Tenant> tenants = tenantRepository.findAll().stream()
+                    .filter(t -> t.getDeletedAt() == null)
+                    .filter(t -> TenantStatus.ACTIVE.equals(t.getStatus()))
+                    .toList();
+
+            for (Tenant tenant : tenants) {
+                // 檢查是否已有員工
+                long staffCount = staffRepository.countByTenantIdAndDeletedAtIsNull(tenant.getId());
+
+                if (staffCount == 0) {
+                    log.info("為租戶 {} 建立預設員工...", tenant.getCode());
+                    createDefaultStaffs(tenant.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("初始化測試員工失敗：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 建立預設員工
+     */
+    private void createDefaultStaffs(String tenantId) {
+        // 員工 1: Michael
+        Staff staff1 = Staff.builder()
+                .name("Michael")
+                .displayName("Michael 老師")
+                .bio("資深設計師，擅長日韓風格")
+                .status(StaffStatus.ACTIVE)
+                .isBookable(true)
+                .isVisible(true)
+                .sortOrder(1)
+                .build();
+        staff1.setTenantId(tenantId);
+        staffRepository.save(staff1);
+
+        // 員工 2: Amy
+        Staff staff2 = Staff.builder()
+                .name("Amy")
+                .displayName("Amy 老師")
+                .bio("專業染燙師，色彩搭配專家")
+                .status(StaffStatus.ACTIVE)
+                .isBookable(true)
+                .isVisible(true)
+                .sortOrder(2)
+                .build();
+        staff2.setTenantId(tenantId);
+        staffRepository.save(staff2);
+
+        // 員工 3: Kevin
+        Staff staff3 = Staff.builder()
+                .name("Kevin")
+                .displayName("Kevin 老師")
+                .bio("男士造型專家")
+                .status(StaffStatus.ACTIVE)
+                .isBookable(true)
+                .isVisible(true)
+                .sortOrder(3)
+                .build();
+        staff3.setTenantId(tenantId);
+        staffRepository.save(staff3);
+
+        log.info("已為租戶建立 3 位預設員工");
     }
 }
