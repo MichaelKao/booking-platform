@@ -89,6 +89,87 @@
         </div></div>
     </div>
 
+    <!-- 排班設定 Modal -->
+    <div class="modal fade" id="scheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-calendar-week me-2"></i>排班設定 - <span id="scheduleStaffName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="scheduleStaffId">
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>設定員工每週的工作時間，顧客只能在員工上班時間內預約。
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle" id="scheduleTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 100px;">星期</th>
+                                    <th style="width: 80px;" class="text-center">上班</th>
+                                    <th>工作時段</th>
+                                    <th>休息時段</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-day="1">
+                                    <td class="fw-bold">週一</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle" checked></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="09:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="18:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="2">
+                                    <td class="fw-bold">週二</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle" checked></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="09:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="18:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="3">
+                                    <td class="fw-bold">週三</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle" checked></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="09:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="18:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="4">
+                                    <td class="fw-bold">週四</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle" checked></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="09:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="18:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="5">
+                                    <td class="fw-bold">週五</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle" checked></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="09:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="18:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="6">
+                                    <td class="fw-bold">週六</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle"></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="10:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="17:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                                <tr data-day="0">
+                                    <td class="fw-bold">週日</td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input day-toggle"></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm start-time" value="10:00"><span>-</span><input type="time" class="form-control form-control-sm end-time" value="17:00"></div></td>
+                                    <td><div class="d-flex gap-2 align-items-center"><input type="time" class="form-control form-control-sm break-start"><span>-</span><input type="time" class="form-control form-control-sm break-end"></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">
+                        <span class="btn-text">儲存排班</span>
+                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>處理中...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
     <script>
         const currentPage = 'staff';
@@ -122,6 +203,7 @@
                         <td>${getStaffStatusBadge(s.status)}</td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-info" onclick="openScheduleModal('${s.id}', '${escapeHtml(s.name)}')" title="排班設定"><i class="bi bi-calendar-week"></i></button>
                                 <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
                             </div>
@@ -257,6 +339,111 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        // ========================================
+        // 排班管理功能
+        // ========================================
+
+        async function openScheduleModal(staffId, staffName) {
+            document.getElementById('scheduleStaffId').value = staffId;
+            document.getElementById('scheduleStaffName').textContent = staffName;
+
+            // 重設表單為預設值
+            resetScheduleForm();
+
+            try {
+                const r = await api.get(`/api/staff/${staffId}/schedule`);
+                if (r.success && r.data && r.data.schedules) {
+                    fillScheduleForm(r.data.schedules);
+                }
+            } catch (e) {
+                console.log('載入排班資料失敗，使用預設值:', e);
+            }
+
+            new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+        }
+
+        function resetScheduleForm() {
+            const rows = document.querySelectorAll('#scheduleTable tbody tr');
+            rows.forEach(row => {
+                const dayOfWeek = parseInt(row.dataset.day);
+                const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+
+                row.querySelector('.day-toggle').checked = isWeekday;
+                row.querySelector('.start-time').value = isWeekday ? '09:00' : '10:00';
+                row.querySelector('.end-time').value = isWeekday ? '18:00' : '17:00';
+                row.querySelector('.break-start').value = '';
+                row.querySelector('.break-end').value = '';
+
+                updateRowDisabledState(row);
+            });
+        }
+
+        function fillScheduleForm(schedules) {
+            schedules.forEach(s => {
+                const row = document.querySelector(`#scheduleTable tbody tr[data-day="${s.dayOfWeek}"]`);
+                if (row) {
+                    row.querySelector('.day-toggle').checked = s.isWorkingDay;
+                    row.querySelector('.start-time').value = s.startTime || '09:00';
+                    row.querySelector('.end-time').value = s.endTime || '18:00';
+                    row.querySelector('.break-start').value = s.breakStartTime || '';
+                    row.querySelector('.break-end').value = s.breakEndTime || '';
+                    updateRowDisabledState(row);
+                }
+            });
+        }
+
+        function updateRowDisabledState(row) {
+            const isWorking = row.querySelector('.day-toggle').checked;
+            row.querySelectorAll('.start-time, .end-time, .break-start, .break-end').forEach(input => {
+                input.disabled = !isWorking;
+            });
+        }
+
+        // 監聽上班開關變化
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('day-toggle')) {
+                const row = e.target.closest('tr');
+                updateRowDisabledState(row);
+            }
+        });
+
+        async function saveSchedule() {
+            const staffId = document.getElementById('scheduleStaffId').value;
+            const schedules = [];
+
+            document.querySelectorAll('#scheduleTable tbody tr').forEach(row => {
+                const dayOfWeek = parseInt(row.dataset.day);
+                schedules.push({
+                    dayOfWeek: dayOfWeek,
+                    isWorkingDay: row.querySelector('.day-toggle').checked,
+                    startTime: row.querySelector('.start-time').value || null,
+                    endTime: row.querySelector('.end-time').value || null,
+                    breakStartTime: row.querySelector('.break-start').value || null,
+                    breakEndTime: row.querySelector('.break-end').value || null
+                });
+            });
+
+            const btn = document.querySelector('#scheduleModal .btn-primary');
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loading').classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const r = await api.put(`/api/staff/${staffId}/schedule`, { schedules: schedules });
+                if (r.success) {
+                    showSuccess('排班設定已儲存');
+                    bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide();
+                }
+            } catch (e) {
+                console.error('儲存排班失敗:', e);
+                showError('儲存失敗: ' + (e.message || '請稍後再試'));
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loading').classList.add('d-none');
+                btn.disabled = false;
+            }
         }
     </script>
 </body>

@@ -12,12 +12,14 @@ import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.catalog.ServiceItem;
 import com.booking.platform.entity.customer.Customer;
 import com.booking.platform.entity.staff.Staff;
+import com.booking.platform.entity.staff.StaffSchedule;
 import com.booking.platform.enums.BookingStatus;
 import com.booking.platform.mapper.BookingMapper;
 import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffRepository;
+import com.booking.platform.repository.StaffScheduleRepository;
 import com.booking.platform.service.line.LineNotificationService;
 import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
+    private final StaffScheduleRepository staffScheduleRepository;
     private final CustomerRepository customerRepository;
     private final BookingMapper bookingMapper;
     private final LineNotificationService lineNotificationService;
@@ -158,7 +161,28 @@ public class BookingService {
         }
 
         // ========================================
-        // 2. 查詢員工（如果有指定）
+        // 2. 驗證預約日期時間
+        // ========================================
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        // 不能預約過去的日期
+        if (request.getBookingDate().isBefore(today)) {
+            throw new BusinessException(
+                    ErrorCode.SYS_PARAM_ERROR, "無法預約過去的日期"
+            );
+        }
+
+        // 如果是今天，不能預約已過的時段
+        if (request.getBookingDate().equals(today) && request.getStartTime().isBefore(now)) {
+            throw new BusinessException(
+                    ErrorCode.SYS_PARAM_ERROR, "無法預約已過的時段"
+            );
+        }
+
+        // ========================================
+        // 3. 查詢員工（如果有指定）
         // ========================================
 
         Staff staff = null;
@@ -174,10 +198,41 @@ public class BookingService {
                         ErrorCode.STAFF_UNAVAILABLE, "該員工目前無法預約"
                 );
             }
+
+            // 驗證員工排班
+            int dayOfWeek = request.getBookingDate().getDayOfWeek().getValue() % 7; // 轉換為 0=週日, 1=週一...
+            StaffSchedule schedule = staffScheduleRepository
+                    .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dayOfWeek)
+                    .orElse(null);
+
+            // 如果有排班記錄，檢查是否上班日
+            if (schedule != null && !schedule.isWorking()) {
+                throw new BusinessException(
+                        ErrorCode.STAFF_UNAVAILABLE,
+                        "該員工在此日期不上班，請選擇其他員工或日期"
+                );
+            }
+
+            // 如果有排班記錄，檢查是否在工作時間內
+            if (schedule != null && schedule.isWorking()) {
+                LocalTime bookingStartTime = request.getStartTime();
+                if (schedule.getStartTime() != null && bookingStartTime.isBefore(schedule.getStartTime())) {
+                    throw new BusinessException(
+                            ErrorCode.STAFF_UNAVAILABLE,
+                            String.format("該員工 %s 後才開始上班", schedule.getStartTime())
+                    );
+                }
+                if (schedule.getEndTime() != null && bookingStartTime.isAfter(schedule.getEndTime().minusMinutes(30))) {
+                    throw new BusinessException(
+                            ErrorCode.STAFF_UNAVAILABLE,
+                            String.format("該員工 %s 前結束工作", schedule.getEndTime())
+                    );
+                }
+            }
         }
 
         // ========================================
-        // 3. 查詢顧客（如果有指定）
+        // 4. 查詢顧客（如果有指定）
         // ========================================
 
         Customer customer = null;
