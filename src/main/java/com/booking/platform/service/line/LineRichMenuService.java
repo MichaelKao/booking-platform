@@ -454,16 +454,24 @@ public class LineRichMenuService {
         HttpEntity<byte[]> request = new HttpEntity<>(imageBytes, headers);
 
         String url = DATA_API_ENDPOINT + String.format(UPLOAD_IMAGE_API, richMenuId);
+        log.debug("上傳 Rich Menu 圖片，URL：{}，大小：{} bytes", url, imageBytes.length);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                request,
-                String.class
-        );
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    request,
+                    String.class
+            );
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new BusinessException(ErrorCode.LINE_API_ERROR, "上傳 Rich Menu 圖片失敗");
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new BusinessException(ErrorCode.LINE_API_ERROR, "上傳 Rich Menu 圖片失敗");
+            }
+            log.info("Rich Menu 圖片上傳成功");
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("上傳圖片失敗：{}，回應：{}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.LINE_API_ERROR,
+                    "上傳 Rich Menu 圖片失敗：" + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
     }
 
@@ -479,16 +487,25 @@ public class LineRichMenuService {
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         String url = apiEndpoint + String.format(SET_DEFAULT_API, richMenuId);
+        log.debug("設定預設 Rich Menu，URL：{}", url);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                request,
-                String.class
-        );
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    request,
+                    String.class
+            );
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            log.warn("設定預設 Rich Menu 失敗，但繼續執行");
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.warn("設定預設 Rich Menu 回應非 2xx：{}", response.getStatusCode());
+            } else {
+                log.info("Rich Menu 設為預設成功");
+            }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("設定預設 Rich Menu 失敗：{}，回應：{}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.LINE_API_ERROR,
+                    "設定預設 Rich Menu 失敗：" + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
     }
 
