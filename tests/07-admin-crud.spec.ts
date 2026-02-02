@@ -118,10 +118,10 @@ test.describe('超管後台 CRUD 完整測試', () => {
         expect(response.ok()).toBeTruthy();
         const data = await response.json();
         expect(data.success).toBeTruthy();
-        expect(data.data).toHaveProperty('businessName');
+        expect(data.data).toHaveProperty('name');
         expect(data.data).toHaveProperty('email');
         expect(data.data).toHaveProperty('status');
-        console.log(`店家詳情: ${data.data.businessName}`);
+        console.log(`店家詳情: ${data.data.name}`);
       }
     });
 
