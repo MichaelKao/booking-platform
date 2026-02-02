@@ -1,6 +1,5 @@
 package com.booking.platform.dto.line;
 
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,8 +26,8 @@ public class CreateRichMenuRequest {
     /**
      * 主題配色
      * <p>可選值：GREEN, BLUE, PURPLE, ORANGE, DARK
+     * <p>若為 null 或空字串，預設使用 GREEN
      */
-    @Pattern(regexp = "^(GREEN|BLUE|PURPLE|ORANGE|DARK)$", message = "主題必須為 GREEN, BLUE, PURPLE, ORANGE 或 DARK")
     private String theme;
 
     // ========================================

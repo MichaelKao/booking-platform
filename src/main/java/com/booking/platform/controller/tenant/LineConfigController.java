@@ -158,7 +158,7 @@ public class LineConfigController {
      */
     @PostMapping("/rich-menu/create")
     public ResponseEntity<ApiResponse<java.util.Map<String, String>>> createRichMenu(
-            @Valid @RequestBody CreateRichMenuRequest request
+            @RequestBody CreateRichMenuRequest request
     ) {
         log.debug("建立 Rich Menu，主題：{}", request.getTheme());
 
