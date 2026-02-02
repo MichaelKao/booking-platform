@@ -7,7 +7,7 @@
 
 ---
 
-## Enum 列表 (20 個)
+## Enum 列表 (26 個)
 
 ### 業務狀態
 
@@ -47,8 +47,30 @@
 | Enum | 值 | 說明 |
 |------|-----|------|
 | ProductCategory | VOUCHER, MERCHANDISE, SERVICE | 商品分類 |
+| CouponType | PERCENTAGE, FIXED_AMOUNT, FREE_ITEM | 票券類型 |
 | CampaignType | DISCOUNT, GIFT, LOYALTY, REFERRAL | 活動類型 |
 | Gender | MALE, FEMALE, UNKNOWN | 性別 |
+
+### 行銷推播相關
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| MarketingPushStatus | DRAFT, SCHEDULED, SENT, CANCELLED | 推播狀態 |
+| MarketingPushTargetType | ALL, ACTIVE, INACTIVE, MEMBERSHIP_LEVEL | 推播目標類型 |
+
+### SMS 相關
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| SmsStatus | PENDING, SENT, FAILED | 簡訊發送狀態 |
+| SmsType | BOOKING_CONFIRMATION, BOOKING_REMINDER, MARKETING | 簡訊類型 |
+
+### 金流相關
+
+| Enum | 值 | 說明 |
+|------|-----|------|
+| PaymentStatus | PENDING, PAID, FAILED, REFUNDED | 支付狀態 |
+| PaymentType | CREDIT_CARD, ATM, CVS, BARCODE | 支付方式 |
 
 ### LINE 相關
 

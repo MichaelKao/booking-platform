@@ -49,13 +49,13 @@ public class Xxx extends BaseEntity {
 
 ---
 
-## Entity 列表 (19 個)
+## Entity 列表 (23 個)
 
 ### 租戶相關
 
 | Entity | 表名 | 說明 |
 |--------|------|------|
-| Tenant | tenants | 店家資訊 |
+| Tenant | tenants | 店家資訊 (含 reminderHoursBefore, smsEnabled 等) |
 | AdminUser | admin_users | 超級管理員 |
 
 ### 員工相關
@@ -70,7 +70,7 @@ public class Xxx extends BaseEntity {
 
 | Entity | 表名 | 說明 |
 |--------|------|------|
-| Booking | bookings | 預約記錄 |
+| Booking | bookings | 預約記錄 (含 cancelToken 欄位) |
 
 ### 顧客相關
 
@@ -100,6 +100,7 @@ public class Xxx extends BaseEntity {
 | Coupon | coupons | 票券定義 |
 | CouponInstance | coupon_instances | 票券實例 |
 | Campaign | campaigns | 行銷活動 |
+| MarketingPush | marketing_pushes | 行銷推播記錄 |
 
 ### 系統相關
 
@@ -108,6 +109,8 @@ public class Xxx extends BaseEntity {
 | Feature | features | 功能定義 |
 | TenantFeature | tenant_features | 租戶功能訂閱狀態 |
 | PointTopUp | point_topups | 儲值申請記錄 |
+| Payment | payments | 支付記錄 (ECPay) |
+| SmsLog | sms_logs | 簡訊發送記錄 |
 
 ### LINE 相關
 
@@ -125,7 +128,10 @@ entity/
 ├── system/              # 系統實體
 │   ├── Feature
 │   ├── TenantFeature
-│   └── PointTopUp
+│   ├── PointTopUp
+│   ├── AdminUser
+│   ├── Payment
+│   └── SmsLog
 ├── staff/               # 員工實體
 │   ├── Staff
 │   ├── StaffSchedule
@@ -136,15 +142,18 @@ entity/
 │   └── Booking
 ├── customer/            # 顧客實體
 │   ├── Customer
-│   └── MembershipLevel
-├── catalog/             # 服務/商品實體
+│   ├── MembershipLevel
+│   └── PointTransaction
+├── catalog/             # 服務實體
 │   ├── ServiceCategory
-│   ├── ServiceItem
+│   └── ServiceItem
+├── product/             # 商品實體
 │   └── Product
 ├── marketing/           # 行銷實體
 │   ├── Coupon
 │   ├── CouponInstance
-│   └── Campaign
+│   ├── Campaign
+│   └── MarketingPush
 └── line/                # LINE 實體
     ├── TenantLineConfig
     └── LineUser

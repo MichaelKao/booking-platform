@@ -10,7 +10,7 @@
 
 ---
 
-## Repository 列表 (19 個)
+## Repository 列表 (23 個)
 
 ### 租戶相關
 
@@ -31,7 +31,7 @@
 
 | Repository | Entity | 說明 |
 |------------|--------|------|
-| BookingRepository | Booking | 預約查詢 |
+| BookingRepository | Booking | 預約查詢 (含 findUpcomingBookings) |
 | CustomerRepository | Customer | 顧客查詢 |
 | ServiceCategoryRepository | ServiceCategory | 服務分類查詢 |
 | ServiceItemRepository | ServiceItem | 服務項目查詢 |
@@ -45,6 +45,7 @@
 | CouponInstanceRepository | CouponInstance | 票券實例查詢 |
 | CampaignRepository | Campaign | 行銷活動查詢 |
 | MembershipLevelRepository | MembershipLevel | 會員等級查詢 |
+| MarketingPushRepository | MarketingPush | 行銷推播查詢 |
 
 ### 系統相關
 
@@ -54,6 +55,8 @@
 | TenantFeatureRepository | TenantFeature | 租戶功能訂閱查詢 |
 | PointTopUpRepository | PointTopUp | 儲值申請查詢 |
 | PointTransactionRepository | PointTransaction | 點數交易查詢 |
+| PaymentRepository | Payment | 支付記錄查詢 |
+| SmsLogRepository | SmsLog | 簡訊記錄查詢 |
 
 ### LINE 相關
 

@@ -11,7 +11,7 @@
 @Slf4j
 ```
 
-## 目錄結構 (24 個 Controller)
+## 目錄結構 (29 個 Controller)
 
 | 目錄 | Controller | 用途 |
 |------|------------|------|
@@ -32,12 +32,17 @@
 | / | ProductController | 商品管理 |
 | / | CouponController | 票券管理 |
 | / | CampaignController | 行銷活動 |
+| / | MarketingController | 行銷推播 |
 | / | MembershipLevelController | 會員等級 |
 | / | PointController | 點數管理 |
 | / | ReportController | 報表 |
 | / | SettingsController | 店家設定 |
 | / | FeatureStoreController | 功能商店 |
 | / | NotificationController | SSE 即時通知 |
+| / | ExportController | 匯出 (Excel/PDF) |
+| / | PaymentController | 金流支付 |
+| / | PublicBookingController | 公開預約頁面 (自助取消) |
+| / | HealthController | 健康檢查 |
 | / | FaviconController | Favicon |
 
 ---
@@ -206,6 +211,38 @@ POST /line/deactivate # 停用 LINE Bot
 ### 即時通知 (`/api/notifications`)
 ```
 GET /stream         # SSE 訂閱（店家後台即時通知）
+```
+
+### 行銷推播 (`/api/marketing`)
+```
+GET    /pushes              # 推播列表
+POST   /pushes              # 建立推播
+GET    /pushes/{id}         # 推播詳情
+DELETE /pushes/{id}         # 取消推播
+POST   /pushes/{id}/send    # 立即發送
+```
+
+### 匯出 (`/api/export`)
+```
+GET /bookings/excel   # 匯出預約 Excel (startDate, endDate, status)
+GET /bookings/pdf     # 匯出預約 PDF
+GET /reports/excel    # 匯出報表 Excel (range=month)
+GET /reports/pdf      # 匯出報表 PDF
+GET /customers/excel  # 匯出顧客 Excel
+```
+
+### 金流 (`/api/payments`)
+```
+POST /create          # 建立支付
+POST /notify          # ECPay 回調通知
+GET  /{id}            # 查詢支付狀態
+GET  /                # 支付記錄列表
+```
+
+### 公開預約 (`/booking`)
+```
+GET  /cancel/{token}  # 顯示取消頁面
+POST /cancel/{token}  # 執行取消預約
 ```
 
 ---

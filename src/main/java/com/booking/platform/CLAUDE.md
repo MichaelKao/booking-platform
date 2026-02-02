@@ -36,16 +36,19 @@ public interface XxxRepository extends JpaRepository<Xxx, String> { }
 | controller/line | LINE Webhook |
 | controller/page | 頁面路由 (Admin/Tenant PageController) |
 | controller/tenant | 店家 API (LineConfigController) |
-| controller/ | 業務 API (15 個 Controller) |
-| service/ | 業務邏輯 (26 個 Service) |
+| controller/ | 業務 API (20 個 Controller) |
+| service/ | 業務邏輯 (34 個 Service) |
 | service/admin | 超管服務 |
-| service/line | LINE 相關服務 |
-| service/notification | 通知服務 |
-| repository/ | 資料存取 (18 個 Repository) |
-| entity/ | 資料庫實體 (18 個 Entity) |
+| service/line | LINE 相關服務 (7 個) |
+| service/notification | 通知服務 (4 個) |
+| service/export | 匯出服務 (Excel/PDF) |
+| service/payment | 金流服務 (ECPay) |
+| scheduler/ | 排程任務 (3 個) |
+| repository/ | 資料存取 (23 個 Repository) |
+| entity/ | 資料庫實體 (23 個 Entity) |
 | dto/request | 請求 DTO |
 | dto/response | 回應 DTO |
-| enums/ | 列舉 (19 個 Enum) |
+| enums/ | 列舉 (26 個 Enum) |
 | mapper/ | Entity <-> DTO 轉換 |
 
 ---
@@ -143,9 +146,10 @@ String decrypted = encryptionService.decrypt(encryptedToken);
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 24 |
-| Service | 26 |
-| Entity | 18 |
-| Repository | 18 |
-| DTO | 60+ |
-| Enum | 19 |
+| Controller | 29 |
+| Service | 34 |
+| Entity | 23 |
+| Repository | 23 |
+| DTO | 70+ |
+| Enum | 26 |
+| Scheduler | 3 |

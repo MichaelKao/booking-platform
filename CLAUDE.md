@@ -44,21 +44,21 @@ com.booking.platform
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (27 個)
+├── controller/                # 控制器 (29 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
 │   ├── line/                 # LINE Webhook (1 個)
 │   ├── page/                 # 頁面路由 (2 個)
-│   └── tenant/               # 店家 API (15 個)
-├── service/                   # 服務層 (32 個)
+│   └── tenant/               # 店家 API (21 個)
+├── service/                   # 服務層 (34 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
 │   ├── notification/         # 通知服務 (Email, SSE, SMS)
 │   ├── payment/              # 金流服務 (ECPay)
 │   └── export/               # 匯出服務 (Excel, PDF)
 ├── scheduler/                 # 排程任務 (3 個)
-├── repository/                # 資料存取層 (22 個)
-├── entity/                    # 資料庫實體 (22 個)
+├── repository/                # 資料存取層 (23 個)
+├── entity/                    # 資料庫實體 (23 個)
 │   ├── system/               # 系統實體 (含 Payment, SmsLog)
 │   ├── staff/                # 員工實體
 │   ├── marketing/            # 行銷實體 (含 MarketingPush)
@@ -66,7 +66,7 @@ com.booking.platform
 ├── dto/                       # 資料傳輸物件 (70+ 個)
 │   ├── request/              # 請求 DTO
 │   └── response/             # 回應 DTO
-├── enums/                     # 列舉 (25 個)
+├── enums/                     # 列舉 (26 個)
 └── mapper/                    # 轉換器
 ```
 
@@ -534,12 +534,12 @@ npx playwright test --list
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 27 |
-| Service | 32 |
-| Entity | 22 |
-| Repository | 22 |
+| Controller | 29 |
+| Service | 34 |
+| Entity | 23 |
+| Repository | 23 |
 | DTO | 70+ |
-| Enum | 25 |
+| Enum | 26 |
 | Scheduler | 3 |
 | HTML 頁面 | 36 |
 | CSS 檔案 | 3 |

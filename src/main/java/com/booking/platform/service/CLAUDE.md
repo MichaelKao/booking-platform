@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (27 個)
+## Service 列表 (34 個)
 
 ### 核心服務
 
@@ -34,10 +34,10 @@ public XxxResponse create(...) { }
 | Service | 說明 |
 |---------|------|
 | CouponService | 票券定義與發放 |
-| CouponInstanceService | 票券實例管理 (核銷、使用) |
 | CampaignService | 行銷活動管理 |
 | ProductService | 商品管理 (庫存、狀態) |
 | MembershipLevelService | 會員等級管理 |
+| MarketingService | 行銷推播管理 (建立、發送、排程) |
 
 ### 點數與儲值
 
@@ -67,6 +67,7 @@ public XxxResponse create(...) { }
 | TenantService | 租戶管理 (建立、更新、狀態變更) |
 | SettingsService | 店家設定管理 |
 | AuthService | 認證與授權 (登入、註冊、密碼重設) |
+| I18nService | 多語系服務 (繁中、簡中、英文) |
 
 ### LINE 服務
 
@@ -78,13 +79,34 @@ public XxxResponse create(...) { }
 | LineMessageService | LINE 訊息發送 |
 | LineFlexMessageBuilder | Flex Message 構建（主選單、服務選單、日期Carousel等） |
 | LineConversationService | 對話狀態管理 |
+| LineNotificationService | LINE 通知發送 (預約提醒) |
 
-### 通知與共用
+### 通知服務
 
 | Service | 說明 |
 |---------|------|
 | EmailService | Email 通知發送 |
 | SseNotificationService | SSE 即時通知 (新預約推送) |
+| SmsService | SMS 介面 |
+| MitakeSmsService | 三竹簡訊實作 |
+
+### 匯出服務
+
+| Service | 說明 |
+|---------|------|
+| ExcelExportService | Excel 匯出 (預約、顧客、報表) |
+| PdfExportService | PDF 匯出 (預約、報表) |
+
+### 金流服務
+
+| Service | 說明 |
+|---------|------|
+| EcpayService | 綠界金流整合 |
+
+### 共用服務
+
+| Service | 說明 |
+|---------|------|
 | EncryptionService | 加密服務 (AES-256-GCM) |
 
 ---
@@ -94,18 +116,27 @@ public XxxResponse create(...) { }
 ```
 service/
 ├── admin/              # 超管服務
-│   ├── AdminDashboardService
-│   └── AdminPointService
+│   └── AdminDashboardService
+├── common/             # 共用服務
+│   └── EncryptionService
+├── export/             # 匯出服務
+│   ├── ExcelExportService
+│   └── PdfExportService
 ├── line/               # LINE 相關
 │   ├── LineConfigService
 │   ├── LineUserService
 │   ├── LineWebhookService
 │   ├── LineMessageService
 │   ├── LineFlexMessageBuilder
-│   └── LineConversationService
+│   ├── LineConversationService
+│   └── LineNotificationService
 ├── notification/       # 通知服務
 │   ├── EmailService
-│   └── SseNotificationService
+│   ├── SseNotificationService
+│   ├── SmsService
+│   └── MitakeSmsService
+├── payment/            # 金流服務
+│   └── EcpayService
 └── /                   # 核心服務
     ├── AuthService
     ├── BookingService
@@ -114,8 +145,8 @@ service/
     ├── ServiceItemService
     ├── ProductService
     ├── CouponService
-    ├── CouponInstanceService
     ├── CampaignService
+    ├── MarketingService
     ├── MembershipLevelService
     ├── PointService
     ├── PointTopUpService
@@ -124,7 +155,7 @@ service/
     ├── ReportService
     ├── TenantService
     ├── SettingsService
-    └── EncryptionService
+    └── I18nService
 ```
 
 ---
