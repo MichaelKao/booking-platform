@@ -116,11 +116,14 @@ public class LineConfigController {
      * @return 測試結果
      */
     @PostMapping("/test")
-    public ResponseEntity<ApiResponse<Boolean>> testConnection() {
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> testConnection() {
         log.debug("測試 LINE Bot 連線");
 
         boolean result = lineConfigService.testConnection();
 
-        return ResponseEntity.ok(ApiResponse.ok("連線測試成功", result));
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("connected", result);
+
+        return ResponseEntity.ok(ApiResponse.ok("連線測試成功", data));
     }
 }
