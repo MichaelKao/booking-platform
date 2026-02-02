@@ -206,6 +206,11 @@ GET /line           # LINE 設定
 PUT /line           # 更新 LINE 設定
 POST /line/activate   # 啟用 LINE Bot
 POST /line/deactivate # 停用 LINE Bot
+POST /line/test       # 測試 LINE Bot 連線
+GET  /line/rich-menu           # 取得 Rich Menu 資訊
+POST /line/rich-menu/create    # 建立 Rich Menu（使用主題配色）
+POST /line/rich-menu/upload-image  # 上傳自訂 Rich Menu 圖片
+DELETE /line/rich-menu         # 刪除 Rich Menu
 ```
 
 ### 即時通知 (`/api/notifications`)

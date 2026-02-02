@@ -152,6 +152,7 @@ POST /api/auth/logout             # 登出
 | 報表 | `GET /reports/dashboard\|summary\|today\|weekly\|monthly\|daily\|top-services\|top-staff` |
 | 設定 | `GET/PUT /settings` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
+| Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
 | 行銷推播 | `GET/POST /marketing/pushes`, `POST /marketing/pushes/{id}/send`, `DELETE /marketing/pushes/{id}` |
@@ -272,7 +273,23 @@ scheduler:
 
 ## LINE Bot 功能
 
-### 主選單
+### Rich Menu（快捷選單）
+底部固定選單，顧客開啟聊天室即可看到：
+
+| 功能 | 說明 |
+|------|------|
+| 開始預約 | 啟動預約流程 |
+| 我的預約 | 查看預約清單 |
+| 瀏覽商品 | 瀏覽商品列表 |
+| 領取票券 | 查看可領取票券 |
+| 會員資訊 | 查看會員資料 |
+| 聯絡店家 | 聯絡客服 |
+
+**主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）
+
+**自訂圖片規格**：2500 x 843 像素，PNG/JPG，最大 1MB
+
+### 主選單（Flex Message）
 用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
 - 開始預約
 - 我的預約

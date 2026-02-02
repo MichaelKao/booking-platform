@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (34 個)
+## Service 列表 (35 個)
 
 ### 核心服務
 
@@ -80,6 +80,7 @@ public XxxResponse create(...) { }
 | LineFlexMessageBuilder | Flex Message 構建（主選單、服務選單、日期Carousel等） |
 | LineConversationService | 對話狀態管理 |
 | LineNotificationService | LINE 通知發送 (預約提醒) |
+| LineRichMenuService | Rich Menu 管理（建立、刪除、主題配色、圖片上傳） |
 
 ### 通知服務
 
@@ -129,7 +130,8 @@ service/
 │   ├── LineMessageService
 │   ├── LineFlexMessageBuilder
 │   ├── LineConversationService
-│   └── LineNotificationService
+│   ├── LineNotificationService
+│   └── LineRichMenuService
 ├── notification/       # 通知服務
 │   ├── EmailService
 │   ├── SseNotificationService

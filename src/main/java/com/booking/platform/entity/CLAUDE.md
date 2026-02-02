@@ -222,6 +222,10 @@ public class TenantLineConfig {
 
     @Enumerated(EnumType.STRING)
     private LineConfigStatus status;
+
+    // Rich Menu
+    private String richMenuId;          // LINE Rich Menu ID
+    private String richMenuTheme;       // GREEN/BLUE/PURPLE/ORANGE/DARK/CUSTOM
 }
 
 // LineUser - LINE 用戶與顧客關聯

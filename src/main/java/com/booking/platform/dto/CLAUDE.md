@@ -177,6 +177,7 @@ public class CreateXxxRequest {
 | DTO | 說明 |
 |-----|------|
 | ConversationContext | 對話上下文（詳見下方） |
+| CreateRichMenuRequest | 建立 Rich Menu（theme: GREEN/BLUE/PURPLE/ORANGE/DARK） |
 
 #### ConversationContext 欄位
 
