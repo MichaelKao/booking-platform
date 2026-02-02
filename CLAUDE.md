@@ -490,18 +490,43 @@ npx playwright test
 
 # 執行特定測試
 npx playwright test tests/06-sse-notifications.spec.ts
+
+# 列出所有測試
+npx playwright test --list
 ```
 
-**測試套件 (73 tests)：**
-| 檔案 | 說明 |
-|------|------|
-| `00-setup.spec.ts` | 環境檢查 |
-| `01-auth.spec.ts` | 認證功能 |
-| `02-admin.spec.ts` | 超管後台 |
-| `03-tenant-dashboard.spec.ts` | 店家後台 |
-| `04-tenant-features.spec.ts` | API 測試 |
-| `05-feature-store.spec.ts` | 功能商店 |
-| `06-sse-notifications.spec.ts` | SSE 即時通知 |
+**測試套件 (368 tests)：**
+
+| 檔案 | 說明 | 測試數 |
+|------|------|--------|
+| `00-setup.spec.ts` | 環境檢查 | 5 |
+| `01-auth.spec.ts` | 認證功能 | 11 |
+| `02-admin.spec.ts` | 超管後台基本測試 | 12 |
+| `03-tenant-dashboard.spec.ts` | 店家後台基本測試 | 8 |
+| `04-tenant-features.spec.ts` | API 測試 | 17 |
+| `05-feature-store.spec.ts` | 功能商店 | 10 |
+| `06-sse-notifications.spec.ts` | SSE 即時通知 | 15 |
+| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 28 |
+| `08-tenant-booking.spec.ts` | 預約管理完整測試 | 32 |
+| `09-tenant-customer.spec.ts` | 顧客管理完整測試 | 35 |
+| `10-tenant-staff-service.spec.ts` | 員工&服務管理測試 | 25 |
+| `11-tenant-product-coupon.spec.ts` | 商品&票券管理測試 | 32 |
+| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 25 |
+| `13-tenant-settings.spec.ts` | 設定頁面測試 | 28 |
+| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 30 |
+| `15-line-bot.spec.ts` | LINE Bot 測試 | 18 |
+| `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
+| `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
+
+**測試涵蓋範圍：**
+
+- 所有超管頁面（儀表板、店家管理、功能管理、儲值審核）
+- 所有店家頁面（16+ 頁面）
+- 所有 API 端點
+- 所有表單欄位和按鈕
+- 功能訂閱與側邊欄顯示控制
+- LINE Bot 對話狀態和訊息格式
+- Excel/PDF 匯出功能
 
 ---
 
@@ -520,4 +545,4 @@ npx playwright test tests/06-sse-notifications.spec.ts
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 73 |
+| E2E 測試 | 368 |
