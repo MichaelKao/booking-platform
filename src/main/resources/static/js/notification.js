@@ -62,23 +62,10 @@ function initNotificationService() {
  * 初始化通知音效
  */
 function initNotificationSound() {
-    try {
-        // 嘗試載入音效檔案
-        notificationSound = new Audio(NotificationConfig.soundFile);
-        notificationSound.volume = 0.5;
-
-        // 檢查音效是否可用，如果不可用則使用 Web Audio API
-        notificationSound.onerror = () => {
-            console.log('使用 Web Audio API 作為通知音效');
-            notificationSound = null;
-        };
-
-        // 預載音效
-        notificationSound.load();
-    } catch (e) {
-        console.warn('無法初始化通知音效，將使用 Web Audio API:', e);
-        notificationSound = null;
-    }
+    // 直接使用 Web Audio API，不載入外部音效檔案
+    // 避免 404/500 錯誤影響頁面
+    notificationSound = null;
+    console.log('通知音效已初始化（使用 Web Audio API）');
 }
 
 // ========================================
