@@ -232,6 +232,9 @@ public class LineWebhookService {
             case "go_back" -> handleGoBack(tenantId, userId, replyToken);
             case "view_bookings" -> handleViewBookings(tenantId, userId, replyToken);
             case "main_menu" -> replyMainMenu(tenantId, userId, replyToken);
+            // 取消當前流程
+            case "cancel_flow" -> handleCancelFlowRequest(tenantId, userId, replyToken);
+            case "confirm_cancel_flow" -> cancelCurrentFlow(tenantId, userId, replyToken);
             // 取消預約功能
             case "cancel_booking_request" -> handleCancelBookingRequest(tenantId, userId, replyToken, params);
             case "confirm_cancel_booking" -> handleConfirmCancelBooking(tenantId, userId, replyToken, params);
@@ -485,11 +488,22 @@ public class LineWebhookService {
     }
 
     /**
+     * 處理取消流程請求（顯示確認對話框）
+     */
+    private void handleCancelFlowRequest(String tenantId, String userId, String replyToken) {
+        JsonNode confirmMessage = flexMessageBuilder.buildCancelFlowConfirmation();
+        messageService.replyFlex(tenantId, replyToken, "確認取消", confirmMessage);
+    }
+
+    /**
      * 取消當前流程
      */
     private void cancelCurrentFlow(String tenantId, String userId, String replyToken) {
         conversationService.reset(tenantId, userId);
-        messageService.replyText(tenantId, replyToken, "已取消。如需預約，請輸入「預約」或點選下方選單。");
+
+        // 顯示主選單而非純文字，讓使用者知道可以做什麼
+        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "已取消。請選擇您需要的服務", mainMenu);
     }
 
     /**
@@ -957,12 +971,13 @@ public class LineWebhookService {
      * 回覆歡迎訊息
      */
     private void replyWelcomeMessage(String tenantId, String userId, String replyToken) {
-        Optional<TenantLineConfig> configOpt = lineConfigRepository.findByTenantId(tenantId);
-        String welcomeMessage = configOpt.map(TenantLineConfig::getWelcomeMessage)
-                .orElse("歡迎加入！請點選下方選單開始預約服務。");
+        // 取得用戶名稱
+        JsonNode profile = messageService.getProfile(tenantId, userId);
+        String displayName = profile != null ? profile.path("displayName").asText(null) : null;
 
-        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
-        messageService.replyFlex(tenantId, replyToken, welcomeMessage, mainMenu);
+        // 使用新的歡迎訊息 Flex Message
+        JsonNode welcomeMessage = flexMessageBuilder.buildWelcomeMessage(tenantId, displayName);
+        messageService.replyFlex(tenantId, replyToken, "歡迎加入！點擊開始使用", welcomeMessage);
     }
 
     /**
@@ -983,12 +998,12 @@ public class LineWebhookService {
     }
 
     /**
-     * 回覆幫助訊息（顯示主選單）
+     * 回覆幫助訊息
      */
     private void replyHelpMessage(String tenantId, String replyToken) {
-        // 顯示主選單讓用戶直接點選
-        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
-        messageService.replyFlex(tenantId, replyToken, "使用說明：點選下方按鈕開始使用", mainMenu);
+        // 使用新的幫助訊息 Flex Message
+        JsonNode helpMessage = flexMessageBuilder.buildHelpMessage(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "使用說明", helpMessage);
     }
 
     /**

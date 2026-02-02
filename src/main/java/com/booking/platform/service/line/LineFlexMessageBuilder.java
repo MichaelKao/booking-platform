@@ -95,29 +95,44 @@ public class LineFlexMessageBuilder {
      */
     public JsonNode buildMainMenu(String tenantId) {
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
-        String shopName = tenantOpt.map(Tenant::getName).orElse("歡迎");
+        String shopName = tenantOpt.map(Tenant::getName).orElse("歡迎光臨");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
+        // Header - 店家名稱與歡迎語
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
         header.put("backgroundColor", PRIMARY_COLOR);
         header.put("paddingAll", "20px");
 
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", shopName);
-        headerText.put("color", "#FFFFFF");
-        headerText.put("size", "xl");
-        headerText.put("weight", "bold");
+        ArrayNode headerContents = objectMapper.createArrayNode();
 
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        // 店家名稱
+        ObjectNode shopNameText = objectMapper.createObjectNode();
+        shopNameText.put("type", "text");
+        shopNameText.put("text", "✨ " + shopName);
+        shopNameText.put("color", "#FFFFFF");
+        shopNameText.put("size", "xl");
+        shopNameText.put("weight", "bold");
+        shopNameText.put("align", "center");
+        headerContents.add(shopNameText);
+
+        // 歡迎語
+        ObjectNode welcomeText = objectMapper.createObjectNode();
+        welcomeText.put("type", "text");
+        welcomeText.put("text", "歡迎光臨！請問需要什麼服務呢？");
+        welcomeText.put("color", "#FFFFFF");
+        welcomeText.put("size", "sm");
+        welcomeText.put("align", "center");
+        welcomeText.put("margin", "md");
+        headerContents.add(welcomeText);
+
+        header.set("contents", headerContents);
         bubble.set("header", header);
 
-        // Body
+        // Body - 功能說明
         ObjectNode body = objectMapper.createObjectNode();
         body.put("type", "box");
         body.put("layout", "vertical");
@@ -126,17 +141,40 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        ObjectNode welcomeText = objectMapper.createObjectNode();
-        welcomeText.put("type", "text");
-        welcomeText.put("text", "請選擇您需要的服務");
-        welcomeText.put("size", "md");
-        welcomeText.put("color", SECONDARY_COLOR);
-        bodyContents.add(welcomeText);
+        // 使用提示
+        ObjectNode tipBox = objectMapper.createObjectNode();
+        tipBox.put("type", "box");
+        tipBox.put("layout", "vertical");
+        tipBox.put("backgroundColor", "#F5F5F5");
+        tipBox.put("cornerRadius", "8px");
+        tipBox.put("paddingAll", "12px");
+
+        ArrayNode tipContents = objectMapper.createArrayNode();
+
+        ObjectNode tipTitle = objectMapper.createObjectNode();
+        tipTitle.put("type", "text");
+        tipTitle.put("text", "💡 使用提示");
+        tipTitle.put("size", "sm");
+        tipTitle.put("weight", "bold");
+        tipTitle.put("color", "#333333");
+        tipContents.add(tipTitle);
+
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "點擊下方按鈕開始使用，或直接輸入「預約」、「幫助」等關鍵字");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("wrap", true);
+        tipText.put("margin", "sm");
+        tipContents.add(tipText);
+
+        tipBox.set("contents", tipContents);
+        bodyContents.add(tipBox);
 
         body.set("contents", bodyContents);
         bubble.set("body", body);
 
-        // Footer
+        // Footer - 功能按鈕（帶圖示）
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
         footer.put("layout", "vertical");
@@ -146,24 +184,87 @@ public class LineFlexMessageBuilder {
         ArrayNode footerContents = objectMapper.createArrayNode();
 
         // 預約按鈕
-        footerContents.add(createButton("開始預約", "action=start_booking", PRIMARY_COLOR));
+        footerContents.add(createMenuButton("📅 開始預約", "快速預約服務", "action=start_booking", PRIMARY_COLOR));
 
         // 查詢預約按鈕
-        footerContents.add(createButton("我的預約", "action=view_bookings", LINK_COLOR));
+        footerContents.add(createMenuButton("📋 我的預約", "查看或取消預約", "action=view_bookings", LINK_COLOR));
 
         // 商品按鈕
-        footerContents.add(createButton("瀏覽商品", "action=start_shopping", "#FF9800"));
+        footerContents.add(createMenuButton("🛍️ 瀏覽商品", "購買優惠商品", "action=start_shopping", "#FF9800"));
 
         // 票券按鈕
-        footerContents.add(createButton("領取票券", "action=view_coupons", "#FF6B6B"));
+        footerContents.add(createMenuButton("🎁 領取票券", "免費領取優惠券", "action=view_coupons", "#E91E63"));
 
         // 會員資訊按鈕
-        footerContents.add(createButton("會員資訊", "action=view_member_info", SECONDARY_COLOR));
+        footerContents.add(createMenuButton("👤 會員資訊", "查看點數與等級", "action=view_member_info", "#9C27B0"));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
 
         return bubble;
+    }
+
+    /**
+     * 建構主選單按鈕（帶說明文字）
+     */
+    private ObjectNode createMenuButton(String title, String subtitle, String postbackData, String color) {
+        ObjectNode box = objectMapper.createObjectNode();
+        box.put("type", "box");
+        box.put("layout", "horizontal");
+        box.put("backgroundColor", color);
+        box.put("cornerRadius", "8px");
+        box.put("paddingAll", "12px");
+        box.put("margin", "sm");
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        // 文字區域
+        ObjectNode textBox = objectMapper.createObjectNode();
+        textBox.put("type", "box");
+        textBox.put("layout", "vertical");
+        textBox.put("flex", 1);
+
+        ArrayNode textContents = objectMapper.createArrayNode();
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", title);
+        titleText.put("size", "md");
+        titleText.put("weight", "bold");
+        titleText.put("color", "#FFFFFF");
+        textContents.add(titleText);
+
+        ObjectNode subtitleText = objectMapper.createObjectNode();
+        subtitleText.put("type", "text");
+        subtitleText.put("text", subtitle);
+        subtitleText.put("size", "xs");
+        subtitleText.put("color", "#FFFFFF");
+        subtitleText.put("margin", "xs");
+        textContents.add(subtitleText);
+
+        textBox.set("contents", textContents);
+        contents.add(textBox);
+
+        // 箭頭
+        ObjectNode arrow = objectMapper.createObjectNode();
+        arrow.put("type", "text");
+        arrow.put("text", "›");
+        arrow.put("size", "xxl");
+        arrow.put("color", "#FFFFFF");
+        arrow.put("align", "end");
+        arrow.put("gravity", "center");
+        contents.add(arrow);
+
+        box.set("contents", contents);
+
+        // 點擊動作
+        ObjectNode action = objectMapper.createObjectNode();
+        action.put("type", "postback");
+        action.put("label", title);
+        action.put("data", postbackData);
+        box.set("action", action);
+
+        return box;
     }
 
     // ========================================
@@ -189,12 +290,103 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bubbles = objectMapper.createArrayNode();
 
+        // 第一個 Bubble：指引說明
+        bubbles.add(buildServiceGuide());
+
         for (ServiceItem service : services) {
             bubbles.add(buildServiceBubble(service));
         }
 
         carousel.set("contents", bubbles);
         return carousel;
+    }
+
+    /**
+     * 建構服務選單指引
+     */
+    private ObjectNode buildServiceGuide() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 1/4");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "✂️ 選擇服務");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "👈 往左滑動查看所有服務項目\n\n點擊「選擇此服務」繼續下一步");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        bodyContents.add(guideText);
+
+        // 流程說明
+        ObjectNode flowBox = objectMapper.createObjectNode();
+        flowBox.put("type", "box");
+        flowBox.put("layout", "vertical");
+        flowBox.put("backgroundColor", "#F5F5F5");
+        flowBox.put("cornerRadius", "8px");
+        flowBox.put("paddingAll", "10px");
+        flowBox.put("margin", "md");
+
+        ArrayNode flowContents = objectMapper.createArrayNode();
+
+        String[] steps = {"1️⃣ 選擇服務", "2️⃣ 選擇人員", "3️⃣ 選擇日期", "4️⃣ 選擇時間"};
+        for (String step : steps) {
+            ObjectNode stepItem = objectMapper.createObjectNode();
+            stepItem.put("type", "text");
+            stepItem.put("text", step);
+            stepItem.put("size", "xs");
+            stepItem.put("color", "#666666");
+            flowContents.add(stepItem);
+        }
+
+        flowBox.set("contents", flowContents);
+        bodyContents.add(flowBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        bubble.set("footer", createCancelFooter());
+
+        return bubble;
     }
 
     /**
@@ -205,40 +397,114 @@ public class LineFlexMessageBuilder {
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
+        // Header - 服務名稱
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "12px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", service.getName());
+        headerText.put("size", "md");
+        headerText.put("weight", "bold");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("align", "center");
+        headerText.put("wrap", true);
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
         // Body
         ObjectNode body = objectMapper.createObjectNode();
         body.put("type", "box");
         body.put("layout", "vertical");
-        body.put("spacing", "sm");
+        body.put("spacing", "md");
         body.put("paddingAll", "15px");
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        // 服務名稱
-        ObjectNode nameText = objectMapper.createObjectNode();
-        nameText.put("type", "text");
-        nameText.put("text", service.getName());
-        nameText.put("size", "lg");
-        nameText.put("weight", "bold");
-        nameText.put("wrap", true);
-        bodyContents.add(nameText);
+        // 服務說明（如有）
+        if (service.getDescription() != null && !service.getDescription().isEmpty()) {
+            ObjectNode descText = objectMapper.createObjectNode();
+            descText.put("type", "text");
+            descText.put("text", service.getDescription());
+            descText.put("size", "sm");
+            descText.put("color", SECONDARY_COLOR);
+            descText.put("wrap", true);
+            bodyContents.add(descText);
+
+            // 分隔線
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "md");
+            bodyContents.add(separator);
+        }
+
+        // 時長與價格資訊
+        ObjectNode infoBox = objectMapper.createObjectNode();
+        infoBox.put("type", "box");
+        infoBox.put("layout", "vertical");
+        infoBox.put("spacing", "sm");
+        infoBox.put("margin", "md");
+
+        ArrayNode infoContents = objectMapper.createArrayNode();
 
         // 時長
+        ObjectNode durationRow = objectMapper.createObjectNode();
+        durationRow.put("type", "box");
+        durationRow.put("layout", "horizontal");
+
+        ArrayNode durationContents = objectMapper.createArrayNode();
+
+        ObjectNode durationIcon = objectMapper.createObjectNode();
+        durationIcon.put("type", "text");
+        durationIcon.put("text", "⏱️");
+        durationIcon.put("size", "sm");
+        durationIcon.put("flex", 0);
+        durationContents.add(durationIcon);
+
         ObjectNode durationText = objectMapper.createObjectNode();
         durationText.put("type", "text");
-        durationText.put("text", String.format("時長：%d 分鐘", service.getDuration()));
+        durationText.put("text", String.format("服務時長 %d 分鐘", service.getDuration()));
         durationText.put("size", "sm");
         durationText.put("color", SECONDARY_COLOR);
-        bodyContents.add(durationText);
+        durationText.put("margin", "sm");
+        durationContents.add(durationText);
+
+        durationRow.set("contents", durationContents);
+        infoContents.add(durationRow);
 
         // 價格
+        ObjectNode priceRow = objectMapper.createObjectNode();
+        priceRow.put("type", "box");
+        priceRow.put("layout", "horizontal");
+        priceRow.put("margin", "sm");
+
+        ArrayNode priceContents = objectMapper.createArrayNode();
+
+        ObjectNode priceIcon = objectMapper.createObjectNode();
+        priceIcon.put("type", "text");
+        priceIcon.put("text", "💰");
+        priceIcon.put("size", "sm");
+        priceIcon.put("flex", 0);
+        priceContents.add(priceIcon);
+
         ObjectNode priceText = objectMapper.createObjectNode();
         priceText.put("type", "text");
-        priceText.put("text", String.format("NT$ %d", service.getPrice().intValue()));
+        priceText.put("text", String.format("NT$ %,d", service.getPrice().intValue()));
         priceText.put("size", "lg");
         priceText.put("weight", "bold");
         priceText.put("color", PRIMARY_COLOR);
-        bodyContents.add(priceText);
+        priceText.put("margin", "sm");
+        priceContents.add(priceText);
+
+        priceRow.set("contents", priceContents);
+        infoContents.add(priceRow);
+
+        infoBox.set("contents", infoContents);
+        bodyContents.add(infoBox);
 
         body.set("contents", bodyContents);
         bubble.set("body", body);
@@ -258,7 +524,7 @@ public class LineFlexMessageBuilder {
         );
 
         footer.set("contents", objectMapper.createArrayNode().add(
-                createButton("選擇此服務", postbackData, PRIMARY_COLOR)
+                createButton("✓ 選擇此服務", postbackData, PRIMARY_COLOR)
         ));
 
         bubble.set("footer", footer);
@@ -313,15 +579,30 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
         header.put("paddingAll", "15px");
 
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", "請選擇服務人員");
-        headerText.put("size", "lg");
-        headerText.put("weight", "bold");
+        ArrayNode headerContents = objectMapper.createArrayNode();
 
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 2/4");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "👤 選擇服務人員");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        header.set("contents", headerContents);
         bubble.set("header", header);
 
         // Body
@@ -333,14 +614,33 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        // 不指定選項
-        bodyContents.add(createStaffButton("不指定", "由系統安排", null));
+        // 提示文字
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "可選擇指定服務人員，或由系統自動安排");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("wrap", true);
+        tipText.put("margin", "none");
+        bodyContents.add(tipText);
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "md");
+        bodyContents.add(separator);
+
+        // 不指定選項（推薦）
+        bodyContents.add(createStaffButton("🎲 不指定（推薦）", "系統自動安排最佳人員", null));
 
         // 員工列表
         for (Staff staff : staffList) {
+            String bio = staff.getBio() != null && !staff.getBio().isEmpty()
+                    ? staff.getBio()
+                    : "專業服務人員";
             bodyContents.add(createStaffButton(
                     staff.getName(),
-                    staff.getBio() != null ? staff.getBio() : "",
+                    bio,
                     staff.getId()
             ));
         }
@@ -624,21 +924,39 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
         header.put("paddingAll", "15px");
 
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", "請選擇時段");
-        headerText.put("size", "lg");
-        headerText.put("weight", "bold");
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 4/4 - 最後一步！");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "⏰ 選擇時段");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
 
         ObjectNode dateText = objectMapper.createObjectNode();
         dateText.put("type", "text");
-        dateText.put("text", date.format(DateTimeFormatter.ofPattern("yyyy年M月d日")));
+        dateText.put("text", "📅 " + date.format(DateTimeFormatter.ofPattern("M月d日 (E)", java.util.Locale.TAIWAN)));
         dateText.put("size", "sm");
-        dateText.put("color", SECONDARY_COLOR);
+        dateText.put("color", "#FFFFFF");
+        dateText.put("align", "center");
+        dateText.put("margin", "sm");
+        headerContents.add(dateText);
 
-        header.set("contents", objectMapper.createArrayNode().add(headerText).add(dateText));
+        header.set("contents", headerContents);
         bubble.set("header", header);
 
         // Body
@@ -1483,11 +1801,29 @@ public class LineFlexMessageBuilder {
     private ObjectNode createBackFooter() {
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("↩ 返回上一步", "action=go_back", SECONDARY_COLOR));
+        footerContents.add(createButton("✕ 取消預約", "action=cancel_flow", "#E74C3C"));
+
+        footer.set("contents", footerContents);
+        return footer;
+    }
+
+    /**
+     * 建構取消 Footer（用於第一步）
+     */
+    private ObjectNode createCancelFooter() {
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
         footer.put("layout", "vertical");
         footer.put("paddingAll", "15px");
 
         footer.set("contents", objectMapper.createArrayNode().add(
-                createButton("返回上一步", "action=go_back", SECONDARY_COLOR)
+                createButton("✕ 取消預約", "action=cancel_flow", SECONDARY_COLOR)
         ));
 
         return footer;
@@ -2524,6 +2860,459 @@ public class LineFlexMessageBuilder {
 
         ArrayNode footerContents = objectMapper.createArrayNode();
         footerContents.add(createButton("查看我的預約", "action=view_bookings", LINK_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    // ========================================
+    // 額外輔助訊息
+    // ========================================
+
+    /**
+     * 建構歡迎訊息（新用戶加入時）
+     *
+     * @param tenantId 租戶 ID
+     * @param userName 用戶名稱
+     * @return Flex Message 內容
+     */
+    public JsonNode buildWelcomeMessage(String tenantId, String userName) {
+        Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
+        String shopName = tenantOpt.map(Tenant::getName).orElse("我們的店");
+
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "25px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode welcomeEmoji = objectMapper.createObjectNode();
+        welcomeEmoji.put("type", "text");
+        welcomeEmoji.put("text", "🎉");
+        welcomeEmoji.put("size", "3xl");
+        welcomeEmoji.put("align", "center");
+        headerContents.add(welcomeEmoji);
+
+        ObjectNode welcomeTitle = objectMapper.createObjectNode();
+        welcomeTitle.put("type", "text");
+        welcomeTitle.put("text", "歡迎加入！");
+        welcomeTitle.put("size", "xl");
+        welcomeTitle.put("weight", "bold");
+        welcomeTitle.put("color", "#FFFFFF");
+        welcomeTitle.put("align", "center");
+        welcomeTitle.put("margin", "md");
+        headerContents.add(welcomeTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode greetingText = objectMapper.createObjectNode();
+        greetingText.put("type", "text");
+        greetingText.put("text", String.format("嗨 %s！感謝您加入 %s 的官方帳號 👋", userName != null ? userName : "朋友", shopName));
+        greetingText.put("size", "sm");
+        greetingText.put("wrap", true);
+        greetingText.put("color", "#333333");
+        bodyContents.add(greetingText);
+
+        // 功能介紹
+        ObjectNode featureBox = objectMapper.createObjectNode();
+        featureBox.put("type", "box");
+        featureBox.put("layout", "vertical");
+        featureBox.put("backgroundColor", "#F8F9FA");
+        featureBox.put("cornerRadius", "8px");
+        featureBox.put("paddingAll", "15px");
+        featureBox.put("margin", "lg");
+
+        ArrayNode featureContents = objectMapper.createArrayNode();
+
+        ObjectNode featureTitle = objectMapper.createObjectNode();
+        featureTitle.put("type", "text");
+        featureTitle.put("text", "✨ 您可以在這裡：");
+        featureTitle.put("size", "sm");
+        featureTitle.put("weight", "bold");
+        featureTitle.put("color", "#333333");
+        featureContents.add(featureTitle);
+
+        String[] features = {
+                "📅 線上預約服務",
+                "📋 查看與管理預約",
+                "🛍️ 購買優惠商品",
+                "🎁 領取專屬優惠券",
+                "👤 查看會員點數"
+        };
+
+        for (String feature : features) {
+            ObjectNode featureItem = objectMapper.createObjectNode();
+            featureItem.put("type", "text");
+            featureItem.put("text", feature);
+            featureItem.put("size", "xs");
+            featureItem.put("color", SECONDARY_COLOR);
+            featureItem.put("margin", "sm");
+            featureContents.add(featureItem);
+        }
+
+        featureBox.set("contents", featureContents);
+        bodyContents.add(featureBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("🚀 開始使用", "action=main_menu", PRIMARY_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構幫助訊息
+     *
+     * @param tenantId 租戶 ID
+     * @return Flex Message 內容
+     */
+    public JsonNode buildHelpMessage(String tenantId) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#5C6BC0");
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "❓ 使用說明");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerContents.add(headerTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 關鍵字說明
+        ObjectNode keywordTitle = objectMapper.createObjectNode();
+        keywordTitle.put("type", "text");
+        keywordTitle.put("text", "📝 快速關鍵字：");
+        keywordTitle.put("size", "sm");
+        keywordTitle.put("weight", "bold");
+        bodyContents.add(keywordTitle);
+
+        String[][] keywords = {
+                {"預約", "開始預約流程"},
+                {"查詢", "查看我的預約"},
+                {"取消", "取消預約"},
+                {"商品", "瀏覽商品"},
+                {"票券", "領取/查看票券"},
+                {"會員", "查看會員資訊"}
+        };
+
+        for (String[] keyword : keywords) {
+            ObjectNode keywordRow = objectMapper.createObjectNode();
+            keywordRow.put("type", "box");
+            keywordRow.put("layout", "horizontal");
+            keywordRow.put("margin", "sm");
+
+            ArrayNode rowContents = objectMapper.createArrayNode();
+
+            ObjectNode keywordText = objectMapper.createObjectNode();
+            keywordText.put("type", "text");
+            keywordText.put("text", "「" + keyword[0] + "」");
+            keywordText.put("size", "sm");
+            keywordText.put("weight", "bold");
+            keywordText.put("color", PRIMARY_COLOR);
+            keywordText.put("flex", 2);
+            rowContents.add(keywordText);
+
+            ObjectNode descText = objectMapper.createObjectNode();
+            descText.put("type", "text");
+            descText.put("text", keyword[1]);
+            descText.put("size", "sm");
+            descText.put("color", SECONDARY_COLOR);
+            descText.put("flex", 3);
+            rowContents.add(descText);
+
+            keywordRow.set("contents", rowContents);
+            bodyContents.add(keywordRow);
+        }
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "lg");
+        bodyContents.add(separator);
+
+        // 提示
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "💡 隨時輸入任何文字，都會顯示主選單喔！");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("wrap", true);
+        tipText.put("margin", "lg");
+        bodyContents.add(tipText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("返回主選單", "action=main_menu", SECONDARY_COLOR)
+        ));
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構錯誤訊息
+     *
+     * @param errorMessage 錯誤訊息
+     * @return Flex Message 內容
+     */
+    public JsonNode buildErrorMessage(String errorMessage) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#E74C3C");
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode errorIcon = objectMapper.createObjectNode();
+        errorIcon.put("type", "text");
+        errorIcon.put("text", "⚠️");
+        errorIcon.put("size", "3xl");
+        errorIcon.put("align", "center");
+        headerContents.add(errorIcon);
+
+        ObjectNode errorTitle = objectMapper.createObjectNode();
+        errorTitle.put("type", "text");
+        errorTitle.put("text", "操作失敗");
+        errorTitle.put("size", "lg");
+        errorTitle.put("weight", "bold");
+        errorTitle.put("color", "#FFFFFF");
+        errorTitle.put("align", "center");
+        errorTitle.put("margin", "md");
+        headerContents.add(errorTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode errorText = objectMapper.createObjectNode();
+        errorText.put("type", "text");
+        errorText.put("text", errorMessage != null ? errorMessage : "發生未預期的錯誤，請稍後再試");
+        errorText.put("size", "sm");
+        errorText.put("wrap", true);
+        errorText.put("align", "center");
+        errorText.put("color", SECONDARY_COLOR);
+        bodyContents.add(errorText);
+
+        ObjectNode helpText = objectMapper.createObjectNode();
+        helpText.put("type", "text");
+        helpText.put("text", "如問題持續發生，請聯繫店家");
+        helpText.put("size", "xs");
+        helpText.put("wrap", true);
+        helpText.put("align", "center");
+        helpText.put("color", SECONDARY_COLOR);
+        helpText.put("margin", "lg");
+        bodyContents.add(helpText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("重新開始", "action=main_menu", PRIMARY_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構取消流程確認訊息
+     *
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCancelFlowConfirmation() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode icon = objectMapper.createObjectNode();
+        icon.put("type", "text");
+        icon.put("text", "🤔");
+        icon.put("size", "3xl");
+        icon.put("align", "center");
+        bodyContents.add(icon);
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", "確定要取消嗎？");
+        titleText.put("size", "lg");
+        titleText.put("weight", "bold");
+        titleText.put("align", "center");
+        titleText.put("margin", "lg");
+        bodyContents.add(titleText);
+
+        ObjectNode descText = objectMapper.createObjectNode();
+        descText.put("type", "text");
+        descText.put("text", "目前填寫的資料將不會保存");
+        descText.put("size", "sm");
+        descText.put("color", SECONDARY_COLOR);
+        descText.put("align", "center");
+        descText.put("margin", "md");
+        bodyContents.add(descText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("繼續預約", "action=go_back", PRIMARY_COLOR));
+        footerContents.add(createButton("確定取消", "action=confirm_cancel_flow", SECONDARY_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構無法理解的訊息回覆
+     *
+     * @param tenantId 租戶 ID
+     * @return Flex Message 內容
+     */
+    public JsonNode buildUnknownCommandMessage(String tenantId) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode icon = objectMapper.createObjectNode();
+        icon.put("type", "text");
+        icon.put("text", "🤖");
+        icon.put("size", "3xl");
+        icon.put("align", "center");
+        bodyContents.add(icon);
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", "需要什麼服務呢？");
+        titleText.put("size", "lg");
+        titleText.put("weight", "bold");
+        titleText.put("align", "center");
+        titleText.put("margin", "lg");
+        bodyContents.add(titleText);
+
+        ObjectNode descText = objectMapper.createObjectNode();
+        descText.put("type", "text");
+        descText.put("text", "請點擊下方按鈕選擇服務，\n或輸入「幫助」查看使用說明");
+        descText.put("size", "sm");
+        descText.put("color", SECONDARY_COLOR);
+        descText.put("align", "center");
+        descText.put("wrap", true);
+        descText.put("margin", "md");
+        bodyContents.add(descText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("📅 開始預約", "action=start_booking", PRIMARY_COLOR));
+        footerContents.add(createButton("📋 查看選單", "action=main_menu", LINK_COLOR));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
