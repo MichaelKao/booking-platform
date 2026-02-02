@@ -78,6 +78,7 @@ public class SecurityConfig {
             "/css/**",
             "/js/**",
             "/images/**",
+            "/sounds/**",
             "/favicon.ico",
 
             // 頁面（由頁面 Controller 處理認證）
