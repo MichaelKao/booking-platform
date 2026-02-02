@@ -1,6 +1,7 @@
 package com.booking.platform.controller;
 
 import com.booking.platform.common.response.ApiResponse;
+import com.booking.platform.dto.response.AdvancedReportResponse;
 import com.booking.platform.dto.response.DailyReportResponse;
 import com.booking.platform.dto.response.ReportSummaryResponse;
 import com.booking.platform.dto.response.TopItemResponse;
@@ -164,6 +165,35 @@ public class ReportController {
             }
         }
         List<TopItemResponse> result = reportService.getTopStaff(startDate, endDate, limit);
+        return ApiResponse.ok(result);
+    }
+
+    // ========================================
+    // 進階報表（需訂閱 ADVANCED_REPORT）
+    // ========================================
+
+    /**
+     * 取得進階報表
+     *
+     * <p>需要訂閱 ADVANCED_REPORT 功能才能存取完整資料
+     */
+    @GetMapping("/advanced")
+    public ApiResponse<AdvancedReportResponse> getAdvancedReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range
+    ) {
+        // 如果沒有提供日期，根據 range 計算
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1); // month
+            }
+        }
+        AdvancedReportResponse result = reportService.getAdvancedReport(startDate, endDate);
         return ApiResponse.ok(result);
     }
 }

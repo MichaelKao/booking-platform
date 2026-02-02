@@ -4,7 +4,9 @@ import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.response.DailyReportResponse;
 import com.booking.platform.dto.response.ReportSummaryResponse;
 import com.booking.platform.dto.response.TopItemResponse;
+import com.booking.platform.dto.response.AdvancedReportResponse;
 import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.enums.FeatureCode;
 import com.booking.platform.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ public class ReportService {
     private final CouponInstanceRepository couponInstanceRepository;
     private final ProductRepository productRepository;
     private final ServiceItemRepository serviceItemRepository;
+    private final TenantFeatureRepository tenantFeatureRepository;
 
     // ========================================
     // 報表摘要
@@ -335,5 +338,127 @@ public class ReportService {
         LocalDate today = LocalDate.now();
         LocalDate startOfMonth = today.withDayOfMonth(1);
         return getSummary(startOfMonth, today);
+    }
+
+    // ========================================
+    // 進階報表（ADVANCED_REPORT 功能）
+    // ========================================
+
+    /**
+     * 取得進階報表分析
+     *
+     * <p>需要訂閱 ADVANCED_REPORT 功能
+     */
+    public AdvancedReportResponse getAdvancedReport(LocalDate startDate, LocalDate endDate) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("產生進階報表，租戶：{}，期間：{} ~ {}", tenantId, startDate, endDate);
+
+        // 檢查是否有進階報表功能
+        boolean hasAdvancedReport = tenantFeatureRepository
+                .isFeatureEnabled(tenantId, FeatureCode.ADVANCED_REPORT, LocalDateTime.now());
+
+        if (!hasAdvancedReport) {
+            log.warn("租戶 {} 未訂閱 ADVANCED_REPORT 功能", tenantId);
+            return AdvancedReportResponse.builder()
+                    .hasAccess(false)
+                    .message("需要訂閱進階報表功能才能查看此報表")
+                    .build();
+        }
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        // 顧客分析
+        long totalCustomers = customerRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
+        long newCustomers = customerRepository.countNewByTenantIdAndDateRange(
+                tenantId, startDateTime, endDateTime
+        );
+        long activeCustomers = bookingRepository.countDistinctCustomersByTenantIdAndDateRange(
+                tenantId, startDateTime, endDateTime
+        );
+
+        // 計算顧客保留率
+        BigDecimal retentionRate = BigDecimal.ZERO;
+        if (totalCustomers > 0) {
+            retentionRate = BigDecimal.valueOf(activeCustomers)
+                    .divide(BigDecimal.valueOf(totalCustomers), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
+        // 計算平均來客週期（天）
+        BigDecimal avgVisitInterval = BigDecimal.valueOf(30); // 預設 30 天
+
+        // 服務趨勢分析 - 計算各服務的預約數變化
+        List<AdvancedReportResponse.ServiceTrend> serviceTrends = new ArrayList<>();
+        List<Object[]> topServices = bookingRepository.findTopServicesByTenantId(
+                tenantId, startDateTime, endDateTime, 5
+        );
+        for (Object[] row : topServices) {
+            serviceTrends.add(AdvancedReportResponse.ServiceTrend.builder()
+                    .serviceId((String) row[0])
+                    .serviceName((String) row[1])
+                    .currentPeriodCount((Long) row[2])
+                    .growthRate(BigDecimal.ZERO) // 需要比較前一期
+                    .build());
+        }
+
+        // 尖峰時段分析
+        List<AdvancedReportResponse.PeakHour> peakHours = analyzePeakHours(tenantId, startDateTime, endDateTime);
+
+        // 顧客價值分析
+        BigDecimal avgCustomerValue = BigDecimal.ZERO;
+        if (activeCustomers > 0) {
+            // 簡化計算：總完成預約 / 活躍顧客數
+            long completedBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
+                    tenantId, BookingStatus.COMPLETED, startDateTime, endDateTime
+            );
+            avgCustomerValue = BigDecimal.valueOf(completedBookings)
+                    .divide(BigDecimal.valueOf(activeCustomers), 2, RoundingMode.HALF_UP);
+        }
+
+        return AdvancedReportResponse.builder()
+                .hasAccess(true)
+                .startDate(startDate)
+                .endDate(endDate)
+                .totalCustomers(totalCustomers)
+                .newCustomers(newCustomers)
+                .activeCustomers(activeCustomers)
+                .retentionRate(retentionRate)
+                .avgVisitInterval(avgVisitInterval)
+                .serviceTrends(serviceTrends)
+                .peakHours(peakHours)
+                .avgCustomerValue(avgCustomerValue)
+                .build();
+    }
+
+    /**
+     * 分析尖峰時段
+     */
+    private List<AdvancedReportResponse.PeakHour> analyzePeakHours(
+            String tenantId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        List<AdvancedReportResponse.PeakHour> peakHours = new ArrayList<>();
+
+        // 統計各時段的預約數
+        for (int hour = 9; hour < 21; hour++) {
+            long count = bookingRepository.countByTenantIdAndHour(tenantId, hour, startDateTime, endDateTime);
+            peakHours.add(AdvancedReportResponse.PeakHour.builder()
+                    .hour(hour)
+                    .hourLabel(String.format("%02d:00 - %02d:00", hour, hour + 1))
+                    .bookingCount(count)
+                    .build());
+        }
+
+        // 標記最高時段
+        if (!peakHours.isEmpty()) {
+            long maxCount = peakHours.stream()
+                    .mapToLong(AdvancedReportResponse.PeakHour::getBookingCount)
+                    .max().orElse(0);
+            for (AdvancedReportResponse.PeakHour ph : peakHours) {
+                ph.setIsPeak(ph.getBookingCount() == maxCount && maxCount > 0);
+            }
+        }
+
+        return peakHours;
     }
 }

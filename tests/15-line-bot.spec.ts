@@ -1,5 +1,5 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
-import { WAIT_TIME, generateTestPhone } from './utils/test-helpers';
+import { WAIT_TIME, generateTestPhone, TEST_ACCOUNTS } from './utils/test-helpers';
 
 /**
  * LINE Bot 功能測試
@@ -14,7 +14,7 @@ import { WAIT_TIME, generateTestPhone } from './utils/test-helpers';
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
   });
   const data = await response.json();
   return data.data?.accessToken || '';

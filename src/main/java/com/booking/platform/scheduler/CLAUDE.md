@@ -11,13 +11,15 @@
 
 ---
 
-## Scheduler 列表 (3 個)
+## Scheduler 列表 (5 個)
 
 | Scheduler | Cron | 說明 |
 |-----------|------|------|
 | BookingReminderScheduler | `0 0 * * * *` | 每小時檢查並發送預約提醒 (LINE/SMS) |
 | MonthlyQuotaResetScheduler | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 |
 | MarketingPushScheduler | `0 * * * * *` | 每分鐘檢查排程推播任務 |
+| BirthdayGreetingScheduler | `0 0 9 * * *` | 每天 9:00 發送生日祝福 (AUTO_BIRTHDAY) |
+| CustomerRecallScheduler | `0 0 14 * * *` | 每天 14:00 發送顧客喚回通知 (AUTO_RECALL) |
 
 ---
 

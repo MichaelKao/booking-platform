@@ -24,7 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -349,5 +353,146 @@ public class CustomerService {
         log.info("顧客已解除封鎖，ID：{}", id);
 
         return customerMapper.toResponse(entity);
+    }
+
+    // ========================================
+    // 標籤操作（ADVANCED_CUSTOMER 功能）
+    // ========================================
+
+    /**
+     * 更新顧客標籤
+     */
+    @Transactional
+    public CustomerResponse updateTags(String id, List<String> tags) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("更新顧客標籤，ID：{}，標籤：{}", id, tags);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        if (tags == null || tags.isEmpty()) {
+            entity.setTags(null);
+        } else {
+            // 清理並去重標籤
+            Set<String> uniqueTags = new HashSet<>();
+            for (String tag : tags) {
+                String cleaned = tag.trim();
+                if (!cleaned.isEmpty()) {
+                    uniqueTags.add(cleaned);
+                }
+            }
+            entity.setTags(String.join(",", uniqueTags));
+        }
+
+        entity = customerRepository.save(entity);
+        log.info("顧客標籤更新成功，ID：{}", id);
+
+        return customerMapper.toResponse(entity);
+    }
+
+    /**
+     * 新增顧客標籤
+     */
+    @Transactional
+    public CustomerResponse addTag(String id, String tag) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("新增顧客標籤，ID：{}，標籤：{}", id, tag);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        String cleaned = tag.trim();
+        if (cleaned.isEmpty()) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "標籤不能為空");
+        }
+
+        Set<String> tags = new HashSet<>();
+        if (entity.getTags() != null && !entity.getTags().isEmpty()) {
+            tags.addAll(Arrays.asList(entity.getTags().split(",")));
+        }
+        tags.add(cleaned);
+        entity.setTags(String.join(",", tags));
+
+        entity = customerRepository.save(entity);
+        log.info("顧客標籤新增成功，ID：{}", id);
+
+        return customerMapper.toResponse(entity);
+    }
+
+    /**
+     * 移除顧客標籤
+     */
+    @Transactional
+    public CustomerResponse removeTag(String id, String tag) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("移除顧客標籤，ID：{}，標籤：{}", id, tag);
+
+        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        if (entity.getTags() == null || entity.getTags().isEmpty()) {
+            return customerMapper.toResponse(entity);
+        }
+
+        Set<String> tags = new HashSet<>(Arrays.asList(entity.getTags().split(",")));
+        tags.remove(tag.trim());
+
+        if (tags.isEmpty()) {
+            entity.setTags(null);
+        } else {
+            entity.setTags(String.join(",", tags));
+        }
+
+        entity = customerRepository.save(entity);
+        log.info("顧客標籤移除成功，ID：{}", id);
+
+        return customerMapper.toResponse(entity);
+    }
+
+    /**
+     * 依標籤搜尋顧客
+     */
+    public List<CustomerResponse> getCustomersByTag(String tag) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.debug("依標籤搜尋顧客，標籤：{}", tag);
+
+        // 使用 LIKE 搜尋包含該標籤的顧客
+        List<Customer> customers = customerRepository.findByTenantIdAndTagContaining(tenantId, tag.trim());
+
+        return customers.stream()
+                .map(customerMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 取得所有使用中的標籤
+     */
+    public List<String> getAllTags() {
+        String tenantId = TenantContext.getTenantId();
+
+        log.debug("取得所有標籤");
+
+        List<Customer> customers = customerRepository.findByTenantIdAndTagsNotNull(tenantId);
+
+        Set<String> allTags = new HashSet<>();
+        for (Customer customer : customers) {
+            if (customer.getTags() != null && !customer.getTags().isEmpty()) {
+                allTags.addAll(Arrays.asList(customer.getTags().split(",")));
+            }
+        }
+
+        return new ArrayList<>(allTags).stream()
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

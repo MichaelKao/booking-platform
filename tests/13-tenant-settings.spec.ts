@@ -3,7 +3,8 @@ import {
   tenantLogin,
   waitForLoading,
   WAIT_TIME,
-  closeModal
+  closeModal,
+  TEST_ACCOUNTS
 } from './utils/test-helpers';
 
 /**
@@ -18,7 +19,7 @@ import {
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
   });
   const data = await response.json();
   return data.data?.accessToken || '';

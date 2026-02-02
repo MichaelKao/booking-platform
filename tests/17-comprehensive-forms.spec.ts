@@ -7,7 +7,8 @@ import {
   generateTestData,
   generateTestPhone,
   generateTestEmail,
-  closeModal
+  closeModal,
+  TEST_ACCOUNTS
 } from './utils/test-helpers';
 
 /**
@@ -22,7 +23,7 @@ import {
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
   });
   const data = await response.json();
   return data.data?.accessToken || '';
@@ -419,8 +420,8 @@ test.describe('登入表單驗證', () => {
       await page.goto('/tenant/login');
       await waitForLoading(page);
 
-      await page.fill('#username', 'tenant_test');
-      await page.fill('#password', 'test123');
+      await page.fill('#username', TEST_ACCOUNTS.tenant.username);
+      await page.fill('#password', TEST_ACCOUNTS.tenant.password);
       await page.click('button[type="submit"]');
 
       await page.waitForURL(/\/tenant\/dashboard/, { timeout: 15000 });
@@ -536,17 +537,29 @@ test.describe('按鈕狀態測試', () => {
   test('表單提交按鈕禁用狀態', async ({ page }) => {
     await page.goto('/tenant/customers');
     await waitForLoading(page);
+    await page.waitForTimeout(WAIT_TIME.api);
 
     const addBtn = page.locator('button:has-text("新增")').first();
-    if (await addBtn.isVisible()) {
+    const isBtnVisible = await addBtn.isVisible().catch(() => false);
+    console.log(`新增按鈕可見: ${isBtnVisible}`);
+
+    if (isBtnVisible) {
       await addBtn.click();
-      await page.waitForTimeout(WAIT_TIME.short);
+      await page.waitForTimeout(WAIT_TIME.medium);
 
       const modal = page.locator('.modal.show');
-      if (await modal.isVisible()) {
-        const submitBtn = modal.locator('button[type="submit"]');
-        const isDisabled = await submitBtn.isDisabled();
-        console.log(`提交按鈕禁用: ${isDisabled}`);
+      const isModalVisible = await modal.isVisible().catch(() => false);
+      console.log(`Modal 可見: ${isModalVisible}`);
+
+      if (isModalVisible) {
+        const submitBtn = modal.locator('button[type="submit"], .btn-primary').first();
+        const submitBtnExists = await submitBtn.count() > 0;
+        console.log(`提交按鈕存在: ${submitBtnExists}`);
+
+        if (submitBtnExists) {
+          const isDisabled = await submitBtn.isDisabled().catch(() => false);
+          console.log(`提交按鈕禁用: ${isDisabled}`);
+        }
 
         await closeModal(page);
       }

@@ -259,11 +259,18 @@ public class FeatureStoreService {
 
         tenantFeatureRepository.save(tf);
 
+        // ========================================
+        // 6. 處理功能特定邏輯
+        // ========================================
+
+        handleFeatureApply(tenant, featureCode);
+        tenantRepository.save(tenant);
+
         log.info("功能訂閱成功，租戶 ID：{}，功能：{}，到期時間：{}",
                 tenantId, code, tf.getExpiresAt());
 
         // ========================================
-        // 6. 返回結果
+        // 7. 返回結果
         // ========================================
 
         return FeatureStoreItemResponse.builder()
@@ -330,6 +337,17 @@ public class FeatureStoreService {
         tf.setDeletedAt(LocalDateTime.now());
         tenantFeatureRepository.save(tf);
 
+        // ========================================
+        // 4. 處理功能特定取消邏輯
+        // ========================================
+
+        Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND, "找不到租戶資料"
+                ));
+        handleFeatureCancel(tenant, featureCode);
+        tenantRepository.save(tenant);
+
         log.info("功能取消訂閱成功，租戶 ID：{}，功能：{}", tenantId, code);
 
         // ========================================
@@ -348,5 +366,63 @@ public class FeatureStoreService {
                 .iconUrl(feature.getIcon())
                 .sortOrder(feature.getSortOrder())
                 .build();
+    }
+
+    // ========================================
+    // 功能特定處理
+    // ========================================
+
+    /**
+     * 處理功能訂閱時的特定邏輯
+     *
+     * @param tenant 租戶
+     * @param featureCode 功能代碼
+     */
+    private void handleFeatureApply(Tenant tenant, FeatureCode featureCode) {
+        switch (featureCode) {
+            case UNLIMITED_STAFF:
+                // 解除員工數量限制
+                tenant.setMaxStaffCount(0);
+                log.info("UNLIMITED_STAFF 已啟用，解除員工數量限制");
+                break;
+
+            case EXTRA_PUSH:
+                // 增加推送額度（每月額外 500 則）
+                int currentQuota = tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 100;
+                tenant.setMonthlyPushQuota(currentQuota + 500);
+                log.info("EXTRA_PUSH 已啟用，推送額度增加至 {}", tenant.getMonthlyPushQuota());
+                break;
+
+            default:
+                // 其他功能無特殊處理
+                break;
+        }
+    }
+
+    /**
+     * 處理功能取消時的特定邏輯
+     *
+     * @param tenant 租戶
+     * @param featureCode 功能代碼
+     */
+    private void handleFeatureCancel(Tenant tenant, FeatureCode featureCode) {
+        switch (featureCode) {
+            case UNLIMITED_STAFF:
+                // 恢復員工數量限制
+                tenant.setMaxStaffCount(3);
+                log.info("UNLIMITED_STAFF 已取消，員工數量限制恢復為 3");
+                break;
+
+            case EXTRA_PUSH:
+                // 減少推送額度
+                int currentQuota = tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 600;
+                tenant.setMonthlyPushQuota(Math.max(100, currentQuota - 500));
+                log.info("EXTRA_PUSH 已取消，推送額度恢復至 {}", tenant.getMonthlyPushQuota());
+                break;
+
+            default:
+                // 其他功能無特殊處理
+                break;
+        }
     }
 }

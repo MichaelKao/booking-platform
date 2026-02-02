@@ -5,7 +5,8 @@ import {
   WAIT_TIME,
   generateTestData,
   generateTestPhone,
-  closeModal
+  closeModal,
+  TEST_ACCOUNTS
 } from './utils/test-helpers';
 
 /**
@@ -20,7 +21,7 @@ import {
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
   });
   const data = await response.json();
   return data.data?.accessToken || '';
@@ -374,10 +375,11 @@ test.describe('員工管理 UI 測試', () => {
       await waitForLoading(page);
       await page.waitForTimeout(WAIT_TIME.api);
 
-      const table = page.locator('table.table');
+      // 使用 first() 因為頁面有多個表格（員工列表、排班表、請假表）
+      const table = page.locator('table.table').first();
       await expect(table).toBeVisible();
 
-      const headers = ['姓名', '電話', '狀態', '操作'];
+      const headers = ['員工', '聯絡', '可預約', '狀態', '操作'];
       for (const header of headers) {
         const th = page.locator(`th:has-text("${header}")`);
         console.log(`表頭 "${header}": ${await th.count() > 0 ? '存在' : '不存在'}`);

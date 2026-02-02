@@ -125,4 +125,53 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
             ORDER BY c.createdAt DESC
             """)
     List<Customer> findByTenantIdAndDeletedAtIsNull(@Param("tenantId") String tenantId);
+
+    /**
+     * 查詢久未到訪的顧客（喚回用）
+     */
+    @Query("""
+            SELECT c FROM Customer c
+            WHERE c.tenantId = :tenantId
+            AND c.deletedAt IS NULL
+            AND c.status = 'ACTIVE'
+            AND c.lineUserId IS NOT NULL
+            AND (c.lastVisitAt IS NULL OR c.lastVisitAt < :thresholdDate)
+            AND (c.lastRecallAt IS NULL OR c.lastRecallAt < :thresholdDate)
+            ORDER BY c.lastVisitAt ASC NULLS FIRST
+            """)
+    List<Customer> findInactiveCustomers(
+            @Param("tenantId") String tenantId,
+            @Param("thresholdDate") LocalDateTime thresholdDate
+    );
+
+    // ========================================
+    // 標籤查詢
+    // ========================================
+
+    /**
+     * 依標籤搜尋顧客
+     */
+    @Query("""
+            SELECT c FROM Customer c
+            WHERE c.tenantId = :tenantId
+            AND c.deletedAt IS NULL
+            AND c.tags LIKE %:tag%
+            ORDER BY c.name ASC
+            """)
+    List<Customer> findByTenantIdAndTagContaining(
+            @Param("tenantId") String tenantId,
+            @Param("tag") String tag
+    );
+
+    /**
+     * 查詢有標籤的顧客
+     */
+    @Query("""
+            SELECT c FROM Customer c
+            WHERE c.tenantId = :tenantId
+            AND c.deletedAt IS NULL
+            AND c.tags IS NOT NULL
+            AND c.tags <> ''
+            """)
+    List<Customer> findByTenantIdAndTagsNotNull(@Param("tenantId") String tenantId);
 }

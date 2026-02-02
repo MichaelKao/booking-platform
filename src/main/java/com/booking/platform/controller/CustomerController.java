@@ -177,4 +177,64 @@ public class CustomerController {
         CustomerResponse result = customerService.unblockCustomer(id);
         return ApiResponse.ok("顧客已解除封鎖", result);
     }
+
+    // ========================================
+    // 標籤操作 API（需訂閱 ADVANCED_CUSTOMER）
+    // ========================================
+
+    /**
+     * 更新顧客標籤
+     */
+    @PostMapping("/{id}/tags")
+    public ApiResponse<CustomerResponse> updateTags(
+            @PathVariable String id,
+            @RequestBody java.util.Map<String, Object> request
+    ) {
+        @SuppressWarnings("unchecked")
+        List<String> tags = (List<String>) request.get("tags");
+        CustomerResponse result = customerService.updateTags(id, tags);
+        return ApiResponse.ok("標籤更新成功", result);
+    }
+
+    /**
+     * 新增顧客標籤
+     */
+    @PostMapping("/{id}/tags/add")
+    public ApiResponse<CustomerResponse> addTag(
+            @PathVariable String id,
+            @RequestParam String tag
+    ) {
+        CustomerResponse result = customerService.addTag(id, tag);
+        return ApiResponse.ok("標籤新增成功", result);
+    }
+
+    /**
+     * 移除顧客標籤
+     */
+    @DeleteMapping("/{id}/tags/{tag}")
+    public ApiResponse<CustomerResponse> removeTag(
+            @PathVariable String id,
+            @PathVariable String tag
+    ) {
+        CustomerResponse result = customerService.removeTag(id, tag);
+        return ApiResponse.ok("標籤移除成功", result);
+    }
+
+    /**
+     * 依標籤搜尋顧客
+     */
+    @GetMapping("/by-tag/{tag}")
+    public ApiResponse<List<CustomerResponse>> getCustomersByTag(@PathVariable String tag) {
+        List<CustomerResponse> result = customerService.getCustomersByTag(tag);
+        return ApiResponse.ok(result);
+    }
+
+    /**
+     * 取得所有使用中的標籤
+     */
+    @GetMapping("/tags")
+    public ApiResponse<List<String>> getAllTags() {
+        List<String> result = customerService.getAllTags();
+        return ApiResponse.ok(result);
+    }
 }

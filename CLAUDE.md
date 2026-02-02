@@ -192,11 +192,13 @@ POST /api/payments/callback      # ECPay 付款結果回調
 
 ## 排程任務
 
-| 排程 | Cron | 說明 |
-|------|------|------|
-| 預約提醒 | `0 0 * * * *` | 每小時檢查並發送 LINE/SMS 提醒 |
-| 額度重置 | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 |
-| 行銷推播 | `0 * * * * *` | 每分鐘檢查排程推播任務 |
+| 排程 | Cron | 說明 | 需訂閱功能 |
+|------|------|------|-----------|
+| 預約提醒 | `0 0 * * * *` | 每小時檢查並發送 LINE/SMS 提醒 | AUTO_REMINDER |
+| 額度重置 | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 | - |
+| 行銷推播 | `0 * * * * *` | 每分鐘檢查排程推播任務 | - |
+| 生日祝福 | `0 0 9 * * *` | 每天 9:00 發送生日祝福 LINE 訊息 | AUTO_BIRTHDAY |
+| 顧客喚回 | `0 0 14 * * *` | 每天 14:00 發送喚回通知給久未到訪顧客 | AUTO_RECALL |
 
 設定於 `application.yml`：
 ```yaml
@@ -210,6 +212,13 @@ scheduler:
   marketing-push:
     enabled: true
     cron: "0 * * * * *"
+  birthday-greeting:
+    enabled: true
+    cron: "0 0 9 * * *"
+  customer-recall:
+    enabled: true
+    cron: "0 0 14 * * *"
+    days-threshold: 30  # 超過30天未到訪的顧客
 ```
 
 ---
@@ -527,6 +536,47 @@ npx playwright test --list
 - 功能訂閱與側邊欄顯示控制
 - LINE Bot 對話狀態和訊息格式
 - Excel/PDF 匯出功能
+
+---
+
+## 待開發功能 (Pending Features)
+
+### 需付費 API（暫不實作）
+
+| 功能代碼 | 說明 | 原因 |
+|---------|------|------|
+| `AI_ASSISTANT` | AI 智慧客服 | 需整合 OpenAI/Claude API，需付費 |
+
+### 複雜功能（未來規劃）
+
+| 功能代碼 | 說明 | 說明 |
+|---------|------|------|
+| `MULTI_ACCOUNT` | 多帳號管理 | 需設計完整的權限和帳號體系 |
+| `MULTI_BRANCH` | 多分店管理 | 需重構租戶架構，影響範圍大 |
+
+### 功能實作狀態
+
+| 功能代碼 | 說明 | 狀態 | 備註 |
+|---------|------|------|------|
+| `BASIC_BOOKING` | 基本預約功能 | ✅ 已完成 | 免費功能 |
+| `BASIC_CUSTOMER` | 基本顧客管理 | ✅ 已完成 | 免費功能 |
+| `BASIC_STAFF` | 基本員工管理 | ✅ 已完成 | 免費，限3位員工 |
+| `BASIC_SERVICE` | 基本服務項目 | ✅ 已完成 | 免費功能 |
+| `BASIC_REPORT` | 基本營運報表 | ✅ 已完成 | 免費功能 |
+| `UNLIMITED_STAFF` | 無限員工數量 | ✅ 已完成 | 付費解除限制 |
+| `ADVANCED_REPORT` | 進階報表分析 | ✅ 已完成 | 顧客分析、趨勢預測 |
+| `COUPON_SYSTEM` | 票券系統 | ✅ 已完成 | 優惠券發放與核銷 |
+| `MEMBERSHIP_SYSTEM` | 會員等級系統 | ✅ 已完成 | 等級設定與升降級 |
+| `POINT_SYSTEM` | 顧客集點獎勵 | ✅ 已完成 | 自動集點與兌換 |
+| `PRODUCT_SALES` | 商品銷售功能 | ✅ 已完成 | 商品管理與庫存 |
+| `AUTO_REMINDER` | 自動預約提醒 | ✅ 已完成 | LINE/SMS 自動提醒 |
+| `AUTO_BIRTHDAY` | 自動生日祝福 | ✅ 已完成 | 每日排程發送祝福 |
+| `AUTO_RECALL` | 顧客喚回通知 | ✅ 已完成 | 久未到訪提醒 |
+| `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
+| `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群 |
+| `AI_ASSISTANT` | AI 智慧客服 | ⏳ 待開發 | 需付費 API |
+| `MULTI_ACCOUNT` | 多帳號管理 | ⏳ 待開發 | 複雜功能 |
+| `MULTI_BRANCH` | 多分店管理 | ⏳ 待開發 | 複雜功能 |
 
 ---
 

@@ -102,4 +102,9 @@ public interface TenantFeatureRepository extends JpaRepository<TenantFeature, St
      * 查詢租戶功能（包含已刪除的，用於重新訂閱）
      */
     Optional<TenantFeature> findByTenantIdAndFeatureCode(String tenantId, FeatureCode featureCode);
+
+    /**
+     * 查詢所有啟用指定功能的租戶
+     */
+    List<TenantFeature> findByFeatureCodeAndDeletedAtIsNull(FeatureCode featureCode);
 }

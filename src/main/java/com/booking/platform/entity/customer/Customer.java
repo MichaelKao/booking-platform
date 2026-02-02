@@ -187,6 +187,12 @@ public class Customer extends BaseEntity {
     @Column(name = "last_visit_at")
     private LocalDateTime lastVisitAt;
 
+    /**
+     * 最後喚回通知時間
+     */
+    @Column(name = "last_recall_at")
+    private LocalDateTime lastRecallAt;
+
     // ========================================
     // 備註
     // ========================================

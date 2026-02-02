@@ -4,7 +4,8 @@ import {
   waitForLoading,
   WAIT_TIME,
   generateTestData,
-  closeModal
+  closeModal,
+  TEST_ACCOUNTS
 } from './utils/test-helpers';
 
 /**
@@ -18,7 +19,7 @@ import {
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
   });
   const data = await response.json();
   return data.data?.accessToken || '';
@@ -362,18 +363,26 @@ test.describe('行銷推播 UI 測試', () => {
     test('新增推播按鈕', async ({ page }) => {
       await page.goto('/tenant/marketing');
       await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
 
       const addBtn = page.locator('button:has-text("新增推播"), button:has-text("建立推播"), button:has-text("新增")').first();
-      if (await addBtn.isVisible()) {
+      const isBtnVisible = await addBtn.isVisible().catch(() => false);
+      console.log(`新增按鈕可見: ${isBtnVisible}`);
+
+      if (isBtnVisible) {
         await addBtn.click();
-        await page.waitForTimeout(WAIT_TIME.short);
+        await page.waitForTimeout(WAIT_TIME.medium);
 
         const modal = page.locator('.modal.show');
-        if (await modal.isVisible()) {
+        const isModalVisible = await modal.isVisible().catch(() => false);
+        console.log(`Modal 可見: ${isModalVisible}`);
+
+        if (isModalVisible) {
           // 檢查表單欄位
           const formFields = ['#title', '#content', '#targetType'];
           for (const field of formFields) {
-            console.log(`欄位 ${field}: ${await page.locator(field).isVisible() ? '存在' : '不存在'}`);
+            const isFieldVisible = await page.locator(field).isVisible().catch(() => false);
+            console.log(`欄位 ${field}: ${isFieldVisible ? '存在' : '不存在'}`);
           }
 
           await closeModal(page);

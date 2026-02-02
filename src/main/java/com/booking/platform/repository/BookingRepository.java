@@ -369,4 +369,41 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
      * 依取消 Token 查詢預約
      */
     Optional<Booking> findByCancelTokenAndDeletedAtIsNull(String cancelToken);
+
+    // ========================================
+    // 進階報表查詢
+    // ========================================
+
+    /**
+     * 統計不重複顧客數（進階報表用）
+     */
+    @Query("""
+            SELECT COUNT(DISTINCT b.customerId) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.customerId IS NOT NULL
+            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            """)
+    long countDistinctCustomersByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 統計指定時段的預約數（尖峰時段分析用）
+     */
+    @Query(value = """
+            SELECT COUNT(*) FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.deleted_at IS NULL
+            AND EXTRACT(HOUR FROM b.start_time) = :hour
+            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            """, nativeQuery = true)
+    long countByTenantIdAndHour(
+            @Param("tenantId") String tenantId,
+            @Param("hour") int hour,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

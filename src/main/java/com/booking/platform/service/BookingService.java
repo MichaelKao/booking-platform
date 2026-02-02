@@ -23,9 +23,11 @@ import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffLeaveRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.StaffScheduleRepository;
+import com.booking.platform.repository.TenantFeatureRepository;
 import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.line.LineNotificationService;
 import com.booking.platform.service.notification.SseNotificationService;
+import com.booking.platform.enums.FeatureCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -59,9 +61,11 @@ public class BookingService {
     private final StaffLeaveRepository staffLeaveRepository;
     private final CustomerRepository customerRepository;
     private final TenantRepository tenantRepository;
+    private final TenantFeatureRepository tenantFeatureRepository;
     private final BookingMapper bookingMapper;
     private final LineNotificationService lineNotificationService;
     private final SseNotificationService sseNotificationService;
+    private final CustomerService customerService;
 
     // ========================================
     // 查詢方法
@@ -653,6 +657,33 @@ public class BookingService {
         entity = bookingRepository.save(entity);
 
         log.info("預約完成，ID：{}", entity.getId());
+
+        // ========================================
+        // 自動集點（POINT_SYSTEM 功能）
+        // ========================================
+        if (entity.getCustomerId() != null) {
+            boolean hasPointSystem = tenantFeatureRepository
+                    .findByTenantIdAndFeatureCodeAndDeletedAtIsNull(tenantId, FeatureCode.POINT_SYSTEM)
+                    .map(tf -> tf.isEffective())
+                    .orElse(false);
+
+            if (hasPointSystem && entity.getPrice() != null) {
+                // 計算點數：每消費 NT$10 獲得 1 點
+                int earnedPoints = entity.getPrice().intValue() / 10;
+                if (earnedPoints > 0) {
+                    try {
+                        customerService.addPoints(
+                                entity.getCustomerId(),
+                                earnedPoints,
+                                "預約完成自動集點 - " + entity.getServiceName()
+                        );
+                        log.info("自動集點成功，顧客 ID：{}，點數：{}", entity.getCustomerId(), earnedPoints);
+                    } catch (Exception e) {
+                        log.warn("自動集點失敗，顧客 ID：{}，錯誤：{}", entity.getCustomerId(), e.getMessage());
+                    }
+                }
+            }
+        }
 
         // 發送 LINE 通知
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.COMPLETED, "感謝您的光臨，期待下次再見！");
