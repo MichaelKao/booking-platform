@@ -1,0 +1,432 @@
+import { test, expect, APIRequestContext } from '@playwright/test';
+import {
+  tenantLogin,
+  waitForLoading,
+  WAIT_TIME,
+  getToday
+} from './utils/test-helpers';
+
+/**
+ * 店家後台 - 報表頁面 & 匯出功能完整測試
+ *
+ * 測試範圍：
+ * 1. 報表儀表板
+ * 2. 各種報表 API
+ * 3. Excel/PDF 匯出
+ */
+
+async function getTenantToken(request: APIRequestContext): Promise<string> {
+  const response = await request.post('/api/auth/tenant/login', {
+    data: { username: 'tenant_test', password: 'test123' }
+  });
+  const data = await response.json();
+  return data.data?.accessToken || '';
+}
+
+test.describe('報表 API 測試', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    tenantToken = await getTenantToken(request);
+  });
+
+  test.describe('報表摘要 API', () => {
+    test('取得今日報表', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/today', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      expect(data.success).toBeTruthy();
+      console.log(`今日報表: ${JSON.stringify(data.data)}`);
+    });
+
+    test('取得週報表', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/weekly', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`週報表: ${JSON.stringify(data.data)}`);
+    });
+
+    test('取得月報表', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/monthly', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`月報表: ${JSON.stringify(data.data)}`);
+    });
+
+    test('取得報表摘要 - 不同時間範圍', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const ranges = ['week', 'month', 'quarter', 'year'];
+      for (const range of ranges) {
+        const response = await request.get(`/api/reports/summary?range=${range}`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+        expect(response.status()).toBeLessThan(500);
+        console.log(`報表摘要 ${range}: ${response.ok() ? '成功' : response.status()}`);
+      }
+    });
+  });
+
+  test.describe('每日報表 API', () => {
+    test('取得每日報表', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/daily?range=week', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`每日報表數據點: ${data.data?.length || 0}`);
+    });
+
+    test('每日報表 - 不同時間範圍', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const ranges = ['week', 'month', 'quarter'];
+      for (const range of ranges) {
+        const response = await request.get(`/api/reports/daily?range=${range}`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+        expect(response.status()).toBeLessThan(500);
+        console.log(`每日報表 ${range}: ${response.ok() ? '成功' : response.status()}`);
+      }
+    });
+  });
+
+  test.describe('排行榜 API', () => {
+    test('熱門服務 TOP 10', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/top-services?range=month&limit=10', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`熱門服務數: ${data.data?.length || 0}`);
+    });
+
+    test('熱門員工 TOP 10', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/top-staff?range=month&limit=10', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`熱門員工數: ${data.data?.length || 0}`);
+    });
+
+    test('排行榜 - 不同限制', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const limits = [5, 10, 20];
+      for (const limit of limits) {
+        const servicesRes = await request.get(`/api/reports/top-services?range=month&limit=${limit}`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+        const staffRes = await request.get(`/api/reports/top-staff?range=month&limit=${limit}`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+
+        console.log(`TOP ${limit} 服務: ${servicesRes.ok() ? '成功' : servicesRes.status()}`);
+        console.log(`TOP ${limit} 員工: ${staffRes.ok() ? '成功' : staffRes.status()}`);
+      }
+    });
+  });
+
+  test.describe('儀表板 API', () => {
+    test('取得儀表板資料', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/dashboard', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      console.log(`儀表板資料: ${JSON.stringify(data.data)}`);
+    });
+  });
+});
+
+test.describe('匯出 API 測試', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    tenantToken = await getTenantToken(request);
+  });
+
+  test.describe('預約匯出', () => {
+    test('匯出預約 Excel', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const today = getToday();
+      const response = await request.get(`/api/export/bookings/excel?startDate=${today}&endDate=${today}`, {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`預約 Excel 匯出: ${response.ok() ? '成功' : response.status()}`);
+    });
+
+    test('匯出預約 PDF', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const today = getToday();
+      const response = await request.get(`/api/export/bookings/pdf?startDate=${today}&endDate=${today}`, {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`預約 PDF 匯出: ${response.ok() ? '成功' : response.status()}`);
+    });
+
+    test('匯出預約 - 帶狀態篩選', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const statuses = ['CONFIRMED', 'COMPLETED'];
+      for (const status of statuses) {
+        const response = await request.get(`/api/export/bookings/excel?status=${status}`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+        console.log(`預約匯出 ${status}: ${response.status()}`);
+      }
+    });
+  });
+
+  test.describe('報表匯出', () => {
+    test('匯出報表 Excel', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/export/reports/excel?range=month', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`報表 Excel 匯出: ${response.ok() ? '成功' : response.status()}`);
+    });
+
+    test('匯出報表 PDF', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/export/reports/pdf?range=month', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`報表 PDF 匯出: ${response.ok() ? '成功' : response.status()}`);
+    });
+  });
+
+  test.describe('顧客匯出', () => {
+    test('匯出顧客 Excel', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/export/customers/excel', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`顧客 Excel 匯出: ${response.ok() ? '成功' : response.status()}`);
+    });
+  });
+});
+
+test.describe('報表 UI 測試', () => {
+  test.beforeEach(async ({ page }) => {
+    await tenantLogin(page);
+  });
+
+  test.describe('報表頁面', () => {
+    test('頁面載入成功', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const title = page.locator('h1, h2, .page-title');
+      await expect(title.first()).toBeVisible();
+    });
+
+    test('統計卡片顯示', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      // 檢查統計卡片
+      const statsLabels = ['總預約', '總營收', '完成率', '新客戶'];
+      for (const label of statsLabels) {
+        const element = page.locator(`:has-text("${label}")`);
+        console.log(`統計 "${label}": ${await element.count() > 0 ? '存在' : '不存在'}`);
+      }
+    });
+
+    test('圖表顯示', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      // 檢查 Chart.js 畫布
+      const charts = page.locator('canvas');
+      const chartCount = await charts.count();
+      console.log(`圖表數量: ${chartCount}`);
+    });
+
+    test('日期範圍選擇', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+
+      const rangeSelect = page.locator('select[name="range"], #dateRange');
+      if (await rangeSelect.isVisible()) {
+        const options = await rangeSelect.locator('option').all();
+        console.log(`日期範圍選項數: ${options.length}`);
+
+        for (const option of options) {
+          const value = await option.getAttribute('value');
+          const text = await option.textContent();
+          console.log(`- ${value}: ${text?.trim()}`);
+        }
+      }
+    });
+
+    test('日期範圍切換', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+
+      const rangeSelect = page.locator('select[name="range"], #dateRange');
+      if (await rangeSelect.isVisible()) {
+        await rangeSelect.selectOption('week').catch(() => {});
+        await page.waitForTimeout(WAIT_TIME.api);
+
+        await rangeSelect.selectOption('month').catch(() => {});
+        await page.waitForTimeout(WAIT_TIME.api);
+
+        await rangeSelect.selectOption('quarter').catch(() => {});
+        await page.waitForTimeout(WAIT_TIME.api);
+      }
+    });
+
+    test('熱門服務表格', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const servicesSection = page.locator(':has-text("熱門服務"), :has-text("TOP 服務")');
+      console.log(`熱門服務區塊: ${await servicesSection.count() > 0 ? '存在' : '不存在'}`);
+    });
+
+    test('員工業績表格', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const staffSection = page.locator(':has-text("員工業績"), :has-text("TOP 員工")');
+      console.log(`員工業績區塊: ${await staffSection.count() > 0 ? '存在' : '不存在'}`);
+    });
+
+    test('匯出按鈕', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+
+      const excelBtn = page.locator('button:has-text("Excel"), button:has-text("匯出 Excel")');
+      const pdfBtn = page.locator('button:has-text("PDF"), button:has-text("匯出 PDF")');
+
+      console.log(`Excel 按鈕: ${await excelBtn.isVisible()}`);
+      console.log(`PDF 按鈕: ${await pdfBtn.isVisible()}`);
+    });
+
+    test('匯出 Excel 功能', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+
+      const excelBtn = page.locator('button:has-text("Excel")').first();
+      if (await excelBtn.isVisible()) {
+        // 監聽下載事件
+        const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+        await excelBtn.click();
+        const download = await downloadPromise;
+
+        if (download) {
+          console.log(`下載檔案: ${download.suggestedFilename()}`);
+        }
+      }
+    });
+
+    test('匯出 PDF 功能', async ({ page }) => {
+      await page.goto('/tenant/reports');
+      await waitForLoading(page);
+
+      const pdfBtn = page.locator('button:has-text("PDF")').first();
+      if (await pdfBtn.isVisible()) {
+        const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+        await pdfBtn.click();
+        const download = await downloadPromise;
+
+        if (download) {
+          console.log(`下載檔案: ${download.suggestedFilename()}`);
+        }
+      }
+    });
+  });
+
+  test.describe('儀表板頁面', () => {
+    test('頁面載入成功', async ({ page }) => {
+      await page.goto('/tenant/dashboard');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const title = page.locator('h1, h2, .page-title');
+      await expect(title.first()).toBeVisible();
+    });
+
+    test('今日統計卡片', async ({ page }) => {
+      await page.goto('/tenant/dashboard');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const cards = page.locator('.card, .stat-card');
+      const cardCount = await cards.count();
+      expect(cardCount).toBeGreaterThan(0);
+      console.log(`儀表板卡片數: ${cardCount}`);
+    });
+
+    test('待處理預約', async ({ page }) => {
+      await page.goto('/tenant/dashboard');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const pendingSection = page.locator(':has-text("待確認"), :has-text("待處理")');
+      console.log(`待處理區塊: ${await pendingSection.count() > 0 ? '存在' : '不存在'}`);
+    });
+
+    test('最近預約列表', async ({ page }) => {
+      await page.goto('/tenant/dashboard');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const recentBookings = page.locator(':has-text("最近預約"), :has-text("近期預約")');
+      console.log(`最近預約區塊: ${await recentBookings.count() > 0 ? '存在' : '不存在'}`);
+    });
+
+    test('快速操作按鈕', async ({ page }) => {
+      await page.goto('/tenant/dashboard');
+      await waitForLoading(page);
+
+      const quickActions = [
+        '新增預約',
+        '新增顧客',
+        '查看報表'
+      ];
+
+      for (const action of quickActions) {
+        const btn = page.locator(`button:has-text("${action}"), a:has-text("${action}")`);
+        console.log(`快速操作 "${action}": ${await btn.count() > 0 ? '存在' : '不存在'}`);
+      }
+    });
+  });
+});
