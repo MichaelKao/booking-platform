@@ -374,8 +374,10 @@ public class LineConfigService {
                 // 產生 QR Code URL 和加好友連結
                 String basicId = (String) botInfo.get("basicId");
                 if (basicId != null) {
-                    // LINE 官方 QR Code URL 格式
-                    result.put("qrCodeUrl", "https://qr-official.line.me/gs/M_" + basicId.replace("@", "") + ".png");
+                    // 移除 @ 符號
+                    String cleanId = basicId.replace("@", "");
+                    // LINE 官方 QR Code URL 格式（正確格式：sid/M/）
+                    result.put("qrCodeUrl", "https://qr-official.line.me/sid/M/" + cleanId + ".png");
                     // 加好友連結
                     result.put("addFriendUrl", "https://line.me/R/ti/p/" + basicId);
                 }
