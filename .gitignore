@@ -34,3 +34,9 @@ logs/
 # Test output
 test-output/
 surefire-reports/
+test-results/
+playwright-report/
+
+# Node
+node_modules/
+package-lock.json
