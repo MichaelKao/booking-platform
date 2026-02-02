@@ -7,6 +7,7 @@ import com.booking.platform.dto.request.CreateStaffRequest;
 import com.booking.platform.dto.request.StaffScheduleRequest;
 import com.booking.platform.dto.response.StaffLeaveResponse;
 import com.booking.platform.dto.response.StaffResponse;
+import com.booking.platform.dto.response.StaffScheduleCalendarResponse;
 import com.booking.platform.dto.response.StaffScheduleResponse;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.service.StaffService;
@@ -162,5 +163,24 @@ public class StaffController {
         log.info("刪除員工請假，員工ID：{}，日期：{}", id, date);
         staffService.deleteLeaveByDate(id, date);
         return ApiResponse.ok();
+    }
+
+    // ========================================
+    // 行事曆 API
+    // ========================================
+
+    /**
+     * 取得員工排班行事曆資料
+     *
+     * <p>包含員工上班時間、請假資訊
+     */
+    @GetMapping("/calendar")
+    public ApiResponse<List<StaffScheduleCalendarResponse>> getCalendar(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String staffId
+    ) {
+        log.info("取得員工排班行事曆，日期範圍：{} ~ {}，員工ID：{}", startDate, endDate, staffId);
+        return ApiResponse.ok(staffService.getCalendarEvents(startDate, endDate, staffId));
     }
 }

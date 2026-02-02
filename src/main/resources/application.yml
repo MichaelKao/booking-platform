@@ -174,3 +174,50 @@ management:
   health:
     redis:
       enabled: false
+
+# ========================================
+# 排程設定
+# ========================================
+scheduler:
+  # 預約提醒
+  booking-reminder:
+    enabled: true
+    cron: "0 0 * * * *"  # 每小時整點執行
+
+  # 額度重置（每月1日凌晨）
+  quota-reset:
+    enabled: true
+    cron: "0 5 0 1 * *"
+
+  # 行銷推播（每分鐘檢查）
+  marketing-push:
+    enabled: true
+    cron: "0 * * * * *"
+
+# ========================================
+# SMS 設定
+# ========================================
+sms:
+  enabled: ${SMS_ENABLED:false}
+  provider: ${SMS_PROVIDER:mitake}
+  mitake:
+    username: ${SMS_USERNAME:}
+    password: ${SMS_PASSWORD:}
+    api-url: https://smsapi.mitake.com.tw/api/mtk/SmSend
+  twsms:
+    username: ${TWSMS_USERNAME:}
+    password: ${TWSMS_PASSWORD:}
+    api-url: https://api.twsms.com/json/sms_send.php
+  every8d:
+    user-id: ${EVERY8D_USER_ID:}
+    password: ${EVERY8D_PASSWORD:}
+    api-url: https://oms.every8d.com/API21/HTTP/sendSMS.ashx
+
+# ========================================
+# ECPay 設定
+# ========================================
+ecpay:
+  merchant-id: ${ECPAY_MERCHANT_ID:}
+  hash-key: ${ECPAY_HASH_KEY:}
+  hash-iv: ${ECPAY_HASH_IV:}
+  api-url: https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5

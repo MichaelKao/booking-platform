@@ -67,4 +67,43 @@ public interface StaffLeaveRepository extends JpaRepository<StaffLeave, String> 
      * 刪除員工的請假記錄
      */
     void deleteByStaffIdAndLeaveDateAndDeletedAtIsNull(String staffId, LocalDate leaveDate);
+
+    /**
+     * 檢查員工在特定時間是否請假（含半天假）
+     *
+     * <p>若為全天假，直接返回 true
+     * <p>若為半天假，檢查指定時間是否在請假時段內
+     * <p>注意：startTime/endTime 為 String 格式 (HH:mm)
+     */
+    @Query("""
+            SELECT COUNT(sl) > 0 FROM StaffLeave sl
+            WHERE sl.staffId = :staffId
+            AND sl.leaveDate = :date
+            AND sl.deletedAt IS NULL
+            AND (
+                sl.isFullDay = true
+                OR (
+                    sl.isFullDay = false
+                    AND sl.startTime <= :time
+                    AND sl.endTime > :time
+                )
+            )
+            """)
+    boolean isStaffOnLeaveAtTime(
+            @Param("staffId") String staffId,
+            @Param("date") LocalDate date,
+            @Param("time") String time);
+
+    /**
+     * 取得員工特定日期的請假記錄（含詳細資訊）
+     */
+    @Query("""
+            SELECT sl FROM StaffLeave sl
+            WHERE sl.staffId = :staffId
+            AND sl.leaveDate = :date
+            AND sl.deletedAt IS NULL
+            """)
+    Optional<StaffLeave> findLeaveDetail(
+            @Param("staffId") String staffId,
+            @Param("date") LocalDate date);
 }

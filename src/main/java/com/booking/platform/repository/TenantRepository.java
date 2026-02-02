@@ -113,4 +113,15 @@ public interface TenantRepository extends JpaRepository<Tenant, String> {
             WHERE t.deletedAt IS NULL
             """)
     int resetAllMonthlyPushUsed();
+
+    /**
+     * 重置所有租戶的月度 SMS 計數
+     */
+    @Modifying
+    @Query("""
+            UPDATE Tenant t
+            SET t.monthlySmsUsed = 0
+            WHERE t.deletedAt IS NULL
+            """)
+    int resetAllMonthlySmsUsed();
 }

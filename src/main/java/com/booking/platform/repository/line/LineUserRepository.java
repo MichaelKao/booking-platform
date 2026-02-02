@@ -201,4 +201,66 @@ public interface LineUserRepository extends JpaRepository<LineUser, String> {
             AND lu.isFollowed = true
             """)
     List<LineUser> findPushableUsersByTenantId(@Param("tenantId") String tenantId);
+
+    // ========================================
+    // 行銷推播查詢
+    // ========================================
+
+    /**
+     * 統計追蹤中用戶數量
+     */
+    long countByTenantIdAndIsFollowedAndDeletedAtIsNull(String tenantId, Boolean isFollowed);
+
+    /**
+     * 查詢追蹤中用戶
+     */
+    List<LineUser> findByTenantIdAndIsFollowedAndDeletedAtIsNull(String tenantId, Boolean isFollowed);
+
+    /**
+     * 依會員等級統計追蹤中用戶數量
+     */
+    @Query("""
+            SELECT COUNT(lu) FROM LineUser lu
+            JOIN Customer c ON lu.customerId = c.id
+            WHERE lu.tenantId = :tenantId
+            AND lu.deletedAt IS NULL
+            AND lu.isFollowed = :isFollowed
+            AND c.membershipLevelId = :membershipLevelId
+            """)
+    long countByTenantIdAndMembershipLevelAndIsFollowedAndDeletedAtIsNull(
+            @Param("tenantId") String tenantId,
+            @Param("membershipLevelId") String membershipLevelId,
+            @Param("isFollowed") Boolean isFollowed
+    );
+
+    /**
+     * 依會員等級查詢追蹤中用戶
+     */
+    @Query("""
+            SELECT lu FROM LineUser lu
+            JOIN Customer c ON lu.customerId = c.id
+            WHERE lu.tenantId = :tenantId
+            AND lu.deletedAt IS NULL
+            AND lu.isFollowed = :isFollowed
+            AND c.membershipLevelId = :membershipLevelId
+            """)
+    List<LineUser> findByTenantIdAndMembershipLevelAndIsFollowedAndDeletedAtIsNull(
+            @Param("tenantId") String tenantId,
+            @Param("membershipLevelId") String membershipLevelId,
+            @Param("isFollowed") Boolean isFollowed
+    );
+
+    /**
+     * 依 LINE User ID 列表查詢
+     */
+    @Query("""
+            SELECT lu FROM LineUser lu
+            WHERE lu.tenantId = :tenantId
+            AND lu.deletedAt IS NULL
+            AND lu.lineUserId IN :lineUserIds
+            """)
+    List<LineUser> findByTenantIdAndLineUserIdInAndDeletedAtIsNull(
+            @Param("tenantId") String tenantId,
+            @Param("lineUserIds") List<String> lineUserIds
+    );
 }

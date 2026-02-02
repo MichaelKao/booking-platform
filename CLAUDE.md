@@ -19,6 +19,9 @@
 | 前端 | Thymeleaf + Bootstrap 5 |
 | 行事曆 | FullCalendar |
 | 圖表 | Chart.js |
+| 報表匯出 | Apache POI (Excel) + OpenPDF (PDF) |
+| 金流 | ECPay 綠界 |
+| SMS | 三竹簡訊 |
 | 部署 | Railway (Docker) |
 
 ## 三個角色
@@ -36,30 +39,34 @@
 ```
 com.booking.platform
 ├── common/                    # 共用元件
-│   ├── config/               # 設定 (Security, Redis, Jackson, Async)
+│   ├── config/               # 設定 (Security, Redis, Jackson, Async, Locale, Sms, Ecpay)
 │   ├── exception/            # 例外 (BusinessException, ErrorCode)
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (24 個)
+├── controller/                # 控制器 (27 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
 │   ├── line/                 # LINE Webhook (1 個)
 │   ├── page/                 # 頁面路由 (2 個)
 │   └── tenant/               # 店家 API (15 個)
-├── service/                   # 服務層 (27 個)
+├── service/                   # 服務層 (32 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
-│   └── notification/         # 通知服務
-├── repository/                # 資料存取層 (19 個)
-├── entity/                    # 資料庫實體 (19 個)
-│   ├── system/               # 系統實體
+│   ├── notification/         # 通知服務 (Email, SSE, SMS)
+│   ├── payment/              # 金流服務 (ECPay)
+│   └── export/               # 匯出服務 (Excel, PDF)
+├── scheduler/                 # 排程任務 (3 個)
+├── repository/                # 資料存取層 (22 個)
+├── entity/                    # 資料庫實體 (22 個)
+│   ├── system/               # 系統實體 (含 Payment, SmsLog)
 │   ├── staff/                # 員工實體
+│   ├── marketing/            # 行銷實體 (含 MarketingPush)
 │   └── tenant/               # 租戶實體
-├── dto/                       # 資料傳輸物件 (65+ 個)
+├── dto/                       # 資料傳輸物件 (70+ 個)
 │   ├── request/              # 請求 DTO
 │   └── response/             # 回應 DTO
-├── enums/                     # 列舉 (20 個)
+├── enums/                     # 列舉 (25 個)
 └── mapper/                    # 轉換器
 ```
 
@@ -147,6 +154,10 @@ POST /api/auth/logout             # 登出
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
+| 行銷推播 | `GET/POST /marketing/pushes`, `POST /marketing/pushes/{id}/send`, `DELETE /marketing/pushes/{id}` |
+| 報表匯出 | `GET /export/bookings/excel\|pdf`, `GET /export/reports/excel\|pdf`, `GET /export/customers/excel` |
+| 員工行事曆 | `GET /staff/calendar` |
+| 支付 | `GET/POST /payments`, `GET /payments/{id}`, `GET /payments/order/{merchantTradeNo}` |
 
 ### LINE Webhook
 
@@ -168,6 +179,38 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | `booking_updated` | 預約編輯 | 刷新列表 |
 | `booking_status_changed` | 狀態變更 | 確認/完成/爽約時觸發 |
 | `booking_cancelled` | 預約取消 | 刷新列表 |
+
+### 公開頁面
+
+```
+GET  /booking/cancel/{token}     # 顧客自助取消頁面
+POST /booking/cancel/{token}     # 執行取消預約
+POST /api/payments/callback      # ECPay 付款結果回調
+```
+
+---
+
+## 排程任務
+
+| 排程 | Cron | 說明 |
+|------|------|------|
+| 預約提醒 | `0 0 * * * *` | 每小時檢查並發送 LINE/SMS 提醒 |
+| 額度重置 | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 |
+| 行銷推播 | `0 * * * * *` | 每分鐘檢查排程推播任務 |
+
+設定於 `application.yml`：
+```yaml
+scheduler:
+  booking-reminder:
+    enabled: true
+    cron: "0 0 * * * *"
+  quota-reset:
+    enabled: true
+    cron: "0 5 0 1 * *"
+  marketing-push:
+    enabled: true
+    cron: "0 * * * * *"
+```
 
 ---
 
@@ -220,8 +263,8 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | 預約 | `bookings`, `booking_histories` |
 | 顧客 | `customers`, `membership_levels`, `point_transactions` |
 | 商品 | `products` |
-| 行銷 | `coupons`, `coupon_instances`, `campaigns` |
-| 系統 | `features`, `tenant_features`, `point_topups` |
+| 行銷 | `coupons`, `coupon_instances`, `campaigns`, `marketing_pushes` |
+| 系統 | `features`, `tenant_features`, `point_topups`, `payments`, `sms_logs` |
 | LINE | `tenant_line_configs`, `line_users` |
 
 ---
@@ -276,6 +319,77 @@ Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 
 ---
 
+## 報表匯出功能
+
+支援 Excel 和 PDF 格式匯出：
+
+| 匯出類型 | API | 說明 |
+|---------|-----|------|
+| 預約記錄 Excel | `GET /api/export/bookings/excel` | 依日期範圍和狀態篩選 |
+| 預約記錄 PDF | `GET /api/export/bookings/pdf` | 同上 |
+| 營運報表 Excel | `GET /api/export/reports/excel` | 統計摘要報表 |
+| 營運報表 PDF | `GET /api/export/reports/pdf` | 同上 |
+| 顧客名單 Excel | `GET /api/export/customers/excel` | 全部顧客資料 |
+
+---
+
+## SMS 通知功能
+
+支援三竹簡訊（Mitake）：
+
+```yaml
+sms:
+  enabled: true
+  provider: mitake
+  mitake:
+    username: ${SMS_USERNAME}
+    password: ${SMS_PASSWORD}
+```
+
+**SMS 類型**：
+- 預約確認（BOOKING_CONFIRMATION）
+- 預約提醒（BOOKING_REMINDER）
+- 預約取消（BOOKING_CANCELLED）
+- 行銷推播（MARKETING）
+
+---
+
+## ECPay 金流整合
+
+```yaml
+ecpay:
+  merchant-id: ${ECPAY_MERCHANT_ID}
+  hash-key: ${ECPAY_HASH_KEY}
+  hash-iv: ${ECPAY_HASH_IV}
+```
+
+**支援付款方式**：信用卡、ATM、超商代碼、超商條碼
+
+---
+
+## 多語系支援
+
+支援語言：繁體中文（zh_TW）、簡體中文（zh_CN）、英文（en）
+
+**切換方式**：URL 參數 `?lang=zh_TW`
+
+**檔案位置**：
+- `messages.properties` - 預設（繁中）
+- `messages_zh_CN.properties` - 簡中
+- `messages_en.properties` - 英文
+
+---
+
+## 預約衝突檢查
+
+預約建立時自動檢查：
+1. 員工全天請假
+2. 員工半天假時段重疊
+3. 既有預約時段衝突
+4. 預約緩衝時間（`bookingBufferMinutes` 設定）
+
+---
+
 ## 啟動指令
 
 ```bash
@@ -289,6 +403,28 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 **本機測試**：
 - Admin: http://localhost:8080/admin/login (admin / admin123)
 - Tenant: http://localhost:8080/tenant/login
+
+---
+
+## 環境變數
+
+| 變數 | 說明 | 預設值 |
+|------|------|--------|
+| `DATABASE_URL` | PostgreSQL 連線 | - |
+| `REDIS_URL` | Redis 連線 | - |
+| `JWT_SECRET` | JWT 密鑰 | - |
+| `ENCRYPTION_SECRET_KEY` | AES 加密金鑰 | - |
+| `LINE_CHANNEL_TOKEN` | LINE Channel Token | - |
+| `LINE_CHANNEL_SECRET` | LINE Channel Secret | - |
+| `SMS_ENABLED` | 啟用 SMS | false |
+| `SMS_PROVIDER` | SMS 供應商 | mitake |
+| `SMS_USERNAME` | SMS 帳號 | - |
+| `SMS_PASSWORD` | SMS 密碼 | - |
+| `ECPAY_MERCHANT_ID` | ECPay 商店代號 | - |
+| `ECPAY_HASH_KEY` | ECPay HashKey | - |
+| `ECPAY_HASH_IV` | ECPay HashIV | - |
+| `MAIL_USERNAME` | 郵件帳號 | - |
+| `MAIL_PASSWORD` | 郵件密碼 | - |
 
 ---
 
@@ -321,13 +457,15 @@ npx playwright test tests/06-sse-notifications.spec.ts
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 24 |
-| Service | 27 |
-| Entity | 19 |
-| Repository | 19 |
-| DTO | 65+ |
-| Enum | 20 |
-| HTML 頁面 | 34 |
+| Controller | 27 |
+| Service | 32 |
+| Entity | 22 |
+| Repository | 22 |
+| DTO | 70+ |
+| Enum | 25 |
+| Scheduler | 3 |
+| HTML 頁面 | 35 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
+| i18n 檔案 | 4 |
 | E2E 測試 | 73 |

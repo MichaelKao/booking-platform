@@ -14,12 +14,16 @@ import com.booking.platform.entity.customer.Customer;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.staff.StaffSchedule;
 import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.entity.staff.StaffLeave;
+import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.mapper.BookingMapper;
 import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.ServiceItemRepository;
+import com.booking.platform.repository.StaffLeaveRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.StaffScheduleRepository;
+import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.line.LineNotificationService;
 import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -51,7 +56,9 @@ public class BookingService {
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
     private final StaffScheduleRepository staffScheduleRepository;
+    private final StaffLeaveRepository staffLeaveRepository;
     private final CustomerRepository customerRepository;
+    private final TenantRepository tenantRepository;
     private final BookingMapper bookingMapper;
     private final LineNotificationService lineNotificationService;
     private final SseNotificationService sseNotificationService;
@@ -243,14 +250,60 @@ public class BookingService {
         }
 
         // ========================================
-        // 4. 計算結束時間
+        // 4. 計算結束時間（含緩衝時間）
         // ========================================
 
         LocalTime startTime = request.getStartTime();
         LocalTime endTime = startTime.plusMinutes(service.getTotalDuration());
 
+        // 取得租戶設定的緩衝時間
+        Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
+        int bufferMinutes = (tenant != null && tenant.getBookingBufferMinutes() != null)
+                ? tenant.getBookingBufferMinutes() : 0;
+
+        // 加入緩衝時間（用於衝突檢查）
+        LocalTime endTimeWithBuffer = endTime.plusMinutes(bufferMinutes);
+
         // ========================================
-        // 5. 檢查時段衝突
+        // 5. 檢查員工請假（含半天假）
+        // ========================================
+
+        if (staff != null) {
+            // 檢查全天請假
+            if (staffLeaveRepository.isStaffOnLeave(staff.getId(), request.getBookingDate())) {
+                throw new BusinessException(
+                        ErrorCode.STAFF_UNAVAILABLE,
+                        "該員工當天請假，請選擇其他員工或日期"
+                );
+            }
+
+            // 檢查半天假是否涵蓋預約時段
+            StaffLeave leave = staffLeaveRepository.findLeaveDetail(staff.getId(), request.getBookingDate())
+                    .orElse(null);
+
+            if (leave != null && !leave.getIsFullDay()) {
+                // 檢查預約時段是否與半天假時段重疊
+                String leaveStartStr = leave.getStartTime();
+                String leaveEndStr = leave.getEndTime();
+
+                if (leaveStartStr != null && leaveEndStr != null) {
+                    // 解析請假時間字串 (HH:mm 格式)
+                    LocalTime leaveStart = LocalTime.parse(leaveStartStr);
+                    LocalTime leaveEnd = LocalTime.parse(leaveEndStr);
+
+                    // 預約時段與請假時段重疊檢查
+                    if (startTime.isBefore(leaveEnd) && endTime.isAfter(leaveStart)) {
+                        throw new BusinessException(
+                                ErrorCode.STAFF_UNAVAILABLE,
+                                String.format("該員工 %s 至 %s 請假，請選擇其他時段", leaveStartStr, leaveEndStr)
+                        );
+                    }
+                }
+            }
+        }
+
+        // ========================================
+        // 6. 檢查時段衝突
         // ========================================
 
         if (staff != null) {
@@ -259,7 +312,7 @@ public class BookingService {
                     staff.getId(),
                     request.getBookingDate(),
                     startTime,
-                    endTime
+                    endTimeWithBuffer  // 使用含緩衝時間的結束時間
             );
 
             if (hasConflict) {
@@ -271,8 +324,11 @@ public class BookingService {
         }
 
         // ========================================
-        // 6. 建立預約
+        // 7. 建立預約
         // ========================================
+
+        // 產生取消 Token（用於顧客自助取消）
+        String cancelToken = UUID.randomUUID().toString();
 
         Booking entity = Booking.builder()
                 .bookingDate(request.getBookingDate())
@@ -290,6 +346,7 @@ public class BookingService {
                 .status(BookingStatus.PENDING)
                 .customerNote(request.getCustomerNote())
                 .source(request.getSource() != null ? request.getSource() : "LINE")
+                .cancelToken(cancelToken)
                 .build();
 
         entity.setTenantId(tenantId);
@@ -298,7 +355,7 @@ public class BookingService {
         log.info("預約建立成功，ID：{}", entity.getId());
 
         // ========================================
-        // 7. 推送 SSE 通知到後台
+        // 8. 推送 SSE 通知到後台
         // ========================================
         BookingResponse response = bookingMapper.toResponse(entity);
         sseNotificationService.notifyNewBooking(tenantId, response);
@@ -412,16 +469,58 @@ public class BookingService {
         }
 
         // ========================================
-        // 6. 檢查時段衝突
+        // 6. 檢查員工請假（含半天假）
         // ========================================
 
         if (entity.getStaffId() != null && hasTimeChange) {
+            // 檢查全天請假
+            if (staffLeaveRepository.isStaffOnLeave(entity.getStaffId(), entity.getBookingDate())) {
+                throw new BusinessException(
+                        ErrorCode.STAFF_UNAVAILABLE,
+                        "該員工當天請假，請選擇其他員工或日期"
+                );
+            }
+
+            // 檢查半天假是否涵蓋預約時段
+            StaffLeave leave = staffLeaveRepository.findLeaveDetail(entity.getStaffId(), entity.getBookingDate())
+                    .orElse(null);
+
+            if (leave != null && !leave.getIsFullDay()) {
+                String leaveStartStr = leave.getStartTime();
+                String leaveEndStr = leave.getEndTime();
+
+                if (leaveStartStr != null && leaveEndStr != null) {
+                    LocalTime leaveStart = LocalTime.parse(leaveStartStr);
+                    LocalTime leaveEnd = LocalTime.parse(leaveEndStr);
+
+                    if (entity.getStartTime().isBefore(leaveEnd) && entity.getEndTime().isAfter(leaveStart)) {
+                        throw new BusinessException(
+                                ErrorCode.STAFF_UNAVAILABLE,
+                                String.format("該員工 %s 至 %s 請假，請選擇其他時段", leaveStartStr, leaveEndStr)
+                        );
+                    }
+                }
+            }
+        }
+
+        // ========================================
+        // 7. 檢查時段衝突（含緩衝時間）
+        // ========================================
+
+        if (entity.getStaffId() != null && hasTimeChange) {
+            // 取得租戶設定的緩衝時間
+            Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
+            int bufferMinutes = (tenant != null && tenant.getBookingBufferMinutes() != null)
+                    ? tenant.getBookingBufferMinutes() : 0;
+
+            LocalTime endTimeWithBuffer = entity.getEndTime().plusMinutes(bufferMinutes);
+
             boolean hasConflict = bookingRepository.existsConflictingBookingExcluding(
                     tenantId,
                     entity.getStaffId(),
                     entity.getBookingDate(),
                     entity.getStartTime(),
-                    entity.getEndTime(),
+                    endTimeWithBuffer,
                     id
             );
 
@@ -434,7 +533,7 @@ public class BookingService {
         }
 
         // ========================================
-        // 7. 更新備註
+        // 8. 更新備註
         // ========================================
 
         if (request.getCustomerNote() != null) {
@@ -450,7 +549,7 @@ public class BookingService {
         }
 
         // ========================================
-        // 8. 記錄修改資訊
+        // 9. 記錄修改資訊
         // ========================================
 
         entity.setLastModifiedAt(LocalDateTime.now());
@@ -458,7 +557,7 @@ public class BookingService {
         entity.setLastModifiedBy(tenantId);
 
         // ========================================
-        // 9. 儲存更新
+        // 10. 儲存更新
         // ========================================
 
         entity = bookingRepository.save(entity);
@@ -466,7 +565,7 @@ public class BookingService {
         log.info("預約更新成功，ID：{}", entity.getId());
 
         // ========================================
-        // 10. 發送 LINE 修改通知
+        // 11. 發送 LINE 修改通知
         // ========================================
 
         // 建構變更描述
@@ -494,7 +593,7 @@ public class BookingService {
         }
 
         // ========================================
-        // 11. 推送 SSE 通知到後台
+        // 12. 推送 SSE 通知到後台
         // ========================================
         BookingResponse response = bookingMapper.toResponse(entity);
         sseNotificationService.notifyBookingUpdated(tenantId, response);

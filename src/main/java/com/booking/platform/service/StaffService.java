@@ -10,6 +10,7 @@ import com.booking.platform.dto.request.CreateStaffRequest;
 import com.booking.platform.dto.request.StaffScheduleRequest;
 import com.booking.platform.dto.response.StaffLeaveResponse;
 import com.booking.platform.dto.response.StaffResponse;
+import com.booking.platform.dto.response.StaffScheduleCalendarResponse;
 import com.booking.platform.dto.response.StaffScheduleResponse;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.staff.StaffLeave;
@@ -521,5 +522,174 @@ public class StaffService {
                 .endTime(leave.getEndTime())
                 .createdAt(leave.getCreatedAt())
                 .build();
+    }
+
+    // ========================================
+    // 行事曆
+    // ========================================
+
+    /**
+     * 取得員工排班行事曆事件
+     *
+     * @param startDate 開始日期
+     * @param endDate   結束日期
+     * @param staffId   員工 ID（可選）
+     * @return 行事曆事件列表
+     */
+    public List<StaffScheduleCalendarResponse> getCalendarEvents(LocalDate startDate, LocalDate endDate, String staffId) {
+        String tenantId = TenantContext.getTenantId();
+
+        List<StaffScheduleCalendarResponse> events = new ArrayList<>();
+
+        // 取得員工列表
+        List<Staff> staffList;
+        if (staffId != null && !staffId.isEmpty()) {
+            staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(staffId, tenantId)
+                    .ifPresent(staff -> {
+                        // 單一員工
+                    });
+            staffList = staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(staffId, tenantId)
+                    .map(List::of)
+                    .orElse(List.of());
+        } else {
+            staffList = staffRepository.findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
+        }
+
+        // 為每個員工產生事件
+        for (Staff staff : staffList) {
+            // 取得排班
+            List<StaffSchedule> schedules = staffScheduleRepository.findByStaffIdAndDeletedAtIsNull(staff.getId());
+            Map<Integer, StaffSchedule> scheduleMap = schedules.stream()
+                    .collect(Collectors.toMap(StaffSchedule::getDayOfWeek, s -> s));
+
+            // 取得請假
+            List<StaffLeave> leaves = staffLeaveRepository.findByStaffIdAndDateRange(
+                    staff.getId(), startDate, endDate);
+            Map<LocalDate, StaffLeave> leaveMap = leaves.stream()
+                    .collect(Collectors.toMap(StaffLeave::getLeaveDate, l -> l, (a, b) -> a));
+
+            // 產生每天的事件
+            LocalDate currentDate = startDate;
+            while (!currentDate.isAfter(endDate)) {
+                int dayOfWeek = currentDate.getDayOfWeek().getValue() % 7; // 轉換為 0=週日
+
+                // 檢查是否請假
+                StaffLeave leave = leaveMap.get(currentDate);
+                if (leave != null) {
+                    // 請假事件
+                    events.add(buildLeaveEvent(staff, leave, currentDate));
+
+                    // 如果是全天假，跳過上班事件
+                    if (Boolean.TRUE.equals(leave.getIsFullDay())) {
+                        currentDate = currentDate.plusDays(1);
+                        continue;
+                    }
+                }
+
+                // 上班事件
+                StaffSchedule schedule = scheduleMap.get(dayOfWeek);
+                if (schedule != null && Boolean.TRUE.equals(schedule.getIsWorkingDay())) {
+                    events.add(buildWorkEvent(staff, schedule, currentDate, leave));
+                }
+
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+
+        return events;
+    }
+
+    /**
+     * 建構上班事件
+     */
+    private StaffScheduleCalendarResponse buildWorkEvent(Staff staff, StaffSchedule schedule, LocalDate date, StaffLeave leave) {
+        LocalTime startTime = schedule.getStartTime();
+        LocalTime endTime = schedule.getEndTime();
+
+        // 如果有半天假，調整時間
+        if (leave != null && !Boolean.TRUE.equals(leave.getIsFullDay())) {
+            String leaveStartStr = leave.getStartTime();
+            String leaveEndStr = leave.getEndTime();
+            if (leaveStartStr != null && leaveEndStr != null) {
+                LocalTime leaveStart = parseTime(leaveStartStr);
+                LocalTime leaveEnd = parseTime(leaveEndStr);
+                // 調整上班時間（避開請假時段）
+                if (startTime.isBefore(leaveStart)) {
+                    endTime = leaveStart;
+                } else if (endTime.isAfter(leaveEnd)) {
+                    startTime = leaveEnd;
+                }
+            }
+        }
+
+        String startDateTime = date + "T" + startTime;
+        String endDateTime = date + "T" + endTime;
+
+        return StaffScheduleCalendarResponse.builder()
+                .id("work_" + staff.getId() + "_" + date)
+                .staffId(staff.getId())
+                .staffName(staff.getEffectiveDisplayName())
+                .type("WORK")
+                .title(staff.getEffectiveDisplayName() + " 上班")
+                .date(date)
+                .startTime(startTime)
+                .endTime(endTime)
+                .start(startDateTime)
+                .end(endDateTime)
+                .backgroundColor("#1cc88a") // 綠色
+                .borderColor("#1cc88a")
+                .textColor("#ffffff")
+                .allDay(false)
+                .editable(false)
+                .build();
+    }
+
+    /**
+     * 建構請假事件
+     */
+    private StaffScheduleCalendarResponse buildLeaveEvent(Staff staff, StaffLeave leave, LocalDate date) {
+        boolean isFullDay = Boolean.TRUE.equals(leave.getIsFullDay());
+        LocalTime startTime = isFullDay ? LocalTime.of(0, 0) : parseTime(leave.getStartTime());
+        LocalTime endTime = isFullDay ? LocalTime.of(23, 59) : parseTime(leave.getEndTime());
+
+        String startDateTime = isFullDay ? date.toString() : date + "T" + startTime;
+        String endDateTime = isFullDay ? date.plusDays(1).toString() : date + "T" + endTime;
+
+        String leaveTypeText = leave.getLeaveType() != null ? leave.getLeaveType().getDescription() : "請假";
+        String title = staff.getEffectiveDisplayName() + " " + leaveTypeText;
+
+        return StaffScheduleCalendarResponse.builder()
+                .id("leave_" + leave.getId())
+                .staffId(staff.getId())
+                .staffName(staff.getEffectiveDisplayName())
+                .type("LEAVE")
+                .title(title)
+                .date(date)
+                .startTime(startTime)
+                .endTime(endTime)
+                .start(startDateTime)
+                .end(endDateTime)
+                .backgroundColor("#e74a3b") // 紅色
+                .borderColor("#e74a3b")
+                .textColor("#ffffff")
+                .allDay(isFullDay)
+                .leaveType(leave.getLeaveType() != null ? leave.getLeaveType().name() : null)
+                .leaveReason(leave.getReason())
+                .editable(false)
+                .build();
+    }
+
+    /**
+     * 解析時間字串
+     */
+    private LocalTime parseTime(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) {
+            return LocalTime.of(9, 0); // 預設
+        }
+        try {
+            return LocalTime.parse(timeStr);
+        } catch (Exception e) {
+            return LocalTime.of(9, 0);
+        }
     }
 }

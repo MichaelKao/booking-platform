@@ -181,7 +181,15 @@ public enum ErrorCode {
     LINE_PUSH_QUOTA_EXCEEDED("LINE_009", "LINE 推送額度已用完"),
     LINE_CONVERSATION_EXPIRED("LINE_010", "對話已過期，請重新開始"),
     LINE_BOOKING_DISABLED("LINE_011", "LINE 預約功能已停用"),
-    LINE_ENCRYPTION_ERROR("LINE_012", "加密處理失敗");
+    LINE_ENCRYPTION_ERROR("LINE_012", "加密處理失敗"),
+
+    // ========================================
+    // 通用錯誤
+    // ========================================
+
+    SYS_RESOURCE_NOT_FOUND("SYS_101", "資源不存在"),
+    SYS_INVALID_OPERATION("SYS_102", "無效的操作"),
+    SYS_INTERNAL_ERROR("SYS_103", "系統內部錯誤");
 
     // ========================================
     // 欄位

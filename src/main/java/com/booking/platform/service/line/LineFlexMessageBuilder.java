@@ -2416,4 +2416,118 @@ public class LineFlexMessageBuilder {
 
         return bubble;
     }
+
+    // ========================================
+    // 預約提醒
+    // ========================================
+
+    /**
+     * 建構預約提醒訊息
+     *
+     * @param booking 預約
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBookingReminder(Booking booking) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header - 使用橙色作為提醒色
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#FF9800");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode bellIcon = objectMapper.createObjectNode();
+        bellIcon.put("type", "text");
+        bellIcon.put("text", "\uD83D\uDD14 預約提醒");
+        bellIcon.put("size", "lg");
+        bellIcon.put("weight", "bold");
+        bellIcon.put("color", "#FFFFFF");
+        bellIcon.put("align", "center");
+        headerContents.add(bellIcon);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 友善問候語
+        ObjectNode greeting = objectMapper.createObjectNode();
+        greeting.put("type", "text");
+        greeting.put("text", String.format("親愛的 %s 您好", booking.getCustomerName() != null ? booking.getCustomerName() : "顧客"));
+        greeting.put("size", "md");
+        greeting.put("weight", "bold");
+        bodyContents.add(greeting);
+
+        ObjectNode reminderText = objectMapper.createObjectNode();
+        reminderText.put("type", "text");
+        reminderText.put("text", "提醒您明天有一個預約：");
+        reminderText.put("size", "sm");
+        reminderText.put("color", SECONDARY_COLOR);
+        reminderText.put("margin", "sm");
+        bodyContents.add(reminderText);
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "lg");
+        bodyContents.add(separator);
+
+        // 預約詳情
+        bodyContents.add(createInfoRow("服務項目", booking.getServiceName()));
+        bodyContents.add(createInfoRow("預約日期",
+                booking.getBookingDate().format(DateTimeFormatter.ofPattern("yyyy年M月d日 (E)"))));
+        bodyContents.add(createInfoRow("預約時間",
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
+                        booking.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"))));
+
+        if (booking.getStaffName() != null) {
+            bodyContents.add(createInfoRow("服務人員", booking.getStaffName()));
+        }
+
+        // 店家備註
+        if (booking.getStoreNoteToCustomer() != null && !booking.getStoreNoteToCustomer().isEmpty()) {
+            ObjectNode noteSeparator = objectMapper.createObjectNode();
+            noteSeparator.put("type", "separator");
+            noteSeparator.put("margin", "lg");
+            bodyContents.add(noteSeparator);
+
+            ObjectNode noteText = objectMapper.createObjectNode();
+            noteText.put("type", "text");
+            noteText.put("text", "店家備註：" + booking.getStoreNoteToCustomer());
+            noteText.put("size", "sm");
+            noteText.put("color", SECONDARY_COLOR);
+            noteText.put("wrap", true);
+            noteText.put("margin", "lg");
+            bodyContents.add(noteText);
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("查看我的預約", "action=view_bookings", LINK_COLOR));
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
 }

@@ -193,6 +193,29 @@ public class Booking extends BaseEntity {
     private String source = "LINE";
 
     // ========================================
+    // 提醒與取消相關
+    // ========================================
+
+    /**
+     * 是否已發送提醒
+     */
+    @Column(name = "reminder_sent")
+    @Builder.Default
+    private Boolean reminderSent = false;
+
+    /**
+     * 提醒發送時間
+     */
+    @Column(name = "reminder_sent_at")
+    private LocalDateTime reminderSentAt;
+
+    /**
+     * 自助取消 Token（用於公開取消連結）
+     */
+    @Column(name = "cancel_token", length = 36)
+    private String cancelToken;
+
+    // ========================================
     // 修改相關
     // ========================================
 
@@ -283,5 +306,13 @@ public class Booking extends BaseEntity {
     public boolean isModifiable() {
         return BookingStatus.PENDING.equals(this.status)
                 || BookingStatus.CONFIRMED.equals(this.status);
+    }
+
+    /**
+     * 標記已發送提醒
+     */
+    public void markReminderSent() {
+        this.reminderSent = true;
+        this.reminderSentAt = LocalDateTime.now();
     }
 }

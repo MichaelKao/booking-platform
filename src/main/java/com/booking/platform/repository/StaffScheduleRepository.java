@@ -78,4 +78,15 @@ public interface StaffScheduleRepository extends JpaRepository<StaffSchedule, St
             @Param("tenantId") String tenantId,
             @Param("dayOfWeek") Integer dayOfWeek
     );
+
+    /**
+     * 查詢員工的所有排班（不需 tenantId）
+     */
+    @Query("""
+            SELECT s FROM StaffSchedule s
+            WHERE s.staffId = :staffId
+            AND s.deletedAt IS NULL
+            ORDER BY s.dayOfWeek ASC
+            """)
+    List<StaffSchedule> findByStaffIdAndDeletedAtIsNull(@Param("staffId") String staffId);
 }

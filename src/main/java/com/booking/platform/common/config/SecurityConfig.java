@@ -64,6 +64,12 @@ public class SecurityConfig {
             // 認證 API
             "/api/auth/**",
 
+            // 公開預約操作（自助取消）
+            "/booking/cancel/**",
+
+            // 金流回調（ECPay）
+            "/api/payments/callback",
+
             // Swagger（開發環境）
             "/swagger-ui/**",
             "/v3/api-docs/**",
@@ -77,6 +83,9 @@ public class SecurityConfig {
             // 頁面（由頁面 Controller 處理認證）
             "/admin/**",
             "/tenant/**",
+
+            // 公開頁面
+            "/public/**",
 
             // 錯誤頁面
             "/error/**"

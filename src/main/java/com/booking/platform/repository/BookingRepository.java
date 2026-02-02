@@ -291,4 +291,82 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    // ========================================
+    // 預約提醒查詢
+    // ========================================
+
+    /**
+     * 查詢需要發送提醒的預約
+     *
+     * <p>查詢條件：
+     * <ul>
+     *   <li>預約日期和時間在指定範圍內</li>
+     *   <li>狀態為已確認</li>
+     *   <li>尚未發送提醒</li>
+     * </ul>
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            AND b.reminderSent = false
+            AND b.bookingDate = :date
+            AND b.startTime BETWEEN :startTime AND :endTime
+            """)
+    List<Booking> findUpcomingBookingsForReminder(
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    /**
+     * 查詢指定租戶需要發送提醒的預約
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            AND b.reminderSent = false
+            AND b.bookingDate = :date
+            AND b.startTime BETWEEN :startTime AND :endTime
+            """)
+    List<Booking> findUpcomingBookingsForReminderByTenant(
+            @Param("tenantId") String tenantId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    // ========================================
+    // 報表匯出查詢
+    // ========================================
+
+    /**
+     * 查詢指定條件的預約（報表匯出用）
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND (:status IS NULL OR b.status = :status)
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            ORDER BY b.bookingDate ASC, b.startTime ASC
+            """)
+    List<Booking> findForExport(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("status") BookingStatus status
+    );
+
+    // ========================================
+    // 自助取消查詢
+    // ========================================
+
+    /**
+     * 依取消 Token 查詢預約
+     */
+    Optional<Booking> findByCancelTokenAndDeletedAtIsNull(String cancelToken);
 }

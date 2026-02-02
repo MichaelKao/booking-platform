@@ -110,4 +110,19 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
     );
+
+    // ========================================
+    // 匯出查詢
+    // ========================================
+
+    /**
+     * 查詢所有顧客（匯出用）
+     */
+    @Query("""
+            SELECT c FROM Customer c
+            WHERE c.tenantId = :tenantId
+            AND c.deletedAt IS NULL
+            ORDER BY c.createdAt DESC
+            """)
+    List<Customer> findByTenantIdAndDeletedAtIsNull(@Param("tenantId") String tenantId);
 }

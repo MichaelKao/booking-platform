@@ -290,6 +290,60 @@ public class Tenant extends BaseEntity {
     private Boolean notifyBookingCancel = false;
 
     // ========================================
+    // 預約提醒設定
+    // ========================================
+
+    /**
+     * 是否啟用預約提醒
+     */
+    @Column(name = "enable_booking_reminder")
+    @Builder.Default
+    private Boolean enableBookingReminder = true;
+
+    /**
+     * 預約提醒提前小時數
+     */
+    @Column(name = "reminder_hours_before")
+    @Builder.Default
+    private Integer reminderHoursBefore = 24;
+
+    // ========================================
+    // SMS 設定
+    // ========================================
+
+    /**
+     * 是否啟用 SMS 通知
+     */
+    @Column(name = "sms_enabled")
+    @Builder.Default
+    private Boolean smsEnabled = false;
+
+    /**
+     * 每月 SMS 額度
+     */
+    @Column(name = "monthly_sms_quota")
+    @Builder.Default
+    private Integer monthlySmsQuota = 0;
+
+    /**
+     * 本月已使用 SMS 數量
+     */
+    @Column(name = "monthly_sms_used")
+    @Builder.Default
+    private Integer monthlySmsUsed = 0;
+
+    // ========================================
+    // 預約緩衝設定
+    // ========================================
+
+    /**
+     * 預約緩衝時間（分鐘）
+     */
+    @Column(name = "booking_buffer_minutes")
+    @Builder.Default
+    private Integer bookingBufferMinutes = 0;
+
+    // ========================================
     // 業務方法
     // ========================================
 
@@ -371,5 +425,31 @@ public class Tenant extends BaseEntity {
         }
         this.pointBalance = this.pointBalance.subtract(amount);
         return true;
+    }
+
+    /**
+     * 檢查 SMS 額度是否足夠
+     *
+     * @param count 需要的數量
+     * @return true 表示額度足夠
+     */
+    public boolean hasSmsQuota(int count) {
+        return (this.monthlySmsQuota - this.monthlySmsUsed) >= count;
+    }
+
+    /**
+     * 使用 SMS 額度
+     *
+     * @param count 使用數量
+     */
+    public void useSmsQuota(int count) {
+        this.monthlySmsUsed += count;
+    }
+
+    /**
+     * 重置月度 SMS 計數
+     */
+    public void resetMonthlySmsUsed() {
+        this.monthlySmsUsed = 0;
     }
 }
