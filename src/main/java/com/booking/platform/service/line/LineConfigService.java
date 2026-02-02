@@ -41,6 +41,7 @@ public class LineConfigService {
     private final TenantLineConfigRepository lineConfigRepository;
     private final TenantRepository tenantRepository;
     private final EncryptionService encryptionService;
+    private final LineRichMenuService richMenuService;
 
     @Value("${server.port:8080}")
     private int serverPort;
@@ -278,6 +279,19 @@ public class LineConfigService {
         config.activate();
         config = lineConfigRepository.save(config);
 
+        // ========================================
+        // 建立 Rich Menu（底部固定選單）
+        // ========================================
+        try {
+            if (config.getRichMenuId() == null) {
+                richMenuService.createAndSetRichMenu(tenantId);
+                log.info("Rich Menu 建立成功，租戶：{}", tenantId);
+            }
+        } catch (Exception e) {
+            log.warn("Rich Menu 建立失敗，但不影響啟用：{}，租戶：{}", e.getMessage(), tenantId);
+            // Rich Menu 建立失敗不影響主流程
+        }
+
         log.info("LINE Bot 啟用成功，租戶：{}", tenantId);
 
         return buildResponse(config, tenantId);
@@ -298,6 +312,16 @@ public class LineConfigService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.LINE_CONFIG_NOT_FOUND, "LINE 設定不存在"
                 ));
+
+        // ========================================
+        // 刪除 Rich Menu
+        // ========================================
+        try {
+            richMenuService.deleteRichMenu(tenantId);
+            log.info("Rich Menu 刪除成功，租戶：{}", tenantId);
+        } catch (Exception e) {
+            log.warn("Rich Menu 刪除失敗，但不影響停用：{}，租戶：{}", e.getMessage(), tenantId);
+        }
 
         config.deactivate();
         config = lineConfigRepository.save(config);

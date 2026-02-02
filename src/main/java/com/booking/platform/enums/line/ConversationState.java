@@ -17,6 +17,8 @@ package com.booking.platform.enums.line;
  *   ↓ 選擇日期
  * SELECTING_TIME（選擇時段）
  *   ↓ 選擇時段
+ * INPUTTING_NOTE（輸入備註，可跳過）
+ *   ↓ 輸入備註或跳過
  * CONFIRMING_BOOKING（確認預約）
  *   ↓ 確認
  * IDLE（完成，回到閒置）
@@ -69,6 +71,11 @@ public enum ConversationState {
      * 選擇時段中
      */
     SELECTING_TIME,
+
+    /**
+     * 輸入備註中
+     */
+    INPUTTING_NOTE,
 
     /**
      * 確認預約中

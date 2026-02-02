@@ -227,6 +227,7 @@ public class LineWebhookService {
             case "select_staff" -> handleSelectStaff(tenantId, userId, replyToken, params);
             case "select_date" -> handleSelectDate(tenantId, userId, replyToken, params);
             case "select_time" -> handleSelectTime(tenantId, userId, replyToken, params);
+            case "skip_note" -> handleSkipNote(tenantId, userId, replyToken);
             case "confirm_booking" -> handleConfirmBooking(tenantId, userId, replyToken);
             case "cancel_booking" -> cancelCurrentFlow(tenantId, userId, replyToken);
             case "go_back" -> handleGoBack(tenantId, userId, replyToken);
@@ -244,6 +245,8 @@ public class LineWebhookService {
             case "view_my_coupons" -> handleViewMyCoupons(tenantId, userId, replyToken);
             // 會員資訊
             case "view_member_info" -> handleViewMemberInfo(tenantId, userId, replyToken);
+            // 聯絡店家
+            case "contact_shop" -> handleContactShop(tenantId, userId, replyToken);
             // 商品功能
             case "start_shopping" -> handleStartShopping(tenantId, userId, replyToken);
             case "select_product" -> handleSelectProduct(tenantId, userId, replyToken, params);
@@ -382,6 +385,18 @@ public class LineWebhookService {
 
         conversationService.setSelectedTime(tenantId, userId, time);
 
+        // 回覆備註輸入提示
+        JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
+        messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
+    }
+
+    /**
+     * 處理跳過備註
+     */
+    private void handleSkipNote(String tenantId, String userId, String replyToken) {
+        // 設定空備註並進入確認狀態
+        conversationService.setCustomerNote(tenantId, userId, null);
+
         // 取得對話上下文
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
@@ -426,6 +441,7 @@ public class LineWebhookService {
                     .serviceId(context.getSelectedServiceId())
                     .staffId(context.getSelectedStaffId())
                     .customerId(customerId)
+                    .customerNote(context.getCustomerNote())
                     .source("LINE")
                     .build();
 
@@ -482,6 +498,10 @@ public class LineWebhookService {
                         context.getSelectedDate(), context.getSelectedServiceDuration()
                 );
                 messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
+            }
+            case INPUTTING_NOTE -> {
+                JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
+                messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
             }
             default -> replyMainMenu(tenantId, userId, replyToken);
         }
@@ -774,6 +794,17 @@ public class LineWebhookService {
         }
     }
 
+    /**
+     * 處理聯絡店家
+     */
+    private void handleContactShop(String tenantId, String userId, String replyToken) {
+        log.info("處理聯絡店家，租戶：{}，用戶：{}", tenantId, userId);
+
+        // 建構聯絡店家訊息
+        JsonNode contactMessage = flexMessageBuilder.buildContactShopMessage(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "聯絡店家", contactMessage);
+    }
+
     // ========================================
     // 商品購買處理
     // ========================================
@@ -960,11 +991,35 @@ public class LineWebhookService {
         // 如果不在對話中，顯示主選單
         if (context.getState() == ConversationState.IDLE) {
             replyDefaultMessage(tenantId, replyToken);
+        } else if (context.getState() == ConversationState.INPUTTING_NOTE) {
+            // 在備註輸入狀態，處理文字輸入作為備註
+            handleNoteInput(tenantId, userId, replyToken, text);
         } else {
             // 在對話中但收到非 Postback 訊息，提示用戶並顯示取消按鈕
             JsonNode cancelMessage = flexMessageBuilder.buildCancelPrompt();
             messageService.replyFlex(tenantId, replyToken, "請點選上方選項繼續操作", cancelMessage);
         }
+    }
+
+    /**
+     * 處理備註文字輸入
+     */
+    private void handleNoteInput(String tenantId, String userId, String replyToken, String text) {
+        // 限制備註長度
+        String note = text;
+        if (note.length() > 500) {
+            note = note.substring(0, 500);
+        }
+
+        // 設定備註並進入確認狀態
+        conversationService.setCustomerNote(tenantId, userId, note);
+
+        // 取得對話上下文
+        ConversationContext context = conversationService.getContext(tenantId, userId);
+
+        // 回覆確認訊息
+        JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+        messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
     }
 
     /**

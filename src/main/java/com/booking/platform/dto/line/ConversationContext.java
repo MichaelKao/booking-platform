@@ -116,6 +116,11 @@ public class ConversationContext implements Serializable {
      */
     private String cancelBookingId;
 
+    /**
+     * 顧客備註
+     */
+    private String customerNote;
+
     // ========================================
     // 商品暫存資料
     // ========================================
@@ -212,6 +217,7 @@ public class ConversationContext implements Serializable {
         this.selectedDate = null;
         this.selectedTime = null;
         this.cancelBookingId = null;
+        this.customerNote = null;
     }
 
     /**
@@ -318,6 +324,24 @@ public class ConversationContext implements Serializable {
      */
     public void setCancelBookingId(String bookingId) {
         this.cancelBookingId = bookingId;
+    }
+
+    /**
+     * 設定顧客備註
+     *
+     * @param note 備註內容
+     */
+    public void setCustomerNote(String note) {
+        this.customerNote = note;
+    }
+
+    /**
+     * 取得顧客備註
+     *
+     * @return 備註內容
+     */
+    public String getCustomerNote() {
+        return this.customerNote;
     }
 
     /**

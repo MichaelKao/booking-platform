@@ -246,7 +246,7 @@ public class LineConversationService {
     }
 
     /**
-     * 設定選擇的時間
+     * 設定選擇的時間（進入備註輸入狀態）
      *
      * @param tenantId   租戶 ID
      * @param lineUserId LINE User ID
@@ -260,11 +260,35 @@ public class LineConversationService {
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
         context.setSelectedTime(time);
-        context.transitionTo(ConversationState.CONFIRMING_BOOKING);
+        context.transitionTo(ConversationState.INPUTTING_NOTE);
         saveContext(context);
 
         log.debug("設定選擇的時間，租戶：{}，LINE User：{}，時間：{}",
                 tenantId, lineUserId, time);
+
+        return context;
+    }
+
+    /**
+     * 設定顧客備註並進入確認狀態
+     *
+     * @param tenantId   租戶 ID
+     * @param lineUserId LINE User ID
+     * @param note       備註內容（可為 null 表示跳過）
+     * @return 更新後的對話上下文
+     */
+    public ConversationContext setCustomerNote(
+            String tenantId,
+            String lineUserId,
+            String note
+    ) {
+        ConversationContext context = getContext(tenantId, lineUserId);
+        context.setCustomerNote(note);
+        context.transitionTo(ConversationState.CONFIRMING_BOOKING);
+        saveContext(context);
+
+        log.debug("設定顧客備註，租戶：{}，LINE User：{}，備註：{}",
+                tenantId, lineUserId, note != null ? note : "無");
 
         return context;
     }

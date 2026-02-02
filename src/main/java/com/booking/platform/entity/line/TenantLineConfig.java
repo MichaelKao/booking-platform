@@ -153,6 +153,16 @@ public class TenantLineConfig {
     private Boolean bookingEnabled = true;
 
     // ========================================
+    // Rich Menu 設定
+    // ========================================
+
+    /**
+     * Rich Menu ID（LINE 平台的 Rich Menu 識別碼）
+     */
+    @Column(name = "rich_menu_id", length = 100)
+    private String richMenuId;
+
+    // ========================================
     // 額度管理
     // ========================================
 
