@@ -13,7 +13,7 @@
 
 ---
 
-## 頁面結構 (34 個 HTML 檔案)
+## 頁面結構 (36 個 HTML 檔案)
 
 ### 超級管理後台 (`admin/`)
 
@@ -47,6 +47,7 @@
 | products.html | 商品管理 | /tenant/products |
 | coupons.html | 票券管理 | /tenant/coupons |
 | campaigns.html | 行銷活動 | /tenant/campaigns |
+| marketing.html | 行銷推播 | /tenant/marketing |
 | settings.html | 店家設定 | /tenant/settings |
 | line-settings.html | LINE 設定 | /tenant/line-settings |
 | feature-store.html | 功能商店 | /tenant/feature-store |
@@ -76,6 +77,12 @@
 |------|------|
 | 404.html | 404 Not Found |
 | 500.html | 500 Server Error |
+
+### 公開頁面 (`public/`)
+
+| 檔案 | 功能 | 路由 |
+|------|------|------|
+| cancel-booking.html | 顧客自助取消預約 | /booking/cancel/{token} |
 
 ---
 

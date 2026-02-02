@@ -12,10 +12,21 @@
                         <h1 class="page-title">營運報表</h1>
                         <p class="page-subtitle">查看店家營運數據與趨勢</p>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-secondary" onclick="setDateRange('week')">本週</button>
-                        <button class="btn btn-outline-secondary active" onclick="setDateRange('month')">本月</button>
-                        <button class="btn btn-outline-secondary" onclick="setDateRange('quarter')">本季</button>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary" onclick="setDateRange('week')">本週</button>
+                            <button class="btn btn-outline-secondary active" onclick="setDateRange('month')">本月</button>
+                            <button class="btn btn-outline-secondary" onclick="setDateRange('quarter')">本季</button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-download me-1"></i>匯出
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="exportReport('excel')"><i class="bi bi-file-earmark-excel me-2"></i>匯出 Excel</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportReport('pdf')"><i class="bi bi-file-earmark-pdf me-2"></i>匯出 PDF</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -427,6 +438,35 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        function exportReport(format) {
+            const token = getToken();
+            const url = `/api/export/reports/${format}?range=${dateRange}`;
+
+            // 使用 fetch 下載檔案
+            fetch(url, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('匯出失敗');
+                return response.blob();
+            })
+            .then(blob => {
+                const filename = `營運報表_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showSuccess('報表匯出成功');
+            })
+            .catch(e => {
+                console.error('匯出失敗:', e);
+                showError('匯出失敗，請稍後再試');
+            });
         }
     </script>
 

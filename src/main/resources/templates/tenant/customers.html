@@ -13,9 +13,14 @@
                         <h1 class="page-title">顧客管理</h1>
                         <p class="page-subtitle">管理所有顧客資料，可搜尋、編輯顧客資訊</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openCreateModal()">
-                        <i class="bi bi-plus-lg me-1"></i>新增顧客
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" onclick="exportCustomers()">
+                            <i class="bi bi-download me-1"></i>匯出 Excel
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="bi bi-plus-lg me-1"></i>新增顧客
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 操作提示卡片（首次使用） -->
@@ -403,6 +408,31 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        // 匯出顧客
+        function exportCustomers() {
+            const token = getToken();
+            fetch('/api/export/customers/excel', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('匯出失敗');
+                return response.blob();
+            })
+            .then(blob => {
+                const filename = `顧客清單_${new Date().toISOString().split('T')[0]}.xlsx`;
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showSuccess('顧客匯出成功');
+            })
+            .catch(e => {
+                console.error('匯出失敗:', e);
+                showError('匯出失敗，請稍後再試');
+            });
         }
     </script>
 </body>

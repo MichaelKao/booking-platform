@@ -176,6 +176,16 @@ public class TenantPageController {
         return "tenant/campaigns";
     }
 
+    /**
+     * 行銷推播頁面
+     */
+    @GetMapping("/marketing")
+    public String marketing(Model model) {
+        model.addAttribute("currentPage", "marketing");
+        model.addAttribute("pageTitle", "行銷推播");
+        return "tenant/marketing";
+    }
+
     // ========================================
     // 系統設定
     // ========================================

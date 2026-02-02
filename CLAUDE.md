@@ -246,6 +246,7 @@ scheduler:
 | /tenant/products | 商品管理 |
 | /tenant/coupons | 票券管理 |
 | /tenant/campaigns | 行銷活動 |
+| /tenant/marketing | 行銷推播 |
 | /tenant/settings | 店家設定 |
 | /tenant/line-settings | LINE 設定 |
 | /tenant/feature-store | 功能商店 |
@@ -464,7 +465,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 | DTO | 70+ |
 | Enum | 25 |
 | Scheduler | 3 |
-| HTML 頁面 | 35 |
+| HTML 頁面 | 36 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |

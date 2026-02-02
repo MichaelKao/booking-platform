@@ -12,9 +12,20 @@
                         <h1 class="page-title">預約管理</h1>
                         <p class="page-subtitle">管理所有預約記錄</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openCreateBookingModal()">
-                        <i class="bi bi-plus-lg me-1"></i>新增預約
-                    </button>
+                    <div class="d-flex gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-download me-1"></i>匯出
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="exportBookings('excel')"><i class="bi bi-file-earmark-excel me-2"></i>匯出 Excel</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportBookings('pdf')"><i class="bi bi-file-earmark-pdf me-2"></i>匯出 PDF</a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCreateBookingModal()">
+                            <i class="bi bi-plus-lg me-1"></i>新增預約
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 狀態說明 -->
@@ -742,6 +753,41 @@
                 });
             }
         });
+
+        // 匯出預約
+        function exportBookings(format) {
+            const token = getToken();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            // 計算日期範圍 (預設過去30天)
+            const endDate = dateFilter || new Date().toISOString().split('T')[0];
+            const startDate = new Date(new Date(endDate).setDate(new Date(endDate).getDate() - 30)).toISOString().split('T')[0];
+
+            let url = `/api/export/bookings/${format}?startDate=${startDate}&endDate=${endDate}`;
+            if (statusFilter) url += `&status=${statusFilter}`;
+
+            fetch(url, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('匯出失敗');
+                return response.blob();
+            })
+            .then(blob => {
+                const filename = `預約清單_${startDate}_${endDate}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showSuccess('預約匯出成功');
+            })
+            .catch(e => {
+                console.error('匯出失敗:', e);
+                showError('匯出失敗，請稍後再試');
+            });
+        }
     </script>
 </body>
 </html>
