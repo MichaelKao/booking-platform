@@ -135,6 +135,7 @@ public enum ErrorCode {
     FEATURE_ALREADY_ENABLED("FEATURE_002", "功能已啟用"),
     FEATURE_NOT_ENABLED("FEATURE_003", "功能未啟用"),
     FEATURE_NOT_SUBSCRIBED("FEATURE_004", "尚未訂閱此功能"),
+    FEATURE_NOT_AVAILABLE("FEATURE_005", "此功能尚未開放訂閱"),
 
     // ========================================
     // 票券相關錯誤（COUPON_xxx）

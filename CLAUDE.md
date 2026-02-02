@@ -197,8 +197,6 @@ POST /api/payments/callback      # ECPay 付款結果回調
 | 預約提醒 | `0 0 * * * *` | 每小時檢查並發送 LINE/SMS 提醒 | AUTO_REMINDER |
 | 額度重置 | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 | - |
 | 行銷推播 | `0 * * * * *` | 每分鐘檢查排程推播任務 | - |
-| 生日祝福 | `0 0 9 * * *` | 每天 9:00 發送生日祝福 LINE 訊息 | AUTO_BIRTHDAY |
-| 顧客喚回 | `0 0 14 * * *` | 每天 14:00 發送喚回通知給久未到訪顧客 | AUTO_RECALL |
 
 設定於 `application.yml`：
 ```yaml
@@ -212,13 +210,6 @@ scheduler:
   marketing-push:
     enabled: true
     cron: "0 * * * * *"
-  birthday-greeting:
-    enabled: true
-    cron: "0 0 9 * * *"
-  customer-recall:
-    enabled: true
-    cron: "0 0 14 * * *"
-    days-threshold: 30  # 超過30天未到訪的顧客
 ```
 
 ---

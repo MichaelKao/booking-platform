@@ -80,10 +80,12 @@ public class FeatureStoreService {
                 .collect(Collectors.toMap(TenantFeature::getFeatureCode, tf -> tf));
 
         // ========================================
-        // 4. 組合並返回結果
+        // 4. 組合並返回結果（過濾未實作的功能）
         // ========================================
 
         return features.stream()
+                // 只顯示已實作的功能
+                .filter(feature -> feature.getCode().isImplemented())
                 .map(feature -> {
                     TenantFeature tf = featureMap.get(feature.getCode());
                     boolean isEnabled = tf != null && tf.isEffective();
@@ -184,6 +186,11 @@ public class FeatureStoreService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.FEATURE_NOT_FOUND, "找不到指定的功能"
                 ));
+
+        // 檢查功能是否已實作
+        if (!featureCode.isImplemented()) {
+            throw new BusinessException(ErrorCode.FEATURE_NOT_AVAILABLE, "此功能尚未開放訂閱");
+        }
 
         // ========================================
         // 3. 查詢租戶

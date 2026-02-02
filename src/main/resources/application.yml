@@ -194,17 +194,6 @@ scheduler:
     enabled: true
     cron: "0 * * * * *"
 
-  # 生日祝福（每天早上9點）
-  birthday-greeting:
-    enabled: true
-    cron: "0 0 9 * * *"
-
-  # 顧客喚回（每天下午2點）
-  customer-recall:
-    enabled: true
-    cron: "0 0 14 * * *"
-    days-threshold: 30  # 超過30天未到訪的顧客
-
 # ========================================
 # SMS 設定
 # ========================================
