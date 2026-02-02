@@ -63,6 +63,25 @@
 | pagination.html | 分頁元件 |
 | modal.html | 模態框元件 |
 
+#### 側邊欄功能訂閱控制
+
+`sidebar-tenant.html` 中使用 `data-feature` 屬性控制選單顯示：
+
+```html
+<!-- 需訂閱功能才顯示的選單項目 -->
+<li class="nav-item" data-feature="COUPON_SYSTEM">
+    <a class="nav-link" href="/tenant/coupons">票券管理</a>
+</li>
+```
+
+| data-feature | 選單項目 | 說明 |
+|--------------|---------|------|
+| `BASIC_REPORT` | 營運報表 | 免費功能，預設顯示 |
+| `PRODUCT_SALES` | 商品管理 | 付費功能，需訂閱 |
+| `COUPON_SYSTEM` | 票券管理 | 付費功能，需訂閱 |
+
+JavaScript 會在頁面載入時檢查訂閱狀態，自動隱藏未訂閱功能的選單。
+
 ### Email 樣板 (`email/`)
 
 | 檔案 | 功能 |

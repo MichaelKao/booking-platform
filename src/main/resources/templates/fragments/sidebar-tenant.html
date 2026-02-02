@@ -90,8 +90,8 @@
             </a>
         </li>
 
-        <!-- 商品管理 -->
-        <li class="nav-item">
+        <!-- 商品管理（需訂閱 PRODUCT_SALES 功能） -->
+        <li class="nav-item" data-feature="PRODUCT_SALES">
             <a class="nav-link" href="/tenant/products"
                th:classappend="${#strings.equals(currentPage, 'products')} ? 'active' : ''">
                 <i class="bi bi-box-seam"></i>
@@ -102,8 +102,8 @@
         <hr class="sidebar-divider">
         <div class="sidebar-heading">行銷推廣</div>
 
-        <!-- 票券管理 -->
-        <li class="nav-item">
+        <!-- 票券管理（需訂閱 COUPON_SYSTEM 功能） -->
+        <li class="nav-item" data-feature="COUPON_SYSTEM">
             <a class="nav-link" href="/tenant/coupons"
                th:classappend="${#strings.equals(currentPage, 'coupons')} ? 'active' : ''">
                 <i class="bi bi-ticket-perforated"></i>
