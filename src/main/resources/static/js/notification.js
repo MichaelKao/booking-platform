@@ -93,8 +93,17 @@ function connectSSE() {
         eventSource.close();
     }
 
+    // 取得 Token（EventSource 無法設定 Header，需用 query parameter）
+    const token = getToken();
+    if (!token) {
+        console.log('沒有 Token，無法連接 SSE');
+        return;
+    }
+
     try {
-        eventSource = new EventSource(NotificationConfig.sseEndpoint);
+        // 將 token 作為 query parameter 傳送
+        const sseUrl = `${NotificationConfig.sseEndpoint}?token=${encodeURIComponent(token)}`;
+        eventSource = new EventSource(sseUrl);
 
         // 連線成功
         eventSource.addEventListener('connected', (event) => {
