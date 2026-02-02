@@ -71,6 +71,11 @@ public class LineRichMenuService {
     @Value("${line.bot.api-endpoint:https://api.line.me}")
     private String apiEndpoint;
 
+    /**
+     * LINE Data API 端點（用於上傳檔案）
+     */
+    private static final String DATA_API_ENDPOINT = "https://api-data.line.me";
+
     // ========================================
     // Rich Menu 規格
     // ========================================
@@ -403,6 +408,9 @@ public class LineRichMenuService {
 
         // 建立請求
         ObjectNode requestBody = buildRichMenuRequest(shopName);
+        String url = apiEndpoint + CREATE_RICH_MENU_API;
+
+        log.debug("建立 Rich Menu，URL：{}，請求：{}", url, requestBody.toString());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
@@ -410,18 +418,26 @@ public class LineRichMenuService {
 
         HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
 
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-                apiEndpoint + CREATE_RICH_MENU_API,
-                HttpMethod.POST,
-                request,
-                JsonNode.class
-        );
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    request,
+                    JsonNode.class
+            );
 
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗");
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗");
+            }
+
+            String richMenuId = response.getBody().path("richMenuId").asText();
+            log.info("Rich Menu 建立成功，ID：{}", richMenuId);
+            return richMenuId;
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("LINE API 錯誤：{}，回應：{}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.LINE_API_ERROR,
+                    "建立 Rich Menu 失敗：" + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
-
-        return response.getBody().path("richMenuId").asText();
     }
 
     /**
@@ -437,7 +453,7 @@ public class LineRichMenuService {
 
         HttpEntity<byte[]> request = new HttpEntity<>(imageBytes, headers);
 
-        String url = apiEndpoint + String.format(UPLOAD_IMAGE_API, richMenuId);
+        String url = DATA_API_ENDPOINT + String.format(UPLOAD_IMAGE_API, richMenuId);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 url,
