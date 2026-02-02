@@ -183,6 +183,7 @@ public enum ErrorCode {
     LINE_CONVERSATION_EXPIRED("LINE_010", "對話已過期，請重新開始"),
     LINE_BOOKING_DISABLED("LINE_011", "LINE 預約功能已停用"),
     LINE_ENCRYPTION_ERROR("LINE_012", "加密處理失敗"),
+    LINE_API_ERROR("LINE_013", "LINE API 呼叫失敗"),
 
     // ========================================
     // 通用錯誤

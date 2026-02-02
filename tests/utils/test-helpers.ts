@@ -47,7 +47,9 @@ export async function tenantLogin(page: Page, username?: string, password?: stri
 
   // 等待登入完成並跳轉
   await page.waitForURL(/\/tenant\/dashboard/, { timeout: 15000 });
-  await page.waitForLoadState('networkidle');
+  // 使用 domcontentloaded 而非 networkidle，因為 SSE 會保持連線
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1000); // 給 JS 時間執行
 }
 
 /**
@@ -69,7 +71,9 @@ export async function adminLogin(page: Page): Promise<void> {
 
   // 等待登入完成並跳轉
   await page.waitForURL(/\/admin\/dashboard/, { timeout: 15000 });
-  await page.waitForLoadState('networkidle');
+  // 使用 domcontentloaded 而非 networkidle，因為可能有長連線
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1000); // 給 JS 時間執行
 }
 
 /**
@@ -310,7 +314,9 @@ export async function waitForLoading(page: Page): Promise<void> {
     }
   }
 
-  await page.waitForLoadState('networkidle');
+  // 使用 domcontentloaded 而非 networkidle，因為 SSE 會保持連線
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(500);
 }
 
 /**

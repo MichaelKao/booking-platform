@@ -308,6 +308,76 @@ public class LineConfigService {
     }
 
     /**
+     * 測試 LINE Bot 連線
+     *
+     * @return 測試結果
+     */
+    public boolean testConnection() {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("測試 LINE Bot 連線，租戶：{}", tenantId);
+
+        // ========================================
+        // 1. 檢查設定是否存在
+        // ========================================
+
+        TenantLineConfig config = lineConfigRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.LINE_CONFIG_NOT_FOUND, "請先完成 LINE 設定"
+                ));
+
+        // ========================================
+        // 2. 檢查設定是否完整
+        // ========================================
+
+        if (config.getChannelAccessTokenEncrypted() == null) {
+            throw new BusinessException(
+                    ErrorCode.LINE_CONFIG_INVALID,
+                    "請先設定 Channel Access Token"
+            );
+        }
+
+        // ========================================
+        // 3. 呼叫 LINE API 測試連線
+        // ========================================
+
+        try {
+            String accessToken = encryptionService.decrypt(config.getChannelAccessTokenEncrypted());
+
+            // 使用 LINE Bot API 的 Get Bot Info 端點測試
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.line.me/v2/bot/info"))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .GET()
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request,
+                    java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                log.info("LINE Bot 連線測試成功，租戶：{}", tenantId);
+                return true;
+            } else {
+                log.warn("LINE Bot 連線測試失敗，租戶：{}，狀態碼：{}，回應：{}",
+                        tenantId, response.statusCode(), response.body());
+                throw new BusinessException(
+                        ErrorCode.LINE_API_ERROR,
+                        "連線測試失敗：" + response.body()
+                );
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("LINE Bot 連線測試異常，租戶：{}", tenantId, e);
+            throw new BusinessException(
+                    ErrorCode.LINE_API_ERROR,
+                    "連線測試失敗：" + e.getMessage()
+            );
+        }
+    }
+
+    /**
      * 標記 Webhook 驗證成功
      *
      * @param tenantId 租戶 ID
