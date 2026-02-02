@@ -118,6 +118,16 @@ public class TenantPageController {
         return "tenant/customer-detail";
     }
 
+    /**
+     * 會員等級頁面
+     */
+    @GetMapping("/membership-levels")
+    public String membershipLevels(Model model) {
+        model.addAttribute("currentPage", "membership-levels");
+        model.addAttribute("pageTitle", "會員等級");
+        return "tenant/membership-levels";
+    }
+
     // ========================================
     // 店家設定
     // ========================================

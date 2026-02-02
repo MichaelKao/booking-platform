@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>會員等級 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <!-- 頁面標題 -->
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">會員等級</h1>
+                        <p class="page-subtitle">設定會員等級與專屬權益</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增等級
+                    </button>
+                </div>
+
+                <!-- 操作提示 -->
+                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>提示：</strong>設定不同會員等級，依消費金額自動升級，並給予專屬折扣與優惠。
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- 會員等級列表 -->
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <h6 class="data-table-title">等級列表</h6>
+                    </div>
+                    <div class="data-table-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>排序</th>
+                                    <th>等級名稱</th>
+                                    <th>升級門檻</th>
+                                    <th>折扣 (%)</th>
+                                    <th>點數倍率</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="levelsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-5">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">載入中...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+
+    <!-- 新增/編輯 Modal -->
+    <div class="modal fade" id="levelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增會員等級</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="levelForm">
+                        <input type="hidden" id="levelId">
+                        <div class="mb-3">
+                            <label class="form-label">等級名稱 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="levelName" required placeholder="例：銀卡會員">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">升級門檻 (累計消費金額)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="thresholdAmount" min="0" value="0">
+                            </div>
+                            <small class="text-muted">顧客累計消費達此金額自動升級</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">折扣比例 (%)</label>
+                                <input type="number" class="form-control" id="discountPercent" min="0" max="100" value="0">
+                                <small class="text-muted">0 表示無折扣</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">點數倍率</label>
+                                <input type="number" class="form-control" id="pointMultiplier" min="1" step="0.1" value="1">
+                                <small class="text-muted">1 = 正常，2 = 雙倍點數</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">等級說明</label>
+                            <textarea class="form-control" id="description" rows="2" placeholder="此等級的專屬權益說明"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">排序</label>
+                            <input type="number" class="form-control" id="sortOrder" min="0" value="0">
+                            <small class="text-muted">數字越小排越前面</small>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="isActive" checked>
+                            <label class="form-check-label" for="isActive">啟用此等級</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isDefault">
+                            <label class="form-check-label" for="isDefault">設為預設等級（新顧客自動套用）</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLevel()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script th:inline="javascript">
+        let levelModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            levelModal = new bootstrap.Modal(document.getElementById('levelModal'));
+            loadLevels();
+        });
+
+        async function loadLevels() {
+            const result = await api.get('/api/membership-levels');
+            if (result.success) {
+                renderLevels(result.data);
+            }
+        }
+
+        function renderLevels(levels) {
+            const tbody = document.getElementById('levelsTable');
+            if (!levels || levels.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            尚未建立會員等級
+                            <br><small>點擊「新增等級」開始建立</small>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = levels.map(level => `
+                <tr>
+                    <td>${level.sortOrder || 0}</td>
+                    <td>
+                        <strong>${level.name}</strong>
+                        ${level.isDefault ? '<span class="badge bg-primary ms-1">預設</span>' : ''}
+                    </td>
+                    <td>NT$ ${formatNumber(level.thresholdAmount || 0)}</td>
+                    <td>${level.discountPercent || 0}%</td>
+                    <td>${level.pointMultiplier || 1}x</td>
+                    <td>
+                        <span class="badge ${level.isActive ? 'bg-success' : 'bg-secondary'}">
+                            ${level.isActive ? '啟用' : '停用'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editLevel('${level.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteLevel('${level.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = '新增會員等級';
+            document.getElementById('levelForm').reset();
+            document.getElementById('levelId').value = '';
+            document.getElementById('isActive').checked = true;
+            levelModal.show();
+        }
+
+        async function editLevel(id) {
+            const result = await api.get(`/api/membership-levels/${id}`);
+            if (result.success) {
+                const level = result.data;
+                document.getElementById('modalTitle').textContent = '編輯會員等級';
+                document.getElementById('levelId').value = level.id;
+                document.getElementById('levelName').value = level.name;
+                document.getElementById('thresholdAmount').value = level.thresholdAmount || 0;
+                document.getElementById('discountPercent').value = level.discountPercent || 0;
+                document.getElementById('pointMultiplier').value = level.pointMultiplier || 1;
+                document.getElementById('description').value = level.description || '';
+                document.getElementById('sortOrder').value = level.sortOrder || 0;
+                document.getElementById('isActive').checked = level.isActive;
+                document.getElementById('isDefault').checked = level.isDefault;
+                levelModal.show();
+            }
+        }
+
+        async function saveLevel() {
+            const id = document.getElementById('levelId').value;
+            const data = {
+                name: document.getElementById('levelName').value,
+                thresholdAmount: parseInt(document.getElementById('thresholdAmount').value) || 0,
+                discountPercent: parseInt(document.getElementById('discountPercent').value) || 0,
+                pointMultiplier: parseFloat(document.getElementById('pointMultiplier').value) || 1,
+                description: document.getElementById('description').value,
+                sortOrder: parseInt(document.getElementById('sortOrder').value) || 0,
+                isActive: document.getElementById('isActive').checked,
+                isDefault: document.getElementById('isDefault').checked
+            };
+
+            const result = id
+                ? await api.put(`/api/membership-levels/${id}`, data)
+                : await api.post('/api/membership-levels', data);
+
+            if (result.success) {
+                showSuccess(id ? '更新成功' : '新增成功');
+                levelModal.hide();
+                loadLevels();
+            }
+        }
+
+        async function deleteLevel(id) {
+            if (await showConfirm('確定要刪除此會員等級嗎？')) {
+                const result = await api.delete(`/api/membership-levels/${id}`);
+                if (result.success) {
+                    showSuccess('刪除成功');
+                    loadLevels();
+                }
+            }
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+    </script>
+</body>
+</html>

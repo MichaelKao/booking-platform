@@ -13,10 +13,16 @@
     "type": "git",
     "url": "git+https://github.com/MichaelKao/booking-platform.git"
   },
-  "keywords": ["booking", "platform", "line-bot", "spring-boot"],
+  "keywords": [
+    "booking",
+    "platform",
+    "line-bot",
+    "spring-boot"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.58.1"
+    "@playwright/test": "^1.58.1",
+    "pg": "^8.18.0"
   }
 }

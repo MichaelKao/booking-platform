@@ -69,6 +69,15 @@
             </a>
         </li>
 
+        <!-- 會員等級（需訂閱 MEMBERSHIP_SYSTEM 功能） -->
+        <li class="nav-item" data-feature="MEMBERSHIP_SYSTEM">
+            <a class="nav-link" href="/tenant/membership-levels"
+               th:classappend="${#strings.equals(currentPage, 'membership-levels')} ? 'active' : ''">
+                <i class="bi bi-award"></i>
+                <span>會員等級</span>
+            </a>
+        </li>
+
         <hr class="sidebar-divider">
         <div class="sidebar-heading">店家設定</div>
 
