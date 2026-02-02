@@ -147,6 +147,74 @@
                             </div>
                         </div>
 
+                        <!-- Bot 資訊（連線成功後顯示） -->
+                        <div class="card mb-4 d-none" id="botInfoCard">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="m-0"><i class="bi bi-robot me-2"></i>您的 LINE Bot</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <!-- Bot 頭像 -->
+                                <img id="botPicture" src="" alt="Bot" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #06C755;">
+                                <!-- Bot 名稱 -->
+                                <h5 id="botName" class="mb-1"></h5>
+                                <!-- Bot ID -->
+                                <p class="text-muted mb-3"><i class="bi bi-at"></i><span id="botId"></span></p>
+
+                                <!-- QR Code -->
+                                <div class="mb-3">
+                                    <p class="small text-muted mb-2">顧客掃描此 QR Code 加入好友：</p>
+                                    <img id="botQrCode" src="" alt="QR Code" class="img-fluid border rounded" style="max-width: 180px;">
+                                </div>
+
+                                <!-- 加好友按鈕 -->
+                                <a id="addFriendBtn" href="#" target="_blank" class="btn btn-success w-100 mb-2">
+                                    <i class="bi bi-person-plus me-1"></i>加入好友
+                                </a>
+
+                                <!-- 複製連結 -->
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="copyAddFriendUrl()">
+                                    <i class="bi bi-link-45deg me-1"></i>複製加好友連結
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 推廣方式（連線成功後顯示） -->
+                        <div class="card mb-4 d-none" id="promotionCard">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-megaphone me-2"></i>如何讓顧客加入？</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">1</span>
+                                    <div class="small">
+                                        <strong>店內張貼 QR Code</strong><br>
+                                        <span class="text-muted">下載上方 QR Code 印出張貼在店內</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">2</span>
+                                    <div class="small">
+                                        <strong>分享加好友連結</strong><br>
+                                        <span class="text-muted">複製連結分享到社群媒體或官網</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">3</span>
+                                    <div class="small">
+                                        <strong>名片或傳單</strong><br>
+                                        <span class="text-muted">在名片、傳單上印製 QR Code</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start">
+                                    <span class="badge bg-primary rounded-pill me-2">4</span>
+                                    <div class="small">
+                                        <strong>搜尋 ID 加入</strong><br>
+                                        <span class="text-muted">顧客在 LINE 搜尋 <code id="searchId">@xxx</code> 加入</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 使用說明 -->
                         <div class="card">
                             <div class="card-header">
@@ -165,8 +233,10 @@
                                 <div class="small text-muted">
                                     <p class="mb-2"><strong>Q: 連線失敗怎麼辦？</strong><br>
                                     請確認 Channel ID、Secret 和 Token 是否正確，並確保 Webhook URL 已設定。</p>
-                                    <p class="mb-0"><strong>Q: 訊息沒有收到？</strong><br>
+                                    <p class="mb-2"><strong>Q: 訊息沒有收到？</strong><br>
                                     請檢查 LINE Developers Console 中 Webhook 是否啟用。</p>
+                                    <p class="mb-0"><strong>Q: 顧客如何使用？</strong><br>
+                                    顧客加入好友後，輸入任何文字即可看到預約選單。</p>
                                 </div>
                             </div>
                         </div>
@@ -217,7 +287,12 @@
                 if (r.success && r.data) {
                     document.getElementById('channelId').value = r.data.channelId || '';
                     // Secret 和 Token 不回傳，保持空白讓用戶重新輸入
-                    document.getElementById('webhookUrl').value = r.data.webhookUrl || (window.location.origin + '/api/line/webhook/' + (r.data.tenantCode || 'YOUR_CODE'));
+
+                    // Webhook URL: 優先使用 API 回傳的，否則使用預設值
+                    const baseUrl = 'https://booking-platform-production-1e08.up.railway.app';
+                    const webhookUrl = r.data.webhookUrl || (baseUrl + '/api/line/webhook/' + (r.data.tenantCode || 'YOUR_CODE'));
+                    document.getElementById('webhookUrl').value = webhookUrl;
+
                     document.getElementById('autoReplyEnabled').checked = r.data.autoReplyEnabled || false;
                     document.getElementById('welcomeMessage').value = r.data.welcomeMessage || '';
                     document.getElementById('defaultReply').value = r.data.defaultReply || '';
@@ -229,6 +304,11 @@
 
                     // 更新自動回覆區域
                     document.getElementById('autoReplyFields').style.opacity = r.data.autoReplyEnabled ? '1' : '0.5';
+
+                    // 如果已連線，自動測試並顯示 Bot 資訊
+                    if (r.data.status === 'ACTIVE' && r.data.hasAccessToken) {
+                        testConnection();
+                    }
                 }
             } catch (e) {
                 console.error('載入 LINE 設定失敗:', e);
@@ -347,27 +427,76 @@
             });
         }
 
+        // 儲存 Bot 資訊供複製連結使用
+        let currentBotInfo = null;
+
         async function testConnection() {
             const btn = document.getElementById('testConnectionBtn');
             setButtonLoading(btn, true);
 
             try {
                 const r = await api.post('/api/settings/line/test');
-                if (r.success) {
-                    if (r.data && r.data.connected) {
-                        updateConnectionStatus('ACTIVE');
-                        showSuccess('連線測試成功！');
-                    } else {
-                        updateConnectionStatus('INVALID');
-                        showError('連線測試失敗：' + (r.data?.message || '請檢查設定'));
-                    }
+                if (r.success && r.data && r.data.connected) {
+                    updateConnectionStatus('ACTIVE');
+                    showBotInfo(r.data);
+                    showSuccess('連線測試成功！您的 LINE Bot 已準備就緒');
+                } else {
+                    updateConnectionStatus('INVALID');
+                    hideBotInfo();
+                    showError('連線測試失敗：' + (r.data?.message || '請檢查設定'));
                 }
             } catch (e) {
                 updateConnectionStatus('INVALID');
+                hideBotInfo();
                 showError('連線測試失敗：' + (e.message || '請檢查設定是否正確'));
             } finally {
                 setButtonLoading(btn, false);
             }
+        }
+
+        function showBotInfo(data) {
+            currentBotInfo = data;
+
+            // 顯示 Bot 資訊卡片
+            document.getElementById('botInfoCard').classList.remove('d-none');
+            document.getElementById('promotionCard').classList.remove('d-none');
+
+            // 填入資料
+            if (data.pictureUrl) {
+                document.getElementById('botPicture').src = data.pictureUrl;
+            } else {
+                document.getElementById('botPicture').src = 'https://via.placeholder.com/80?text=BOT';
+            }
+
+            document.getElementById('botName').textContent = data.displayName || 'LINE Bot';
+            document.getElementById('botId').textContent = data.basicId || '';
+            document.getElementById('searchId').textContent = data.basicId || '@xxx';
+
+            if (data.qrCodeUrl) {
+                document.getElementById('botQrCode').src = data.qrCodeUrl;
+            }
+
+            if (data.addFriendUrl) {
+                document.getElementById('addFriendBtn').href = data.addFriendUrl;
+            }
+        }
+
+        function hideBotInfo() {
+            currentBotInfo = null;
+            document.getElementById('botInfoCard').classList.add('d-none');
+            document.getElementById('promotionCard').classList.add('d-none');
+        }
+
+        function copyAddFriendUrl() {
+            if (!currentBotInfo || !currentBotInfo.addFriendUrl) {
+                showError('尚未取得加好友連結');
+                return;
+            }
+            navigator.clipboard.writeText(currentBotInfo.addFriendUrl).then(() => {
+                showSuccess('已複製加好友連結！');
+            }).catch(() => {
+                showError('複製失敗，請手動複製');
+            });
         }
 
         function setButtonLoading(btn, loading) {

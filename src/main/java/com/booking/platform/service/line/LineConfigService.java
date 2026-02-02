@@ -308,11 +308,11 @@ public class LineConfigService {
     }
 
     /**
-     * 測試 LINE Bot 連線
+     * 測試 LINE Bot 連線並取得 Bot 資訊
      *
-     * @return 測試結果
+     * @return Bot 資訊（包含 basicId, displayName, pictureUrl 等）
      */
-    public boolean testConnection() {
+    public java.util.Map<String, Object> testConnection() {
         String tenantId = TenantContext.getTenantId();
 
         log.info("測試 LINE Bot 連線，租戶：{}", tenantId);
@@ -338,13 +338,13 @@ public class LineConfigService {
         }
 
         // ========================================
-        // 3. 呼叫 LINE API 測試連線
+        // 3. 呼叫 LINE API 取得 Bot 資訊
         // ========================================
 
         try {
             String accessToken = encryptionService.decrypt(config.getChannelAccessTokenEncrypted());
 
-            // 使用 LINE Bot API 的 Get Bot Info 端點測試
+            // 使用 LINE Bot API 的 Get Bot Info 端點
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                     .uri(java.net.URI.create("https://api.line.me/v2/bot/info"))
@@ -357,13 +357,36 @@ public class LineConfigService {
 
             if (response.statusCode() == 200) {
                 log.info("LINE Bot 連線測試成功，租戶：{}", tenantId);
-                return true;
+
+                // 解析 JSON 回應
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                java.util.Map<String, Object> botInfo = mapper.readValue(response.body(),
+                        new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {});
+
+                // 建立回應
+                java.util.Map<String, Object> result = new java.util.HashMap<>();
+                result.put("connected", true);
+                result.put("basicId", botInfo.get("basicId"));
+                result.put("displayName", botInfo.get("displayName"));
+                result.put("pictureUrl", botInfo.get("pictureUrl"));
+                result.put("chatMode", botInfo.get("chatMode"));
+
+                // 產生 QR Code URL 和加好友連結
+                String basicId = (String) botInfo.get("basicId");
+                if (basicId != null) {
+                    // LINE 官方 QR Code URL 格式
+                    result.put("qrCodeUrl", "https://qr-official.line.me/gs/M_" + basicId.replace("@", "") + ".png");
+                    // 加好友連結
+                    result.put("addFriendUrl", "https://line.me/R/ti/p/" + basicId);
+                }
+
+                return result;
             } else {
                 log.warn("LINE Bot 連線測試失敗，租戶：{}，狀態碼：{}，回應：{}",
                         tenantId, response.statusCode(), response.body());
                 throw new BusinessException(
                         ErrorCode.LINE_API_ERROR,
-                        "連線測試失敗：" + response.body()
+                        "連線測試失敗：請確認 Channel Access Token 是否正確"
                 );
             }
         } catch (BusinessException e) {
@@ -398,6 +421,9 @@ public class LineConfigService {
     // 私有方法
     // ========================================
 
+    @org.springframework.beans.factory.annotation.Value("${app.base-url:https://booking-platform-production-1e08.up.railway.app}")
+    private String appBaseUrl;
+
     /**
      * 更新 Webhook URL
      */
@@ -406,8 +432,7 @@ public class LineConfigService {
         Optional<Tenant> tenantOpt = tenantRepository.findById(tenantId);
         if (tenantOpt.isPresent()) {
             String tenantCode = tenantOpt.get().getCode();
-            // TODO: 正式環境使用 HTTPS 和正確的域名
-            String webhookUrl = String.format("https://your-domain.com/api/line/webhook/%s", tenantCode);
+            String webhookUrl = String.format("%s/api/line/webhook/%s", appBaseUrl, tenantCode);
             config.setWebhookUrl(webhookUrl);
         }
     }
