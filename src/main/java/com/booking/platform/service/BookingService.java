@@ -457,7 +457,15 @@ public class BookingService {
         }
 
         // ========================================
-        // 5. 更新日期時間
+        // 5. 更新自訂服務時長（如有指定）
+        // ========================================
+
+        if (request.getDuration() != null && request.getDuration() > 0) {
+            entity.setDuration(request.getDuration());
+        }
+
+        // ========================================
+        // 6. 更新日期時間
         // ========================================
 
         if (request.getBookingDate() != null) {
@@ -467,9 +475,12 @@ public class BookingService {
 
         if (request.getStartTime() != null) {
             entity.setStartTime(request.getStartTime());
-            // 重新計算結束時間
-            entity.setEndTime(request.getStartTime().plusMinutes(entity.getDuration()));
             hasTimeChange = true;
+        }
+
+        // 重新計算結束時間（使用目前的 duration）
+        if (hasTimeChange || request.getDuration() != null) {
+            entity.setEndTime(entity.getStartTime().plusMinutes(entity.getDuration()));
         }
 
         // ========================================

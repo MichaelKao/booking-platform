@@ -236,8 +236,12 @@
                                 <div class="invalid-feedback">請選擇開始時間</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">服務時長</label>
-                                <input type="text" class="form-control" id="editBookingDuration" readonly placeholder="由服務項目決定">
+                                <label class="form-label">服務時長 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="editBookingDuration" min="15" max="480" step="5" required>
+                                    <span class="input-group-text">分鐘</span>
+                                </div>
+                                <div class="form-text">可調整服務時長（15-480 分鐘）</div>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -662,17 +666,20 @@
             document.getElementById('editBookingTime').value = booking.startTime?.substring(0, 5) || '';
             document.getElementById('editBookingNoteToCustomer').value = '';
 
+            // 設定服務時長（從預約資料）
+            document.getElementById('editBookingDuration').value = booking.duration || 60;
+
             // 設定日期最小值
             document.getElementById('editBookingDate').min = new Date().toISOString().split('T')[0];
-
-            // 更新服務時長顯示
-            onEditServiceChange();
         }
 
         function onEditServiceChange() {
             const select = document.getElementById('editBookingService');
             const option = select.options[select.selectedIndex];
-            document.getElementById('editBookingDuration').value = option.dataset.duration ? `${option.dataset.duration} 分鐘` : '';
+            // 切換服務時，更新為該服務的預設時長
+            if (option.dataset.duration) {
+                document.getElementById('editBookingDuration').value = option.dataset.duration;
+            }
         }
 
         async function saveBookingEdit() {
@@ -680,6 +687,7 @@
             const serviceEl = document.getElementById('editBookingService');
             const dateEl = document.getElementById('editBookingDate');
             const timeEl = document.getElementById('editBookingTime');
+            const durationEl = document.getElementById('editBookingDuration');
 
             let isValid = true;
 
@@ -707,6 +715,15 @@
                 timeEl.classList.remove('is-invalid');
             }
 
+            // 服務時長驗證
+            const duration = parseInt(durationEl.value);
+            if (!duration || duration < 15 || duration > 480) {
+                durationEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                durationEl.classList.remove('is-invalid');
+            }
+
             if (!isValid) {
                 form.classList.add('was-validated');
                 showError('請填寫所有必填欄位');
@@ -714,11 +731,13 @@
             }
 
             const bookingId = document.getElementById('editBookingId').value;
+            const durationEl = document.getElementById('editBookingDuration');
             const data = {
                 serviceItemId: serviceEl.value,
                 staffId: document.getElementById('editBookingStaff').value || null,
                 bookingDate: dateEl.value,
                 startTime: timeEl.value,
+                duration: parseInt(durationEl.value) || null,
                 storeNoteToCustomer: document.getElementById('editBookingNoteToCustomer').value.trim() || null
             };
 

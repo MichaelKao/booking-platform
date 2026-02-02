@@ -44,6 +44,12 @@ public class UpdateBookingRequest {
     private LocalTime startTime;
 
     /**
+     * 自訂服務時長（分鐘）
+     * 如不提供則使用服務項目預設時長
+     */
+    private Integer duration;
+
+    /**
      * 結束時間
      */
     private LocalTime endTime;
