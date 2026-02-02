@@ -17,7 +17,7 @@ import {
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
   const response = await request.post('/api/auth/tenant/login', {
-    data: { username: 'tenant_test', password: 'test123' }
+    data: { username: 'g0909095118@gmail.com', password: 'gaojunting11' }
   });
   const data = await response.json();
   return data.data?.accessToken || '';
@@ -150,7 +150,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const dashboardLink = page.locator('a[href="/tenant/dashboard"]');
+      const dashboardLink = page.locator('a.nav-link[href="/tenant/dashboard"]');
       await expect(dashboardLink).toBeVisible();
     });
 
@@ -159,7 +159,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const bookingsLink = page.locator('a[href="/tenant/bookings"]');
+      const bookingsLink = page.locator('a.nav-link[href="/tenant/bookings"]');
       await expect(bookingsLink).toBeVisible();
     });
 
@@ -168,7 +168,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const calendarLink = page.locator('a[href="/tenant/calendar"]');
+      const calendarLink = page.locator('a.nav-link[href="/tenant/calendar"]');
       await expect(calendarLink).toBeVisible();
     });
 
@@ -177,7 +177,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const customersLink = page.locator('a[href="/tenant/customers"]');
+      const customersLink = page.locator('a.nav-link[href="/tenant/customers"]');
       await expect(customersLink).toBeVisible();
     });
 
@@ -186,7 +186,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const staffLink = page.locator('a[href="/tenant/staff"]');
+      const staffLink = page.locator('a.nav-link[href="/tenant/staff"]');
       await expect(staffLink).toBeVisible();
     });
 
@@ -195,7 +195,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const servicesLink = page.locator('a[href="/tenant/services"]');
+      const servicesLink = page.locator('a.nav-link[href="/tenant/services"]');
       await expect(servicesLink).toBeVisible();
     });
 
@@ -204,7 +204,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const settingsLink = page.locator('a[href="/tenant/settings"]');
+      const settingsLink = page.locator('a.nav-link[href="/tenant/settings"]');
       await expect(settingsLink).toBeVisible();
     });
 
@@ -213,7 +213,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const lineSettingsLink = page.locator('a[href="/tenant/line-settings"]');
+      const lineSettingsLink = page.locator('a.nav-link[href="/tenant/line-settings"]');
       await expect(lineSettingsLink).toBeVisible();
     });
 
@@ -222,7 +222,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const featureStoreLink = page.locator('a[href="/tenant/feature-store"]');
+      const featureStoreLink = page.locator('a.nav-link[href="/tenant/feature-store"]');
       await expect(featureStoreLink).toBeVisible();
     });
 
@@ -231,7 +231,7 @@ test.describe('側邊欄功能訂閱控制測試', () => {
       await page.goto('/tenant/dashboard');
       await waitForLoading(page);
 
-      const pointsLink = page.locator('a[href="/tenant/points"]');
+      const pointsLink = page.locator('a.nav-link[href="/tenant/points"]');
       await expect(pointsLink).toBeVisible();
     });
   });
