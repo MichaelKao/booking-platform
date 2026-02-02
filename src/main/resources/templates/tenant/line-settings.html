@@ -215,6 +215,77 @@
                             </div>
                         </div>
 
+                        <!-- Rich Menu 設定 -->
+                        <div class="card mb-4" id="richMenuCard">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-grid-3x2 me-2"></i>Rich Menu 快捷選單</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- 當前狀態 -->
+                                <div id="richMenuStatus" class="mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <span id="richMenuStatusBadge" class="badge bg-secondary me-2">未設定</span>
+                                        <span id="richMenuThemeText" class="small text-muted"></span>
+                                    </div>
+                                </div>
+
+                                <!-- 主題選擇 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">選擇主題配色</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-sm theme-btn" data-theme="GREEN" style="background-color: #1DB446; color: white; border: 2px solid transparent;">
+                                            LINE 綠
+                                        </button>
+                                        <button type="button" class="btn btn-sm theme-btn" data-theme="BLUE" style="background-color: #2196F3; color: white; border: 2px solid transparent;">
+                                            海洋藍
+                                        </button>
+                                        <button type="button" class="btn btn-sm theme-btn" data-theme="PURPLE" style="background-color: #9C27B0; color: white; border: 2px solid transparent;">
+                                            皇家紫
+                                        </button>
+                                        <button type="button" class="btn btn-sm theme-btn" data-theme="ORANGE" style="background-color: #FF5722; color: white; border: 2px solid transparent;">
+                                            日落橘
+                                        </button>
+                                        <button type="button" class="btn btn-sm theme-btn" data-theme="DARK" style="background-color: #263238; color: white; border: 2px solid transparent;">
+                                            暗黑
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createRichMenu()" id="createRichMenuBtn">
+                                    <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>建立主題選單</span>
+                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
+                                </button>
+
+                                <hr>
+
+                                <!-- 自訂圖片上傳 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">或上傳自訂圖片</label>
+                                    <input type="file" class="form-control form-control-sm" id="richMenuImage" accept="image/png,image/jpeg">
+                                    <div class="form-text">
+                                        尺寸：2500 x 843 像素，格式：PNG/JPG，大小：最大 1MB
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 mb-3" onclick="uploadCustomRichMenu()" id="uploadRichMenuBtn">
+                                    <span class="btn-text"><i class="bi bi-upload me-1"></i>上傳自訂圖片</span>
+                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>上傳中...</span>
+                                </button>
+
+                                <!-- 刪除按鈕 -->
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 d-none" onclick="deleteRichMenu()" id="deleteRichMenuBtn">
+                                    <span class="btn-text"><i class="bi bi-trash me-1"></i>刪除 Rich Menu</span>
+                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>刪除中...</span>
+                                </button>
+
+                                <!-- 說明 -->
+                                <div class="alert alert-light small mt-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Rich Menu 是顧客打開聊天室時，顯示在底部的快捷按鈕選單，可讓顧客快速操作預約、查詢等功能。
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 使用說明 -->
                         <div class="card">
                             <div class="card-header">
@@ -304,6 +375,11 @@
 
                     // 更新自動回覆區域
                     document.getElementById('autoReplyFields').style.opacity = r.data.autoReplyEnabled ? '1' : '0.5';
+
+                    // 載入 Rich Menu 資訊
+                    if (r.data.hasAccessToken) {
+                        loadRichMenuInfo();
+                    }
 
                     // 如果已連線，自動測試並顯示 Bot 資訊
                     if (r.data.status === 'ACTIVE' && r.data.hasAccessToken) {
@@ -479,12 +555,16 @@
             if (data.addFriendUrl) {
                 document.getElementById('addFriendBtn').href = data.addFriendUrl;
             }
+
+            // 載入 Rich Menu 資訊
+            loadRichMenuInfo();
         }
 
         function hideBotInfo() {
             currentBotInfo = null;
             document.getElementById('botInfoCard').classList.add('d-none');
             document.getElementById('promotionCard').classList.add('d-none');
+            // Rich Menu 卡片保持顯示，不隱藏
         }
 
         function copyAddFriendUrl() {
@@ -508,6 +588,173 @@
                 btn.querySelector('.btn-text').classList.remove('d-none');
                 btn.querySelector('.btn-loading').classList.add('d-none');
                 btn.disabled = false;
+            }
+        }
+
+        // ========================================
+        // Rich Menu 功能
+        // ========================================
+
+        let selectedTheme = 'GREEN';
+
+        // 主題按鈕點擊事件
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除所有選中狀態
+                document.querySelectorAll('.theme-btn').forEach(b => {
+                    b.style.border = '2px solid transparent';
+                });
+                // 設定選中狀態
+                this.style.border = '2px solid #000';
+                selectedTheme = this.dataset.theme;
+            });
+        });
+
+        // 預設選中 GREEN
+        document.querySelector('.theme-btn[data-theme="GREEN"]').style.border = '2px solid #000';
+
+        async function loadRichMenuInfo() {
+            try {
+                const r = await api.get('/api/settings/line/rich-menu');
+                if (r.success && r.data) {
+                    updateRichMenuStatus(r.data);
+                }
+            } catch (e) {
+                console.error('載入 Rich Menu 資訊失敗:', e);
+            }
+        }
+
+        function updateRichMenuStatus(data) {
+            const statusBadge = document.getElementById('richMenuStatusBadge');
+            const themeText = document.getElementById('richMenuThemeText');
+            const deleteBtn = document.getElementById('deleteRichMenuBtn');
+
+            if (data && data.richMenuId) {
+                statusBadge.className = 'badge bg-success me-2';
+                statusBadge.textContent = '已啟用';
+
+                const themeNames = {
+                    'GREEN': 'LINE 綠',
+                    'BLUE': '海洋藍',
+                    'PURPLE': '皇家紫',
+                    'ORANGE': '日落橘',
+                    'DARK': '暗黑模式',
+                    'CUSTOM': '自訂圖片'
+                };
+                themeText.textContent = '主題：' + (themeNames[data.theme] || data.theme || '未知');
+
+                // 選中對應的主題按鈕
+                if (data.theme && data.theme !== 'CUSTOM') {
+                    document.querySelectorAll('.theme-btn').forEach(b => {
+                        b.style.border = '2px solid transparent';
+                        if (b.dataset.theme === data.theme) {
+                            b.style.border = '2px solid #000';
+                            selectedTheme = data.theme;
+                        }
+                    });
+                }
+
+                deleteBtn.classList.remove('d-none');
+            } else {
+                statusBadge.className = 'badge bg-secondary me-2';
+                statusBadge.textContent = '未設定';
+                themeText.textContent = '';
+                deleteBtn.classList.add('d-none');
+            }
+        }
+
+        async function createRichMenu() {
+            const btn = document.getElementById('createRichMenuBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const r = await api.post('/api/settings/line/rich-menu/create', {
+                    theme: selectedTheme
+                });
+                if (r.success) {
+                    showSuccess('Rich Menu 建立成功！顧客現在可以看到快捷選單了');
+                    loadRichMenuInfo();
+                } else {
+                    showError('建立失敗：' + (r.message || '請稍後再試'));
+                }
+            } catch (e) {
+                showError('建立失敗：' + (e.message || '請檢查 LINE 設定'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        async function uploadCustomRichMenu() {
+            const fileInput = document.getElementById('richMenuImage');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showError('請選擇圖片檔案');
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // 驗證檔案大小
+            if (file.size > 1024 * 1024) {
+                showError('圖片大小不能超過 1MB');
+                return;
+            }
+
+            // 驗證檔案類型
+            if (!['image/png', 'image/jpeg'].includes(file.type)) {
+                showError('請上傳 PNG 或 JPG 格式的圖片');
+                return;
+            }
+
+            const btn = document.getElementById('uploadRichMenuBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/settings/line/rich-menu/upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: formData
+                });
+
+                const r = await response.json();
+
+                if (r.success) {
+                    showSuccess('自訂 Rich Menu 建立成功！');
+                    fileInput.value = '';
+                    loadRichMenuInfo();
+                } else {
+                    showError('上傳失敗：' + (r.message || '請確認圖片尺寸為 2500x843 像素'));
+                }
+            } catch (e) {
+                showError('上傳失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        async function deleteRichMenu() {
+            const confirmed = await showConfirm('確定要刪除 Rich Menu 嗎？刪除後顧客將看不到快捷選單。');
+            if (!confirmed) return;
+
+            const btn = document.getElementById('deleteRichMenuBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const r = await api.delete('/api/settings/line/rich-menu');
+                if (r.success) {
+                    showSuccess('Rich Menu 已刪除');
+                    loadRichMenuInfo();
+                } else {
+                    showError('刪除失敗：' + (r.message || '請稍後再試'));
+                }
+            } catch (e) {
+                showError('刪除失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
             }
         }
     </script>

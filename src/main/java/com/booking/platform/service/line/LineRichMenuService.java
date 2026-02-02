@@ -121,6 +121,26 @@ public class LineRichMenuService {
     private static final Color ICON_BG_COLOR = new Color(255, 255, 255, 50);
 
     // ========================================
+    // 主題配色
+    // ========================================
+
+    /**
+     * 主題配色對應表
+     */
+    private static final java.util.Map<String, Color> THEME_COLORS = java.util.Map.of(
+            "GREEN", new Color(0x1D, 0xB4, 0x46),   // LINE Green #1DB446
+            "BLUE", new Color(0x21, 0x96, 0xF3),    // Ocean Blue #2196F3
+            "PURPLE", new Color(0x9C, 0x27, 0xB0),  // Royal Purple #9C27B0
+            "ORANGE", new Color(0xFF, 0x57, 0x22),  // Sunset Orange #FF5722
+            "DARK", new Color(0x26, 0x32, 0x38)     // Dark Mode #263238
+    );
+
+    /**
+     * 圖片上傳大小限制（1MB）
+     */
+    private static final long MAX_IMAGE_SIZE = 1024 * 1024;
+
+    // ========================================
     // 選單項目
     // ========================================
 
@@ -154,39 +174,56 @@ public class LineRichMenuService {
      */
     @Transactional
     public String createAndSetRichMenu(String tenantId) {
-        log.info("開始建立 Rich Menu，租戶：{}", tenantId);
+        return createAndSetRichMenu(tenantId, "GREEN");
+    }
+
+    /**
+     * 為租戶建立並設定指定主題的 Rich Menu
+     *
+     * @param tenantId 租戶 ID
+     * @param theme 主題配色（GREEN, BLUE, PURPLE, ORANGE, DARK）
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createAndSetRichMenu(String tenantId, String theme) {
+        log.info("開始建立 Rich Menu，租戶：{}，主題：{}", tenantId, theme);
 
         try {
             // ========================================
-            // 1. 取得店家名稱
+            // 1. 刪除現有的 Rich Menu
+            // ========================================
+            deleteRichMenu(tenantId);
+
+            // ========================================
+            // 2. 取得店家名稱
             // ========================================
             String shopName = tenantRepository.findById(tenantId)
                     .map(Tenant::getName)
                     .orElse("預約服務");
 
             // ========================================
-            // 2. 建立 Rich Menu 結構
+            // 3. 建立 Rich Menu 結構
             // ========================================
             String richMenuId = createRichMenu(tenantId, shopName);
             log.info("Rich Menu 建立成功，ID：{}", richMenuId);
 
             // ========================================
-            // 3. 產生並上傳圖片
+            // 4. 產生並上傳圖片
             // ========================================
-            byte[] imageBytes = generateRichMenuImage(shopName);
+            byte[] imageBytes = generateRichMenuImage(shopName, theme);
             uploadRichMenuImage(tenantId, richMenuId, imageBytes);
             log.info("Rich Menu 圖片上傳成功");
 
             // ========================================
-            // 4. 設為預設選單
+            // 5. 設為預設選單
             // ========================================
             setDefaultRichMenu(tenantId, richMenuId);
             log.info("Rich Menu 設為預設成功");
 
             // ========================================
-            // 5. 儲存 Rich Menu ID
+            // 6. 儲存 Rich Menu ID 和主題
             // ========================================
-            saveRichMenuId(tenantId, richMenuId);
+            saveRichMenuIdAndTheme(tenantId, richMenuId, theme);
 
             return richMenuId;
 
@@ -194,6 +231,122 @@ public class LineRichMenuService {
             log.error("建立 Rich Menu 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
             throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗：" + e.getMessage());
         }
+    }
+
+    /**
+     * 使用自訂圖片建立 Rich Menu
+     *
+     * @param tenantId 租戶 ID
+     * @param imageBytes 圖片位元組陣列
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createRichMenuWithCustomImage(String tenantId, byte[] imageBytes) {
+        log.info("開始建立自訂圖片 Rich Menu，租戶：{}", tenantId);
+
+        try {
+            // ========================================
+            // 1. 驗證圖片
+            // ========================================
+            validateImage(imageBytes);
+
+            // ========================================
+            // 2. 刪除現有的 Rich Menu
+            // ========================================
+            deleteRichMenu(tenantId);
+
+            // ========================================
+            // 3. 取得店家名稱
+            // ========================================
+            String shopName = tenantRepository.findById(tenantId)
+                    .map(Tenant::getName)
+                    .orElse("預約服務");
+
+            // ========================================
+            // 4. 建立 Rich Menu 結構
+            // ========================================
+            String richMenuId = createRichMenu(tenantId, shopName);
+            log.info("Rich Menu 建立成功，ID：{}", richMenuId);
+
+            // ========================================
+            // 5. 上傳自訂圖片
+            // ========================================
+            uploadRichMenuImage(tenantId, richMenuId, imageBytes);
+            log.info("Rich Menu 自訂圖片上傳成功");
+
+            // ========================================
+            // 6. 設為預設選單
+            // ========================================
+            setDefaultRichMenu(tenantId, richMenuId);
+            log.info("Rich Menu 設為預設成功");
+
+            // ========================================
+            // 7. 儲存 Rich Menu ID 和主題
+            // ========================================
+            saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM");
+
+            return richMenuId;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("建立自訂圖片 Rich Menu 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 驗證上傳的圖片
+     *
+     * @param imageBytes 圖片位元組陣列
+     */
+    private void validateImage(byte[] imageBytes) {
+        // 檢查檔案大小
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "請上傳圖片");
+        }
+        if (imageBytes.length > MAX_IMAGE_SIZE) {
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片大小不能超過 1MB");
+        }
+
+        // 檢查圖片尺寸
+        try {
+            BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+            if (image == null) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "無法讀取圖片，請確認格式為 PNG 或 JPG");
+            }
+            if (image.getWidth() != MENU_WIDTH || image.getHeight() != MENU_HEIGHT) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR,
+                        String.format("圖片尺寸必須為 %dx%d 像素，目前為 %dx%d",
+                                MENU_WIDTH, MENU_HEIGHT, image.getWidth(), image.getHeight()));
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片格式無效");
+        }
+    }
+
+    /**
+     * 取得當前 Rich Menu 資訊
+     *
+     * @param tenantId 租戶 ID
+     * @return Rich Menu 資訊（包含 richMenuId 和 theme）
+     */
+    public java.util.Map<String, String> getRichMenuInfo(String tenantId) {
+        TenantLineConfig config = lineConfigRepository.findByTenantId(tenantId).orElse(null);
+        if (config == null) {
+            return java.util.Map.of();
+        }
+
+        java.util.Map<String, String> info = new java.util.HashMap<>();
+        if (config.getRichMenuId() != null) {
+            info.put("richMenuId", config.getRichMenuId());
+        }
+        if (config.getRichMenuTheme() != null) {
+            info.put("theme", config.getRichMenuTheme());
+        }
+        return info;
     }
 
     /**
@@ -435,18 +588,35 @@ public class LineRichMenuService {
     // ========================================
 
     /**
-     * 產生 Rich Menu 圖片
+     * 產生 Rich Menu 圖片（使用預設主題）
      */
     private byte[] generateRichMenuImage(String shopName) throws IOException {
+        return generateRichMenuImage(shopName, "GREEN");
+    }
+
+    /**
+     * 產生指定主題的 Rich Menu 圖片
+     *
+     * @param shopName 店家名稱
+     * @param theme 主題配色
+     * @return 圖片位元組陣列
+     */
+    private byte[] generateRichMenuImage(String shopName, String theme) throws IOException {
         BufferedImage image = new BufferedImage(MENU_WIDTH, MENU_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = image.createGraphics();
+
+        // 取得主題顏色
+        Color themeColor = THEME_COLORS.getOrDefault(
+                theme != null ? theme.toUpperCase() : "GREEN",
+                BACKGROUND_COLOR
+        );
 
         // 設定抗鋸齒
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         // 填充背景
-        g2d.setColor(BACKGROUND_COLOR);
+        g2d.setColor(themeColor);
         g2d.fillRect(0, 0, MENU_WIDTH, MENU_HEIGHT);
 
         // 繪製格線（淡色）
@@ -535,6 +705,21 @@ public class LineRichMenuService {
     private void saveRichMenuId(String tenantId, String richMenuId) {
         lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
             config.setRichMenuId(richMenuId);
+            lineConfigRepository.save(config);
+        });
+    }
+
+    /**
+     * 儲存 Rich Menu ID 和主題
+     *
+     * @param tenantId 租戶 ID
+     * @param richMenuId Rich Menu ID
+     * @param theme 主題
+     */
+    private void saveRichMenuIdAndTheme(String tenantId, String richMenuId, String theme) {
+        lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+            config.setRichMenuId(richMenuId);
+            config.setRichMenuTheme(theme);
             lineConfigRepository.save(config);
         });
     }

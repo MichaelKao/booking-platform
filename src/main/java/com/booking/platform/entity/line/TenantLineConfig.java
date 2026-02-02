@@ -162,6 +162,13 @@ public class TenantLineConfig {
     @Column(name = "rich_menu_id", length = 100)
     private String richMenuId;
 
+    /**
+     * Rich Menu 主題配色
+     * <p>可選值：GREEN, BLUE, PURPLE, ORANGE, DARK, CUSTOM
+     */
+    @Column(name = "rich_menu_theme", length = 20)
+    private String richMenuTheme;
+
     // ========================================
     // 額度管理
     // ========================================

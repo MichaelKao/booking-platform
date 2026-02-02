@@ -1,19 +1,25 @@
 package com.booking.platform.controller.tenant;
 
 import com.booking.platform.common.response.ApiResponse;
+import com.booking.platform.common.tenant.TenantContext;
+import com.booking.platform.dto.line.CreateRichMenuRequest;
 import com.booking.platform.dto.line.LineConfigResponse;
 import com.booking.platform.dto.line.SaveLineConfigRequest;
 import com.booking.platform.service.line.LineConfigService;
+import com.booking.platform.service.line.LineRichMenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * LINE 設定控制器
@@ -42,6 +48,7 @@ public class LineConfigController {
     // ========================================
 
     private final LineConfigService lineConfigService;
+    private final LineRichMenuService richMenuService;
 
     // ========================================
     // 查詢 API
@@ -122,5 +129,98 @@ public class LineConfigController {
         java.util.Map<String, Object> botInfo = lineConfigService.testConnection();
 
         return ResponseEntity.ok(ApiResponse.ok("連線測試成功", botInfo));
+    }
+
+    // ========================================
+    // Rich Menu API
+    // ========================================
+
+    /**
+     * 取得 Rich Menu 資訊
+     *
+     * @return Rich Menu 資訊
+     */
+    @GetMapping("/rich-menu")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> getRichMenuInfo() {
+        log.debug("取得 Rich Menu 資訊");
+
+        String tenantId = TenantContext.getTenantId();
+        java.util.Map<String, String> info = richMenuService.getRichMenuInfo(tenantId);
+
+        return ResponseEntity.ok(ApiResponse.ok(info));
+    }
+
+    /**
+     * 建立 Rich Menu（使用主題配色）
+     *
+     * @param request 包含主題參數的請求
+     * @return Rich Menu ID
+     */
+    @PostMapping("/rich-menu/create")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> createRichMenu(
+            @Valid @RequestBody CreateRichMenuRequest request
+    ) {
+        log.debug("建立 Rich Menu，主題：{}", request.getTheme());
+
+        String tenantId = TenantContext.getTenantId();
+        String theme = request.getTheme() != null ? request.getTheme() : "GREEN";
+        String richMenuId = richMenuService.createAndSetRichMenu(tenantId, theme);
+
+        java.util.Map<String, String> result = new java.util.HashMap<>();
+        result.put("richMenuId", richMenuId);
+        result.put("theme", theme);
+
+        return ResponseEntity.ok(ApiResponse.ok("Rich Menu 建立成功", result));
+    }
+
+    /**
+     * 上傳自訂 Rich Menu 圖片
+     *
+     * <p>圖片規格：
+     * <ul>
+     *   <li>尺寸：2500x843 像素</li>
+     *   <li>格式：PNG 或 JPG</li>
+     *   <li>大小：最大 1MB</li>
+     * </ul>
+     *
+     * @param file 圖片檔案
+     * @return Rich Menu ID
+     */
+    @PostMapping("/rich-menu/upload-image")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> uploadRichMenuImage(
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.debug("上傳自訂 Rich Menu 圖片");
+
+        try {
+            String tenantId = TenantContext.getTenantId();
+            byte[] imageBytes = file.getBytes();
+            String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes);
+
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            result.put("richMenuId", richMenuId);
+            result.put("theme", "CUSTOM");
+
+            return ResponseEntity.ok(ApiResponse.ok("自訂圖片上傳成功", result));
+        } catch (java.io.IOException e) {
+            log.error("讀取上傳檔案失敗", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
+        }
+    }
+
+    /**
+     * 刪除 Rich Menu
+     *
+     * @return 操作結果
+     */
+    @DeleteMapping("/rich-menu")
+    public ResponseEntity<ApiResponse<Void>> deleteRichMenu() {
+        log.debug("刪除 Rich Menu");
+
+        String tenantId = TenantContext.getTenantId();
+        richMenuService.deleteRichMenu(tenantId);
+
+        return ResponseEntity.ok(ApiResponse.ok("Rich Menu 已刪除", null));
     }
 }
