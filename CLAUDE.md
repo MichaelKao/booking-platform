@@ -2,11 +2,11 @@
 
 ## 線上環境
 
-| 環境 | URL |
-|------|-----|
-| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login |
-| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login |
-| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health |
+| 環境 | URL | 短網址 |
+|------|-----|--------|
+| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login | https://is.gd/MzrSX0 |
+| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login | https://is.gd/uFDVuc |
+| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health | https://is.gd/3Cm3RC |
 
 ## 快速參考
 
