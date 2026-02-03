@@ -46,6 +46,22 @@ test.describe('店家設定 API 測試', () => {
       console.log(`店家名稱: ${data.data.name}`);
     });
 
+    test('取得點數累積設定', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/settings', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      expect(data.success).toBeTruthy();
+      // 檢查點數設定欄位
+      expect(data.data).toHaveProperty('pointEarnEnabled');
+      expect(data.data).toHaveProperty('pointEarnRate');
+      expect(data.data).toHaveProperty('pointRoundMode');
+      console.log(`點數累積: 啟用=${data.data.pointEarnEnabled}, 比例=${data.data.pointEarnRate}, 取整=${data.data.pointRoundMode}`);
+    });
+
     test('更新店家設定', async ({ request }) => {
       if (!tenantToken) return;
 
@@ -71,6 +87,24 @@ test.describe('店家設定 API 測試', () => {
         expect(response.status()).toBeLessThan(500);
         console.log(`更新設定回應: ${response.status()}`);
       }
+    });
+
+    test('更新點數累積設定', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.put('/api/settings', {
+        headers: {
+          'Authorization': `Bearer ${tenantToken}`,
+          'Content-Type': 'application/json'
+        },
+        data: {
+          pointEarnEnabled: true,
+          pointEarnRate: 10,
+          pointRoundMode: 'FLOOR'
+        }
+      });
+      expect(response.status()).toBeLessThan(500);
+      console.log(`更新點數設定回應: ${response.status()}`);
     });
   });
 
@@ -347,6 +381,35 @@ test.describe('店家設定 UI 測試', () => {
       }
     });
 
+    test('詳細教學可展開', async ({ page }) => {
+      await page.goto('/tenant/line-settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      // 找到展開教學按鈕
+      const tutorialBtn = page.locator('button:has-text("詳細教學"), button:has-text("查看詳細")');
+      if (await tutorialBtn.isVisible()) {
+        await tutorialBtn.click();
+        await page.waitForTimeout(WAIT_TIME.short);
+
+        // 檢查教學內容是否展開
+        const tutorialContent = page.locator('#detailedTutorial, .collapse.show');
+        console.log(`教學內容展開: ${await tutorialContent.isVisible() ? '是' : '否'}`);
+      }
+    });
+
+    test('欄位 tooltip 存在', async ({ page }) => {
+      await page.goto('/tenant/line-settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      // 檢查 tooltip 圖示
+      const tooltips = page.locator('[data-bs-toggle="tooltip"], .bi-question-circle');
+      const count = await tooltips.count();
+      console.log(`Tooltip 數量: ${count}`);
+      expect(count).toBeGreaterThan(0);
+    });
+
     test('Webhook URL 顯示', async ({ page }) => {
       await page.goto('/tenant/line-settings');
       await waitForLoading(page);
@@ -374,6 +437,79 @@ test.describe('店家設定 UI 測試', () => {
 
       const testBtn = page.locator('button:has-text("測試連線"), button:has-text("測試")');
       console.log(`測試連線按鈕: ${await testBtn.isVisible()}`);
+    });
+  });
+
+  test.describe('點數設定', () => {
+    test('點數設定分頁存在', async ({ page }) => {
+      await page.goto('/tenant/settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const pointsTab = page.locator('a:has-text("點數設定"), a[href="#points"]');
+      await expect(pointsTab).toBeVisible();
+      console.log('點數設定分頁存在');
+    });
+
+    test('點數設定欄位', async ({ page }) => {
+      await page.goto('/tenant/settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      // 點擊點數設定分頁
+      const pointsTab = page.locator('a:has-text("點數設定"), a[href="#points"]');
+      if (await pointsTab.isVisible()) {
+        await pointsTab.click();
+        await page.waitForTimeout(WAIT_TIME.short);
+
+        // 檢查點數設定欄位
+        const enabledSwitch = page.locator('#pointEarnEnabled');
+        const rateInput = page.locator('#pointEarnRate');
+        const roundModeRadio = page.locator('input[name="pointRoundMode"]');
+
+        console.log(`啟用開關: ${await enabledSwitch.isVisible() ? '存在' : '不存在'}`);
+        console.log(`累積比例: ${await rateInput.isVisible() ? '存在' : '不存在'}`);
+        console.log(`取整方式選項數: ${await roundModeRadio.count()}`);
+      }
+    });
+
+    test('點數試算功能', async ({ page }) => {
+      await page.goto('/tenant/settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const pointsTab = page.locator('a:has-text("點數設定"), a[href="#points"]');
+      if (await pointsTab.isVisible()) {
+        await pointsTab.click();
+        await page.waitForTimeout(WAIT_TIME.short);
+
+        // 檢查試算區塊
+        const testAmountInput = page.locator('#testAmount');
+        const testResult = page.locator('#testResult');
+
+        if (await testAmountInput.isVisible()) {
+          await testAmountInput.fill('100');
+          await page.waitForTimeout(300);
+          const result = await testResult.textContent();
+          console.log(`試算結果: ${result}`);
+        }
+      }
+    });
+
+    test('儲存點數設定', async ({ page }) => {
+      await page.goto('/tenant/settings');
+      await waitForLoading(page);
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const pointsTab = page.locator('a:has-text("點數設定"), a[href="#points"]');
+      if (await pointsTab.isVisible()) {
+        await pointsTab.click();
+        await page.waitForTimeout(WAIT_TIME.short);
+
+        const saveBtn = page.locator('#savePointsBtn, button:has-text("儲存")').first();
+        await expect(saveBtn).toBeVisible();
+        console.log('儲存按鈕存在');
+      }
     });
   });
 
