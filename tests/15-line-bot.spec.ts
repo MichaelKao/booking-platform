@@ -163,13 +163,16 @@ test.describe('LINE Bot API 測試', () => {
 test.describe('LINE 對話狀態測試', () => {
   test.describe('ConversationState 列舉', () => {
     test('所有對話狀態', () => {
+      // 所有對話狀態（共 17 個）
       const conversationStates = [
         'IDLE',
         'SELECTING_SERVICE',
         'SELECTING_STAFF',
         'SELECTING_DATE',
         'SELECTING_TIME',
+        'INPUTTING_NOTE',           // 備註輸入狀態
         'CONFIRMING_BOOKING',
+        'VIEWING_BOOKINGS',         // 查看預約
         'CONFIRMING_CANCEL_BOOKING',
         'BROWSING_PRODUCTS',
         'VIEWING_PRODUCT_DETAIL',
@@ -177,6 +180,7 @@ test.describe('LINE 對話狀態測試', () => {
         'CONFIRMING_PURCHASE',
         'BROWSING_COUPONS',
         'VIEWING_MY_COUPONS',
+        'VIEWING_PROFILE',          // 查看個人資料
         'VIEWING_MEMBER_INFO'
       ];
 
@@ -184,19 +188,21 @@ test.describe('LINE 對話狀態測試', () => {
       for (const state of conversationStates) {
         console.log(`- ${state}`);
       }
-      expect(conversationStates.length).toBe(14);
+      expect(conversationStates.length).toBe(17);
     });
   });
 
   test.describe('預約流程狀態', () => {
     test('預約流程狀態順序', () => {
+      // 完整預約流程：包含備註輸入步驟
       const bookingFlow = [
         'IDLE',
         'SELECTING_SERVICE',
         'SELECTING_STAFF',
         'SELECTING_DATE',
         'SELECTING_TIME',
-        'CONFIRMING_BOOKING',
+        'INPUTTING_NOTE',      // 選擇時間後進入備註輸入狀態
+        'CONFIRMING_BOOKING',  // 輸入備註或跳過後進入確認狀態
         'IDLE'
       ];
 
@@ -206,6 +212,7 @@ test.describe('LINE 對話狀態測試', () => {
       }
       expect(bookingFlow[0]).toBe('IDLE');
       expect(bookingFlow[bookingFlow.length - 1]).toBe('IDLE');
+      expect(bookingFlow).toContain('INPUTTING_NOTE');
     });
   });
 
@@ -397,6 +404,86 @@ test.describe('LINE 訊息格式測試', () => {
       expect(confirmationFlex.contents.type).toBe('bubble');
       expect(confirmationFlex.contents.footer).toBeDefined();
       console.log('預約確認 Flex Message 結構驗證通過');
+    });
+
+    test('備註輸入提示 Flex Message', () => {
+      // 模擬備註輸入提示結構
+      const notePromptFlex = {
+        type: 'flex',
+        altText: '是否需要備註？',
+        contents: {
+          type: 'bubble',
+          header: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              { type: 'text', text: '是否需要備註？', weight: 'bold', color: '#FFFFFF' }
+            ]
+          },
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              { type: 'text', text: '您可以直接輸入文字作為備註，或點選「跳過」繼續預約。', wrap: true },
+              { type: 'box', layout: 'vertical', contents: [
+                { type: 'text', text: '備註範例：' },
+                { type: 'text', text: '希望靠窗座位、有過敏體質、第一次來...' }
+              ]}
+            ]
+          },
+          footer: {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'button', action: { type: 'postback', label: '↩ 返回', data: 'action=go_back' } },
+              { type: 'button', action: { type: 'postback', label: '跳過 →', data: 'action=skip_note' } }
+            ]
+          }
+        }
+      };
+
+      // 驗證結構
+      expect(notePromptFlex.contents.type).toBe('bubble');
+      expect(notePromptFlex.contents.header).toBeDefined();
+      expect(notePromptFlex.contents.body).toBeDefined();
+      expect(notePromptFlex.contents.footer).toBeDefined();
+      // 驗證有跳過按鈕
+      expect(notePromptFlex.contents.footer.contents[1].action.data).toBe('action=skip_note');
+      console.log('備註輸入提示 Flex Message 結構驗證通過');
+    });
+
+    test('主選單會員資訊按鈕', () => {
+      // 模擬主選單結構（只驗證會員資訊按鈕部分）
+      const mainMenuFlex = {
+        type: 'flex',
+        altText: '主選單',
+        contents: {
+          type: 'bubble',
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              { type: 'box', layout: 'horizontal', action: { type: 'postback', data: 'action=start_booking' } },
+              { type: 'box', layout: 'horizontal', action: { type: 'postback', data: 'action=view_bookings' } },
+              { type: 'box', layout: 'horizontal', action: { type: 'postback', data: 'action=start_shopping' } },
+              { type: 'box', layout: 'horizontal', contents: [
+                { type: 'box', action: { type: 'postback', data: 'action=view_coupons' } },
+                { type: 'box', action: { type: 'postback', data: 'action=view_my_coupons' } }
+              ]},
+              // 會員資訊按鈕
+              { type: 'box', layout: 'horizontal', action: { type: 'postback', label: '👤 會員資訊', data: 'action=view_member_info' } }
+            ]
+          }
+        }
+      };
+
+      // 驗證會員資訊按鈕存在
+      const memberInfoButton = mainMenuFlex.contents.footer.contents.find(
+        (item: any) => item.action && item.action.data === 'action=view_member_info'
+      );
+      expect(memberInfoButton).toBeDefined();
+      expect(memberInfoButton.action.data).toBe('action=view_member_info');
+      console.log('主選單會員資訊按鈕結構驗證通過');
     });
   });
 });

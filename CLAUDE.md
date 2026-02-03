@@ -311,10 +311,18 @@ SELECTING_DATE（選擇日期）- 支援 Carousel 顯示完整可預約天數
   ↓ 選擇日期
 SELECTING_TIME（選擇時段）
   ↓ 選擇時段
+INPUTTING_NOTE（輸入備註）- 可直接輸入文字或點選「跳過」
+  ↓ 輸入備註或跳過
 CONFIRMING_BOOKING（確認預約）
   ↓ 確認
 IDLE（完成，回到閒置）
 ```
+
+**備註輸入說明：**
+- 選擇時段後，系統會顯示備註輸入提示
+- 用戶可以在聊天輸入框直接打字輸入備註內容
+- 也可以點選「跳過」按鈕略過備註步驟
+- 備註會顯示在預約確認頁面和店家後台
 
 ### 其他流程
 - 取消預約：`IDLE → CONFIRMING_CANCEL_BOOKING → IDLE`

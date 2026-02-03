@@ -1507,14 +1507,42 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        // 說明文字
-        ObjectNode descText = objectMapper.createObjectNode();
-        descText.put("type", "text");
-        descText.put("text", "您可以直接輸入文字作為備註，或點選「跳過」繼續預約。");
-        descText.put("size", "sm");
-        descText.put("color", SECONDARY_COLOR);
-        descText.put("wrap", true);
-        bodyContents.add(descText);
+        // 重點說明 - 告訴用戶在哪裡輸入
+        ObjectNode inputHint = objectMapper.createObjectNode();
+        inputHint.put("type", "box");
+        inputHint.put("layout", "vertical");
+        inputHint.put("backgroundColor", "#E3F2FD");
+        inputHint.put("cornerRadius", "8px");
+        inputHint.put("paddingAll", "12px");
+
+        ArrayNode inputHintContents = objectMapper.createArrayNode();
+
+        ObjectNode inputIcon = objectMapper.createObjectNode();
+        inputIcon.put("type", "text");
+        inputIcon.put("text", "⌨️ 請在下方聊天輸入框輸入");
+        inputIcon.put("size", "sm");
+        inputIcon.put("weight", "bold");
+        inputIcon.put("color", "#1565C0");
+        inputIcon.put("align", "center");
+        inputHintContents.add(inputIcon);
+
+        ObjectNode inputDesc = objectMapper.createObjectNode();
+        inputDesc.put("type", "text");
+        inputDesc.put("text", "直接打字輸入備註內容即可");
+        inputDesc.put("size", "xs");
+        inputDesc.put("color", "#1976D2");
+        inputDesc.put("align", "center");
+        inputDesc.put("margin", "sm");
+        inputHintContents.add(inputDesc);
+
+        inputHint.set("contents", inputHintContents);
+        bodyContents.add(inputHint);
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "md");
+        bodyContents.add(separator);
 
         // 提示範例
         ObjectNode tipBox = objectMapper.createObjectNode();
@@ -1529,14 +1557,14 @@ public class LineFlexMessageBuilder {
 
         ObjectNode tipTitle = objectMapper.createObjectNode();
         tipTitle.put("type", "text");
-        tipTitle.put("text", "備註範例：");
+        tipTitle.put("text", "💡 備註範例：");
         tipTitle.put("size", "xs");
         tipTitle.put("color", SECONDARY_COLOR);
         tipContents.add(tipTitle);
 
         ObjectNode tipExample = objectMapper.createObjectNode();
         tipExample.put("type", "text");
-        tipExample.put("text", "希望靠窗座位、有過敏體質、第一次來...");
+        tipExample.put("text", "「希望靠窗座位」\n「有過敏體質」\n「第一次來」");
         tipExample.put("size", "xs");
         tipExample.put("color", SECONDARY_COLOR);
         tipExample.put("wrap", true);
@@ -1545,6 +1573,16 @@ public class LineFlexMessageBuilder {
 
         tipBox.set("contents", tipContents);
         bodyContents.add(tipBox);
+
+        // 無備註說明
+        ObjectNode noNoteText = objectMapper.createObjectNode();
+        noNoteText.put("type", "text");
+        noNoteText.put("text", "沒有特殊需求？點選「跳過」即可");
+        noNoteText.put("size", "xs");
+        noNoteText.put("color", "#9E9E9E");
+        noNoteText.put("align", "center");
+        noNoteText.put("margin", "md");
+        bodyContents.add(noNoteText);
 
         body.set("contents", bodyContents);
         bubble.set("body", body);
