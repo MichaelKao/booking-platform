@@ -465,10 +465,103 @@ a:hover {
 }
 
 /* ========================================
-   響應式
+   響應式 - 手機 (< 576px)
    ======================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 575.98px) {
+    body {
+        font-size: 0.8125rem;
+    }
+
+    .card-body {
+        padding: 0.875rem;
+    }
+
+    .card-header {
+        padding: 0.5rem 0.875rem;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.125rem;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 1.25rem;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.625rem;
+    }
+
+    .table {
+        font-size: 0.75rem;
+    }
+
+    .table thead th {
+        font-size: 0.675rem;
+        padding: 0.5rem;
+    }
+
+    .table tbody td {
+        padding: 0.5rem;
+    }
+
+    .btn {
+        font-size: 0.8125rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .badge {
+        font-size: 0.675rem;
+        padding: 0.25em 0.5em;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.8125rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .form-label {
+        font-size: 0.8125rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 0.75rem 1rem;
+    }
+
+    .toast {
+        min-width: 250px;
+    }
+
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+}
+
+/* ========================================
+   響應式 - 平板 (576px - 768px)
+   ======================================== */
+
+@media (min-width: 576px) and (max-width: 767.98px) {
     .stat-card .stat-value {
         font-size: 1.25rem;
     }
@@ -477,7 +570,99 @@ a:hover {
         font-size: 1.5rem;
     }
 
-    .table-responsive {
+    .table {
         font-size: 0.8rem;
+    }
+
+    .table thead th {
+        font-size: 0.7rem;
+    }
+}
+
+/* ========================================
+   響應式 - 小平板/大手機 (768px - 992px)
+   ======================================== */
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .stat-card .stat-value {
+        font-size: 1.375rem;
+    }
+}
+
+/* ========================================
+   RWD 工具類
+   ======================================== */
+
+/* 觸控裝置優化 */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        min-width: 36px;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+    }
+
+    .nav-link {
+        padding: 0.875rem 1rem;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* 隱藏捲軸但保持滾動 */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* 文字截斷 */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 彈性間距 */
+.gap-responsive {
+    gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .gap-responsive {
+        gap: 1rem;
+    }
+}
+
+/* 響應式表格欄位隱藏 */
+@media (max-width: 575.98px) {
+    .table .hide-xs {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table .hide-sm {
+        display: none !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .table .hide-md {
+        display: none !important;
     }
 }

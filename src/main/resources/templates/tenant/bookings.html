@@ -7,15 +7,15 @@
         <div id="content-wrapper">
             <header th:replace="~{tenant/layout :: topbar}"></header>
             <main id="content">
-                <div class="page-header d-flex justify-content-between align-items-center">
+                <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <div>
                         <h1 class="page-title">預約管理</h1>
-                        <p class="page-subtitle">管理所有預約記錄</p>
+                        <p class="page-subtitle mb-0">管理所有預約記錄</p>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-download me-1"></i>匯出
+                                <i class="bi bi-download me-1"></i><span class="d-none d-sm-inline">匯出</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="#" onclick="exportBookings('excel')"><i class="bi bi-file-earmark-excel me-2"></i>匯出 Excel</a></li>
@@ -23,19 +23,19 @@
                             </ul>
                         </div>
                         <button class="btn btn-primary" onclick="openCreateBookingModal()">
-                            <i class="bi bi-plus-lg me-1"></i>新增預約
+                            <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">新增預約</span><span class="d-sm-none">新增</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- 狀態說明 -->
-                <div class="alert alert-light mb-4">
-                    <div class="d-flex gap-3 flex-wrap">
-                        <span><span class="badge bg-warning text-dark">待確認</span> 新預約等待確認</span>
-                        <span><span class="badge bg-primary">已確認</span> 預約已確認</span>
-                        <span><span class="badge bg-info">進行中</span> 服務進行中</span>
-                        <span><span class="badge bg-success">已完成</span> 服務已完成</span>
-                        <span><span class="badge bg-secondary">已取消</span> 預約已取消</span>
+                <div class="alert alert-light mb-3 py-2 d-none d-md-block">
+                    <div class="d-flex gap-3 flex-wrap small">
+                        <span><span class="badge bg-warning text-dark">待確認</span> 新預約</span>
+                        <span><span class="badge bg-primary">已確認</span> 已確認</span>
+                        <span><span class="badge bg-info">進行中</span> 服務中</span>
+                        <span><span class="badge bg-success">已完成</span> 完成</span>
+                        <span><span class="badge bg-secondary">已取消</span> 取消</span>
                     </div>
                 </div>
 
@@ -81,17 +81,17 @@
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width: 40px;">
+                                        <th style="width: 40px;" class="d-none d-md-table-cell">
                                             <input type="checkbox" class="form-check-input" id="selectAllCheckbox" onchange="toggleSelectAll()" title="全選">
                                         </th>
-                                        <th>預約編號</th>
+                                        <th class="d-none d-lg-table-cell">編號</th>
                                         <th>日期時間</th>
                                         <th>顧客</th>
-                                        <th>服務項目</th>
-                                        <th>服務人員</th>
-                                        <th>金額</th>
+                                        <th class="d-none d-md-table-cell">服務</th>
+                                        <th class="d-none d-lg-table-cell">員工</th>
+                                        <th class="d-none d-sm-table-cell">金額</th>
                                         <th class="text-center">狀態</th>
-                                        <th class="text-center" style="width: 180px;">操作</th>
+                                        <th class="text-center" style="min-width: 100px;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bookingsTable">
@@ -361,38 +361,39 @@
                 return;
             }
             tbody.innerHTML = bookings.map(b => `<tr data-id="${b.id}" data-status="${b.status}">
-                <td>
+                <td class="d-none d-md-table-cell">
                     <input type="checkbox" class="form-check-input booking-checkbox"
                            data-id="${b.id}" data-status="${b.status}"
                            onchange="updateBatchSelection()"
                            ${['PENDING', 'CONFIRMED'].includes(b.status) ? '' : 'disabled'}>
                 </td>
-                <td><a href="#" onclick="openDetailModal('${b.id}');return false;" class="text-decoration-none">${b.bookingNo || b.id.substring(0, 8)}</a></td>
+                <td class="d-none d-lg-table-cell"><a href="#" onclick="openDetailModal('${b.id}');return false;" class="text-decoration-none small">${b.bookingNo || b.id.substring(0, 8)}</a></td>
                 <td>
-                    <div class="fw-bold">${formatDate(b.bookingDate)}</div>
+                    <div class="fw-bold text-nowrap">${formatDate(b.bookingDate)}</div>
                     <div class="small text-muted">${b.startTime?.substring(0, 5) || '-'} - ${b.endTime?.substring(0, 5) || '-'}</div>
                 </td>
                 <td>
                     <div>${escapeHtml(b.customerName || '-')}</div>
-                    ${b.customerPhone ? `<small class="text-muted">${escapeHtml(b.customerPhone)}</small>` : ''}
+                    <div class="d-md-none small text-muted">${escapeHtml(b.serviceName || '-')}</div>
+                    ${b.customerPhone ? `<small class="text-muted d-none d-sm-block">${escapeHtml(b.customerPhone)}</small>` : ''}
                 </td>
-                <td>${escapeHtml(b.serviceName || '-')}</td>
-                <td>${escapeHtml(b.staffName || '未指定')}</td>
-                <td>${formatMoney(b.totalAmount || 0)}</td>
+                <td class="d-none d-md-table-cell">${escapeHtml(b.serviceName || '-')}</td>
+                <td class="d-none d-lg-table-cell">${escapeHtml(b.staffName || '未指定')}</td>
+                <td class="d-none d-sm-table-cell text-nowrap">${formatMoney(b.totalAmount || 0)}</td>
                 <td class="text-center">${getBookingStatusBadge(b.status)}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
                         ${b.status === 'PENDING' ? `
-                            <button class="btn btn-success" onclick="confirmBooking('${b.id}')" title="確認預約"><i class="bi bi-check"></i></button>
-                            <button class="btn btn-outline-primary" onclick="openEditBookingModal('${b.id}')" title="編輯預約"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消預約"><i class="bi bi-x"></i></button>
+                            <button class="btn btn-success" onclick="confirmBooking('${b.id}')" title="確認"><i class="bi bi-check"></i></button>
+                            <button class="btn btn-outline-primary d-none d-sm-inline-block" onclick="openEditBookingModal('${b.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消"><i class="bi bi-x"></i></button>
                         ` : ''}
                         ${b.status === 'CONFIRMED' ? `
-                            <button class="btn btn-primary" onclick="completeBooking('${b.id}')" title="標記完成"><i class="bi bi-check-circle"></i></button>
-                            <button class="btn btn-outline-primary" onclick="openEditBookingModal('${b.id}')" title="編輯預約"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消預約"><i class="bi bi-x"></i></button>
+                            <button class="btn btn-primary" onclick="completeBooking('${b.id}')" title="完成"><i class="bi bi-check-circle"></i></button>
+                            <button class="btn btn-outline-primary d-none d-sm-inline-block" onclick="openEditBookingModal('${b.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消"><i class="bi bi-x"></i></button>
                         ` : ''}
-                        <button class="btn btn-outline-secondary" onclick="openDetailModal('${b.id}')" title="查看詳情"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-outline-secondary" onclick="openDetailModal('${b.id}')" title="詳情"><i class="bi bi-eye"></i></button>
                     </div>
                 </td>
             </tr>`).join('');

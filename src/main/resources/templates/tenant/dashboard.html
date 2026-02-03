@@ -106,7 +106,7 @@
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
-                                        <thead><tr><th>時間</th><th>顧客</th><th>服務</th><th>員工</th><th>狀態</th></tr></thead>
+                                        <thead><tr><th>時間</th><th>顧客</th><th class="d-none d-md-table-cell">服務</th><th class="d-none d-sm-table-cell">員工</th><th>狀態</th></tr></thead>
                                         <tbody id="todayBookingsTable"><tr><td colspan="5" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2"></div>載入中...</td></tr></tbody>
                                     </table>
                                 </div>
@@ -230,10 +230,13 @@
                 return;
             }
             tbody.innerHTML = bookings.map(b => `<tr>
-                <td class="fw-bold">${b.startTime?.substring(0, 5) || '-'}</td>
-                <td>${escapeHtml(b.customerName || '-')}</td>
-                <td>${escapeHtml(b.serviceName || '-')}</td>
-                <td>${escapeHtml(b.staffName || '未指定')}</td>
+                <td class="fw-bold text-nowrap">${b.startTime?.substring(0, 5) || '-'}</td>
+                <td>
+                    <div>${escapeHtml(b.customerName || '-')}</div>
+                    <div class="d-md-none small text-muted">${escapeHtml(b.serviceName || '-')}</div>
+                </td>
+                <td class="d-none d-md-table-cell">${escapeHtml(b.serviceName || '-')}</td>
+                <td class="d-none d-sm-table-cell">${escapeHtml(b.staffName || '未指定')}</td>
                 <td>${getBookingStatusBadge(b.status)}</td>
             </tr>`).join('');
         }

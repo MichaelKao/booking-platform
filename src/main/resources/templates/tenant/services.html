@@ -7,17 +7,54 @@
         <div id="content-wrapper">
             <header th:replace="~{tenant/layout :: topbar}"></header>
             <main id="content">
-                <div class="page-header d-flex justify-content-between align-items-center">
-                    <div><h1 class="page-title">服務項目</h1><p class="page-subtitle">管理服務項目與價格</p></div>
-                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增服務</button>
+                <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h1 class="page-title">服務項目</h1>
+                        <p class="page-subtitle mb-0">管理服務項目與分類</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-primary" onclick="openCategoryModal()">
+                            <i class="bi bi-folder-plus me-1"></i><span class="d-none d-sm-inline">管理分類</span><span class="d-sm-none">分類</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">新增服務</span><span class="d-sm-none">新增</span>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- 分類篩選 -->
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="text-muted small">篩選分類：</span>
+                            <div class="btn-group btn-group-sm flex-wrap" id="categoryFilter">
+                                <button class="btn btn-outline-primary active" data-category="">全部</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="data-table-container">
-                    <div class="data-table-header"><h6 class="data-table-title">服務列表</h6></div>
+                    <div class="data-table-header">
+                        <h6 class="data-table-title mb-0">服務列表</h6>
+                        <span class="text-muted small" id="serviceCount"></span>
+                    </div>
                     <div class="data-table-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead><tr><th>服務名稱</th><th>分類</th><th>價格</th><th>時長</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
-                                <tbody id="dataTable"><tr><td colspan="6" class="text-center text-muted py-5">載入中...</td></tr></tbody>
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>服務名稱</th>
+                                        <th class="d-none d-md-table-cell">分類</th>
+                                        <th>價格</th>
+                                        <th class="d-none d-sm-table-cell">時長</th>
+                                        <th>狀態</th>
+                                        <th class="text-center" style="width:100px">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                    <tr><td colspan="6" class="text-center text-muted py-5">載入中...</td></tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -26,100 +63,219 @@
             <footer th:replace="~{tenant/layout :: footer}"></footer>
         </div>
     </div>
-    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div class="sidebar-overlay"></div>
+    <div class="toast-container"></div>
     <div th:replace="~{tenant/layout :: confirm-modal}"></div>
 
+    <!-- 服務表單 Modal -->
     <div class="modal fade" id="formModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalTitle">新增服務</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="dataForm" novalidate>
-                    <input type="hidden" id="dataId">
-                    <div class="mb-3">
-                        <label class="form-label">服務名稱 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" required maxlength="100">
-                        <div class="invalid-feedback">請輸入服務名稱</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">分類</label>
-                        <select class="form-select" id="categoryId">
-                            <option value="">請選擇分類</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">價格 <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">NT$</span>
-                                <input type="number" class="form-control" id="price" required min="0" step="1">
-                            </div>
-                            <div class="invalid-feedback">請輸入有效的價格（不可為負數）</div>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增服務</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm" novalidate>
+                        <input type="hidden" id="dataId">
+                        <div class="mb-3">
+                            <label class="form-label">服務名稱 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" required maxlength="100" placeholder="例如：男士剪髮">
+                            <div class="invalid-feedback">請輸入服務名稱</div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">時長 <span class="text-danger">*</span></label>
+                        <div class="mb-3">
+                            <label class="form-label">分類</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="duration" required min="5" max="480" step="5">
-                                <span class="input-group-text">分鐘</span>
+                                <select class="form-select" id="categoryId">
+                                    <option value="">請選擇分類</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" onclick="quickAddCategory()" title="快速新增分類">
+                                    <i class="bi bi-plus"></i>
+                                </button>
                             </div>
-                            <div class="invalid-feedback">請輸入時長（5-480分鐘）</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">價格 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">NT$</span>
+                                    <input type="number" class="form-control" id="price" required min="0" step="1" placeholder="0">
+                                </div>
+                                <div class="invalid-feedback">請輸入有效的價格</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">時長 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="duration" required min="5" max="480" step="5" placeholder="30">
+                                    <span class="input-group-text">分鐘</span>
+                                </div>
+                                <div class="invalid-feedback">時長 5-480 分鐘</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" id="description" rows="2" maxlength="500" placeholder="服務描述（選填）"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分類管理 Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">管理服務分類</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="text-muted mb-0 small">建立分類可讓顧客更容易找到服務</p>
+                        <button class="btn btn-sm btn-primary" onclick="showAddCategoryForm()">
+                            <i class="bi bi-plus me-1"></i>新增分類
+                        </button>
+                    </div>
+
+                    <!-- 新增分類表單 -->
+                    <div id="addCategoryForm" class="card bg-light mb-3" style="display:none">
+                        <div class="card-body">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-sm-5">
+                                    <label class="form-label small">分類名稱 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="newCategoryName" maxlength="50" placeholder="例如：剪髮、燙染">
+                                </div>
+                                <div class="col-12 col-sm-5">
+                                    <label class="form-label small">描述</label>
+                                    <input type="text" class="form-control form-control-sm" id="newCategoryDesc" maxlength="200" placeholder="選填">
+                                </div>
+                                <div class="col-12 col-sm-2">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-success flex-grow-1" onclick="saveNewCategory()">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="hideAddCategoryForm()">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">描述</label>
-                        <textarea class="form-control" id="description" rows="3" maxlength="500"></textarea>
+
+                    <!-- 分類列表 -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>分類名稱</th>
+                                    <th class="d-none d-sm-table-cell">描述</th>
+                                    <th class="text-center" style="width:80px">狀態</th>
+                                    <th class="text-center" style="width:100px">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTable">
+                                <tr><td colspan="4" class="text-center text-muted py-4">載入中...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
-            </div>
-        </div></div>
+        </div>
     </div>
 
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
     <script>
         const currentPage = 'services';
+        let allServices = [];
+        let allCategories = [];
+        let currentFilter = '';
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            loadCategories();
+            loadCategories().then(() => loadData());
         });
 
         async function loadCategories() {
             try {
-                const r = await api.get('/api/service-categories');
-                const categories = r.data || [];
-                document.getElementById('categoryId').innerHTML = '<option value="">請選擇分類</option>' +
-                    categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+                const r = await api.get('/api/service-categories', { activeOnly: false });
+                allCategories = r.data || [];
+                renderCategorySelect();
+                renderCategoryFilter();
+                renderCategoryTable();
             } catch (e) {
                 console.error('載入分類失敗:', e);
             }
         }
 
+        function renderCategorySelect() {
+            const select = document.getElementById('categoryId');
+            select.innerHTML = '<option value="">不指定分類</option>' +
+                allCategories.filter(c => c.isActive).map(c =>
+                    `<option value="${c.id}">${escapeHtml(c.name)}</option>`
+                ).join('');
+        }
+
+        function renderCategoryFilter() {
+            const container = document.getElementById('categoryFilter');
+            const activeCategories = allCategories.filter(c => c.isActive);
+            container.innerHTML = `<button class="btn btn-outline-primary ${currentFilter === '' ? 'active' : ''}" data-category="" onclick="filterByCategory('')">全部</button>` +
+                activeCategories.map(c =>
+                    `<button class="btn btn-outline-primary ${currentFilter === c.id ? 'active' : ''}" data-category="${c.id}" onclick="filterByCategory('${c.id}')">${escapeHtml(c.name)}</button>`
+                ).join('');
+        }
+
+        function filterByCategory(categoryId) {
+            currentFilter = categoryId;
+            document.querySelectorAll('#categoryFilter button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === categoryId);
+            });
+            renderServiceTable();
+        }
+
         async function loadData() {
             try {
                 const r = await api.get('/api/services');
-                const items = r.data?.content || r.data || [];
-                document.getElementById('dataTable').innerHTML = items.length === 0
-                    ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無服務項目</td></tr>'
-                    : items.map(s => `<tr>
-                        <td><strong>${escapeHtml(s.name)}</strong></td>
-                        <td>${escapeHtml(s.categoryName) || '-'}</td>
-                        <td>${formatMoney(s.price)}</td>
-                        <td>${s.duration} 分鐘</td>
-                        <td>${s.status === 'ACTIVE' ? '<span class="badge bg-success">啟用</span>' : '<span class="badge bg-secondary">停用</span>'}</td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>`).join('');
+                allServices = r.data?.content || r.data || [];
+                renderServiceTable();
             } catch (e) {
                 console.error('載入服務失敗:', e);
                 document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
             }
+        }
+
+        function renderServiceTable() {
+            const filtered = currentFilter
+                ? allServices.filter(s => s.categoryId === currentFilter)
+                : allServices;
+
+            document.getElementById('serviceCount').textContent = `共 ${filtered.length} 項`;
+
+            document.getElementById('dataTable').innerHTML = filtered.length === 0
+                ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無服務項目</td></tr>'
+                : filtered.map(s => `<tr>
+                    <td>
+                        <strong>${escapeHtml(s.name)}</strong>
+                        <div class="d-md-none small text-muted">${escapeHtml(s.categoryName) || '未分類'}</div>
+                    </td>
+                    <td class="d-none d-md-table-cell">${escapeHtml(s.categoryName) || '<span class="text-muted">-</span>'}</td>
+                    <td class="text-nowrap">${formatMoney(s.price)}</td>
+                    <td class="d-none d-sm-table-cell">${s.duration} 分鐘</td>
+                    <td>${s.status === 'ACTIVE' ? '<span class="badge bg-success">啟用</span>' : '<span class="badge bg-secondary">停用</span>'}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editData('${s.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-danger" onclick="deleteData('${s.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`).join('');
         }
 
         function openCreateModal() {
@@ -158,32 +314,15 @@
             const durationEl = document.getElementById('duration');
 
             let isValid = true;
+            [nameEl, priceEl, durationEl].forEach(el => el.classList.remove('is-invalid'));
 
-            // 名稱必填
-            if (!nameEl.value.trim()) {
-                nameEl.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                nameEl.classList.remove('is-invalid');
-            }
+            if (!nameEl.value.trim()) { nameEl.classList.add('is-invalid'); isValid = false; }
 
-            // 價格驗證
             const price = parseInt(priceEl.value);
-            if (isNaN(price) || price < 0) {
-                priceEl.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                priceEl.classList.remove('is-invalid');
-            }
+            if (isNaN(price) || price < 0) { priceEl.classList.add('is-invalid'); isValid = false; }
 
-            // 時長驗證
             const duration = parseInt(durationEl.value);
-            if (isNaN(duration) || duration < 5 || duration > 480) {
-                durationEl.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                durationEl.classList.remove('is-invalid');
-            }
+            if (isNaN(duration) || duration < 5 || duration > 480) { durationEl.classList.add('is-invalid'); isValid = false; }
 
             if (!isValid) {
                 form.classList.add('was-validated');
@@ -225,6 +364,126 @@
                 console.error('刪除服務失敗:', e);
                 showError('刪除失敗');
             }
+        }
+
+        // ========== 分類管理 ==========
+        function openCategoryModal() {
+            loadCategories();
+            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+        }
+
+        function renderCategoryTable() {
+            const tbody = document.getElementById('categoryTable');
+            if (allCategories.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">尚未建立任何分類</td></tr>';
+                return;
+            }
+            tbody.innerHTML = allCategories.map(c => `<tr>
+                <td><input type="text" class="form-control form-control-sm border-0 bg-transparent" value="${escapeHtml(c.name)}" data-id="${c.id}" data-field="name" onchange="updateCategory('${c.id}')"></td>
+                <td class="d-none d-sm-table-cell"><input type="text" class="form-control form-control-sm border-0 bg-transparent" value="${escapeHtml(c.description)}" data-id="${c.id}" data-field="description" onchange="updateCategory('${c.id}')" placeholder="無"></td>
+                <td class="text-center">
+                    <div class="form-check form-switch d-inline-block">
+                        <input class="form-check-input" type="checkbox" ${c.isActive ? 'checked' : ''} onchange="toggleCategory('${c.id}', this.checked)">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${c.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`).join('');
+        }
+
+        function showAddCategoryForm() {
+            document.getElementById('addCategoryForm').style.display = 'block';
+            document.getElementById('newCategoryName').focus();
+        }
+
+        function hideAddCategoryForm() {
+            document.getElementById('addCategoryForm').style.display = 'none';
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('newCategoryDesc').value = '';
+        }
+
+        async function saveNewCategory() {
+            const name = document.getElementById('newCategoryName').value.trim();
+            const desc = document.getElementById('newCategoryDesc').value.trim();
+
+            if (!name) {
+                showError('請輸入分類名稱');
+                return;
+            }
+
+            try {
+                const r = await api.post('/api/service-categories', { name, description: desc });
+                if (r.success) {
+                    showSuccess('分類建立成功');
+                    hideAddCategoryForm();
+                    loadCategories();
+                }
+            } catch (e) {
+                showError(e.message || '建立分類失敗');
+            }
+        }
+
+        async function updateCategory(id) {
+            const nameInput = document.querySelector(`input[data-id="${id}"][data-field="name"]`);
+            const descInput = document.querySelector(`input[data-id="${id}"][data-field="description"]`);
+
+            const name = nameInput?.value.trim();
+            const description = descInput?.value.trim() || '';
+
+            if (!name) {
+                showError('分類名稱不能為空');
+                loadCategories();
+                return;
+            }
+
+            try {
+                await api.put(`/api/service-categories/${id}`, { name, description });
+                showSuccess('分類已更新');
+                loadCategories();
+            } catch (e) {
+                showError(e.message || '更新失敗');
+                loadCategories();
+            }
+        }
+
+        async function toggleCategory(id, isActive) {
+            const cat = allCategories.find(c => c.id === id);
+            if (!cat) return;
+
+            try {
+                await api.put(`/api/service-categories/${id}`, { name: cat.name, isActive });
+                loadCategories();
+            } catch (e) {
+                showError('更新失敗');
+                loadCategories();
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!await showConfirm('確定要刪除此分類嗎？\n該分類下的服務不會被刪除，只會變成「未分類」。')) return;
+
+            try {
+                await api.delete(`/api/service-categories/${id}`);
+                showSuccess('分類已刪除');
+                loadCategories();
+            } catch (e) {
+                showError(e.message || '刪除失敗');
+            }
+        }
+
+        function quickAddCategory() {
+            const name = prompt('請輸入新分類名稱：');
+            if (!name || !name.trim()) return;
+
+            api.post('/api/service-categories', { name: name.trim() })
+                .then(r => {
+                    if (r.success) {
+                        showSuccess('分類建立成功');
+                        loadCategories();
+                    }
+                })
+                .catch(e => showError(e.message || '建立分類失敗'));
         }
 
         function escapeHtml(t) {
