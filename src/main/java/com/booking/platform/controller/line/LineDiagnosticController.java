@@ -2,11 +2,14 @@ package com.booking.platform.controller.line;
 
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.entity.line.TenantLineConfig;
+import com.booking.platform.enums.line.LineConfigStatus;
+import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.common.EncryptionService;
 import com.booking.platform.service.line.LineConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,6 +26,7 @@ import java.util.Map;
 public class LineDiagnosticController {
 
     private final LineConfigService lineConfigService;
+    private final TenantLineConfigRepository lineConfigRepository;
     private final EncryptionService encryptionService;
     private final RestTemplate restTemplate;
 
@@ -76,8 +80,44 @@ public class LineDiagnosticController {
             }
             
             return ApiResponse.ok(result);
-            
+
         } catch (Exception e) {
+            result.put("error", e.getMessage());
+            return ApiResponse.ok(result);
+        }
+    }
+
+    /**
+     * 啟用 LINE Bot（除錯用）
+     */
+    @PostMapping("/{tenantCode}/activate")
+    @Transactional
+    public ApiResponse<Map<String, Object>> activate(@PathVariable String tenantCode) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            var configOpt = lineConfigService.getConfigByTenantCode(tenantCode);
+            if (configOpt.isEmpty()) {
+                result.put("success", false);
+                result.put("error", "找不到 LINE 設定");
+                return ApiResponse.ok(result);
+            }
+
+            TenantLineConfig config = configOpt.get();
+            String previousStatus = config.getStatus().name();
+
+            config.setStatus(LineConfigStatus.ACTIVE);
+            lineConfigRepository.save(config);
+
+            result.put("success", true);
+            result.put("previousStatus", previousStatus);
+            result.put("currentStatus", "ACTIVE");
+            result.put("message", "LINE Bot 已啟用");
+
+            return ApiResponse.ok(result);
+
+        } catch (Exception e) {
+            result.put("success", false);
             result.put("error", e.getMessage());
             return ApiResponse.ok(result);
         }
