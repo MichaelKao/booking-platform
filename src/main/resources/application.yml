@@ -194,6 +194,17 @@ scheduler:
     enabled: true
     cron: "0 * * * * *"
 
+  # 生日祝福（每日早上 9:00）
+  birthday-greeting:
+    enabled: true
+    cron: "0 0 9 * * *"
+
+  # 顧客喚回（每日下午 2:00）
+  customer-recall:
+    enabled: true
+    cron: "0 0 14 * * *"
+    max-per-tenant: 50
+
 # ========================================
 # SMS 設定
 # ========================================

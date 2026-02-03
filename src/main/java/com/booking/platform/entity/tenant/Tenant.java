@@ -344,6 +344,49 @@ public class Tenant extends BaseEntity {
     private Integer bookingBufferMinutes = 0;
 
     // ========================================
+    // 生日祝福設定
+    // ========================================
+
+    /**
+     * 是否啟用生日祝福
+     */
+    @Column(name = "enable_birthday_greeting")
+    @Builder.Default
+    private Boolean enableBirthdayGreeting = false;
+
+    /**
+     * 生日祝福訊息
+     */
+    @Column(name = "birthday_greeting_message", length = 500)
+    @Builder.Default
+    private String birthdayGreetingMessage = "親愛的顧客，祝您生日快樂！🎂 感謝您一直以來的支持，期待再次為您服務！";
+
+    // ========================================
+    // 顧客喚回設定
+    // ========================================
+
+    /**
+     * 是否啟用顧客喚回通知
+     */
+    @Column(name = "enable_customer_recall")
+    @Builder.Default
+    private Boolean enableCustomerRecall = false;
+
+    /**
+     * 顧客喚回天數（超過幾天未到訪就發送喚回通知）
+     */
+    @Column(name = "customer_recall_days")
+    @Builder.Default
+    private Integer customerRecallDays = 30;
+
+    /**
+     * 顧客喚回訊息
+     */
+    @Column(name = "customer_recall_message", length = 500)
+    @Builder.Default
+    private String customerRecallMessage = "好久不見！我們想念您了 💕 期待您再次光臨，為您提供最優質的服務！";
+
+    // ========================================
     // 業務方法
     // ========================================
 

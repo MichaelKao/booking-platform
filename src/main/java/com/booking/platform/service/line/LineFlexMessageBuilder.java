@@ -3567,4 +3567,178 @@ public class LineFlexMessageBuilder {
 
         return bubble;
     }
+
+    // ========================================
+    // 生日祝福與顧客喚回
+    // ========================================
+
+    /**
+     * 建構生日祝福訊息
+     *
+     * @param customerName 顧客名稱
+     * @param message      祝福訊息
+     * @return Flex Message 內容
+     */
+    public JsonNode buildBirthdayGreeting(String customerName, String message) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header - 生日主題
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#FF6B9D");
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode iconText = objectMapper.createObjectNode();
+        iconText.put("type", "text");
+        iconText.put("text", "🎂🎉🎁");
+        iconText.put("size", "xxl");
+        iconText.put("align", "center");
+        headerContents.add(iconText);
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", "生日快樂！");
+        titleText.put("size", "xl");
+        titleText.put("weight", "bold");
+        titleText.put("color", "#FFFFFF");
+        titleText.put("align", "center");
+        titleText.put("margin", "md");
+        headerContents.add(titleText);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+        body.put("spacing", "md");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", "親愛的 " + customerName);
+        nameText.put("size", "md");
+        nameText.put("weight", "bold");
+        nameText.put("align", "center");
+        bodyContents.add(nameText);
+
+        ObjectNode messageText = objectMapper.createObjectNode();
+        messageText.put("type", "text");
+        messageText.put("text", message);
+        messageText.put("size", "sm");
+        messageText.put("color", SECONDARY_COLOR);
+        messageText.put("align", "center");
+        messageText.put("wrap", true);
+        messageText.put("margin", "lg");
+        bodyContents.add(messageText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 預約按鈕
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("🎁 立即預約享優惠", "action=start_booking", "#FF6B9D")
+        ));
+
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構顧客喚回通知
+     *
+     * @param customerName 顧客名稱
+     * @param message      喚回訊息
+     * @return Flex Message 內容
+     */
+    public JsonNode buildRecallNotification(String customerName, String message) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#6C5CE7");
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode iconText = objectMapper.createObjectNode();
+        iconText.put("type", "text");
+        iconText.put("text", "💕");
+        iconText.put("size", "xxl");
+        iconText.put("align", "center");
+        headerContents.add(iconText);
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", "好久不見！");
+        titleText.put("size", "xl");
+        titleText.put("weight", "bold");
+        titleText.put("color", "#FFFFFF");
+        titleText.put("align", "center");
+        titleText.put("margin", "md");
+        headerContents.add(titleText);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+        body.put("spacing", "md");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", "親愛的 " + customerName);
+        nameText.put("size", "md");
+        nameText.put("weight", "bold");
+        nameText.put("align", "center");
+        bodyContents.add(nameText);
+
+        ObjectNode messageText = objectMapper.createObjectNode();
+        messageText.put("type", "text");
+        messageText.put("text", message);
+        messageText.put("size", "sm");
+        messageText.put("color", SECONDARY_COLOR);
+        messageText.put("align", "center");
+        messageText.put("wrap", true);
+        messageText.put("margin", "lg");
+        bodyContents.add(messageText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 預約按鈕
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("📅 立即預約", "action=start_booking", "#6C5CE7")
+        ));
+
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
 }
