@@ -34,6 +34,11 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a class="nav-link" href="#points" data-bs-toggle="tab">
+                                            <i class="bi bi-coin me-2"></i>點數設定
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link" href="#security" data-bs-toggle="tab">
                                             <i class="bi bi-shield-lock me-2"></i>帳號安全
                                         </a>
@@ -173,6 +178,100 @@
                                         </form>
                                     </div>
 
+                                    <!-- 點數設定 -->
+                                    <div class="tab-pane fade" id="points">
+                                        <h5 class="mb-4"><i class="bi bi-coin me-2"></i>顧客點數累積設定</h5>
+                                        <form id="pointsForm">
+                                            <div class="alert alert-info mb-4">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                設定顧客完成預約後如何累積點數。需訂閱「POINT_SYSTEM 顧客集點獎勵」功能才會生效。
+                                            </div>
+
+                                            <!-- 啟用開關 -->
+                                            <div class="mb-4">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="pointEarnEnabled" checked>
+                                                    <label class="form-check-label" for="pointEarnEnabled">
+                                                        <strong>啟用點數累積</strong>
+                                                        <div class="small text-muted">開啟後，顧客完成預約可自動獲得點數</div>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div id="pointSettingsFields">
+                                                <!-- 累積比例 -->
+                                                <div class="mb-4">
+                                                    <label class="form-label">點數累積比例</label>
+                                                    <div class="input-group" style="max-width: 300px;">
+                                                        <span class="input-group-text">每消費 NT$</span>
+                                                        <input type="number" class="form-control" id="pointEarnRate" value="10" min="1" max="1000">
+                                                        <span class="input-group-text">得 1 點</span>
+                                                    </div>
+                                                    <div class="form-text">
+                                                        例如：設定 10 表示消費 NT$100 獲得 10 點，消費 NT$150 獲得 15 點
+                                                    </div>
+                                                </div>
+
+                                                <!-- 取整方式 -->
+                                                <div class="mb-4">
+                                                    <label class="form-label">小數點取整方式</label>
+                                                    <div class="row">
+                                                        <div class="col-md-8">
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio" name="pointRoundMode" id="roundFloor" value="FLOOR" checked>
+                                                                <label class="form-check-label" for="roundFloor">
+                                                                    <strong>無條件捨去</strong>
+                                                                    <span class="text-muted ms-2">（推薦）</span>
+                                                                    <div class="small text-muted">消費 NT$95（比例 10）→ 9 點</div>
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio" name="pointRoundMode" id="roundRound" value="ROUND">
+                                                                <label class="form-check-label" for="roundRound">
+                                                                    <strong>四捨五入</strong>
+                                                                    <div class="small text-muted">消費 NT$95（比例 10）→ 10 點</div>
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="pointRoundMode" id="roundCeil" value="CEIL">
+                                                                <label class="form-check-label" for="roundCeil">
+                                                                    <strong>無條件進位</strong>
+                                                                    <div class="small text-muted">消費 NT$91（比例 10）→ 10 點</div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 點數試算 -->
+                                                <div class="card bg-light mb-4">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title"><i class="bi bi-calculator me-1"></i>點數試算</h6>
+                                                        <div class="row align-items-center">
+                                                            <div class="col-auto">
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">消費金額 NT$</span>
+                                                                    <input type="number" class="form-control" id="testAmount" value="100" min="0" style="width: 100px;" oninput="calculateTestPoints()">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <i class="bi bi-arrow-right"></i>
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <span class="badge bg-primary fs-6" id="testResult">10 點</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-primary" onclick="savePointSettings()" id="savePointsBtn">
+                                                <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存變更</span>
+                                                <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                                            </button>
+                                        </form>
+                                    </div>
+
                                     <!-- 帳號安全 -->
                                     <div class="tab-pane fade" id="security">
                                         <h5 class="mb-4"><i class="bi bi-shield-lock me-2"></i>更改密碼</h5>
@@ -304,6 +403,19 @@
                     if (r.data.notifyNewBooking !== undefined) document.getElementById('notifyNewBooking').checked = r.data.notifyNewBooking;
                     if (r.data.notifyBookingReminder !== undefined) document.getElementById('notifyBookingReminder').checked = r.data.notifyBookingReminder;
                     if (r.data.notifyBookingCancel !== undefined) document.getElementById('notifyBookingCancel').checked = r.data.notifyBookingCancel;
+
+                    // 點數設定
+                    if (r.data.pointEarnEnabled !== undefined) {
+                        document.getElementById('pointEarnEnabled').checked = r.data.pointEarnEnabled;
+                        updatePointFieldsVisibility();
+                    }
+                    if (r.data.pointEarnRate) document.getElementById('pointEarnRate').value = r.data.pointEarnRate;
+                    if (r.data.pointRoundMode) {
+                        const mode = r.data.pointRoundMode.toUpperCase();
+                        const radio = document.querySelector(`input[name="pointRoundMode"][value="${mode}"]`);
+                        if (radio) radio.checked = true;
+                    }
+                    calculateTestPoints();
                 }
             } catch (e) {
                 console.error('載入設定失敗:', e);
@@ -421,6 +533,72 @@
             try {
                 await api.put('/api/settings', data);
                 showSuccess('通知設定已儲存');
+            } catch (e) {
+                showError('儲存失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        // ========================================
+        // 點數設定
+        // ========================================
+
+        // 點數啟用開關變更時
+        document.getElementById('pointEarnEnabled').addEventListener('change', updatePointFieldsVisibility);
+
+        function updatePointFieldsVisibility() {
+            const enabled = document.getElementById('pointEarnEnabled').checked;
+            document.getElementById('pointSettingsFields').style.opacity = enabled ? '1' : '0.5';
+            document.getElementById('pointSettingsFields').style.pointerEvents = enabled ? 'auto' : 'none';
+        }
+
+        // 點數試算
+        function calculateTestPoints() {
+            const amount = parseInt(document.getElementById('testAmount').value) || 0;
+            const rate = parseInt(document.getElementById('pointEarnRate').value) || 10;
+            const mode = document.querySelector('input[name="pointRoundMode"]:checked')?.value || 'FLOOR';
+
+            let points = 0;
+            if (rate > 0) {
+                const rawPoints = amount / rate;
+                switch (mode) {
+                    case 'ROUND': points = Math.round(rawPoints); break;
+                    case 'CEIL': points = Math.ceil(rawPoints); break;
+                    default: points = Math.floor(rawPoints); // FLOOR
+                }
+            }
+
+            document.getElementById('testResult').textContent = points + ' 點';
+        }
+
+        // 監聽累積比例和取整方式變更
+        document.getElementById('pointEarnRate').addEventListener('input', calculateTestPoints);
+        document.querySelectorAll('input[name="pointRoundMode"]').forEach(radio => {
+            radio.addEventListener('change', calculateTestPoints);
+        });
+
+        async function savePointSettings() {
+            const rate = parseInt(document.getElementById('pointEarnRate').value);
+
+            // 驗證累積比例
+            if (isNaN(rate) || rate < 1 || rate > 1000) {
+                showError('點數累積比例需在 1-1000 之間');
+                return;
+            }
+
+            const data = {
+                pointEarnEnabled: document.getElementById('pointEarnEnabled').checked,
+                pointEarnRate: rate,
+                pointRoundMode: document.querySelector('input[name="pointRoundMode"]:checked')?.value || 'FLOOR'
+            };
+
+            const btn = document.getElementById('savePointsBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                await api.put('/api/settings', data);
+                showSuccess('點數設定已儲存');
             } catch (e) {
                 showError('儲存失敗：' + (e.message || '請稍後再試'));
             } finally {

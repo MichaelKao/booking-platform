@@ -21,11 +21,19 @@
                                 <h6 class="m-0"><i class="bi bi-chat-dots me-2"></i>LINE Official Account 設定</h6>
                             </div>
                             <div class="card-body">
-                                <!-- 設定步驟說明 -->
-                                <div class="alert alert-light mb-4">
-                                    <strong><i class="bi bi-lightbulb me-1"></i>設定步驟：</strong>
+                                <!-- 設定步驟說明（可展開詳細教學） -->
+                                <div class="alert alert-info mb-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong><i class="bi bi-lightbulb me-1"></i>快速設定指南</strong>
+                                            <span class="text-muted ms-2">（約 5 分鐘完成）</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#detailedTutorial">
+                                            <i class="bi bi-book me-1"></i>查看詳細教學
+                                        </button>
+                                    </div>
                                     <ol class="mb-0 mt-2 ps-3">
-                                        <li>前往 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a></li>
+                                        <li>前往 <a href="https://developers.line.biz/" target="_blank" class="fw-bold">LINE Developers Console <i class="bi bi-box-arrow-up-right"></i></a></li>
                                         <li>建立或選擇您的 Provider 和 Messaging API Channel</li>
                                         <li>複製 Channel ID、Channel Secret 和 Access Token 填入下方</li>
                                         <li>將下方的 Webhook URL 設定到 LINE Developers Console</li>
@@ -33,36 +41,102 @@
                                     </ol>
                                 </div>
 
+                                <!-- 詳細圖文教學（預設收合） -->
+                                <div class="collapse mb-4" id="detailedTutorial">
+                                    <div class="card card-body bg-light">
+                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-1-circle me-2"></i>步驟一：登入 LINE Developers</h6>
+                                        <p class="small mb-2">1. 點擊上方連結前往 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a></p>
+                                        <p class="small mb-2">2. 使用您的 LINE 帳號登入（與您的 LINE 官方帳號相同）</p>
+                                        <p class="small mb-3">3. 如果是首次使用，需要先同意開發者條款</p>
+
+                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-2-circle me-2"></i>步驟二：建立 Provider 和 Channel</h6>
+                                        <p class="small mb-2">1. 點擊「Create a new provider」建立提供者（輸入您的店名即可）</p>
+                                        <p class="small mb-2">2. 在 Provider 中點擊「Create a Messaging API channel」</p>
+                                        <p class="small mb-2">3. 填寫 Channel 基本資訊：</p>
+                                        <ul class="small mb-3">
+                                            <li>Channel name：您的 LINE 官方帳號名稱</li>
+                                            <li>Channel description：簡短描述</li>
+                                            <li>Category：選擇「美容・サロン」或相關分類</li>
+                                            <li>Email：您的聯絡信箱</li>
+                                        </ul>
+
+                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-3-circle me-2"></i>步驟三：取得設定資訊</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="border rounded p-2 mb-2 bg-white">
+                                                    <p class="small mb-1 fw-bold">Channel ID 位置：</p>
+                                                    <p class="small text-muted mb-0">Basic settings → Channel ID</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="border rounded p-2 mb-2 bg-white">
+                                                    <p class="small mb-1 fw-bold">Channel Secret 位置：</p>
+                                                    <p class="small text-muted mb-0">Basic settings → Channel secret</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="border rounded p-2 mb-2 bg-white">
+                                                    <p class="small mb-1 fw-bold">Channel Access Token 位置：</p>
+                                                    <p class="small text-muted mb-0">Messaging API → Channel access token → 點擊「Issue」產生</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="fw-bold text-primary mb-3 mt-3"><i class="bi bi-4-circle me-2"></i>步驟四：設定 Webhook</h6>
+                                        <p class="small mb-2">1. 在 Messaging API 頁面找到「Webhook settings」</p>
+                                        <p class="small mb-2">2. 將下方的 Webhook URL 貼到「Webhook URL」欄位</p>
+                                        <p class="small mb-2">3. 點擊「Verify」驗證連線</p>
+                                        <p class="small mb-2">4. 將「Use webhook」開關打開</p>
+                                        <div class="alert alert-warning small mb-0 mt-2">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            <strong>重要！</strong>請關閉 LINE Official Account Manager 的自動回應訊息，否則會與 Bot 衝突。
+                                            <br>位置：LINE Official Account Manager → 設定 → 回應設定 → 自動回應訊息 → 關閉
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <form id="lineForm" novalidate>
                                     <div class="mb-3">
-                                        <label class="form-label">Channel ID <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="channelId" placeholder="輸入 Channel ID" maxlength="50">
+                                        <label class="form-label">
+                                            Channel ID <span class="text-danger">*</span>
+                                            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
+                                               title="在 LINE Developers Console → Basic settings → Channel ID，通常是 10 位數字"></i>
+                                        </label>
+                                        <input type="text" class="form-control" id="channelId" placeholder="例如：1234567890" maxlength="50">
                                         <div class="invalid-feedback">請輸入 Channel ID</div>
-                                        <div class="form-text">在 LINE Developers Console 的 Basic settings 可找到</div>
+                                        <div class="form-text"><i class="bi bi-arrow-right-short"></i>位置：Basic settings → Channel ID</div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">Channel Secret <span class="text-danger">*</span></label>
+                                        <label class="form-label">
+                                            Channel Secret <span class="text-danger">*</span>
+                                            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
+                                               title="在 Basic settings 頁面，點擊 Channel secret 旁的「Issue」或複製現有的 Secret"></i>
+                                        </label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="channelSecret" placeholder="輸入 Channel Secret" maxlength="100">
+                                            <input type="password" class="form-control" id="channelSecret" placeholder="32 字元的密鑰" maxlength="100">
                                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('channelSecret')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
                                         <div class="invalid-feedback">請輸入 Channel Secret</div>
-                                        <div class="form-text">在 Basic settings 的 Channel secret 欄位</div>
+                                        <div class="form-text"><i class="bi bi-arrow-right-short"></i>位置：Basic settings → Channel secret</div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">Channel Access Token <span class="text-danger">*</span></label>
+                                        <label class="form-label">
+                                            Channel Access Token <span class="text-danger">*</span>
+                                            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
+                                               title="在 Messaging API 頁面最下方，點擊「Issue」按鈕產生長期有效的 Token"></i>
+                                        </label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="channelAccessToken" placeholder="輸入 Channel Access Token" maxlength="500">
+                                            <input type="password" class="form-control" id="channelAccessToken" placeholder="長字串 Token" maxlength="500">
                                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('channelAccessToken')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
                                         <div class="invalid-feedback">請輸入 Channel Access Token</div>
-                                        <div class="form-text">在 Messaging API 頁面點擊「Issue」產生長期 Token</div>
+                                        <div class="form-text"><i class="bi bi-arrow-right-short"></i>位置：Messaging API → Channel access token → Issue</div>
                                     </div>
 
                                     <hr class="my-4">
@@ -325,6 +399,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadLineSettings();
+
+            // 初始化所有 tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
 
             // 字數統計
             document.getElementById('welcomeMessage').addEventListener('input', function() {

@@ -163,7 +163,7 @@ public class Tenant extends BaseEntity {
     private String lineChannelToken;
 
     // ========================================
-    // 點數相關
+    // 店家點數餘額（用於訂閱功能）
     // ========================================
 
     /**
@@ -172,6 +172,35 @@ public class Tenant extends BaseEntity {
     @Column(name = "point_balance", precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal pointBalance = BigDecimal.ZERO;
+
+    // ========================================
+    // 顧客點數累積設定
+    // ========================================
+
+    /**
+     * 是否啟用顧客點數累積
+     */
+    @Column(name = "point_earn_enabled")
+    @Builder.Default
+    private Boolean pointEarnEnabled = true;
+
+    /**
+     * 點數累積比例（每消費多少元得 1 點）
+     * 例如：10 表示每消費 NT$10 獲得 1 點
+     */
+    @Column(name = "point_earn_rate")
+    @Builder.Default
+    private Integer pointEarnRate = 10;
+
+    /**
+     * 點數取整方式
+     * FLOOR: 無條件捨去（預設）
+     * ROUND: 四捨五入
+     * CEIL: 無條件進位
+     */
+    @Column(name = "point_round_mode", length = 10)
+    @Builder.Default
+    private String pointRoundMode = "FLOOR";
 
     // ========================================
     // 配額限制

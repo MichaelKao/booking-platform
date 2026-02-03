@@ -328,7 +328,7 @@ IDLE（完成，回到閒置）
 - 取消預約：`IDLE → CONFIRMING_CANCEL_BOOKING → IDLE`
 - 商品購買：`IDLE → BROWSING_PRODUCTS → VIEWING_PRODUCT_DETAIL → SELECTING_QUANTITY → CONFIRMING_PURCHASE → IDLE`
 - 票券領取：`IDLE → BROWSING_COUPONS → IDLE`
-- 會員資訊：`IDLE → VIEWING_MEMBER_INFO → IDLE`（包含點數說明 Carousel）
+- 會員資訊：`IDLE → VIEWING_MEMBER_INFO → IDLE`（單一 Bubble Flex Message）
 
 Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 
@@ -354,11 +354,30 @@ Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 
 ### 會員點數功能
 
-**會員資訊顯示內容：**
-- 👤 會員名稱
-- 💰 點數餘額
+**會員資訊顯示內容（Flex Message 單一 Bubble）：**
+- 👤 會員名稱（Header 區塊）
+- ⭐ 會員等級標籤
+- 💰 點數餘額（醒目顯示）
 - 📅 累計預約次數
-- ⭐ 會員等級
+- 💳 累計消費（如有）
+- 操作按鈕：開始預約、我的票券
+
+### 顧客點數累積設定
+
+店家可在「店家設定 → 點數設定」自訂點數累積規則：
+
+| 設定項目 | 說明 | 預設值 |
+|---------|------|--------|
+| `pointEarnEnabled` | 是否啟用點數累積 | true |
+| `pointEarnRate` | 每消費多少元得 1 點 | 10 |
+| `pointRoundMode` | 取整方式 (FLOOR/ROUND/CEIL) | FLOOR |
+
+**計算範例**（比例 10，消費 NT$95）：
+- FLOOR（無條件捨去）：9 點
+- ROUND（四捨五入）：10 點
+- CEIL（無條件進位）：10 點
+
+**注意**：需訂閱 `POINT_SYSTEM` 功能才會自動集點
 
 **點數獲得方式：**
 - 完成預約自動累積

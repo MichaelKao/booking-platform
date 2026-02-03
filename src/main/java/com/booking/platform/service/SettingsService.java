@@ -172,6 +172,24 @@ public class SettingsService {
         }
 
         // ========================================
+        // 3.3 更新顧客點數累積設定
+        // ========================================
+
+        if (request.getPointEarnEnabled() != null) {
+            tenant.setPointEarnEnabled(request.getPointEarnEnabled());
+        }
+        if (request.getPointEarnRate() != null) {
+            tenant.setPointEarnRate(request.getPointEarnRate());
+        }
+        if (request.getPointRoundMode() != null) {
+            // 驗證取整方式
+            String mode = request.getPointRoundMode().toUpperCase();
+            if ("FLOOR".equals(mode) || "ROUND".equals(mode) || "CEIL".equals(mode)) {
+                tenant.setPointRoundMode(mode);
+            }
+        }
+
+        // ========================================
         // 4. 儲存更新
         // ========================================
 
@@ -227,6 +245,10 @@ public class SettingsService {
                 .notifyNewBooking(tenant.getNotifyNewBooking())
                 .notifyBookingReminder(tenant.getNotifyBookingReminder())
                 .notifyBookingCancel(tenant.getNotifyBookingCancel())
+                // 顧客點數累積設定
+                .pointEarnEnabled(tenant.getPointEarnEnabled())
+                .pointEarnRate(tenant.getPointEarnRate())
+                .pointRoundMode(tenant.getPointRoundMode())
                 .build();
     }
 }

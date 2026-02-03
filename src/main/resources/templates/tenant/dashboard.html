@@ -71,7 +71,7 @@
                 <!-- 快速操作 -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h6 class="mb-3">快速操作</h6>
+                        <h6 class="mb-3"><i class="bi bi-lightning-charge me-1"></i>快速操作</h6>
                         <div class="quick-actions">
                             <a href="/tenant/bookings" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','booking')">
                                 <i class="bi bi-plus-circle"></i><span>新增預約</span>
@@ -82,8 +82,14 @@
                             <a href="/tenant/calendar" class="quick-action-btn">
                                 <i class="bi bi-calendar3"></i><span>查看行事曆</span>
                             </a>
-                            <a href="/tenant/coupons" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','coupon')">
-                                <i class="bi bi-ticket-perforated"></i><span>建立票券</span>
+                            <a href="/tenant/reports" class="quick-action-btn">
+                                <i class="bi bi-graph-up"></i><span>營運報表</span>
+                            </a>
+                            <a href="/tenant/marketing" class="quick-action-btn" onclick="sessionStorage.setItem('openCreateModal','push')">
+                                <i class="bi bi-megaphone"></i><span>發送推播</span>
+                            </a>
+                            <a href="/tenant/line-settings" class="quick-action-btn">
+                                <i class="bi bi-chat-dots"></i><span>LINE 設定</span>
                             </a>
                         </div>
                     </div>
@@ -123,14 +129,12 @@
                 <div class="row">
                     <div class="col-12 mb-4">
                         <div class="card">
-                            <div class="card-header"><h6 class="m-0">本週預約趨勢</h6></div>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="m-0">本週預約趨勢</h6>
+                                <a href="/tenant/reports" class="btn btn-sm btn-outline-primary">詳細報表</a>
+                            </div>
                             <div class="card-body">
-                                <div id="weeklyChart" style="height: 300px;">
-                                    <div class="text-center text-muted py-5">
-                                        <i class="bi bi-bar-chart-line" style="font-size: 3rem;"></i>
-                                        <p class="mt-2">統計圖表功能開發中</p>
-                                    </div>
-                                </div>
+                                <canvas id="weeklyChart" style="height: 280px;"></canvas>
                             </div>
                         </div>
                     </div>
@@ -143,13 +147,16 @@
     <div class="toast-container"></div>
     <div th:replace="~{tenant/layout :: confirm-modal}"></div>
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         const currentPage = 'dashboard';
+        let weeklyChartInstance = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
             loadTodayBookings();
             loadRecentActivities();
+            loadWeeklyChart();
         });
 
         async function loadDashboardData() {
@@ -265,6 +272,144 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        async function loadWeeklyChart() {
+            try {
+                const r = await api.get('/api/reports/daily', { days: 7 });
+                if (r.success && r.data) {
+                    renderWeeklyChart(r.data);
+                }
+            } catch (e) {
+                console.error('載入週統計失敗:', e);
+                // 顯示空白圖表
+                renderWeeklyChart([]);
+            }
+        }
+
+        function renderWeeklyChart(data) {
+            const ctx = document.getElementById('weeklyChart');
+            if (!ctx) return;
+
+            // 如果已有圖表，先銷毀
+            if (weeklyChartInstance) {
+                weeklyChartInstance.destroy();
+            }
+
+            // 產生最近 7 天的標籤
+            const labels = [];
+            const bookingCounts = [];
+            const revenueData = [];
+            const today = new Date();
+            const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                labels.push(`${date.getMonth() + 1}/${date.getDate()} (${dayNames[date.getDay()]})`);
+
+                // 查找對應日期的資料
+                const dayData = data.find(d => d.date === dateStr);
+                bookingCounts.push(dayData?.bookingCount || 0);
+                revenueData.push(dayData?.revenue || 0);
+            }
+
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '預約數',
+                            data: bookingCounts,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            order: 2
+                        },
+                        {
+                            label: '營收 (NT$)',
+                            data: revenueData,
+                            type: 'line',
+                            borderColor: '#28a745',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#28a745',
+                            fill: true,
+                            yAxisID: 'y1',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.label === '營收 (NT$)') {
+                                        return '營收：NT$ ' + context.raw.toLocaleString();
+                                    }
+                                    return '預約數：' + context.raw + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '預約數'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '營收 (NT$)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'NT$ ' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>

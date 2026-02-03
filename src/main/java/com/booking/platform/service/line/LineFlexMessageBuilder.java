@@ -3257,6 +3257,170 @@ public class LineFlexMessageBuilder {
     }
 
     /**
+     * 建構簡化版會員資訊訊息（單一 Bubble）
+     *
+     * <p>使用單一 Bubble 結構，比 Carousel 更穩定
+     *
+     * @param customer            顧客
+     * @param bookingCount        預約次數
+     * @param membershipLevelName 會員等級名稱（可為 null）
+     * @return Flex Message 內容（單一 Bubble）
+     */
+    public JsonNode buildSimpleMemberInfo(Customer customer, long bookingCount, String membershipLevelName) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // ========================================
+        // Header - 會員頭像與名稱
+        // ========================================
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        // 頭像 icon
+        ObjectNode icon = objectMapper.createObjectNode();
+        icon.put("type", "text");
+        icon.put("text", "👤");
+        icon.put("size", "3xl");
+        icon.put("align", "center");
+        headerContents.add(icon);
+
+        // 名稱
+        String displayName = customer.getName() != null ? customer.getName() : "會員";
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", displayName);
+        nameText.put("size", "xl");
+        nameText.put("weight", "bold");
+        nameText.put("color", "#FFFFFF");
+        nameText.put("align", "center");
+        nameText.put("margin", "md");
+        headerContents.add(nameText);
+
+        // 會員等級標籤
+        String levelDisplay = membershipLevelName != null ? membershipLevelName : "一般會員";
+        ObjectNode levelBadge = objectMapper.createObjectNode();
+        levelBadge.put("type", "box");
+        levelBadge.put("layout", "vertical");
+        levelBadge.put("backgroundColor", "rgba(255,255,255,0.3)");
+        levelBadge.put("cornerRadius", "15px");
+        levelBadge.put("paddingAll", "5px");
+        levelBadge.put("paddingStart", "15px");
+        levelBadge.put("paddingEnd", "15px");
+        levelBadge.put("margin", "md");
+
+        ObjectNode levelText = objectMapper.createObjectNode();
+        levelText.put("type", "text");
+        levelText.put("text", "⭐ " + levelDisplay);
+        levelText.put("size", "sm");
+        levelText.put("color", "#FFFFFF");
+        levelText.put("align", "center");
+        levelBadge.set("contents", objectMapper.createArrayNode().add(levelText));
+        headerContents.add(levelBadge);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // ========================================
+        // Body - 會員資訊
+        // ========================================
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "lg");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 點數餘額（醒目顯示）
+        ObjectNode pointsBox = objectMapper.createObjectNode();
+        pointsBox.put("type", "box");
+        pointsBox.put("layout", "vertical");
+        pointsBox.put("paddingAll", "15px");
+        pointsBox.put("backgroundColor", "#FFF8E1");
+        pointsBox.put("cornerRadius", "10px");
+
+        ArrayNode pointsContents = objectMapper.createArrayNode();
+
+        ObjectNode pointsLabel = objectMapper.createObjectNode();
+        pointsLabel.put("type", "text");
+        pointsLabel.put("text", "💰 點數餘額");
+        pointsLabel.put("size", "sm");
+        pointsLabel.put("color", SECONDARY_COLOR);
+        pointsLabel.put("align", "center");
+        pointsContents.add(pointsLabel);
+
+        int points = customer.getPointBalance() != null ? customer.getPointBalance() : 0;
+        ObjectNode pointsValue = objectMapper.createObjectNode();
+        pointsValue.put("type", "text");
+        pointsValue.put("text", String.format("%,d 點", points));
+        pointsValue.put("size", "xxl");
+        pointsValue.put("weight", "bold");
+        pointsValue.put("color", "#FF9800");
+        pointsValue.put("align", "center");
+        pointsValue.put("margin", "sm");
+        pointsContents.add(pointsValue);
+
+        pointsBox.set("contents", pointsContents);
+        bodyContents.add(pointsBox);
+
+        // 統計資訊（橫向排列）
+        ObjectNode statsRow = objectMapper.createObjectNode();
+        statsRow.put("type", "box");
+        statsRow.put("layout", "horizontal");
+        statsRow.put("spacing", "md");
+        statsRow.put("margin", "lg");
+
+        ArrayNode statsContents = objectMapper.createArrayNode();
+        statsContents.add(createStatItem("📅", "累計預約", bookingCount + " 次"));
+
+        // 累計消費（如果有的話）
+        if (customer.getTotalSpent() != null && customer.getTotalSpent().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            statsContents.add(createStatItem("💳", "累計消費", "NT$ " + String.format("%,.0f", customer.getTotalSpent())));
+        } else {
+            // 顯示加入日期
+            if (customer.getCreatedAt() != null) {
+                String joinDate = customer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy/MM"));
+                statsContents.add(createStatItem("📆", "加入時間", joinDate));
+            }
+        }
+
+        statsRow.set("contents", statsContents);
+        bodyContents.add(statsRow);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // ========================================
+        // Footer - 操作按鈕
+        // ========================================
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+
+        ObjectNode bookingBtn = createButton("開始預約", "action=start_booking", PRIMARY_COLOR);
+        bookingBtn.put("flex", 1);
+        footerContents.add(bookingBtn);
+
+        ObjectNode couponBtn = createButton("我的票券", "action=view_my_coupons", LINK_COLOR);
+        couponBtn.put("flex", 1);
+        footerContents.add(couponBtn);
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
      * 建構統計項目
      */
     private ObjectNode createStatItem(String icon, String label, String value) {

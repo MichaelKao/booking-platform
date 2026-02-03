@@ -128,4 +128,26 @@ public class UpdateSettingsRequest {
      * 取消預約通知
      */
     private Boolean notifyBookingCancel;
+
+    // ========================================
+    // 顧客點數累積設定
+    // ========================================
+
+    /**
+     * 是否啟用顧客點數累積
+     */
+    private Boolean pointEarnEnabled;
+
+    /**
+     * 點數累積比例（每消費多少元得 1 點）
+     */
+    @Min(value = 1, message = "點數累積比例最少為 1")
+    @Max(value = 1000, message = "點數累積比例最多為 1000")
+    private Integer pointEarnRate;
+
+    /**
+     * 點數取整方式 (FLOOR/ROUND/CEIL)
+     */
+    @Size(max = 10, message = "取整方式長度不能超過 10 字")
+    private String pointRoundMode;
 }

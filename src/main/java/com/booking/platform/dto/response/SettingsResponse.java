@@ -110,13 +110,32 @@ public class SettingsResponse {
     private Integer monthlyPushRemaining;
 
     // ========================================
-    // 點數資訊
+    // 店家點數資訊
     // ========================================
 
     /**
      * 點數餘額
      */
     private BigDecimal pointBalance;
+
+    // ========================================
+    // 顧客點數累積設定
+    // ========================================
+
+    /**
+     * 是否啟用顧客點數累積
+     */
+    private Boolean pointEarnEnabled;
+
+    /**
+     * 點數累積比例（每消費多少元得 1 點）
+     */
+    private Integer pointEarnRate;
+
+    /**
+     * 點數取整方式 (FLOOR/ROUND/CEIL)
+     */
+    private String pointRoundMode;
 
     // ========================================
     // 時間資訊

@@ -43,6 +43,19 @@
                     <div class="data-table-header">
                         <h6 class="data-table-title">預約列表</h6>
                         <div class="data-table-actions">
+                            <!-- 批次操作按鈕（選取後顯示） -->
+                            <div id="batchActions" class="d-none me-2">
+                                <span class="text-muted small me-2">已選 <strong id="selectedCount">0</strong> 筆</span>
+                                <button type="button" class="btn btn-sm btn-primary me-1" onclick="batchConfirm()" title="批次確認">
+                                    <i class="bi bi-check-lg"></i> 確認
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger me-1" onclick="batchCancel()" title="批次取消">
+                                    <i class="bi bi-x-lg"></i> 取消
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()" title="清除選取">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
                             <input type="date" class="form-control form-control-sm" id="dateFilter" style="width: 140px;" onchange="loadBookings()">
                             <select class="form-select form-select-sm" id="statusFilter" style="width: 120px;" onchange="loadBookings()">
                                 <option value="">全部狀態</option>
@@ -68,6 +81,9 @@
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
+                                        <th style="width: 40px;">
+                                            <input type="checkbox" class="form-check-input" id="selectAllCheckbox" onchange="toggleSelectAll()" title="全選">
+                                        </th>
                                         <th>預約編號</th>
                                         <th>日期時間</th>
                                         <th>顧客</th>
@@ -79,7 +95,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="bookingsTable">
-                                    <tr><td colspan="8" class="text-center text-muted py-5">
+                                    <tr><td colspan="9" class="text-center text-muted py-5">
                                         <div class="spinner-border spinner-border-sm me-2"></div>載入中...
                                     </td></tr>
                                 </tbody>
@@ -324,14 +340,18 @@
                 }
             } catch (e) {
                 console.error('載入預約失敗:', e);
-                document.getElementById('bookingsTable').innerHTML = '<tr><td colspan="8" class="text-center text-danger py-5">載入失敗，請重新整理頁面</td></tr>';
+                document.getElementById('bookingsTable').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-5">載入失敗，請重新整理頁面</td></tr>';
             }
         }
 
         function renderBookings(bookings) {
             const tbody = document.getElementById('bookingsTable');
+            // 清除全選狀態
+            document.getElementById('selectAllCheckbox').checked = false;
+            clearSelection();
+
             if (!bookings || bookings.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-5">
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5">
                     <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
                     <p class="mt-2 mb-0">暫無預約記錄</p>
                     <button class="btn btn-primary btn-sm mt-2" onclick="openCreateBookingModal()">
@@ -340,7 +360,13 @@
                 </td></tr>`;
                 return;
             }
-            tbody.innerHTML = bookings.map(b => `<tr>
+            tbody.innerHTML = bookings.map(b => `<tr data-id="${b.id}" data-status="${b.status}">
+                <td>
+                    <input type="checkbox" class="form-check-input booking-checkbox"
+                           data-id="${b.id}" data-status="${b.status}"
+                           onchange="updateBatchSelection()"
+                           ${['PENDING', 'CONFIRMED'].includes(b.status) ? '' : 'disabled'}>
+                </td>
                 <td><a href="#" onclick="openDetailModal('${b.id}');return false;" class="text-decoration-none">${b.bookingNo || b.id.substring(0, 8)}</a></td>
                 <td>
                     <div class="fw-bold">${formatDate(b.bookingDate)}</div>
@@ -603,6 +629,160 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        // ========================================
+        // 批次操作功能
+        // ========================================
+
+        // 記錄已選取的預約
+        let selectedBookings = new Set();
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAllCheckbox');
+            const checkboxes = document.querySelectorAll('.booking-checkbox:not(:disabled)');
+
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    selectedBookings.add(cb.dataset.id);
+                } else {
+                    selectedBookings.delete(cb.dataset.id);
+                }
+            });
+
+            updateBatchActionsUI();
+        }
+
+        function updateBatchSelection() {
+            const checkboxes = document.querySelectorAll('.booking-checkbox');
+            selectedBookings.clear();
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    selectedBookings.add(cb.dataset.id);
+                }
+            });
+
+            // 更新全選 checkbox 狀態
+            const enabledCheckboxes = document.querySelectorAll('.booking-checkbox:not(:disabled)');
+            const checkedCount = document.querySelectorAll('.booking-checkbox:checked').length;
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            selectAllCb.checked = enabledCheckboxes.length > 0 && checkedCount === enabledCheckboxes.length;
+            selectAllCb.indeterminate = checkedCount > 0 && checkedCount < enabledCheckboxes.length;
+
+            updateBatchActionsUI();
+        }
+
+        function updateBatchActionsUI() {
+            const batchActions = document.getElementById('batchActions');
+            const selectedCount = document.getElementById('selectedCount');
+
+            if (selectedBookings.size > 0) {
+                batchActions.classList.remove('d-none');
+                selectedCount.textContent = selectedBookings.size;
+            } else {
+                batchActions.classList.add('d-none');
+            }
+        }
+
+        function clearSelection() {
+            selectedBookings.clear();
+            const checkboxes = document.querySelectorAll('.booking-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            document.getElementById('selectAllCheckbox').checked = false;
+            document.getElementById('selectAllCheckbox').indeterminate = false;
+            updateBatchActionsUI();
+        }
+
+        async function batchConfirm() {
+            if (selectedBookings.size === 0) {
+                showError('請先選擇要確認的預約');
+                return;
+            }
+
+            // 過濾出狀態為 PENDING 的預約
+            const pendingIds = [];
+            document.querySelectorAll('.booking-checkbox:checked').forEach(cb => {
+                if (cb.dataset.status === 'PENDING') {
+                    pendingIds.push(cb.dataset.id);
+                }
+            });
+
+            if (pendingIds.length === 0) {
+                showWarning('選取的預約中沒有「待確認」狀態的預約');
+                return;
+            }
+
+            const confirmed = await showConfirm(`確定要批次確認 ${pendingIds.length} 筆預約嗎？`);
+            if (!confirmed) return;
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const id of pendingIds) {
+                try {
+                    await api.post(`/api/bookings/${id}/confirm`);
+                    successCount++;
+                } catch (e) {
+                    failCount++;
+                    console.error(`確認預約 ${id} 失敗:`, e);
+                }
+            }
+
+            if (successCount > 0) {
+                showSuccess(`成功確認 ${successCount} 筆預約${failCount > 0 ? `，${failCount} 筆失敗` : ''}`);
+            } else {
+                showError(`批次確認失敗`);
+            }
+
+            clearSelection();
+            loadBookings();
+        }
+
+        async function batchCancel() {
+            if (selectedBookings.size === 0) {
+                showError('請先選擇要取消的預約');
+                return;
+            }
+
+            // 過濾出可取消的預約（PENDING 或 CONFIRMED）
+            const cancellableIds = [];
+            document.querySelectorAll('.booking-checkbox:checked').forEach(cb => {
+                if (['PENDING', 'CONFIRMED'].includes(cb.dataset.status)) {
+                    cancellableIds.push(cb.dataset.id);
+                }
+            });
+
+            if (cancellableIds.length === 0) {
+                showWarning('選取的預約中沒有可取消的預約');
+                return;
+            }
+
+            const confirmed = await showConfirm(`確定要批次取消 ${cancellableIds.length} 筆預約嗎？此操作無法復原！`);
+            if (!confirmed) return;
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const id of cancellableIds) {
+                try {
+                    await api.post(`/api/bookings/${id}/cancel`);
+                    successCount++;
+                } catch (e) {
+                    failCount++;
+                    console.error(`取消預約 ${id} 失敗:`, e);
+                }
+            }
+
+            if (successCount > 0) {
+                showSuccess(`成功取消 ${successCount} 筆預約${failCount > 0 ? `，${failCount} 筆失敗` : ''}`);
+            } else {
+                showError(`批次取消失敗`);
+            }
+
+            clearSelection();
+            loadBookings();
         }
 
         // ========================================

@@ -679,18 +679,41 @@ public class BookingService {
                     .orElse(false);
 
             if (hasPointSystem && entity.getPrice() != null) {
-                // 計算點數：每消費 NT$10 獲得 1 點
-                int earnedPoints = entity.getPrice().intValue() / 10;
-                if (earnedPoints > 0) {
-                    try {
-                        customerService.addPoints(
-                                entity.getCustomerId(),
-                                earnedPoints,
-                                "預約完成自動集點 - " + entity.getServiceName()
-                        );
-                        log.info("自動集點成功，顧客 ID：{}，點數：{}", entity.getCustomerId(), earnedPoints);
-                    } catch (Exception e) {
-                        log.warn("自動集點失敗，顧客 ID：{}，錯誤：{}", entity.getCustomerId(), e.getMessage());
+                // 取得店家點數累積設定
+                var tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
+                if (tenantOpt.isPresent()) {
+                    var tenant = tenantOpt.get();
+
+                    // 檢查是否啟用點數累積
+                    boolean pointEarnEnabled = tenant.getPointEarnEnabled() != null ? tenant.getPointEarnEnabled() : true;
+                    int pointEarnRate = tenant.getPointEarnRate() != null ? tenant.getPointEarnRate() : 10;
+                    String pointRoundMode = tenant.getPointRoundMode() != null ? tenant.getPointRoundMode() : "FLOOR";
+
+                    if (pointEarnEnabled && pointEarnRate > 0) {
+                        // 根據設定計算點數
+                        double rawPoints = entity.getPrice().doubleValue() / pointEarnRate;
+                        int earnedPoints;
+
+                        // 根據取整方式計算
+                        switch (pointRoundMode) {
+                            case "ROUND" -> earnedPoints = (int) Math.round(rawPoints);
+                            case "CEIL" -> earnedPoints = (int) Math.ceil(rawPoints);
+                            default -> earnedPoints = (int) Math.floor(rawPoints); // FLOOR
+                        }
+
+                        if (earnedPoints > 0) {
+                            try {
+                                customerService.addPoints(
+                                        entity.getCustomerId(),
+                                        earnedPoints,
+                                        "預約完成自動集點 - " + entity.getServiceName()
+                                );
+                                log.info("自動集點成功，顧客 ID：{}，點數：{}（比例：每 {} 元得 1 點，取整：{}）",
+                                        entity.getCustomerId(), earnedPoints, pointEarnRate, pointRoundMode);
+                            } catch (Exception e) {
+                                log.warn("自動集點失敗，顧客 ID：{}，錯誤：{}", entity.getCustomerId(), e.getMessage());
+                            }
+                        }
                     }
                 }
             }
