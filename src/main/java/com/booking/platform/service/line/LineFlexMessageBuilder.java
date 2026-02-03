@@ -3016,7 +3016,9 @@ public class LineFlexMessageBuilder {
 
         ObjectNode nameText = objectMapper.createObjectNode();
         nameText.put("type", "text");
-        nameText.put("text", customer.getName());
+        // 防止 null 導致 Flex Message 無效
+        String displayName = customer.getName() != null ? customer.getName() : "會員";
+        nameText.put("text", displayName);
         nameText.put("size", "xl");
         nameText.put("weight", "bold");
         nameText.put("color", "#FFFFFF");

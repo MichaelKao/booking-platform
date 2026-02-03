@@ -347,3 +347,845 @@ SSE 通知服務已整合到以下操作：
 匯出按鈕數: 1
   ✓  158 [chromium] › tests\09-tenant-customer.spec.ts:451:9 › 顧客管理 UI 測試 › 顧客列表頁面 › 匯出按鈕 (6.8s)
   ✓  159 [chromium] › tests\09-tenant-customer.spec.ts:460:9 › 顧客管理 UI 測試 › 顧客列表頁面 › 分頁功能 (10.7s)
+  ✓  160 [chromium] › tests\09-tenant-customer.spec.ts:482:9 › 顧客管理 UI 測試 › 顧客詳情頁面 › 頁面載入成功 (10.4s)
+資訊 "姓名": 存在
+資訊 "電話": 存在
+資訊 "點數": 存在
+資訊 "狀態": 存在
+資訊 "Email": 存在
+  ✓  161 [chromium] › tests\09-tenant-customer.spec.ts:502:9 › 顧客管理 UI 測試 › 顧客詳情頁面 › 顧客資訊卡片 (10.8s)
+預約記錄區塊: 存在
+  ✓  162 [chromium] › tests\09-tenant-customer.spec.ts:525:9 › 顧客管理 UI 測試 › 顧客詳情頁面 › 預約記錄 (10.9s)
+點數記錄區塊: 存在
+  ✓  163 [chromium] › tests\09-tenant-customer.spec.ts:545:9 › 顧客管理 UI 測試 › 顧客詳情頁面 › 點數異動記錄 (10.1s)
+  ✓  164 [chromium] › tests\09-tenant-customer.spec.ts:565:9 › 顧客管理 UI 測試 › 顧客詳情頁面 › 返回列表按鈕 (8.1s)
+  ✓  165 [chromium] › tests\09-tenant-pages.spec.ts:14:9 › 店家後台所有頁面測試 › 儀表板 › 儀表板頁面載入成功 (7.8s)
+  ✓  166 [chromium] › tests\09-tenant-pages.spec.ts:28:9 › 店家後台所有頁面測試 › 預約管理 › 預約列表頁面載入成功 (9.0s)
+  ✓  167 [chromium] › tests\09-tenant-pages.spec.ts:45:9 › 店家後台所有頁面測試 › 預約管理 › 預約列表無 JavaScript 錯誤 (8.2s)
+  ✓  168 [chromium] › tests\09-tenant-pages.spec.ts:60:9 › 店家後台所有頁面測試 › 預約管理 › 新增預約 Modal 可開啟 (8.0s)
+  ✓  169 [chromium] › tests\09-tenant-pages.spec.ts:77:9 › 店家後台所有頁面測試 › 行事曆 › 行事曆頁面載入成功 (7.8s)
+  ✓  170 [chromium] › tests\09-tenant-pages.spec.ts:89:9 › 店家後台所有頁面測試 › 營運報表 › 報表頁面載入成功 (8.0s)
+  ✓  171 [chromium] › tests\09-tenant-pages.spec.ts:104:9 › 店家後台所有頁面測試 › 顧客管理 › 顧客列表頁面載入成功 (7.7s)
+  ✓  172 [chromium] › tests\09-tenant-pages.spec.ts:117:9 › 店家後台所有頁面測試 › 顧客管理 › 新增顧客 Modal 可開啟 (8.6s)
+  ✓  173 [chromium] › tests\09-tenant-pages.spec.ts:134:9 › 店家後台所有頁面測試 › 員工管理 › 員工列表頁面載入成功 (8.1s)
+  ✓  174 [chromium] › tests\09-tenant-pages.spec.ts:149:9 › 店家後台所有頁面測試 › 服務管理 › 服務列表頁面載入成功 (8.0s)
+  ✓  175 [chromium] › tests\09-tenant-pages.spec.ts:164:9 › 店家後台所有頁面測試 › 商品管理 › 商品列表頁面載入成功 (8.3s)
+  ✓  176 [chromium] › tests\09-tenant-pages.spec.ts:175:9 › 店家後台所有頁面測試 › 票券管理 › 票券列表頁面載入成功 (7.6s)
+  ✓  177 [chromium] › tests\09-tenant-pages.spec.ts:186:9 › 店家後台所有頁面測試 › 行銷活動 › 行銷活動頁面載入成功 (8.2s)
+  ✓  178 [chromium] › tests\09-tenant-pages.spec.ts:197:9 › 店家後台所有頁面測試 › 店家設定 › 設定頁面載入成功 (7.4s)
+  ✓  179 [chromium] › tests\09-tenant-pages.spec.ts:212:9 › 店家後台所有頁面測試 › LINE 設定 › LINE 設定頁面載入成功 (7.8s)
+  ✓  180 [chromium] › tests\09-tenant-pages.spec.ts:223:9 › 店家後台所有頁面測試 › 功能商店 › 功能商店頁面載入成功 (9.7s)
+  ✓  181 [chromium] › tests\09-tenant-pages.spec.ts:238:9 › 店家後台所有頁面測試 › 點數管理 › 點數管理頁面載入成功 (8.0s)
+  ✓  182 [chromium] › tests\09-tenant-pages.spec.ts:249:9 › 店家後台所有頁面測試 › 會員等級 › 會員等級頁面載入成功 (8.3s)
+側邊欄連結數量: 16
+  ✓  183 [chromium] › tests\09-tenant-pages.spec.ts:265:7 › 店家後台側邊欄導航 › 所有側邊欄連結可點擊 (6.0s)
+  ✓  184 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 儀表板 頁面無 JavaScript 錯誤 (7.9s)
+  ✓  185 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 預約管理 頁面無 JavaScript 錯誤 (7.9s)
+  ✓  186 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 行事曆 頁面無 JavaScript 錯誤 (8.9s)
+  ✓  187 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 營運報表 頁面無 JavaScript 錯誤 (9.3s)
+  ✓  188 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 顧客管理 頁面無 JavaScript 錯誤 (8.8s)
+  ✓  189 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 員工管理 頁面無 JavaScript 錯誤 (9.2s)
+  ✓  190 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 服務管理 頁面無 JavaScript 錯誤 (10.1s)
+  ✓  191 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 商品管理 頁面無 JavaScript 錯誤 (9.4s)
+  ✓  192 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 票券管理 頁面無 JavaScript 錯誤 (9.5s)
+  ✓  193 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 行銷活動 頁面無 JavaScript 錯誤 (10.9s)
+  ✓  194 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 店家設定 頁面無 JavaScript 錯誤 (8.3s)
+  ✓  195 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › LINE 設定 頁面無 JavaScript 錯誤 (8.1s)
+  ✓  196 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 功能商店 頁面無 JavaScript 錯誤 (7.6s)
+  ✓  197 [chromium] › tests\09-tenant-pages.spec.ts:300:9 › 店家後台無 JavaScript 錯誤 › 點數管理 頁面無 JavaScript 錯誤 (8.0s)
+  ✓  198 [chromium] › tests\10-admin-pages.spec.ts:14:9 › 超管後台所有頁面測試 › 儀表板 › 儀表板頁面載入成功 (7.7s)
+  ✓  199 [chromium] › tests\10-admin-pages.spec.ts:29:9 › 超管後台所有頁面測試 › 店家管理 › 店家列表頁面載入成功 (7.2s)
+  ✓  200 [chromium] › tests\10-admin-pages.spec.ts:42:9 › 超管後台所有頁面測試 › 店家管理 › 店家列表無 JavaScript 錯誤 (9.7s)
+  ✓  201 [chromium] › tests\10-admin-pages.spec.ts:68:9 › 超管後台所有頁面測試 › 儲值審核 › 儲值審核頁面載入成功 (8.3s)
+  ✓  202 [chromium] › tests\10-admin-pages.spec.ts:79:9 › 超管後台所有頁面測試 › 功能管理 › 功能管理頁面載入成功 (8.1s)
+超管側邊欄連結數量: 4
+  ✓  203 [chromium] › tests\10-admin-pages.spec.ts:99:7 › 超管後台側邊欄導航 › 所有側邊欄連結可點擊 (7.4s)
+  ✓  204 [chromium] › tests\10-admin-pages.spec.ts:124:9 › 超管後台無 JavaScript 錯誤 › 儀表板 頁面無 JavaScript 錯誤 (7.6s)
+  ✓  205 [chromium] › tests\10-admin-pages.spec.ts:124:9 › 超管後台無 JavaScript 錯誤 › 店家管理 頁面無 JavaScript 錯誤 (7.5s)
+  ✓  206 [chromium] › tests\10-admin-pages.spec.ts:124:9 › 超管後台無 JavaScript 錯誤 › 儲值審核 頁面無 JavaScript 錯誤 (8.1s)
+  ✓  207 [chromium] › tests\10-admin-pages.spec.ts:124:9 › 超管後台無 JavaScript 錯誤 › 功能管理 頁面無 JavaScript 錯誤 (10.0s)
+  ✘  208 [chromium] › tests\10-admin-pages.spec.ts:155:7 › 超管 API 測試 › 儀表板 API 回應正確 (5.7s)
+  ✘  209 [chromium] › tests\10-admin-pages.spec.ts:155:7 › 超管 API 測試 › 儀表板 API 回應正確 (retry #1) (7.5s)
+  ✘  210 [chromium] › tests\10-admin-pages.spec.ts:174:7 › 超管 API 測試 › 店家列表 API 回應正確 (6.2s)
+  ✘  211 [chromium] › tests\10-admin-pages.spec.ts:174:7 › 超管 API 測試 › 店家列表 API 回應正確 (retry #1) (7.5s)
+  ✘  212 [chromium] › tests\10-admin-pages.spec.ts:191:7 › 超管 API 測試 › 功能列表 API 回應正確 (8.7s)
+  ✘  213 [chromium] › tests\10-admin-pages.spec.ts:191:7 › 超管 API 測試 › 功能列表 API 回應正確 (retry #1) (7.9s)
+員工總數: 3
+  ✓  214 [chromium] › tests\10-tenant-staff-service.spec.ts:38:9 › 員工管理 API 測試 › 員工列表 API › 取得員工列表 (346ms)
+可預約員工數: 2
+  ✓  215 [chromium] › tests\10-tenant-staff-service.spec.ts:50:9 › 員工管理 API 測試 › 員工列表 API › 取得可預約員工 (376ms)
+  ✓  216 [chromium] › tests\10-tenant-staff-service.spec.ts:65:9 › 員工管理 API 測試 › 員工 CRUD API › 新增員工 (361ms)
+  ✓  217 [chromium] › tests\10-tenant-staff-service.spec.ts:90:9 › 員工管理 API 測試 › 員工 CRUD API › 取得單一員工 (925ms)
+  ✓  218 [chromium] › tests\10-tenant-staff-service.spec.ts:109:9 › 員工管理 API 測試 › 員工 CRUD API › 更新員工 (1.3s)
+排班資料: {"staffId":"7778916d-4ba5-4def-915f-7099f512fb7f","staffName":"Michael 老師","schedules":[{"id":"62cec646-2fde-41ab-acb9-1f8cd918d78c","dayOfWeek":0,"dayOfWeekName":"週日","isWorkingDay":false,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null},{"id":"7474052e-1426-40be-ae3e-4719440c029a","dayOfWeek":1,"dayOfWeekName":"週一","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null},{"id":"00b7297b-76e3-4e25-8150-ad458a997a06","dayOfWeek":2,"dayOfWeekName":"週二","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null},{"id":"d2d28f93-5fde-48e1-9b5f-28844ae5c075","dayOfWeek":3,"dayOfWeekName":"週三","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null},{"id":"cc30578e-8f34-479f-b2b5-ecb1ffca7401","dayOfWeek":4,"dayOfWeekName":"週四","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null},{"id":"b05192c6-7705-42e2-9a58-aaa704fa9b19","dayOfWeek":5,"dayOfWeekName":"週五","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":"12:00","breakEndTime":"13:00"},{"id":"80941f63-decb-4da5-95ad-d29c9bb81555","dayOfWeek":6,"dayOfWeekName":"週六","isWorkingDay":true,"startTime":"09:00","endTime":"18:00","breakStartTime":null,"breakEndTime":null}]}
+  ✓  219 [chromium] › tests\10-tenant-staff-service.spec.ts:137:9 › 員工管理 API 測試 › 員工排班 API › 取得員工排班 (922ms)
+更新排班回應: 400
+  ✓  220 [chromium] › tests\10-tenant-staff-service.spec.ts:158:9 › 員工管理 API 測試 › 員工排班 API › 更新員工排班 (731ms)
+  ✓  221 [chromium] › tests\10-tenant-staff-service.spec.ts:193:9 › 員工管理 API 測試 › 員工請假 API › 取得員工請假 (938ms)
+新增請假回應: 400
+  ✓  222 [chromium] › tests\10-tenant-staff-service.spec.ts:210:9 › 員工管理 API 測試 › 員工請假 API › 新增員工請假 (727ms)
+服務總數: 4
+  ✓  223 [chromium] › tests\10-tenant-staff-service.spec.ts:249:9 › 服務管理 API 測試 › 服務列表 API › 取得服務列表 (388ms)
+可預約服務數: 4
+  ✓  224 [chromium] › tests\10-tenant-staff-service.spec.ts:261:9 › 服務管理 API 測試 › 服務列表 API › 取得可預約服務 (376ms)
+服務分類數: 0
+  ✓  225 [chromium] › tests\10-tenant-staff-service.spec.ts:272:9 › 服務管理 API 測試 › 服務列表 API › 取得服務分類 (358ms)
+  ✓  226 [chromium] › tests\10-tenant-staff-service.spec.ts:287:9 › 服務管理 API 測試 › 服務 CRUD API › 新增服務 (353ms)
+  ✓  227 [chromium] › tests\10-tenant-staff-service.spec.ts:313:9 › 服務管理 API 測試 › 服務 CRUD API › 取得單一服務 (893ms)
+  ✓  228 [chromium] › tests\10-tenant-staff-service.spec.ts:330:9 › 服務管理 API 測試 › 服務 CRUD API › 更新服務 (690ms)
+  ✓  229 [chromium] › tests\10-tenant-staff-service.spec.ts:364:9 › 員工管理 UI 測試 › 員工列表頁面 › 頁面載入成功 (10.7s)
+表頭 "員工": 存在
+表頭 "聯絡": 存在
+表頭 "可預約": 存在
+表頭 "狀態": 存在
+表頭 "操作": 存在
+  ✓  230 [chromium] › tests\10-tenant-staff-service.spec.ts:373:9 › 員工管理 UI 測試 › 員工列表頁面 › 表格正確顯示 (11.2s)
+欄位 #name: 存在
+欄位 #phone: 存在
+欄位 #email: 存在
+欄位 #status: 不存在
+  ✓  231 [chromium] › tests\10-tenant-staff-service.spec.ts:389:9 › 員工管理 UI 測試 › 員工列表頁面 › 新增員工按鈕 (6.9s)
+  ✓  232 [chromium] › tests\10-tenant-staff-service.spec.ts:412:9 › 員工管理 UI 測試 › 員工列表頁面 › 排班設定按鈕 (10.1s)
+  ✓  233 [chromium] › tests\10-tenant-staff-service.spec.ts:436:9 › 員工管理 UI 測試 › 員工列表頁面 › 請假管理按鈕 (11.7s)
+  ✓  234 [chromium] › tests\10-tenant-staff-service.spec.ts:467:9 › 服務管理 UI 測試 › 服務列表頁面 › 頁面載入成功 (12.0s)
+表頭 "名稱": 存在
+表頭 "時長": 存在
+表頭 "價格": 存在
+表頭 "狀態": 存在
+表頭 "操作": 存在
+  ✓  235 [chromium] › tests\10-tenant-staff-service.spec.ts:476:9 › 服務管理 UI 測試 › 服務列表頁面 › 表格正確顯示 (10.6s)
+欄位 #name: 存在
+欄位 #duration: 存在
+欄位 #price: 存在
+欄位 #description: 存在
+  ✓  236 [chromium] › tests\10-tenant-staff-service.spec.ts:491:9 › 服務管理 UI 測試 › 服務列表頁面 › 新增服務按鈕 (8.4s)
+  ✓  237 [chromium] › tests\10-tenant-staff-service.spec.ts:514:9 › 服務管理 UI 測試 › 服務列表頁面 › 編輯服務 (14.7s)
+  ✓  238 [chromium] › tests\10-tenant-staff-service.spec.ts:535:9 › 服務管理 UI 測試 › 服務列表頁面 › 狀態切換 (9.9s)
+  ✓  239 [chromium] › tests\11-public-pages.spec.ts:8:9 › 公開頁面測試 › 健康檢查 › 健康檢查端點回應正確 (1.2s)
+  ✓  240 [chromium] › tests\11-public-pages.spec.ts:18:9 › 公開頁面測試 › 店家登入頁 › 登入頁面載入成功 (2.0s)
+  ✓  241 [chromium] › tests\11-public-pages.spec.ts:28:9 › 公開頁面測試 › 店家登入頁 › 登入頁面無 JavaScript 錯誤 (4.3s)
+  ✓  242 [chromium] › tests\11-public-pages.spec.ts:47:9 › 公開頁面測試 › 店家登入頁 › 忘記密碼連結存在 (1.6s)
+  ✓  243 [chromium] › tests\11-public-pages.spec.ts:55:9 › 公開頁面測試 › 店家登入頁 › 註冊連結存在 (1.8s)
+  ✓  244 [chromium] › tests\11-public-pages.spec.ts:65:9 › 公開頁面測試 › 店家註冊頁 › 註冊頁面載入成功 (1.3s)
+  ✓  245 [chromium] › tests\11-public-pages.spec.ts:75:9 › 公開頁面測試 › 店家註冊頁 › 註冊頁面無 JavaScript 錯誤 (4.5s)
+  ✓  246 [chromium] › tests\11-public-pages.spec.ts:96:9 › 公開頁面測試 › 忘記密碼頁 › 忘記密碼頁面載入成功 (1.9s)
+  ✓  247 [chromium] › tests\11-public-pages.spec.ts:105:9 › 公開頁面測試 › 忘記密碼頁 › 忘記密碼頁面無 JavaScript 錯誤 (3.8s)
+  ✓  248 [chromium] › tests\11-public-pages.spec.ts:126:9 › 公開頁面測試 › 超管登入頁 › 超管登入頁面載入成功 (2.3s)
+  ✓  249 [chromium] › tests\11-public-pages.spec.ts:136:9 › 公開頁面測試 › 超管登入頁 › 超管登入頁面無 JavaScript 錯誤 (4.1s)
+  ✓  250 [chromium] › tests\11-public-pages.spec.ts:157:9 › 公開頁面測試 › 顧客自助取消預約頁 › 無效 token 會顯示錯誤 (2.5s)
+  ✓  251 [chromium] › tests\11-public-pages.spec.ts:172:9 › 公開頁面測試 › 顧客自助取消預約頁 › 取消頁面無 JavaScript 錯誤 (3.4s)
+  ✓  252 [chromium] › tests\11-public-pages.spec.ts:194:7 › 錯誤頁面測試 › 404 頁面處理 (1.2s)
+  ✓  253 [chromium] › tests\11-public-pages.spec.ts:204:7 › 公開 API 測試 › 健康檢查 API (727ms)
+  ✓  254 [chromium] › tests\11-public-pages.spec.ts:209:7 › 公開 API 測試 › 認證 API - 無 token 返回 401 (309ms)
+  ✓  255 [chromium] › tests\11-public-pages.spec.ts:214:7 › 公開 API 測試 › 店家登入 API - 錯誤帳密返回錯誤 (307ms)
+  ✓  256 [chromium] › tests\11-public-pages.spec.ts:227:7 › 靜態資源測試 › CSS 檔案可存取 (482ms)
+  ✓  257 [chromium] › tests\11-public-pages.spec.ts:233:7 › 靜態資源測試 › JS 檔案可存取 (298ms)
+  ✓  258 [chromium] › tests\11-public-pages.spec.ts:239:7 › 靜態資源測試 › Tenant CSS 可存取 (297ms)
+  ✓  259 [chromium] › tests\11-public-pages.spec.ts:244:7 › 靜態資源測試 › Tenant JS 可存取 (296ms)
+  ✓  260 [chromium] › tests\11-public-pages.spec.ts:251:7 › 登入流程測試 › 店家登入成功後跳轉到儀表板 (3.6s)
+  ✓  261 [chromium] › tests\11-public-pages.spec.ts:272:7 › 登入流程測試 › 超管登入成功後跳轉到儀表板 (3.5s)
+  ✓  262 [chromium] › tests\11-public-pages.spec.ts:293:7 › 登入流程測試 › 錯誤密碼顯示錯誤訊息 (3.9s)
+商品總數: 2
+  ✓  263 [chromium] › tests\11-tenant-product-coupon.spec.ts:37:9 › 商品管理 API 測試 › 商品列表 API › 取得商品列表 (312ms)
+分類 VOUCHER: 400
+分類 MERCHANDISE: 400
+分類 SERVICE: 400
+  ✓  264 [chromium] › tests\11-tenant-product-coupon.spec.ts:49:9 › 商品管理 API 測試 › 商品列表 API › 商品列表 - 帶分類篩選 (1.3s)
+狀態 ON_SALE: 成功
+狀態 OFF_SHELF: 成功
+狀態 ARCHIVED: 400
+  ✓  265 [chromium] › tests\11-tenant-product-coupon.spec.ts:62:9 › 商品管理 API 測試 › 商品列表 API › 商品列表 - 帶狀態篩選 (1.1s)
+新增商品回應: 400
+  ✓  266 [chromium] › tests\11-tenant-product-coupon.spec.ts:79:9 › 商品管理 API 測試 › 商品 CRUD API › 新增商品 (484ms)
+  ✓  267 [chromium] › tests\11-tenant-product-coupon.spec.ts:108:9 › 商品管理 API 測試 › 商品 CRUD API › 取得單一商品 (809ms)
+  ✓  268 [chromium] › tests\11-tenant-product-coupon.spec.ts:128:9 › 商品管理 API 測試 › 商品 CRUD API › 更新商品 (608ms)
+  ✓  269 [chromium] › tests\11-tenant-product-coupon.spec.ts:157:9 › 商品管理 API 測試 › 商品狀態操作 API › 上架商品 (491ms)
+下架商品回應: 200
+  ✓  270 [chromium] › tests\11-tenant-product-coupon.spec.ts:174:9 › 商品管理 API 測試 › 商品狀態操作 API › 下架商品 (928ms)
+調整庫存回應: 400
+  ✓  271 [chromium] › tests\11-tenant-product-coupon.spec.ts:196:9 › 商品管理 API 測試 › 商品狀態操作 API › 調整庫存 (610ms)
+票券總數: 1
+  ✓  272 [chromium] › tests\11-tenant-product-coupon.spec.ts:230:9 › 票券管理 API 測試 › 票券列表 API › 取得票券列表 (307ms)
+狀態 DRAFT: 成功
+狀態 PUBLISHED: 成功
+狀態 PAUSED: 成功
+狀態 ENDED: 成功
+  ✓  273 [chromium] › tests\11-tenant-product-coupon.spec.ts:242:9 › 票券管理 API 測試 › 票券列表 API › 票券列表 - 帶狀態篩選 (1.2s)
+新增票券回應: 400
+  ✓  274 [chromium] › tests\11-tenant-product-coupon.spec.ts:259:9 › 票券管理 API 測試 › 票券 CRUD API › 新增票券 (300ms)
+  ✓  275 [chromium] › tests\11-tenant-product-coupon.spec.ts:295:9 › 票券管理 API 測試 › 票券 CRUD API › 取得單一票券 (801ms)
+  ✓  276 [chromium] › tests\11-tenant-product-coupon.spec.ts:314:9 › 票券管理 API 測試 › 票券 CRUD API › 更新票券 (621ms)
+  ✓  277 [chromium] › tests\11-tenant-product-coupon.spec.ts:340:9 › 票券管理 API 測試 › 票券操作 API › 發布票券 (492ms)
+暫停票券回應: 200
+  ✓  278 [chromium] › tests\11-tenant-product-coupon.spec.ts:357:9 › 票券管理 API 測試 › 票券操作 API › 暫停票券 (948ms)
+發放票券回應: 200
+  ✓  279 [chromium] › tests\11-tenant-product-coupon.spec.ts:379:9 › 票券管理 API 測試 › 票券操作 API › 發放票券給顧客 (1.4s)
+  ✓  280 [chromium] › tests\11-tenant-product-coupon.spec.ts:418:9 › 商品管理 UI 測試 › 商品列表頁面 › 頁面載入成功 (9.8s)
+表頭 "名稱": 存在
+表頭 "分類": 存在
+表頭 "價格": 不存在
+表頭 "庫存": 存在
+表頭 "狀態": 存在
+表頭 "操作": 存在
+  ✓  281 [chromium] › tests\11-tenant-product-coupon.spec.ts:427:9 › 商品管理 UI 測試 › 商品列表頁面 › 表格正確顯示 (9.6s)
+欄位 #name: 存在
+欄位 #category: 存在
+欄位 #price: 存在
+欄位 #stock: 不存在
+欄位 #description: 存在
+  ✓  282 [chromium] › tests\11-tenant-product-coupon.spec.ts:442:9 › 商品管理 UI 測試 › 商品列表頁面 › 新增商品按鈕 (7.3s)
+  ✓  283 [chromium] › tests\11-tenant-product-coupon.spec.ts:464:9 › 商品管理 UI 測試 › 商品列表頁面 › 分類篩選 (7.8s)
+上架按鈕: false
+下架按鈕: false
+  ✓  284 [chromium] › tests\11-tenant-product-coupon.spec.ts:478:9 › 商品管理 UI 測試 › 商品列表頁面 › 上架/下架按鈕 (13.1s)
+  ✓  285 [chromium] › tests\11-tenant-product-coupon.spec.ts:490:9 › 商品管理 UI 測試 › 商品列表頁面 › 調整庫存按鈕 (9.7s)
+  ✓  286 [chromium] › tests\11-tenant-product-coupon.spec.ts:517:9 › 票券管理 UI 測試 › 票券列表頁面 › 頁面載入成功 (10.8s)
+表頭 "名稱": 存在
+表頭 "折扣": 存在
+表頭 "數量": 不存在
+表頭 "有效期": 存在
+表頭 "狀態": 存在
+表頭 "操作": 存在
+  ✓  287 [chromium] › tests\11-tenant-product-coupon.spec.ts:526:9 › 票券管理 UI 測試 › 票券列表頁面 › 表格正確顯示 (10.2s)
+欄位 #name: 存在
+欄位 #discountType: 不存在
+欄位 #discountValue: 不存在
+欄位 #totalQuantity: 存在
+欄位 #startDate: 不存在
+欄位 #endDate: 不存在
+  ✓  288 [chromium] › tests\11-tenant-product-coupon.spec.ts:541:9 › 票券管理 UI 測試 › 票券列表頁面 › 新增票券按鈕 (8.4s)
+狀態標籤數: 2
+標籤 1: 
+標籤 2: 
+  ✓  289 [chromium] › tests\11-tenant-product-coupon.spec.ts:563:9 › 票券管理 UI 測試 › 票券列表頁面 › 狀態篩選標籤 (6.7s)
+發布按鈕: false
+暫停按鈕: false
+  ✓  290 [chromium] › tests\11-tenant-product-coupon.spec.ts:580:9 › 票券管理 UI 測試 › 票券列表頁面 › 發布/暫停按鈕 (10.3s)
+  ✓  291 [chromium] › tests\11-tenant-product-coupon.spec.ts:592:9 › 票券管理 UI 測試 › 票券列表頁面 › 發放票券按鈕 (10.4s)
+活動總數: 1
+  ✓  292 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:36:9 › 行銷活動 API 測試 › 活動列表 API › 取得活動列表 (364ms)
+類型 DISCOUNT: 400
+類型 GIFT: 400
+類型 LOYALTY: 400
+類型 REFERRAL: 成功
+  ✓  293 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:48:9 › 行銷活動 API 測試 › 活動列表 API › 活動列表 - 帶類型篩選 (1.9s)
+狀態 DRAFT: 成功
+狀態 PUBLISHED: 400
+狀態 PAUSED: 成功
+狀態 ENDED: 成功
+  ✓  294 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:61:9 › 行銷活動 API 測試 › 活動列表 API › 活動列表 - 帶狀態篩選 (2.3s)
+新增活動回應: 400
+  ✓  295 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:78:9 › 行銷活動 API 測試 › 活動 CRUD API › 新增活動 (356ms)
+  ✓  296 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:111:9 › 行銷活動 API 測試 › 活動 CRUD API › 取得單一活動 (902ms)
+  ✓  297 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:130:9 › 行銷活動 API 測試 › 活動 CRUD API › 更新活動 (707ms)
+  ✓  298 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:156:9 › 行銷活動 API 測試 › 活動狀態操作 API › 發布活動 (551ms)
+  ✓  299 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:173:9 › 行銷活動 API 測試 › 活動狀態操作 API › 暫停活動 (347ms)
+  ✓  300 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:195:9 › 行銷活動 API 測試 › 活動狀態操作 API › 結束活動 (541ms)
+推播總數: 3
+  ✓  301 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:215:9 › 行銷推播 API 測試 › 推播列表 API › 取得推播列表 (360ms)
+建立推播回應: 200
+  ✓  302 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:230:9 › 行銷推播 API 測試 › 推播 CRUD API › 建立推播 (366ms)
+  ✘  303 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:258:9 › 行銷活動 UI 測試 › 活動列表頁面 › 頁面載入成功 (1.0m)
+  ✘  304 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:267:9 › 行銷活動 UI 測試 › 活動列表頁面 › 表格正確顯示 (0ms)
+  -  305 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:282:9 › 行銷活動 UI 測試 › 活動列表頁面 › 新增活動按鈕
+  -  306 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:304:9 › 行銷活動 UI 測試 › 活動列表頁面 › 類型篩選
+  -  307 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:318:9 › 行銷活動 UI 測試 › 活動列表頁面 › 狀態篩選
+  -  308 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:332:9 › 行銷活動 UI 測試 › 活動列表頁面 › 發布/暫停/結束按鈕
+  -  309 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:354:9 › 行銷推播 UI 測試 › 推播管理頁面 › 頁面載入成功
+  -  310 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:363:9 › 行銷推播 UI 測試 › 推播管理頁面 › 新增推播按鈕
+  -  311 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:393:9 › 行銷推播 UI 測試 › 推播管理頁面 › 推播目標類型選擇
+  -  312 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:421:9 › 行銷推播 UI 測試 › 推播管理頁面 › 排程發送功能
+  -  313 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:444:9 › 行銷推播 UI 測試 › 推播管理頁面 › 發送按鈕
+  -  314 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:454:9 › 行銷推播 UI 測試 › 推播管理頁面 › 推播歷史列表
+  -  315 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:258:9 › 行銷活動 UI 測試 › 活動列表頁面 › 頁面載入成功 (retry #1)
+  ✘  316 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:267:9 › 行銷活動 UI 測試 › 活動列表頁面 › 表格正確顯示 (retry #1) (0ms)
+  -  317 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:282:9 › 行銷活動 UI 測試 › 活動列表頁面 › 新增活動按鈕 (retry #1)
+  -  318 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:304:9 › 行銷活動 UI 測試 › 活動列表頁面 › 類型篩選 (retry #1)
+  -  319 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:318:9 › 行銷活動 UI 測試 › 活動列表頁面 › 狀態篩選 (retry #1)
+  -  320 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:332:9 › 行銷活動 UI 測試 › 活動列表頁面 › 發布/暫停/結束按鈕 (retry #1)
+  -  321 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:354:9 › 行銷推播 UI 測試 › 推播管理頁面 › 頁面載入成功 (retry #1)
+  -  322 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:363:9 › 行銷推播 UI 測試 › 推播管理頁面 › 新增推播按鈕 (retry #1)
+  -  323 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:393:9 › 行銷推播 UI 測試 › 推播管理頁面 › 推播目標類型選擇 (retry #1)
+  -  324 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:421:9 › 行銷推播 UI 測試 › 推播管理頁面 › 排程發送功能 (retry #1)
+  -  325 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:444:9 › 行銷推播 UI 測試 › 推播管理頁面 › 發送按鈕 (retry #1)
+  -  326 [chromium] › tests\12-tenant-campaign-marketing.spec.ts:454:9 › 行銷推播 UI 測試 › 推播管理頁面 › 推播歷史列表 (retry #1)
+  ✘  327 [chromium] › tests\13-tenant-settings.spec.ts:36:9 › 店家設定 API 測試 › 設定 API › 取得店家設定 (0ms)
+  -  328 [chromium] › tests\13-tenant-settings.spec.ts:49:9 › 店家設定 API 測試 › 設定 API › 更新店家設定
+  -  329 [chromium] › tests\13-tenant-settings.spec.ts:78:9 › 店家設定 API 測試 › LINE 設定 API › 取得 LINE 設定
+  -  330 [chromium] › tests\13-tenant-settings.spec.ts:91:9 › 店家設定 API 測試 › LINE 設定 API › 更新 LINE 設定
+  -  331 [chromium] › tests\13-tenant-settings.spec.ts:109:9 › 店家設定 API 測試 › LINE 設定 API › 啟用/停用 LINE
+  -  332 [chromium] › tests\13-tenant-settings.spec.ts:134:9 › 功能商店 API 測試 › 功能商店 API › 取得功能列表
+  -  333 [chromium] › tests\13-tenant-settings.spec.ts:153:9 › 功能商店 API 測試 › 功能商店 API › 取得單一功能詳情
+  -  334 [chromium] › tests\13-tenant-settings.spec.ts:166:9 › 功能商店 API 測試 › 功能商店 API › 申請功能
+  -  335 [chromium] › tests\13-tenant-settings.spec.ts:176:9 › 功能商店 API 測試 › 功能商店 API › 取消功能
+  -  336 [chromium] › tests\13-tenant-settings.spec.ts:196:9 › 點數管理 API 測試 › 點數 API › 取得點數餘額
+  -  337 [chromium] › tests\13-tenant-settings.spec.ts:208:9 › 點數管理 API 測試 › 點數 API › 取得儲值記錄
+  -  338 [chromium] › tests\13-tenant-settings.spec.ts:219:9 › 點數管理 API 測試 › 點數 API › 取得異動記錄
+  -  339 [chromium] › tests\13-tenant-settings.spec.ts:230:9 › 點數管理 API 測試 › 點數 API › 申請儲值
+  -  340 [chromium] › tests\13-tenant-settings.spec.ts:254:9 › 店家設定 UI 測試 › 設定頁面 › 頁面載入成功
+  -  341 [chromium] › tests\13-tenant-settings.spec.ts:263:9 › 店家設定 UI 測試 › 設定頁面 › 基本資訊欄位
+  -  342 [chromium] › tests\13-tenant-settings.spec.ts:283:9 › 店家設定 UI 測試 › 設定頁面 › 營業時間設定
+  -  343 [chromium] › tests\13-tenant-settings.spec.ts:296:9 › 店家設定 UI 測試 › 設定頁面 › 預約設定
+  -  344 [chromium] › tests\13-tenant-settings.spec.ts:314:9 › 店家設定 UI 測試 › 設定頁面 › 儲存按鈕
+  -  345 [chromium] › tests\13-tenant-settings.spec.ts:324:9 › 店家設定 UI 測試 › LINE 設定頁面 › 頁面載入成功
+  -  346 [chromium] › tests\13-tenant-settings.spec.ts:333:9 › 店家設定 UI 測試 › LINE 設定頁面 › LINE 設定欄位
+  -  347 [chromium] › tests\13-tenant-settings.spec.ts:350:9 › 店家設定 UI 測試 › LINE 設定頁面 › Webhook URL 顯示
+  -  348 [chromium] › tests\13-tenant-settings.spec.ts:359:9 › 店家設定 UI 測試 › LINE 設定頁面 › 啟用/停用按鈕
+  -  349 [chromium] › tests\13-tenant-settings.spec.ts:371:9 › 店家設定 UI 測試 › LINE 設定頁面 › 測試連線按鈕
+  -  350 [chromium] › tests\13-tenant-settings.spec.ts:381:9 › 店家設定 UI 測試 › 功能商店頁面 › 頁面載入成功
+  -  351 [chromium] › tests\13-tenant-settings.spec.ts:390:9 › 店家設定 UI 測試 › 功能商店頁面 › 功能卡片顯示
+  -  352 [chromium] › tests\13-tenant-settings.spec.ts:400:9 › 店家設定 UI 測試 › 功能商店頁面 › 免費/付費分類
+  -  353 [chromium] › tests\13-tenant-settings.spec.ts:412:9 › 店家設定 UI 測試 › 功能商店頁面 › 訂閱/取消訂閱按鈕
+  -  354 [chromium] › tests\13-tenant-settings.spec.ts:424:9 › 店家設定 UI 測試 › 功能商店頁面 › 功能詳情檢視
+  -  355 [chromium] › tests\13-tenant-settings.spec.ts:444:9 › 店家設定 UI 測試 › 點數管理頁面 › 頁面載入成功
+  -  356 [chromium] › tests\13-tenant-settings.spec.ts:453:9 › 店家設定 UI 測試 › 點數管理頁面 › 點數餘額顯示
+  -  357 [chromium] › tests\13-tenant-settings.spec.ts:462:9 › 店家設定 UI 測試 › 點數管理頁面 › 儲值按鈕
+  -  358 [chromium] › tests\13-tenant-settings.spec.ts:485:9 › 店家設定 UI 測試 › 點數管理頁面 › 儲值記錄表格
+  -  359 [chromium] › tests\13-tenant-settings.spec.ts:500:9 › 店家設定 UI 測試 › 點數管理頁面 › 異動記錄標籤
+  ✘  360 [chromium] › tests\13-tenant-settings.spec.ts:36:9 › 店家設定 API 測試 › 設定 API › 取得店家設定 (retry #1) (0ms)
+  -  361 [chromium] › tests\13-tenant-settings.spec.ts:49:9 › 店家設定 API 測試 › 設定 API › 更新店家設定 (retry #1)
+  -  362 [chromium] › tests\13-tenant-settings.spec.ts:78:9 › 店家設定 API 測試 › LINE 設定 API › 取得 LINE 設定 (retry #1)
+  -  363 [chromium] › tests\13-tenant-settings.spec.ts:91:9 › 店家設定 API 測試 › LINE 設定 API › 更新 LINE 設定 (retry #1)
+  -  364 [chromium] › tests\13-tenant-settings.spec.ts:109:9 › 店家設定 API 測試 › LINE 設定 API › 啟用/停用 LINE (retry #1)
+  -  365 [chromium] › tests\13-tenant-settings.spec.ts:134:9 › 功能商店 API 測試 › 功能商店 API › 取得功能列表 (retry #1)
+  -  366 [chromium] › tests\13-tenant-settings.spec.ts:153:9 › 功能商店 API 測試 › 功能商店 API › 取得單一功能詳情 (retry #1)
+  -  367 [chromium] › tests\13-tenant-settings.spec.ts:166:9 › 功能商店 API 測試 › 功能商店 API › 申請功能 (retry #1)
+  -  368 [chromium] › tests\13-tenant-settings.spec.ts:176:9 › 功能商店 API 測試 › 功能商店 API › 取消功能 (retry #1)
+  -  369 [chromium] › tests\13-tenant-settings.spec.ts:196:9 › 點數管理 API 測試 › 點數 API › 取得點數餘額 (retry #1)
+  -  370 [chromium] › tests\13-tenant-settings.spec.ts:208:9 › 點數管理 API 測試 › 點數 API › 取得儲值記錄 (retry #1)
+  -  371 [chromium] › tests\13-tenant-settings.spec.ts:219:9 › 點數管理 API 測試 › 點數 API › 取得異動記錄 (retry #1)
+  -  372 [chromium] › tests\13-tenant-settings.spec.ts:230:9 › 點數管理 API 測試 › 點數 API › 申請儲值 (retry #1)
+  -  373 [chromium] › tests\13-tenant-settings.spec.ts:254:9 › 店家設定 UI 測試 › 設定頁面 › 頁面載入成功 (retry #1)
+  -  374 [chromium] › tests\13-tenant-settings.spec.ts:263:9 › 店家設定 UI 測試 › 設定頁面 › 基本資訊欄位 (retry #1)
+  -  375 [chromium] › tests\13-tenant-settings.spec.ts:283:9 › 店家設定 UI 測試 › 設定頁面 › 營業時間設定 (retry #1)
+  -  376 [chromium] › tests\13-tenant-settings.spec.ts:296:9 › 店家設定 UI 測試 › 設定頁面 › 預約設定 (retry #1)
+  -  377 [chromium] › tests\13-tenant-settings.spec.ts:314:9 › 店家設定 UI 測試 › 設定頁面 › 儲存按鈕 (retry #1)
+  -  378 [chromium] › tests\13-tenant-settings.spec.ts:324:9 › 店家設定 UI 測試 › LINE 設定頁面 › 頁面載入成功 (retry #1)
+  -  379 [chromium] › tests\13-tenant-settings.spec.ts:333:9 › 店家設定 UI 測試 › LINE 設定頁面 › LINE 設定欄位 (retry #1)
+  -  380 [chromium] › tests\13-tenant-settings.spec.ts:350:9 › 店家設定 UI 測試 › LINE 設定頁面 › Webhook URL 顯示 (retry #1)
+  -  381 [chromium] › tests\13-tenant-settings.spec.ts:359:9 › 店家設定 UI 測試 › LINE 設定頁面 › 啟用/停用按鈕 (retry #1)
+  -  382 [chromium] › tests\13-tenant-settings.spec.ts:371:9 › 店家設定 UI 測試 › LINE 設定頁面 › 測試連線按鈕 (retry #1)
+  -  383 [chromium] › tests\13-tenant-settings.spec.ts:381:9 › 店家設定 UI 測試 › 功能商店頁面 › 頁面載入成功 (retry #1)
+  -  384 [chromium] › tests\13-tenant-settings.spec.ts:390:9 › 店家設定 UI 測試 › 功能商店頁面 › 功能卡片顯示 (retry #1)
+  -  385 [chromium] › tests\13-tenant-settings.spec.ts:400:9 › 店家設定 UI 測試 › 功能商店頁面 › 免費/付費分類 (retry #1)
+  -  386 [chromium] › tests\13-tenant-settings.spec.ts:412:9 › 店家設定 UI 測試 › 功能商店頁面 › 訂閱/取消訂閱按鈕 (retry #1)
+  -  387 [chromium] › tests\13-tenant-settings.spec.ts:424:9 › 店家設定 UI 測試 › 功能商店頁面 › 功能詳情檢視 (retry #1)
+  -  388 [chromium] › tests\13-tenant-settings.spec.ts:444:9 › 店家設定 UI 測試 › 點數管理頁面 › 頁面載入成功 (retry #1)
+  -  389 [chromium] › tests\13-tenant-settings.spec.ts:453:9 › 店家設定 UI 測試 › 點數管理頁面 › 點數餘額顯示 (retry #1)
+  -  390 [chromium] › tests\13-tenant-settings.spec.ts:462:9 › 店家設定 UI 測試 › 點數管理頁面 › 儲值按鈕 (retry #1)
+  -  391 [chromium] › tests\13-tenant-settings.spec.ts:485:9 › 店家設定 UI 測試 › 點數管理頁面 › 儲值記錄表格 (retry #1)
+  -  392 [chromium] › tests\13-tenant-settings.spec.ts:500:9 › 店家設定 UI 測試 › 點數管理頁面 › 異動記錄標籤 (retry #1)
+  ✘  393 [chromium] › tests\14-tenant-reports.spec.ts:35:9 › 報表 API 測試 › 報表摘要 API › 取得今日報表 (0ms)
+  -  394 [chromium] › tests\14-tenant-reports.spec.ts:47:9 › 報表 API 測試 › 報表摘要 API › 取得週報表
+  -  395 [chromium] › tests\14-tenant-reports.spec.ts:58:9 › 報表 API 測試 › 報表摘要 API › 取得月報表
+  -  396 [chromium] › tests\14-tenant-reports.spec.ts:69:9 › 報表 API 測試 › 報表摘要 API › 取得報表摘要 - 不同時間範圍
+  -  397 [chromium] › tests\14-tenant-reports.spec.ts:84:9 › 報表 API 測試 › 每日報表 API › 取得每日報表
+  -  398 [chromium] › tests\14-tenant-reports.spec.ts:95:9 › 報表 API 測試 › 每日報表 API › 每日報表 - 不同時間範圍
+  -  399 [chromium] › tests\14-tenant-reports.spec.ts:110:9 › 報表 API 測試 › 排行榜 API › 熱門服務 TOP 10
+  -  400 [chromium] › tests\14-tenant-reports.spec.ts:121:9 › 報表 API 測試 › 排行榜 API › 熱門員工 TOP 10
+  -  401 [chromium] › tests\14-tenant-reports.spec.ts:132:9 › 報表 API 測試 › 排行榜 API › 排行榜 - 不同限制
+  -  402 [chromium] › tests\14-tenant-reports.spec.ts:151:9 › 報表 API 測試 › 儀表板 API › 取得儀表板資料
+  -  403 [chromium] › tests\14-tenant-reports.spec.ts:172:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 Excel
+  -  404 [chromium] › tests\14-tenant-reports.spec.ts:183:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 PDF
+  -  405 [chromium] › tests\14-tenant-reports.spec.ts:194:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 - 帶狀態篩選
+  -  406 [chromium] › tests\14-tenant-reports.spec.ts:208:9 › 匯出 API 測試 › 報表匯出 › 匯出報表 Excel
+  -  407 [chromium] › tests\14-tenant-reports.spec.ts:218:9 › 匯出 API 測試 › 報表匯出 › 匯出報表 PDF
+  -  408 [chromium] › tests\14-tenant-reports.spec.ts:230:9 › 匯出 API 測試 › 顧客匯出 › 匯出顧客 Excel
+  -  409 [chromium] › tests\14-tenant-reports.spec.ts:248:9 › 報表 UI 測試 › 報表頁面 › 頁面載入成功
+  -  410 [chromium] › tests\14-tenant-reports.spec.ts:257:9 › 報表 UI 測試 › 報表頁面 › 統計卡片顯示
+  -  411 [chromium] › tests\14-tenant-reports.spec.ts:270:9 › 報表 UI 測試 › 報表頁面 › 圖表顯示
+  -  412 [chromium] › tests\14-tenant-reports.spec.ts:281:9 › 報表 UI 測試 › 報表頁面 › 日期範圍選擇
+  -  413 [chromium] › tests\14-tenant-reports.spec.ts:298:9 › 報表 UI 測試 › 報表頁面 › 日期範圍切換
+  -  414 [chromium] › tests\14-tenant-reports.spec.ts:315:9 › 報表 UI 測試 › 報表頁面 › 熱門服務表格
+  -  415 [chromium] › tests\14-tenant-reports.spec.ts:324:9 › 報表 UI 測試 › 報表頁面 › 員工業績表格
+  -  416 [chromium] › tests\14-tenant-reports.spec.ts:333:9 › 報表 UI 測試 › 報表頁面 › 匯出按鈕
+  -  417 [chromium] › tests\14-tenant-reports.spec.ts:344:9 › 報表 UI 測試 › 報表頁面 › 匯出 Excel 功能
+  -  418 [chromium] › tests\14-tenant-reports.spec.ts:361:9 › 報表 UI 測試 › 報表頁面 › 匯出 PDF 功能
+  -  419 [chromium] › tests\14-tenant-reports.spec.ts:379:9 › 報表 UI 測試 › 儀表板頁面 › 頁面載入成功
+  -  420 [chromium] › tests\14-tenant-reports.spec.ts:388:9 › 報表 UI 測試 › 儀表板頁面 › 今日統計卡片
+  -  421 [chromium] › tests\14-tenant-reports.spec.ts:399:9 › 報表 UI 測試 › 儀表板頁面 › 待處理預約
+  -  422 [chromium] › tests\14-tenant-reports.spec.ts:408:9 › 報表 UI 測試 › 儀表板頁面 › 最近預約列表
+  -  423 [chromium] › tests\14-tenant-reports.spec.ts:417:9 › 報表 UI 測試 › 儀表板頁面 › 快速操作按鈕
+  ✘  424 [chromium] › tests\14-tenant-reports.spec.ts:35:9 › 報表 API 測試 › 報表摘要 API › 取得今日報表 (retry #1) (0ms)
+  -  425 [chromium] › tests\14-tenant-reports.spec.ts:47:9 › 報表 API 測試 › 報表摘要 API › 取得週報表 (retry #1)
+  -  426 [chromium] › tests\14-tenant-reports.spec.ts:58:9 › 報表 API 測試 › 報表摘要 API › 取得月報表 (retry #1)
+  -  427 [chromium] › tests\14-tenant-reports.spec.ts:69:9 › 報表 API 測試 › 報表摘要 API › 取得報表摘要 - 不同時間範圍 (retry #1)
+  -  428 [chromium] › tests\14-tenant-reports.spec.ts:84:9 › 報表 API 測試 › 每日報表 API › 取得每日報表 (retry #1)
+  -  429 [chromium] › tests\14-tenant-reports.spec.ts:95:9 › 報表 API 測試 › 每日報表 API › 每日報表 - 不同時間範圍 (retry #1)
+  -  430 [chromium] › tests\14-tenant-reports.spec.ts:110:9 › 報表 API 測試 › 排行榜 API › 熱門服務 TOP 10 (retry #1)
+  -  431 [chromium] › tests\14-tenant-reports.spec.ts:121:9 › 報表 API 測試 › 排行榜 API › 熱門員工 TOP 10 (retry #1)
+  -  432 [chromium] › tests\14-tenant-reports.spec.ts:132:9 › 報表 API 測試 › 排行榜 API › 排行榜 - 不同限制 (retry #1)
+  -  433 [chromium] › tests\14-tenant-reports.spec.ts:151:9 › 報表 API 測試 › 儀表板 API › 取得儀表板資料 (retry #1)
+  -  434 [chromium] › tests\14-tenant-reports.spec.ts:172:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 Excel (retry #1)
+  -  435 [chromium] › tests\14-tenant-reports.spec.ts:183:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 PDF (retry #1)
+  -  436 [chromium] › tests\14-tenant-reports.spec.ts:194:9 › 匯出 API 測試 › 預約匯出 › 匯出預約 - 帶狀態篩選 (retry #1)
+  -  437 [chromium] › tests\14-tenant-reports.spec.ts:208:9 › 匯出 API 測試 › 報表匯出 › 匯出報表 Excel (retry #1)
+  -  438 [chromium] › tests\14-tenant-reports.spec.ts:218:9 › 匯出 API 測試 › 報表匯出 › 匯出報表 PDF (retry #1)
+  -  439 [chromium] › tests\14-tenant-reports.spec.ts:230:9 › 匯出 API 測試 › 顧客匯出 › 匯出顧客 Excel (retry #1)
+  -  440 [chromium] › tests\14-tenant-reports.spec.ts:248:9 › 報表 UI 測試 › 報表頁面 › 頁面載入成功 (retry #1)
+  -  441 [chromium] › tests\14-tenant-reports.spec.ts:257:9 › 報表 UI 測試 › 報表頁面 › 統計卡片顯示 (retry #1)
+  -  442 [chromium] › tests\14-tenant-reports.spec.ts:270:9 › 報表 UI 測試 › 報表頁面 › 圖表顯示 (retry #1)
+  -  443 [chromium] › tests\14-tenant-reports.spec.ts:281:9 › 報表 UI 測試 › 報表頁面 › 日期範圍選擇 (retry #1)
+  -  444 [chromium] › tests\14-tenant-reports.spec.ts:298:9 › 報表 UI 測試 › 報表頁面 › 日期範圍切換 (retry #1)
+  -  445 [chromium] › tests\14-tenant-reports.spec.ts:315:9 › 報表 UI 測試 › 報表頁面 › 熱門服務表格 (retry #1)
+  -  446 [chromium] › tests\14-tenant-reports.spec.ts:324:9 › 報表 UI 測試 › 報表頁面 › 員工業績表格 (retry #1)
+  -  447 [chromium] › tests\14-tenant-reports.spec.ts:333:9 › 報表 UI 測試 › 報表頁面 › 匯出按鈕 (retry #1)
+  -  448 [chromium] › tests\14-tenant-reports.spec.ts:344:9 › 報表 UI 測試 › 報表頁面 › 匯出 Excel 功能 (retry #1)
+  -  449 [chromium] › tests\14-tenant-reports.spec.ts:361:9 › 報表 UI 測試 › 報表頁面 › 匯出 PDF 功能 (retry #1)
+  -  450 [chromium] › tests\14-tenant-reports.spec.ts:379:9 › 報表 UI 測試 › 儀表板頁面 › 頁面載入成功 (retry #1)
+  -  451 [chromium] › tests\14-tenant-reports.spec.ts:388:9 › 報表 UI 測試 › 儀表板頁面 › 今日統計卡片 (retry #1)
+  -  452 [chromium] › tests\14-tenant-reports.spec.ts:399:9 › 報表 UI 測試 › 儀表板頁面 › 待處理預約 (retry #1)
+  -  453 [chromium] › tests\14-tenant-reports.spec.ts:408:9 › 報表 UI 測試 › 儀表板頁面 › 最近預約列表 (retry #1)
+  -  454 [chromium] › tests\14-tenant-reports.spec.ts:417:9 › 報表 UI 測試 › 儀表板頁面 › 快速操作按鈕 (retry #1)
+  ✘  455 [chromium] › tests\15-line-bot.spec.ts:39:9 › LINE Bot API 測試 › LINE Webhook › Webhook 端點存在 (0ms)
+  -  456 [chromium] › tests\15-line-bot.spec.ts:53:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Follow 事件
+  -  457 [chromium] › tests\15-line-bot.spec.ts:74:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Message 事件
+  -  458 [chromium] › tests\15-line-bot.spec.ts:100:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Postback 事件
+  -  459 [chromium] › tests\15-line-bot.spec.ts:124:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Unfollow 事件
+  -  460 [chromium] › tests\15-line-bot.spec.ts:146:9 › LINE Bot API 測試 › LINE 用戶資料 › 取得店家的 LINE 用戶列表
+  -  461 [chromium] › tests\15-line-bot.spec.ts:165:9 › LINE 對話狀態測試 › ConversationState 列舉 › 所有對話狀態
+  -  462 [chromium] › tests\15-line-bot.spec.ts:192:9 › LINE 對話狀態測試 › 預約流程狀態 › 預約流程狀態順序
+  -  463 [chromium] › tests\15-line-bot.spec.ts:213:9 › LINE 對話狀態測試 › 商品購買流程狀態 › 商品購買流程狀態順序
+  -  464 [chromium] › tests\15-line-bot.spec.ts:233:9 › LINE 對話狀態測試 › 票券領取流程狀態 › 票券領取流程狀態順序
+  -  465 [chromium] › tests\15-line-bot.spec.ts:251:9 › LINE 訊息格式測試 › Flex Message 結構 › 主選單 Flex Message
+  -  466 [chromium] › tests\15-line-bot.spec.ts:291:9 › LINE 訊息格式測試 › Flex Message 結構 › 服務列表 Carousel
+  -  467 [chromium] › tests\15-line-bot.spec.ts:328:9 › LINE 訊息格式測試 › Flex Message 結構 › 日期選擇 Carousel
+  -  468 [chromium] › tests\15-line-bot.spec.ts:342:9 › LINE 訊息格式測試 › Flex Message 結構 › 時段選擇 Quick Reply
+  -  469 [chromium] › tests\15-line-bot.spec.ts:360:9 › LINE 訊息格式測試 › Flex Message 結構 › 預約確認 Flex Message
+  -  470 [chromium] › tests\15-line-bot.spec.ts:405:7 › LINE Event Type 測試 › 事件類型列舉
+  -  471 [chromium] › tests\15-line-bot.spec.ts:417:7 › LINE Config Status 測試 › 設定狀態列舉
+  ✘  472 [chromium] › tests\15-line-bot.spec.ts:39:9 › LINE Bot API 測試 › LINE Webhook › Webhook 端點存在 (retry #1) (0ms)
+  -  473 [chromium] › tests\15-line-bot.spec.ts:53:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Follow 事件 (retry #1)
+  -  474 [chromium] › tests\15-line-bot.spec.ts:74:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Message 事件 (retry #1)
+  -  475 [chromium] › tests\15-line-bot.spec.ts:100:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Postback 事件 (retry #1)
+  -  476 [chromium] › tests\15-line-bot.spec.ts:124:9 › LINE Bot API 測試 › LINE Webhook › Webhook - 模擬 Unfollow 事件 (retry #1)
+  -  477 [chromium] › tests\15-line-bot.spec.ts:146:9 › LINE Bot API 測試 › LINE 用戶資料 › 取得店家的 LINE 用戶列表 (retry #1)
+  -  478 [chromium] › tests\15-line-bot.spec.ts:165:9 › LINE 對話狀態測試 › ConversationState 列舉 › 所有對話狀態 (retry #1)
+  -  479 [chromium] › tests\15-line-bot.spec.ts:192:9 › LINE 對話狀態測試 › 預約流程狀態 › 預約流程狀態順序 (retry #1)
+  -  480 [chromium] › tests\15-line-bot.spec.ts:213:9 › LINE 對話狀態測試 › 商品購買流程狀態 › 商品購買流程狀態順序 (retry #1)
+  -  481 [chromium] › tests\15-line-bot.spec.ts:233:9 › LINE 對話狀態測試 › 票券領取流程狀態 › 票券領取流程狀態順序 (retry #1)
+  -  482 [chromium] › tests\15-line-bot.spec.ts:251:9 › LINE 訊息格式測試 › Flex Message 結構 › 主選單 Flex Message (retry #1)
+  -  483 [chromium] › tests\15-line-bot.spec.ts:291:9 › LINE 訊息格式測試 › Flex Message 結構 › 服務列表 Carousel (retry #1)
+  -  484 [chromium] › tests\15-line-bot.spec.ts:328:9 › LINE 訊息格式測試 › Flex Message 結構 › 日期選擇 Carousel (retry #1)
+  -  485 [chromium] › tests\15-line-bot.spec.ts:342:9 › LINE 訊息格式測試 › Flex Message 結構 › 時段選擇 Quick Reply (retry #1)
+  -  486 [chromium] › tests\15-line-bot.spec.ts:360:9 › LINE 訊息格式測試 › Flex Message 結構 › 預約確認 Flex Message (retry #1)
+  -  487 [chromium] › tests\15-line-bot.spec.ts:405:7 › LINE Event Type 測試 › 事件類型列舉 (retry #1)
+  -  488 [chromium] › tests\15-line-bot.spec.ts:417:7 › LINE Config Status 測試 › 設定狀態列舉 (retry #1)
+  ✘  489 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:36:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 側邊欄包含正確的 data-feature 屬性 (0ms)
+  -  490 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:65:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 營運報表選單有 BASIC_REPORT 屬性
+  -  491 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:75:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 商品管理選單有 PRODUCT_SALES 屬性
+  -  492 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:85:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 票券管理選單有 COUPON_SYSTEM 屬性
+  -  493 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:97:9 › 側邊欄功能訂閱控制測試 › 功能訂閱 API 與側邊欄 › 取得功能訂閱狀態
+  -  494 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:113:9 › 側邊欄功能訂閱控制測試 › 功能訂閱 API 與側邊欄 › 側邊欄根據訂閱狀態顯示/隱藏選單
+  -  495 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:148:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 儀表板選單始終可見
+  -  496 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:157:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 預約列表選單始終可見
+  -  497 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:166:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 行事曆選單始終可見
+  -  498 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:175:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 顧客列表選單始終可見
+  -  499 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:184:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 員工管理選單始終可見
+  -  500 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:193:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 服務項目選單始終可見
+  -  501 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:202:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 店家設定選單始終可見
+  -  502 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:211:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › LINE 設定選單始終可見
+  -  503 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:220:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 功能商店選單始終可見
+  -  504 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:229:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 點數管理選單始終可見
+  -  505 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:240:9 › 側邊欄功能訂閱控制測試 › 側邊欄完整選單測試 › 所有選單項目可點擊導航
+  -  506 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:274:9 › 側邊欄功能訂閱控制測試 › 側邊欄完整選單測試 › 需訂閱的選單項目測試
+  -  507 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:309:9 › 側邊欄功能訂閱控制測試 › 超管側邊欄測試 › 超管側邊欄所有選單可見
+  -  508 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:328:9 › 側邊欄功能訂閱控制測試 › 超管側邊欄測試 › 超管側邊欄導航功能
+  -  509 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:353:7 › 功能訂閱變更影響側邊欄 › 訂閱功能後側邊欄顯示對應選單
+  -  510 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:377:7 › 功能訂閱變更影響側邊欄 › 取消訂閱後側邊欄隱藏對應選單
+  ✘  511 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:36:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 側邊欄包含正確的 data-feature 屬性 (retry #1) (0ms)
+  -  512 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:65:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 營運報表選單有 BASIC_REPORT 屬性 (retry #1)
+  -  513 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:75:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 商品管理選單有 PRODUCT_SALES 屬性 (retry #1)
+  -  514 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:85:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 票券管理選單有 COUPON_SYSTEM 屬性 (retry #1)
+  -  515 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:97:9 › 側邊欄功能訂閱控制測試 › 功能訂閱 API 與側邊欄 › 取得功能訂閱狀態 (retry #1)
+  -  516 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:113:9 › 側邊欄功能訂閱控制測試 › 功能訂閱 API 與側邊欄 › 側邊欄根據訂閱狀態顯示/隱藏選單 (retry #1)
+  -  517 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:148:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 儀表板選單始終可見 (retry #1)
+  -  518 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:157:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 預約列表選單始終可見 (retry #1)
+  -  519 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:166:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 行事曆選單始終可見 (retry #1)
+  -  520 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:175:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 顧客列表選單始終可見 (retry #1)
+  -  521 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:184:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 員工管理選單始終可見 (retry #1)
+  -  522 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:193:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 服務項目選單始終可見 (retry #1)
+  -  523 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:202:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 店家設定選單始終可見 (retry #1)
+  -  524 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:211:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › LINE 設定選單始終可見 (retry #1)
+  -  525 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:220:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 功能商店選單始終可見 (retry #1)
+  -  526 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:229:9 › 側邊欄功能訂閱控制測試 › 基本選單項目（不需訂閱） › 點數管理選單始終可見 (retry #1)
+  -  527 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:240:9 › 側邊欄功能訂閱控制測試 › 側邊欄完整選單測試 › 所有選單項目可點擊導航 (retry #1)
+  -  528 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:274:9 › 側邊欄功能訂閱控制測試 › 側邊欄完整選單測試 › 需訂閱的選單項目測試 (retry #1)
+  -  529 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:309:9 › 側邊欄功能訂閱控制測試 › 超管側邊欄測試 › 超管側邊欄所有選單可見 (retry #1)
+  -  530 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:328:9 › 側邊欄功能訂閱控制測試 › 超管側邊欄測試 › 超管側邊欄導航功能 (retry #1)
+  -  531 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:353:7 › 功能訂閱變更影響側邊欄 › 訂閱功能後側邊欄顯示對應選單 (retry #1)
+  -  532 [chromium] › tests\16-sidebar-feature-visibility.spec.ts:377:7 › 功能訂閱變更影響側邊欄 › 取消訂閱後側邊欄隱藏對應選單 (retry #1)
+  ✘  533 [chromium] › tests\17-comprehensive-forms.spec.ts:42:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得會員等級列表 (0ms)
+  -  534 [chromium] › tests\17-comprehensive-forms.spec.ts:54:9 › 會員等級 API 測試 › 會員等級 CRUD › 新增會員等級
+  -  535 [chromium] › tests\17-comprehensive-forms.spec.ts:85:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得單一會員等級
+  -  536 [chromium] › tests\17-comprehensive-forms.spec.ts:104:9 › 會員等級 API 測試 › 會員等級 CRUD › 更新會員等級
+  -  537 [chromium] › tests\17-comprehensive-forms.spec.ts:131:9 › 會員等級 API 測試 › 會員等級 CRUD › 刪除會員等級
+  -  538 [chromium] › tests\17-comprehensive-forms.spec.ts:148:9 › 表單驗證測試 › 顧客新增表單 › 必填欄位驗證
+  -  539 [chromium] › tests\17-comprehensive-forms.spec.ts:176:9 › 表單驗證測試 › 顧客新增表單 › 電話格式驗證
+  -  540 [chromium] › tests\17-comprehensive-forms.spec.ts:205:9 › 表單驗證測試 › 顧客新增表單 › Email 格式驗證
+  -  541 [chromium] › tests\17-comprehensive-forms.spec.ts:234:9 › 表單驗證測試 › 顧客新增表單 › 完整填寫表單
+  -  542 [chromium] › tests\17-comprehensive-forms.spec.ts:268:9 › 表單驗證測試 › 員工新增表單 › 必填欄位驗證
+  -  543 [chromium] › tests\17-comprehensive-forms.spec.ts:296:9 › 表單驗證測試 › 服務新增表單 › 必填欄位驗證
+  -  544 [chromium] › tests\17-comprehensive-forms.spec.ts:318:9 › 表單驗證測試 › 服務新增表單 › 價格數值驗證
+  -  545 [chromium] › tests\17-comprehensive-forms.spec.ts:341:9 › 表單驗證測試 › 服務新增表單 › 時長數值驗證
+  -  546 [chromium] › tests\17-comprehensive-forms.spec.ts:366:9 › 表單驗證測試 › 預約新增表單 › 日期時間驗證
+  -  547 [chromium] › tests\17-comprehensive-forms.spec.ts:393:9 › 登入表單驗證 › 店家登入 › 空白欄位驗證
+  -  548 [chromium] › tests\17-comprehensive-forms.spec.ts:406:9 › 登入表單驗證 › 店家登入 › 錯誤帳密驗證
+  -  549 [chromium] › tests\17-comprehensive-forms.spec.ts:422:9 › 登入表單驗證 › 店家登入 › 正確登入
+  -  550 [chromium] › tests\17-comprehensive-forms.spec.ts:436:9 › 登入表單驗證 › 超管登入 › 空白欄位驗證
+  -  551 [chromium] › tests\17-comprehensive-forms.spec.ts:447:9 › 登入表單驗證 › 超管登入 › 錯誤帳密驗證
+  -  552 [chromium] › tests\17-comprehensive-forms.spec.ts:462:9 › 登入表單驗證 › 超管登入 › 正確登入
+  -  553 [chromium] › tests\17-comprehensive-forms.spec.ts:482:9 › 設定表單驗證 › 店家設定表單 › 店家名稱必填
+  -  554 [chromium] › tests\17-comprehensive-forms.spec.ts:501:9 › 設定表單驗證 › 店家設定表單 › 營業時間邏輯驗證
+  -  555 [chromium] › tests\17-comprehensive-forms.spec.ts:521:9 › 設定表單驗證 › LINE 設定表單 › Channel 資訊欄位
+  -  556 [chromium] › tests\17-comprehensive-forms.spec.ts:540:7 › 按鈕狀態測試 › 表單提交按鈕禁用狀態
+  -  557 [chromium] › tests\17-comprehensive-forms.spec.ts:572:7 › 按鈕狀態測試 › 刪除按鈕確認對話框
+  ✘  558 [chromium] › tests\17-comprehensive-forms.spec.ts:42:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得會員等級列表 (retry #1) (0ms)
+  -  559 [chromium] › tests\17-comprehensive-forms.spec.ts:54:9 › 會員等級 API 測試 › 會員等級 CRUD › 新增會員等級 (retry #1)
+  -  560 [chromium] › tests\17-comprehensive-forms.spec.ts:85:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得單一會員等級 (retry #1)
+  -  561 [chromium] › tests\17-comprehensive-forms.spec.ts:104:9 › 會員等級 API 測試 › 會員等級 CRUD › 更新會員等級 (retry #1)
+  -  562 [chromium] › tests\17-comprehensive-forms.spec.ts:131:9 › 會員等級 API 測試 › 會員等級 CRUD › 刪除會員等級 (retry #1)
+  -  563 [chromium] › tests\17-comprehensive-forms.spec.ts:148:9 › 表單驗證測試 › 顧客新增表單 › 必填欄位驗證 (retry #1)
+  -  564 [chromium] › tests\17-comprehensive-forms.spec.ts:176:9 › 表單驗證測試 › 顧客新增表單 › 電話格式驗證 (retry #1)
+  -  565 [chromium] › tests\17-comprehensive-forms.spec.ts:205:9 › 表單驗證測試 › 顧客新增表單 › Email 格式驗證 (retry #1)
+  -  566 [chromium] › tests\17-comprehensive-forms.spec.ts:234:9 › 表單驗證測試 › 顧客新增表單 › 完整填寫表單 (retry #1)
+  -  567 [chromium] › tests\17-comprehensive-forms.spec.ts:268:9 › 表單驗證測試 › 員工新增表單 › 必填欄位驗證 (retry #1)
+  -  568 [chromium] › tests\17-comprehensive-forms.spec.ts:296:9 › 表單驗證測試 › 服務新增表單 › 必填欄位驗證 (retry #1)
+  -  569 [chromium] › tests\17-comprehensive-forms.spec.ts:318:9 › 表單驗證測試 › 服務新增表單 › 價格數值驗證 (retry #1)
+  -  570 [chromium] › tests\17-comprehensive-forms.spec.ts:341:9 › 表單驗證測試 › 服務新增表單 › 時長數值驗證 (retry #1)
+  -  571 [chromium] › tests\17-comprehensive-forms.spec.ts:366:9 › 表單驗證測試 › 預約新增表單 › 日期時間驗證 (retry #1)
+  -  572 [chromium] › tests\17-comprehensive-forms.spec.ts:393:9 › 登入表單驗證 › 店家登入 › 空白欄位驗證 (retry #1)
+  -  573 [chromium] › tests\17-comprehensive-forms.spec.ts:406:9 › 登入表單驗證 › 店家登入 › 錯誤帳密驗證 (retry #1)
+  -  574 [chromium] › tests\17-comprehensive-forms.spec.ts:422:9 › 登入表單驗證 › 店家登入 › 正確登入 (retry #1)
+  -  575 [chromium] › tests\17-comprehensive-forms.spec.ts:436:9 › 登入表單驗證 › 超管登入 › 空白欄位驗證 (retry #1)
+  -  576 [chromium] › tests\17-comprehensive-forms.spec.ts:447:9 › 登入表單驗證 › 超管登入 › 錯誤帳密驗證 (retry #1)
+  -  577 [chromium] › tests\17-comprehensive-forms.spec.ts:462:9 › 登入表單驗證 › 超管登入 › 正確登入 (retry #1)
+  -  578 [chromium] › tests\17-comprehensive-forms.spec.ts:482:9 › 設定表單驗證 › 店家設定表單 › 店家名稱必填 (retry #1)
+  -  579 [chromium] › tests\17-comprehensive-forms.spec.ts:501:9 › 設定表單驗證 › 店家設定表單 › 營業時間邏輯驗證 (retry #1)
+  -  580 [chromium] › tests\17-comprehensive-forms.spec.ts:521:9 › 設定表單驗證 › LINE 設定表單 › Channel 資訊欄位 (retry #1)
+  -  581 [chromium] › tests\17-comprehensive-forms.spec.ts:540:7 › 按鈕狀態測試 › 表單提交按鈕禁用狀態 (retry #1)
+  -  582 [chromium] › tests\17-comprehensive-forms.spec.ts:572:7 › 按鈕狀態測試 › 刪除按鈕確認對話框 (retry #1)
+  ✘  583 [chromium] › tests\marketing-ui-test.spec.ts:5:7 › 行銷推播 UI 測試 › 建立推播表單測試 (0ms)
+  ✘  584 [chromium] › tests\marketing-ui-test.spec.ts:5:7 › 行銷推播 UI 測試 › 建立推播表單測試 (retry #1) (0ms)
+
+
+  1) [chromium] › tests\06-sse-notifications.spec.ts:213:7 › 通知 UI 元素測試 › sounds 目錄可訪問（即使為空） ───────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: < [32m500[39m
+    Received:   [31m500[39m
+
+      219 |     const status = response?.status() || 0;
+      220 |     console.log(`Sound file status: ${status}`);
+    > 221 |     expect(status).toBeLessThan(500);
+          |                    ^
+      222 |   });
+      223 | });
+      224 |
+        at C:\soho\booking-platform\tests\06-sse-notifications.spec.ts:221:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: < [32m500[39m
+    Received:   [31m500[39m
+
+      219 |     const status = response?.status() || 0;
+      220 |     console.log(`Sound file status: ${status}`);
+    > 221 |     expect(status).toBeLessThan(500);
+          |                    ^
+      222 |   });
+      223 | });
+      224 |
+        at C:\soho\booking-platform\tests\06-sse-notifications.spec.ts:221:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\06-sse-notifications-通知-UI-元素測試-sounds-目錄可訪問（即使為空）-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests\10-admin-pages.spec.ts:155:7 › 超管 API 測試 › 儀表板 API 回應正確 ────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      159 |     // 取得 token
+      160 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 161 |     expect(token).toBeTruthy();
+          |                   ^
+      162 |
+      163 |     // 測試 API
+      164 |     const response = await page.evaluate(async (token) => {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:161:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      159 |     // 取得 token
+      160 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 161 |     expect(token).toBeTruthy();
+          |                   ^
+      162 |
+      163 |     // 測試 API
+      164 |     const response = await page.evaluate(async (token) => {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:161:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\10-admin-pages-超管-API-測試-儀表板-API-回應正確-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests\10-admin-pages.spec.ts:174:7 › 超管 API 測試 › 店家列表 API 回應正確 ───────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      177 |
+      178 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 179 |     expect(token).toBeTruthy();
+          |                   ^
+      180 |
+      181 |     const response = await page.evaluate(async (token) => {
+      182 |       const res = await fetch('/api/admin/tenants?page=0&size=10', {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:179:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      177 |
+      178 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 179 |     expect(token).toBeTruthy();
+          |                   ^
+      180 |
+      181 |     const response = await page.evaluate(async (token) => {
+      182 |       const res = await fetch('/api/admin/tenants?page=0&size=10', {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:179:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\10-admin-pages-超管-API-測試-店家列表-API-回應正確-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests\10-admin-pages.spec.ts:191:7 › 超管 API 測試 › 功能列表 API 回應正確 ───────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      194 |
+      195 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 196 |     expect(token).toBeTruthy();
+          |                   ^
+      197 |
+      198 |     const response = await page.evaluate(async (token) => {
+      199 |       const res = await fetch('/api/admin/features', {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:196:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mnull[39m
+
+      194 |
+      195 |     const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    > 196 |     expect(token).toBeTruthy();
+          |                   ^
+      197 |
+      198 |     const response = await page.evaluate(async (token) => {
+      199 |       const res = await fetch('/api/admin/features', {
+        at C:\soho\booking-platform\tests\10-admin-pages.spec.ts:196:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\10-admin-pages-超管-API-測試-功能列表-API-回應正確-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › tests\12-tenant-campaign-marketing.spec.ts:258:9 › 行銷活動 UI 測試 › 活動列表頁面 › 頁面載入成功 ──
+
+    [31mTest timeout of 60000ms exceeded while running "beforeEach" hook.[39m
+
+      251 |
+      252 | test.describe('行銷活動 UI 測試', () => {
+    > 253 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      254 |     await tenantLogin(page);
+      255 |   });
+      256 |
+        at C:\soho\booking-platform\tests\12-tenant-campaign-marketing.spec.ts:253:8
+
+    Error: browserContext.newPage: Test timeout of 60000ms exceeded.
+
+  6) [chromium] › tests\12-tenant-campaign-marketing.spec.ts:267:9 › 行銷活動 UI 測試 › 活動列表頁面 › 表格正確顯示 ──
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  7) [chromium] › tests\13-tenant-settings.spec.ts:36:9 › 店家設定 API 測試 › 設定 API › 取得店家設定 ────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  8) [chromium] › tests\14-tenant-reports.spec.ts:35:9 › 報表 API 測試 › 報表摘要 API › 取得今日報表 ─────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  9) [chromium] › tests\15-line-bot.spec.ts:39:9 › LINE Bot API 測試 › LINE Webhook › Webhook 端點存在 ───
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  10) [chromium] › tests\16-sidebar-feature-visibility.spec.ts:36:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 側邊欄包含正確的 data-feature 屬性 
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  11) [chromium] › tests\17-comprehensive-forms.spec.ts:42:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得會員等級列表 ──
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  12) [chromium] › tests\marketing-ui-test.spec.ts:5:7 › 行銷推播 UI 測試 › 建立推播表單測試 ─────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: worker process exited unexpectedly (code=3221225794, signal=null)
+
+  12 failed
+    [chromium] › tests\06-sse-notifications.spec.ts:213:7 › 通知 UI 元素測試 › sounds 目錄可訪問（即使為空） ────────
+    [chromium] › tests\10-admin-pages.spec.ts:155:7 › 超管 API 測試 › 儀表板 API 回應正確 ─────────────────────
+    [chromium] › tests\10-admin-pages.spec.ts:174:7 › 超管 API 測試 › 店家列表 API 回應正確 ────────────────────
+    [chromium] › tests\10-admin-pages.spec.ts:191:7 › 超管 API 測試 › 功能列表 API 回應正確 ────────────────────
+    [chromium] › tests\12-tenant-campaign-marketing.spec.ts:258:9 › 行銷活動 UI 測試 › 活動列表頁面 › 頁面載入成功 ───
+    [chromium] › tests\12-tenant-campaign-marketing.spec.ts:267:9 › 行銷活動 UI 測試 › 活動列表頁面 › 表格正確顯示 ───
+    [chromium] › tests\13-tenant-settings.spec.ts:36:9 › 店家設定 API 測試 › 設定 API › 取得店家設定 ─────────────
+    [chromium] › tests\14-tenant-reports.spec.ts:35:9 › 報表 API 測試 › 報表摘要 API › 取得今日報表 ──────────────
+    [chromium] › tests\15-line-bot.spec.ts:39:9 › LINE Bot API 測試 › LINE Webhook › Webhook 端點存在 ────
+    [chromium] › tests\16-sidebar-feature-visibility.spec.ts:36:9 › 側邊欄功能訂閱控制測試 › data-feature 屬性檢查 › 側邊欄包含正確的 data-feature 屬性 
+    [chromium] › tests\17-comprehensive-forms.spec.ts:42:9 › 會員等級 API 測試 › 會員等級 CRUD › 取得會員等級列表 ────
+    [chromium] › tests\marketing-ui-test.spec.ts:5:7 › 行銷推播 UI 測試 › 建立推播表單測試 ───────────────────────
+  133 did not run
+  294 passed (26.9m)

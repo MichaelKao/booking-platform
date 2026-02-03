@@ -789,12 +789,15 @@ public class LineWebhookService {
      * 處理查看會員資訊
      */
     private void handleViewMemberInfo(String tenantId, String userId, String replyToken) {
-        log.info("處理查看會員資訊，租戶：{}，用戶：{}", tenantId, userId);
+        log.info("處理查看會員資訊，租戶：{}，用戶：{}，replyToken：{}", tenantId, userId, replyToken);
 
         try {
             // 取得顧客 ID
             String customerId = lineUserService.getCustomerId(tenantId, userId);
+            log.info("顧客 ID：{}", customerId);
+
             if (customerId == null) {
+                log.info("用戶尚未成為會員，回覆提示訊息");
                 messageService.replyText(tenantId, replyToken, "您尚未成為會員。\n完成首次預約即可成為會員。");
                 return;
             }
@@ -802,14 +805,17 @@ public class LineWebhookService {
             // 查詢顧客資料
             Optional<Customer> customerOpt = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId);
             if (customerOpt.isEmpty()) {
+                log.warn("找不到顧客資料，customerId：{}", customerId);
                 messageService.replyText(tenantId, replyToken, "找不到會員資料。");
                 return;
             }
 
             Customer customer = customerOpt.get();
+            log.info("找到顧客：{}，名稱：{}", customer.getId(), customer.getName());
 
             // 查詢預約統計
             long bookingCount = bookingRepository.countByCustomerIdAndTenantId(customerId, tenantId);
+            log.info("預約次數：{}", bookingCount);
 
             // 查詢會員等級名稱
             String membershipLevelName = null;
@@ -818,15 +824,24 @@ public class LineWebhookService {
                         .findById(customer.getMembershipLevelId())
                         .map(level -> level.getName())
                         .orElse(null);
+                log.info("會員等級：{}", membershipLevelName);
             }
 
             // 建構會員資訊訊息
+            log.info("開始建構會員資訊 Flex Message");
             JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount, membershipLevelName);
+            log.info("Flex Message 建構完成，準備回覆");
+
             messageService.replyFlex(tenantId, replyToken, "會員資訊", memberInfo);
+            log.info("會員資訊回覆成功");
 
         } catch (Exception e) {
-            log.error("查詢會員資訊失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
-            messageService.replyText(tenantId, replyToken, "查詢失敗，請稍後再試。");
+            log.error("查詢會員資訊失敗，租戶：{}，用戶：{}，錯誤：{}", tenantId, userId, e.getMessage(), e);
+            try {
+                messageService.replyText(tenantId, replyToken, "查詢失敗，請稍後再試。");
+            } catch (Exception replyError) {
+                log.error("錯誤訊息回覆也失敗：{}", replyError.getMessage());
+            }
         }
     }
 
