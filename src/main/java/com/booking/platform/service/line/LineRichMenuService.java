@@ -158,13 +158,14 @@ public class LineRichMenuService {
             {"聯絡店家", "contact_shop"}
     };
 
+    // 使用簡單文字符號取代 Emoji（確保跨平台相容性）
     private static final String[] MENU_ICONS = {
-            "\uD83D\uDCC5",  // 日曆
-            "\uD83D\uDCCB",  // 剪貼簿
-            "\uD83D\uDECD",   // 購物袋
-            "\uD83C\uDF81",  // 禮物
-            "\uD83D\uDC64",  // 人像
-            "\uD83D\uDCDE"   // 電話
+            "預",  // 開始預約
+            "查",  // 我的預約
+            "購",  // 瀏覽商品
+            "券",  // 領取票券
+            "會",  // 會員資訊
+            "客"   // 聯絡店家
     };
 
     // ========================================
@@ -251,42 +252,47 @@ public class LineRichMenuService {
 
         try {
             // ========================================
-            // 1. 驗證圖片
+            // 1. 驗證圖片格式
             // ========================================
             validateImage(imageBytes);
 
             // ========================================
-            // 2. 刪除現有的 Rich Menu
+            // 2. 自動縮放圖片到 Rich Menu 尺寸
+            // ========================================
+            byte[] resizedImageBytes = resizeImageToRichMenuSize(imageBytes);
+
+            // ========================================
+            // 3. 刪除現有的 Rich Menu
             // ========================================
             deleteRichMenu(tenantId);
 
             // ========================================
-            // 3. 取得店家名稱
+            // 4. 取得店家名稱
             // ========================================
             String shopName = tenantRepository.findById(tenantId)
                     .map(Tenant::getName)
                     .orElse("預約服務");
 
             // ========================================
-            // 4. 建立 Rich Menu 結構
+            // 5. 建立 Rich Menu 結構
             // ========================================
             String richMenuId = createRichMenu(tenantId, shopName);
             log.info("Rich Menu 建立成功，ID：{}", richMenuId);
 
             // ========================================
-            // 5. 上傳自訂圖片
+            // 6. 上傳縮放後的圖片
             // ========================================
-            uploadRichMenuImage(tenantId, richMenuId, imageBytes);
+            uploadRichMenuImage(tenantId, richMenuId, resizedImageBytes);
             log.info("Rich Menu 自訂圖片上傳成功");
 
             // ========================================
-            // 6. 設為預設選單
+            // 7. 設為預設選單
             // ========================================
             setDefaultRichMenu(tenantId, richMenuId);
             log.info("Rich Menu 設為預設成功");
 
             // ========================================
-            // 7. 儲存 Rich Menu ID 和主題
+            // 8. 儲存 Rich Menu ID 和主題
             // ========================================
             saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM");
 
@@ -301,34 +307,118 @@ public class LineRichMenuService {
     }
 
     /**
-     * 驗證上傳的圖片
+     * 驗證上傳的圖片（僅檢查格式，不檢查尺寸）
      *
      * @param imageBytes 圖片位元組陣列
      */
     private void validateImage(byte[] imageBytes) {
-        // 檢查檔案大小
+        // 檢查檔案是否存在
         if (imageBytes == null || imageBytes.length == 0) {
             throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "請上傳圖片");
         }
-        if (imageBytes.length > MAX_IMAGE_SIZE) {
-            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片大小不能超過 1MB");
-        }
 
-        // 檢查圖片尺寸
+        // 檢查圖片格式（嘗試讀取）
         try {
             BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
             if (image == null) {
                 throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "無法讀取圖片，請確認格式為 PNG 或 JPG");
             }
-            if (image.getWidth() != MENU_WIDTH || image.getHeight() != MENU_HEIGHT) {
-                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR,
-                        String.format("圖片尺寸必須為 %dx%d 像素，目前為 %dx%d",
-                                MENU_WIDTH, MENU_HEIGHT, image.getWidth(), image.getHeight()));
-            }
         } catch (BusinessException e) {
             throw e;
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片格式無效");
+        }
+    }
+
+    /**
+     * 將圖片縮放到 Rich Menu 規格尺寸（2500x843）
+     *
+     * <p>縮放策略：
+     * <ul>
+     *   <li>等比例縮放圖片以填滿 2500x843 區域</li>
+     *   <li>超出部分會被裁切（置中裁切）</li>
+     *   <li>使用高品質縮放演算法</li>
+     * </ul>
+     *
+     * @param imageBytes 原始圖片位元組陣列
+     * @return 縮放後的圖片位元組陣列（PNG 格式）
+     */
+    private byte[] resizeImageToRichMenuSize(byte[] imageBytes) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+            if (originalImage == null) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "無法讀取圖片");
+            }
+
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+
+            // 如果尺寸已正確，直接返回
+            if (originalWidth == MENU_WIDTH && originalHeight == MENU_HEIGHT) {
+                log.debug("圖片尺寸已正確，無需縮放");
+                return imageBytes;
+            }
+
+            log.info("縮放圖片：{}x{} → {}x{}", originalWidth, originalHeight, MENU_WIDTH, MENU_HEIGHT);
+
+            // 計算縮放比例（使用 cover 策略，填滿整個區域）
+            double scaleX = (double) MENU_WIDTH / originalWidth;
+            double scaleY = (double) MENU_HEIGHT / originalHeight;
+            double scale = Math.max(scaleX, scaleY);  // 使用較大的比例以填滿
+
+            int scaledWidth = (int) Math.round(originalWidth * scale);
+            int scaledHeight = (int) Math.round(originalHeight * scale);
+
+            // 建立縮放後的圖片
+            BufferedImage scaledImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = scaledImage.createGraphics();
+
+            // 設定高品質縮放
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2d.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
+            g2d.dispose();
+
+            // 置中裁切到目標尺寸
+            int cropX = (scaledWidth - MENU_WIDTH) / 2;
+            int cropY = (scaledHeight - MENU_HEIGHT) / 2;
+            BufferedImage finalImage = scaledImage.getSubimage(cropX, cropY, MENU_WIDTH, MENU_HEIGHT);
+
+            // 複製裁切後的圖片（避免 SubImage 的記憶體問題）
+            BufferedImage outputImage = new BufferedImage(MENU_WIDTH, MENU_HEIGHT, BufferedImage.TYPE_INT_RGB);
+            Graphics2D outputG2d = outputImage.createGraphics();
+            outputG2d.drawImage(finalImage, 0, 0, null);
+            outputG2d.dispose();
+
+            // 轉換為 PNG 位元組陣列
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(outputImage, "png", baos);
+            byte[] result = baos.toByteArray();
+
+            // 檢查輸出大小
+            if (result.length > MAX_IMAGE_SIZE) {
+                log.warn("縮放後圖片超過 1MB（{}KB），嘗試轉為 JPEG", result.length / 1024);
+                // 嘗試用 JPEG 格式（較小檔案）
+                baos = new ByteArrayOutputStream();
+                ImageIO.write(outputImage, "jpg", baos);
+                result = baos.toByteArray();
+
+                if (result.length > MAX_IMAGE_SIZE) {
+                    throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR,
+                            "圖片處理後仍超過 1MB，請使用較小的原始圖片");
+                }
+            }
+
+            log.info("圖片縮放完成，輸出大小：{}KB", result.length / 1024);
+            return result;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("圖片縮放失敗：{}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理失敗：" + e.getMessage());
         }
     }
 
@@ -669,8 +759,9 @@ public class LineRichMenuService {
         }
 
         // 繪製每個選單項目
-        Font iconFont = new Font("Segoe UI Emoji", Font.PLAIN, 80);
-        Font textFont = new Font("Microsoft JhengHei", Font.BOLD, 48);
+        // 使用跨平台字型載入策略（依序嘗試：思源黑體 > 微軟正黑體 > Noto Sans CJK > 邏輯字型）
+        Font iconFont = loadChineseFont(Font.BOLD, 90);
+        Font textFont = loadChineseFont(Font.BOLD, 48);
 
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
@@ -755,5 +846,64 @@ public class LineRichMenuService {
             config.setRichMenuTheme(theme);
             lineConfigRepository.save(config);
         });
+    }
+
+    /**
+     * 載入支援中文的字型（跨平台相容）
+     *
+     * <p>依序嘗試以下字型：
+     * <ol>
+     *   <li>WenQuanYi Zen Hei（Docker/Linux - 文泉驛正黑，優先使用）</li>
+     *   <li>WenQuanYi Micro Hei（Linux - 文泉驛微米黑）</li>
+     *   <li>Noto Sans CJK TC（Linux - Google Noto）</li>
+     *   <li>Microsoft JhengHei（Windows - 微軟正黑體）</li>
+     *   <li>PingFang TC（macOS - 蘋方）</li>
+     *   <li>SansSerif（Java 邏輯字型，最後備援）</li>
+     * </ol>
+     *
+     * @param style 字型樣式（Font.PLAIN, Font.BOLD 等）
+     * @param size 字型大小
+     * @return 可用的中文字型
+     */
+    private Font loadChineseFont(int style, int size) {
+        // 候選字型列表（依優先順序）
+        // 注意：Docker 環境安裝的是 font-wqy-zenhei（文泉驛正黑）
+        String[] fontCandidates = {
+                "WenQuanYi Zen Hei",     // Docker/Linux - 文泉驛正黑（優先使用）
+                "WenQuanYi Micro Hei",   // Linux - 文泉驛微米黑
+                "Noto Sans CJK TC",      // Linux - Google Noto 字型
+                "Noto Sans TC",          // Linux - Noto 變體
+                "Droid Sans Fallback",   // Linux/Android
+                "Microsoft JhengHei",    // Windows - 微軟正黑體
+                "Microsoft YaHei",       // Windows - 微軟雅黑
+                "PingFang TC",           // macOS - 蘋方繁體
+                "Heiti TC",              // macOS - 黑體繁體
+                "SimHei",                // Windows - 黑體
+                "SansSerif"              // Java 邏輯字型（最後備援）
+        };
+
+        // 取得系統可用字型
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        java.util.Set<String> availableFonts = new java.util.HashSet<>();
+        for (String fontName : ge.getAvailableFontFamilyNames()) {
+            availableFonts.add(fontName);
+        }
+
+        // 嘗試找到可用的中文字型
+        for (String fontName : fontCandidates) {
+            if (availableFonts.contains(fontName)) {
+                Font font = new Font(fontName, style, size);
+                // 驗證字型確實可以顯示中文
+                if (font.canDisplay('預')) {
+                    log.debug("使用字型：{}", fontName);
+                    return font;
+                }
+            }
+        }
+
+        // 如果都找不到，使用 SansSerif 並記錄警告
+        log.warn("找不到支援中文的字型，使用預設 SansSerif（可能無法正確顯示中文）");
+        log.warn("可用字型列表：{}", String.join(", ", availableFonts));
+        return new Font("SansSerif", style, size);
     }
 }

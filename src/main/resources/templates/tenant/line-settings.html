@@ -263,7 +263,7 @@
                                     <label class="form-label small fw-bold">或上傳自訂圖片</label>
                                     <input type="file" class="form-control form-control-sm" id="richMenuImage" accept="image/png,image/jpeg">
                                     <div class="form-text">
-                                        尺寸：2500 x 843 像素，格式：PNG/JPG，大小：最大 1MB
+                                        格式：PNG/JPG（任意尺寸，系統會自動縮放至 2500x843）
                                     </div>
                                 </div>
 
@@ -727,7 +727,7 @@
                     fileInput.value = '';
                     loadRichMenuInfo();
                 } else {
-                    showError('上傳失敗：' + (r.message || '請確認圖片尺寸為 2500x843 像素'));
+                    showError('上傳失敗：' + (r.message || '請確認圖片格式正確'));
                 }
             } catch (e) {
                 showError('上傳失敗：' + (e.message || '請稍後再試'));

@@ -20,6 +20,14 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
+# 安裝中文字型（用於 Rich Menu 圖片生成）
+# font-wqy-zenhei: 文泉驛正黑（開源中文字型，支援繁簡中文）
+RUN apk add --no-cache \
+    fontconfig \
+    ttf-dejavu \
+    font-wqy-zenhei \
+    && fc-cache -fv
+
 # 建立非 root 用戶
 RUN addgroup -g 1001 appgroup && \
     adduser -u 1001 -G appgroup -D appuser
