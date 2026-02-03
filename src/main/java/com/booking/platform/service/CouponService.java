@@ -19,6 +19,9 @@ import com.booking.platform.mapper.CouponMapper;
 import com.booking.platform.repository.CouponInstanceRepository;
 import com.booking.platform.repository.CouponRepository;
 import com.booking.platform.repository.CustomerRepository;
+import com.booking.platform.repository.line.LineUserRepository;
+import com.booking.platform.entity.line.LineUser;
+import com.booking.platform.service.line.LineMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,6 +51,8 @@ public class CouponService {
     private final CouponInstanceRepository couponInstanceRepository;
     private final CustomerRepository customerRepository;
     private final CouponMapper couponMapper;
+    private final LineUserRepository lineUserRepository;
+    private final LineMessageService lineMessageService;
 
     // ========================================
     // 票券定義查詢
@@ -448,7 +454,52 @@ public class CouponService {
                 .map(Customer::getDisplayName)
                 .orElse(null);
 
+        // 發送 LINE 核銷通知給顧客
+        sendRedeemNotification(tenantId, instance, coupon);
+
         return couponMapper.toInstanceResponse(instance, coupon, customerName);
+    }
+
+    /**
+     * 發送票券核銷通知給顧客
+     */
+    private void sendRedeemNotification(String tenantId, CouponInstance instance, Coupon coupon) {
+        try {
+            // 查詢顧客的 LINE User ID
+            LineUser lineUser = lineUserRepository.findByTenantIdAndCustomerIdAndDeletedAtIsNull(
+                    tenantId, instance.getCustomerId()
+            ).orElse(null);
+
+            if (lineUser == null || lineUser.getLineUserId() == null) {
+                log.debug("顧客沒有綁定 LINE，跳過通知");
+                return;
+            }
+
+            // 組裝通知訊息
+            String couponName = coupon != null ? coupon.getName() : "票券";
+            String usedTime = instance.getUsedAt() != null
+                    ? instance.getUsedAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
+                    : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
+
+            String message = String.format(
+                    "🎫 票券已核銷\n\n" +
+                    "票券名稱：%s\n" +
+                    "票券代碼：%s\n" +
+                    "核銷時間：%s\n\n" +
+                    "感謝您的消費！",
+                    couponName,
+                    instance.getCode(),
+                    usedTime
+            );
+
+            // 發送 LINE 通知
+            lineMessageService.pushText(tenantId, lineUser.getLineUserId(), message);
+
+            log.info("票券核銷通知已發送，顧客 LINE User ID：{}", lineUser.getLineUserId());
+        } catch (Exception e) {
+            // 通知失敗不影響核銷結果
+            log.warn("發送票券核銷通知失敗：{}", e.getMessage());
+        }
     }
 
     @Transactional
