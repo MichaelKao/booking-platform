@@ -620,10 +620,10 @@ npx playwright test --list
 | `POINT_SYSTEM` | 顧客集點獎勵 | ✅ 已完成 | 自動集點與兌換 |
 | `PRODUCT_SALES` | 商品銷售功能 | ✅ 已完成 | 商品管理與庫存 |
 | `AUTO_REMINDER` | 自動預約提醒 | ✅ 已完成 | LINE/SMS 自動提醒 |
-| `AUTO_BIRTHDAY` | 自動生日祝福 | ✅ 已完成 | 每日排程發送祝福 |
-| `AUTO_RECALL` | 顧客喚回通知 | ✅ 已完成 | 久未到訪提醒 |
+| `AUTO_BIRTHDAY` | 自動生日祝福 | ⏳ 待開發 | 每日排程發送祝福 |
+| `AUTO_RECALL` | 顧客喚回通知 | ⏳ 待開發 | 久未到訪提醒 |
 | `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
-| `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群 |
+| `ADVANCED_CUSTOMER` | 進階顧客管理 | ⏳ 待開發 | 顧客標籤與分群 |
 | `AI_ASSISTANT` | AI 智慧客服 | ⏳ 待開發 | 需付費 API |
 | `MULTI_ACCOUNT` | 多帳號管理 | ⏳ 待開發 | 複雜功能 |
 | `MULTI_BRANCH` | 多分店管理 | ⏳ 待開發 | 複雜功能 |
