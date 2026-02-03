@@ -42,8 +42,8 @@ test.describe('店家設定 API 測試', () => {
       expect(response.ok()).toBeTruthy();
       const data = await response.json();
       expect(data.success).toBeTruthy();
-      expect(data.data).toHaveProperty('businessName');
-      console.log(`店家名稱: ${data.data.businessName}`);
+      expect(data.data).toHaveProperty('name');
+      console.log(`店家名稱: ${data.data.name}`);
     });
 
     test('更新店家設定', async ({ request }) => {
@@ -62,7 +62,7 @@ test.describe('店家設定 API 測試', () => {
             'Content-Type': 'application/json'
           },
           data: {
-            businessName: currentSettings.data.businessName,
+            name: currentSettings.data.name,
             phone: currentSettings.data.phone,
             address: currentSettings.data.address,
             description: currentSettings.data.description
@@ -146,7 +146,7 @@ test.describe('功能商店 API 測試', () => {
         const feature = data.data[0];
         expect(feature).toHaveProperty('code');
         expect(feature).toHaveProperty('name');
-        expect(feature).toHaveProperty('subscribed');
+        expect(feature).toHaveProperty('isEnabled');  // 實際欄位名稱
       }
     });
 
