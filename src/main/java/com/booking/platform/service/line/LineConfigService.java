@@ -336,6 +336,7 @@ public class LineConfigService {
      *
      * @return Bot 資訊（包含 basicId, displayName, pictureUrl 等）
      */
+    @Transactional
     public java.util.Map<String, Object> testConnection() {
         String tenantId = TenantContext.getTenantId();
 
@@ -381,6 +382,15 @@ public class LineConfigService {
 
             if (response.statusCode() == 200) {
                 log.info("LINE Bot 連線測試成功，租戶：{}", tenantId);
+
+                // ========================================
+                // 連線成功，自動啟用 LINE Bot
+                // ========================================
+                if (config.getStatus() != LineConfigStatus.ACTIVE) {
+                    config.activate();
+                    lineConfigRepository.save(config);
+                    log.info("LINE Bot 自動啟用成功，租戶：{}", tenantId);
+                }
 
                 // 解析 JSON 回應
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
