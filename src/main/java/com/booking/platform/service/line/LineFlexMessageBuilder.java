@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -192,11 +193,21 @@ public class LineFlexMessageBuilder {
         // 商品按鈕
         footerContents.add(createMenuButton("🛍️ 瀏覽商品", "購買優惠商品", "action=start_shopping", "#FF9800"));
 
-        // 票券按鈕
-        footerContents.add(createMenuButton("🎁 領取票券", "免費領取優惠券", "action=view_coupons", "#E91E63"));
+        // 票券按鈕（橫向排列兩個）
+        ObjectNode couponRow = objectMapper.createObjectNode();
+        couponRow.put("type", "box");
+        couponRow.put("layout", "horizontal");
+        couponRow.put("spacing", "sm");
+        couponRow.put("margin", "sm");
+
+        ArrayNode couponRowContents = objectMapper.createArrayNode();
+        couponRowContents.add(createCompactMenuButton("🎁 領取票券", "action=view_coupons", "#E91E63"));
+        couponRowContents.add(createCompactMenuButton("🎫 我的票券", "action=view_my_coupons", "#9C27B0"));
+        couponRow.set("contents", couponRowContents);
+        footerContents.add(couponRow);
 
         // 會員資訊按鈕
-        footerContents.add(createMenuButton("👤 會員資訊", "查看點數與等級", "action=view_member_info", "#9C27B0"));
+        footerContents.add(createMenuButton("👤 會員資訊", "查看點數與等級", "action=view_member_info", "#673AB7"));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
@@ -254,6 +265,41 @@ public class LineFlexMessageBuilder {
         arrow.put("align", "end");
         arrow.put("gravity", "center");
         contents.add(arrow);
+
+        box.set("contents", contents);
+
+        // 點擊動作
+        ObjectNode action = objectMapper.createObjectNode();
+        action.put("type", "postback");
+        action.put("label", title);
+        action.put("data", postbackData);
+        box.set("action", action);
+
+        return box;
+    }
+
+    /**
+     * 建構主選單精簡按鈕（無副標題，用於並排顯示）
+     */
+    private ObjectNode createCompactMenuButton(String title, String postbackData, String color) {
+        ObjectNode box = objectMapper.createObjectNode();
+        box.put("type", "box");
+        box.put("layout", "vertical");
+        box.put("backgroundColor", color);
+        box.put("cornerRadius", "8px");
+        box.put("paddingAll", "12px");
+        box.put("flex", 1);
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", title);
+        titleText.put("size", "sm");
+        titleText.put("weight", "bold");
+        titleText.put("color", "#FFFFFF");
+        titleText.put("align", "center");
+        contents.add(titleText);
 
         box.set("contents", contents);
 
@@ -2395,14 +2441,34 @@ public class LineFlexMessageBuilder {
             body.put("type", "box");
             body.put("layout", "vertical");
             body.put("paddingAll", "20px");
+            body.put("spacing", "md");
+
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            ObjectNode icon = objectMapper.createObjectNode();
+            icon.put("type", "text");
+            icon.put("text", "🎫");
+            icon.put("size", "3xl");
+            icon.put("align", "center");
+            bodyContents.add(icon);
 
             ObjectNode text = objectMapper.createObjectNode();
             text.put("type", "text");
             text.put("text", "您目前沒有票券");
             text.put("align", "center");
             text.put("color", SECONDARY_COLOR);
+            text.put("margin", "md");
+            bodyContents.add(text);
 
-            body.set("contents", objectMapper.createArrayNode().add(text));
+            ObjectNode tipText = objectMapper.createObjectNode();
+            tipText.put("type", "text");
+            tipText.put("text", "快去領取優惠券吧！");
+            tipText.put("align", "center");
+            tipText.put("size", "sm");
+            tipText.put("color", SECONDARY_COLOR);
+            bodyContents.add(tipText);
+
+            body.set("contents", bodyContents);
             bubble.set("body", body);
 
             ObjectNode footer = objectMapper.createObjectNode();
@@ -2422,6 +2488,9 @@ public class LineFlexMessageBuilder {
         carousel.put("type", "carousel");
 
         ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // 第一個 Bubble：使用說明
+        bubbles.add(buildCouponUsageGuide());
 
         for (CouponInstance instance : instances) {
             ObjectNode bubble = objectMapper.createObjectNode();
@@ -2472,22 +2541,82 @@ public class LineFlexMessageBuilder {
             nameText.put("wrap", true);
             bodyContents.add(nameText);
 
-            // 票券代碼
-            ObjectNode codeText = objectMapper.createObjectNode();
-            codeText.put("type", "text");
-            codeText.put("text", "序號：" + instance.getCode());
-            codeText.put("size", "sm");
-            codeText.put("color", SECONDARY_COLOR);
-            bodyContents.add(codeText);
+            // 分隔線
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "md");
+            bodyContents.add(separator);
+
+            // 票券代碼（大字顯示，方便給店家看）
+            if (instance.getStatus() == CouponInstanceStatus.UNUSED) {
+                ObjectNode codeLabel = objectMapper.createObjectNode();
+                codeLabel.put("type", "text");
+                codeLabel.put("text", "核銷代碼");
+                codeLabel.put("size", "xs");
+                codeLabel.put("color", SECONDARY_COLOR);
+                codeLabel.put("margin", "md");
+                bodyContents.add(codeLabel);
+
+                ObjectNode codeBox = objectMapper.createObjectNode();
+                codeBox.put("type", "box");
+                codeBox.put("layout", "vertical");
+                codeBox.put("backgroundColor", "#FFF3E0");
+                codeBox.put("cornerRadius", "8px");
+                codeBox.put("paddingAll", "10px");
+                codeBox.put("margin", "sm");
+
+                ObjectNode codeText = objectMapper.createObjectNode();
+                codeText.put("type", "text");
+                codeText.put("text", instance.getCode());
+                codeText.put("size", "xl");
+                codeText.put("weight", "bold");
+                codeText.put("align", "center");
+                codeText.put("color", "#E65100");
+
+                codeBox.set("contents", objectMapper.createArrayNode().add(codeText));
+                bodyContents.add(codeBox);
+
+                // 使用提示
+                ObjectNode tipText = objectMapper.createObjectNode();
+                tipText.put("type", "text");
+                tipText.put("text", "👆 出示此代碼給店家核銷");
+                tipText.put("size", "xs");
+                tipText.put("color", PRIMARY_COLOR);
+                tipText.put("align", "center");
+                tipText.put("margin", "sm");
+                bodyContents.add(tipText);
+            } else {
+                // 已使用或已過期的票券，代碼顯示較小
+                ObjectNode codeText = objectMapper.createObjectNode();
+                codeText.put("type", "text");
+                codeText.put("text", "序號：" + instance.getCode());
+                codeText.put("size", "sm");
+                codeText.put("color", SECONDARY_COLOR);
+                codeText.put("margin", "md");
+                bodyContents.add(codeText);
+            }
 
             // 有效期限
             if (instance.getExpiresAt() != null) {
                 ObjectNode expiryText = objectMapper.createObjectNode();
                 expiryText.put("type", "text");
-                expiryText.put("text", "有效至：" + instance.getExpiresAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+                String expiryPrefix = instance.getStatus() == CouponInstanceStatus.UNUSED ? "⏰ 有效至：" : "有效至：";
+                expiryText.put("text", expiryPrefix + instance.getExpiresAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")));
                 expiryText.put("size", "xs");
-                expiryText.put("color", SECONDARY_COLOR);
+                expiryText.put("color", instance.getStatus() == CouponInstanceStatus.UNUSED ? "#FF5722" : SECONDARY_COLOR);
+                expiryText.put("margin", "sm");
                 bodyContents.add(expiryText);
+            }
+
+            // 已使用時間
+            if (instance.getStatus() == CouponInstanceStatus.USED && instance.getUsedAt() != null) {
+                ObjectNode usedText = objectMapper.createObjectNode();
+                usedText.put("type", "text");
+                usedText.put("text", "使用時間：" + instance.getUsedAt().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")));
+                usedText.put("size", "xs");
+                usedText.put("color", SECONDARY_COLOR);
+                usedText.put("margin", "sm");
+                bodyContents.add(usedText);
             }
 
             body.set("contents", bodyContents);
@@ -2501,6 +2630,130 @@ public class LineFlexMessageBuilder {
     }
 
     /**
+     * 建構票券使用說明 Bubble
+     */
+    private ObjectNode buildCouponUsageGuide() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#FF6B6B");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode headerIcon = objectMapper.createObjectNode();
+        headerIcon.put("type", "text");
+        headerIcon.put("text", "📋 票券使用說明");
+        headerIcon.put("size", "md");
+        headerIcon.put("weight", "bold");
+        headerIcon.put("color", "#FFFFFF");
+        headerIcon.put("align", "center");
+        headerContents.add(headerIcon);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 步驟 1
+        bodyContents.add(createUsageStep("1️⃣", "消費時告知店家要使用票券"));
+        // 步驟 2
+        bodyContents.add(createUsageStep("2️⃣", "出示票券代碼給店家"));
+        // 步驟 3
+        bodyContents.add(createUsageStep("3️⃣", "店家輸入代碼完成核銷"));
+
+        // 注意事項
+        ObjectNode noteBox = objectMapper.createObjectNode();
+        noteBox.put("type", "box");
+        noteBox.put("layout", "vertical");
+        noteBox.put("backgroundColor", "#FFF8E1");
+        noteBox.put("cornerRadius", "8px");
+        noteBox.put("paddingAll", "10px");
+        noteBox.put("margin", "md");
+
+        ArrayNode noteContents = objectMapper.createArrayNode();
+
+        ObjectNode noteTitle = objectMapper.createObjectNode();
+        noteTitle.put("type", "text");
+        noteTitle.put("text", "⚠️ 注意事項");
+        noteTitle.put("size", "xs");
+        noteTitle.put("weight", "bold");
+        noteTitle.put("color", "#F57C00");
+        noteContents.add(noteTitle);
+
+        ObjectNode noteText = objectMapper.createObjectNode();
+        noteText.put("type", "text");
+        noteText.put("text", "• 票券核銷後即無法再次使用\n• 請留意有效期限\n• 無法與其他優惠併用");
+        noteText.put("size", "xs");
+        noteText.put("color", SECONDARY_COLOR);
+        noteText.put("wrap", true);
+        noteText.put("margin", "sm");
+        noteContents.add(noteText);
+
+        noteBox.set("contents", noteContents);
+        bodyContents.add(noteBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 領取更多票券按鈕
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "10px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("領取更多票券", "action=view_coupons", PRIMARY_COLOR)
+        ));
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構使用步驟項目
+     */
+    private ObjectNode createUsageStep(String number, String text) {
+        ObjectNode box = objectMapper.createObjectNode();
+        box.put("type", "box");
+        box.put("layout", "horizontal");
+        box.put("spacing", "sm");
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        ObjectNode numText = objectMapper.createObjectNode();
+        numText.put("type", "text");
+        numText.put("text", number);
+        numText.put("size", "sm");
+        numText.put("flex", 0);
+        contents.add(numText);
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", text);
+        stepText.put("size", "sm");
+        stepText.put("color", SECONDARY_COLOR);
+        stepText.put("wrap", true);
+        stepText.put("flex", 1);
+        contents.add(stepText);
+
+        box.set("contents", contents);
+        return box;
+    }
+
+    /**
      * 取得票券狀態文字
      */
     private String getCouponStatusText(CouponInstanceStatus status) {
@@ -2510,6 +2763,177 @@ public class LineFlexMessageBuilder {
             case EXPIRED -> "已過期";
             case VOIDED -> "已作廢";
         };
+    }
+
+    /**
+     * 建構票券領取成功訊息
+     *
+     * @param couponName 票券名稱
+     * @param couponCode 票券代碼
+     * @param expiresAt  有效期限（可為 null）
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCouponReceiveSuccess(String couponName, String couponCode, LocalDateTime expiresAt) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header - 成功標示
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "20px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode successIcon = objectMapper.createObjectNode();
+        successIcon.put("type", "text");
+        successIcon.put("text", "🎉");
+        successIcon.put("size", "3xl");
+        successIcon.put("align", "center");
+        headerContents.add(successIcon);
+
+        ObjectNode successText = objectMapper.createObjectNode();
+        successText.put("type", "text");
+        successText.put("text", "領取成功！");
+        successText.put("size", "xl");
+        successText.put("weight", "bold");
+        successText.put("color", "#FFFFFF");
+        successText.put("align", "center");
+        successText.put("margin", "md");
+        headerContents.add(successText);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body - 票券資訊
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 票券名稱
+        ObjectNode nameLabel = objectMapper.createObjectNode();
+        nameLabel.put("type", "text");
+        nameLabel.put("text", "票券名稱");
+        nameLabel.put("size", "xs");
+        nameLabel.put("color", SECONDARY_COLOR);
+        bodyContents.add(nameLabel);
+
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", couponName);
+        nameText.put("size", "lg");
+        nameText.put("weight", "bold");
+        nameText.put("wrap", true);
+        bodyContents.add(nameText);
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        separator.put("margin", "lg");
+        bodyContents.add(separator);
+
+        // 核銷代碼區塊
+        ObjectNode codeLabel = objectMapper.createObjectNode();
+        codeLabel.put("type", "text");
+        codeLabel.put("text", "🎫 核銷代碼");
+        codeLabel.put("size", "sm");
+        codeLabel.put("color", SECONDARY_COLOR);
+        codeLabel.put("margin", "lg");
+        bodyContents.add(codeLabel);
+
+        ObjectNode codeBox = objectMapper.createObjectNode();
+        codeBox.put("type", "box");
+        codeBox.put("layout", "vertical");
+        codeBox.put("backgroundColor", "#FFF3E0");
+        codeBox.put("cornerRadius", "10px");
+        codeBox.put("paddingAll", "15px");
+        codeBox.put("margin", "sm");
+
+        ObjectNode codeText = objectMapper.createObjectNode();
+        codeText.put("type", "text");
+        codeText.put("text", couponCode);
+        codeText.put("size", "xxl");
+        codeText.put("weight", "bold");
+        codeText.put("align", "center");
+        codeText.put("color", "#E65100");
+
+        codeBox.set("contents", objectMapper.createArrayNode().add(codeText));
+        bodyContents.add(codeBox);
+
+        // 有效期限
+        if (expiresAt != null) {
+            ObjectNode expiryText = objectMapper.createObjectNode();
+            expiryText.put("type", "text");
+            expiryText.put("text", "⏰ 有效至：" + expiresAt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")));
+            expiryText.put("size", "sm");
+            expiryText.put("color", "#FF5722");
+            expiryText.put("align", "center");
+            expiryText.put("margin", "md");
+            bodyContents.add(expiryText);
+        }
+
+        // 使用說明
+        ObjectNode tipBox = objectMapper.createObjectNode();
+        tipBox.put("type", "box");
+        tipBox.put("layout", "vertical");
+        tipBox.put("backgroundColor", "#E3F2FD");
+        tipBox.put("cornerRadius", "8px");
+        tipBox.put("paddingAll", "12px");
+        tipBox.put("margin", "lg");
+
+        ArrayNode tipContents = objectMapper.createArrayNode();
+
+        ObjectNode tipTitle = objectMapper.createObjectNode();
+        tipTitle.put("type", "text");
+        tipTitle.put("text", "💡 如何使用");
+        tipTitle.put("size", "sm");
+        tipTitle.put("weight", "bold");
+        tipTitle.put("color", "#1565C0");
+        tipContents.add(tipTitle);
+
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "消費時出示上方代碼給店家，由店家輸入代碼完成核銷即可享有優惠！");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("wrap", true);
+        tipText.put("margin", "sm");
+        tipContents.add(tipText);
+
+        tipBox.set("contents", tipContents);
+        bodyContents.add(tipBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 按鈕
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "horizontal");
+        footer.put("spacing", "sm");
+        footer.put("paddingAll", "15px");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+
+        // 查看我的票券按鈕
+        ObjectNode viewBtn = createButton("查看我的票券", "action=view_my_coupons", PRIMARY_COLOR);
+        viewBtn.put("flex", 1);
+        footerContents.add(viewBtn);
+
+        // 繼續領取按鈕
+        ObjectNode moreBtn = createButton("領取更多", "action=view_coupons", LINK_COLOR);
+        moreBtn.put("flex", 1);
+        footerContents.add(moreBtn);
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
     }
 
     // ========================================
@@ -2525,8 +2949,16 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildMemberInfo(Customer customer, long bookingCount, String membershipLevelName) {
-        ObjectNode bubble = objectMapper.createObjectNode();
-        bubble.put("type", "bubble");
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // ========================================
+        // Bubble 1: 會員資訊
+        // ========================================
+        ObjectNode infoBubble = objectMapper.createObjectNode();
+        infoBubble.put("type", "bubble");
 
         // Header
         ObjectNode header = objectMapper.createObjectNode();
@@ -2539,7 +2971,7 @@ public class LineFlexMessageBuilder {
 
         ObjectNode icon = objectMapper.createObjectNode();
         icon.put("type", "text");
-        icon.put("text", "\uD83D\uDC64");
+        icon.put("text", "👤");
         icon.put("size", "3xl");
         icon.put("align", "center");
         headerContents.add(icon);
@@ -2553,19 +2985,32 @@ public class LineFlexMessageBuilder {
         nameText.put("align", "center");
         headerContents.add(nameText);
 
-        // 會員等級
+        // 會員等級（帶標籤樣式）
         if (membershipLevelName != null) {
+            ObjectNode levelBox = objectMapper.createObjectNode();
+            levelBox.put("type", "box");
+            levelBox.put("layout", "vertical");
+            levelBox.put("backgroundColor", "#FFFFFF");
+            levelBox.put("cornerRadius", "20px");
+            levelBox.put("paddingAll", "5px");
+            levelBox.put("paddingStart", "15px");
+            levelBox.put("paddingEnd", "15px");
+            levelBox.put("margin", "md");
+
             ObjectNode levelText = objectMapper.createObjectNode();
             levelText.put("type", "text");
-            levelText.put("text", membershipLevelName);
+            levelText.put("text", "⭐ " + membershipLevelName);
             levelText.put("size", "sm");
-            levelText.put("color", "#FFFFFF");
+            levelText.put("color", PRIMARY_COLOR);
+            levelText.put("weight", "bold");
             levelText.put("align", "center");
-            headerContents.add(levelText);
+
+            levelBox.set("contents", objectMapper.createArrayNode().add(levelText));
+            headerContents.add(levelBox);
         }
 
         header.set("contents", headerContents);
-        bubble.set("header", header);
+        infoBubble.set("header", header);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -2576,59 +3021,246 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        // 點數
+        // 點數餘額（大字顯示）
         ObjectNode pointsBox = objectMapper.createObjectNode();
         pointsBox.put("type", "box");
-        pointsBox.put("layout", "horizontal");
+        pointsBox.put("layout", "vertical");
         pointsBox.put("paddingAll", "15px");
-        pointsBox.put("backgroundColor", "#F5F5F5");
+        pointsBox.put("backgroundColor", "#FFF8E1");
         pointsBox.put("cornerRadius", "10px");
 
         ArrayNode pointsContents = objectMapper.createArrayNode();
 
         ObjectNode pointsLabel = objectMapper.createObjectNode();
         pointsLabel.put("type", "text");
-        pointsLabel.put("text", "\uD83D\uDCB0 點數餘額");
-        pointsLabel.put("flex", 2);
+        pointsLabel.put("text", "💰 點數餘額");
+        pointsLabel.put("size", "sm");
+        pointsLabel.put("color", SECONDARY_COLOR);
+        pointsLabel.put("align", "center");
         pointsContents.add(pointsLabel);
 
         ObjectNode pointsValue = objectMapper.createObjectNode();
         pointsValue.put("type", "text");
-        pointsValue.put("text", String.format("%d 點", customer.getPointBalance() != null ? customer.getPointBalance() : 0));
+        int points = customer.getPointBalance() != null ? customer.getPointBalance() : 0;
+        pointsValue.put("text", String.format("%,d 點", points));
+        pointsValue.put("size", "xxl");
         pointsValue.put("weight", "bold");
-        pointsValue.put("align", "end");
-        pointsValue.put("flex", 1);
+        pointsValue.put("color", "#FF9800");
+        pointsValue.put("align", "center");
+        pointsValue.put("margin", "sm");
         pointsContents.add(pointsValue);
 
         pointsBox.set("contents", pointsContents);
         bodyContents.add(pointsBox);
 
+        // 統計資訊
+        ObjectNode statsBox = objectMapper.createObjectNode();
+        statsBox.put("type", "box");
+        statsBox.put("layout", "horizontal");
+        statsBox.put("spacing", "md");
+        statsBox.put("margin", "lg");
+
+        ArrayNode statsContents = objectMapper.createArrayNode();
+
         // 預約次數
-        bodyContents.add(createInfoRow("累計預約", bookingCount + " 次"));
+        statsContents.add(createStatItem("📅", "累計預約", bookingCount + " 次"));
+
+        // 累計消費（如果有的話）
+        if (customer.getTotalSpent() != null && customer.getTotalSpent().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            statsContents.add(createStatItem("💳", "累計消費", "NT$ " + String.format("%,.0f", customer.getTotalSpent())));
+        }
+
+        statsBox.set("contents", statsContents);
+        bodyContents.add(statsBox);
 
         // 電話
         if (customer.getPhone() != null) {
-            bodyContents.add(createInfoRow("聯絡電話", customer.getPhone()));
+            bodyContents.add(createInfoRow("📱 聯絡電話", customer.getPhone()));
         }
 
         body.set("contents", bodyContents);
-        bubble.set("body", body);
+        infoBubble.set("body", body);
 
         // Footer
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
-        footer.put("layout", "vertical");
+        footer.put("layout", "horizontal");
         footer.put("spacing", "sm");
         footer.put("paddingAll", "15px");
 
         ArrayNode footerContents = objectMapper.createArrayNode();
-        footerContents.add(createButton("開始預約", "action=start_booking", PRIMARY_COLOR));
-        footerContents.add(createButton("我的票券", "action=view_my_coupons", LINK_COLOR));
+
+        ObjectNode bookingBtn = createButton("開始預約", "action=start_booking", PRIMARY_COLOR);
+        bookingBtn.put("flex", 1);
+        footerContents.add(bookingBtn);
+
+        ObjectNode couponBtn = createButton("我的票券", "action=view_my_coupons", LINK_COLOR);
+        couponBtn.put("flex", 1);
+        footerContents.add(couponBtn);
 
         footer.set("contents", footerContents);
-        bubble.set("footer", footer);
+        infoBubble.set("footer", footer);
 
-        return bubble;
+        bubbles.add(infoBubble);
+
+        // ========================================
+        // Bubble 2: 點數說明
+        // ========================================
+        ObjectNode pointsBubble = objectMapper.createObjectNode();
+        pointsBubble.put("type", "bubble");
+        pointsBubble.put("size", "kilo");
+
+        // Header
+        ObjectNode pointsHeader = objectMapper.createObjectNode();
+        pointsHeader.put("type", "box");
+        pointsHeader.put("layout", "vertical");
+        pointsHeader.put("backgroundColor", "#FF9800");
+        pointsHeader.put("paddingAll", "15px");
+
+        ObjectNode pointsHeaderText = objectMapper.createObjectNode();
+        pointsHeaderText.put("type", "text");
+        pointsHeaderText.put("text", "💡 點數說明");
+        pointsHeaderText.put("size", "lg");
+        pointsHeaderText.put("weight", "bold");
+        pointsHeaderText.put("color", "#FFFFFF");
+        pointsHeaderText.put("align", "center");
+
+        pointsHeader.set("contents", objectMapper.createArrayNode().add(pointsHeaderText));
+        pointsBubble.set("header", pointsHeader);
+
+        // Body
+        ObjectNode pointsBody = objectMapper.createObjectNode();
+        pointsBody.put("type", "box");
+        pointsBody.put("layout", "vertical");
+        pointsBody.put("spacing", "lg");
+        pointsBody.put("paddingAll", "15px");
+
+        ArrayNode pointsBodyContents = objectMapper.createArrayNode();
+
+        // 如何獲得點數
+        ObjectNode earnBox = objectMapper.createObjectNode();
+        earnBox.put("type", "box");
+        earnBox.put("layout", "vertical");
+        earnBox.put("spacing", "sm");
+
+        ArrayNode earnContents = objectMapper.createArrayNode();
+
+        ObjectNode earnTitle = objectMapper.createObjectNode();
+        earnTitle.put("type", "text");
+        earnTitle.put("text", "📈 如何獲得點數");
+        earnTitle.put("size", "sm");
+        earnTitle.put("weight", "bold");
+        earnTitle.put("color", "#333333");
+        earnContents.add(earnTitle);
+
+        earnContents.add(createPointTip("✓ 完成預約服務"));
+        earnContents.add(createPointTip("✓ 消費累積回饋"));
+        earnContents.add(createPointTip("✓ 參與店家活動"));
+        earnContents.add(createPointTip("✓ 生日禮、節慶禮"));
+
+        earnBox.set("contents", earnContents);
+        pointsBodyContents.add(earnBox);
+
+        // 分隔線
+        ObjectNode separator = objectMapper.createObjectNode();
+        separator.put("type", "separator");
+        pointsBodyContents.add(separator);
+
+        // 如何使用點數
+        ObjectNode useBox = objectMapper.createObjectNode();
+        useBox.put("type", "box");
+        useBox.put("layout", "vertical");
+        useBox.put("spacing", "sm");
+
+        ArrayNode useContents = objectMapper.createArrayNode();
+
+        ObjectNode useTitle = objectMapper.createObjectNode();
+        useTitle.put("type", "text");
+        useTitle.put("text", "🎁 如何使用點數");
+        useTitle.put("size", "sm");
+        useTitle.put("weight", "bold");
+        useTitle.put("color", "#333333");
+        useContents.add(useTitle);
+
+        useContents.add(createPointTip("✓ 消費時折抵現金"));
+        useContents.add(createPointTip("✓ 兌換店家商品"));
+        useContents.add(createPointTip("✓ 兌換優惠票券"));
+
+        useBox.set("contents", useContents);
+        pointsBodyContents.add(useBox);
+
+        // 提示
+        ObjectNode tipBox = objectMapper.createObjectNode();
+        tipBox.put("type", "box");
+        tipBox.put("layout", "vertical");
+        tipBox.put("backgroundColor", "#E3F2FD");
+        tipBox.put("cornerRadius", "8px");
+        tipBox.put("paddingAll", "10px");
+
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "💬 使用點數時，請告知店家您要折抵的點數，由店家協助處理。");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("wrap", true);
+
+        tipBox.set("contents", objectMapper.createArrayNode().add(tipText));
+        pointsBodyContents.add(tipBox);
+
+        pointsBody.set("contents", pointsBodyContents);
+        pointsBubble.set("body", pointsBody);
+
+        bubbles.add(pointsBubble);
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構統計項目
+     */
+    private ObjectNode createStatItem(String icon, String label, String value) {
+        ObjectNode box = objectMapper.createObjectNode();
+        box.put("type", "box");
+        box.put("layout", "vertical");
+        box.put("backgroundColor", "#F5F5F5");
+        box.put("cornerRadius", "8px");
+        box.put("paddingAll", "10px");
+        box.put("flex", 1);
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        ObjectNode iconText = objectMapper.createObjectNode();
+        iconText.put("type", "text");
+        iconText.put("text", icon + " " + label);
+        iconText.put("size", "xs");
+        iconText.put("color", SECONDARY_COLOR);
+        iconText.put("align", "center");
+        contents.add(iconText);
+
+        ObjectNode valueText = objectMapper.createObjectNode();
+        valueText.put("type", "text");
+        valueText.put("text", value);
+        valueText.put("size", "sm");
+        valueText.put("weight", "bold");
+        valueText.put("align", "center");
+        valueText.put("margin", "sm");
+        contents.add(valueText);
+
+        box.set("contents", contents);
+        return box;
+    }
+
+    /**
+     * 建構點數說明項目
+     */
+    private ObjectNode createPointTip(String text) {
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", text);
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        return tipText;
     }
 
     // ========================================

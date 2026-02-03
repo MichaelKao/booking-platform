@@ -417,14 +417,38 @@
             const resultDiv = document.getElementById('redeemResult');
             const contentDiv = document.getElementById('redeemResultContent');
 
+            // 計算優惠內容
+            let discountText = '';
+            if (data.couponType === 'DISCOUNT_AMOUNT' && data.discountAmount) {
+                discountText = `<span class="badge bg-danger fs-6">折抵 ${formatMoney(data.discountAmount)}</span>`;
+            } else if (data.couponType === 'DISCOUNT_PERCENT' && data.discountPercent) {
+                discountText = `<span class="badge bg-warning text-dark fs-6">${(data.discountPercent * 100).toFixed(0)}% OFF</span>`;
+            } else if (data.couponType === 'GIFT' && data.giftItem) {
+                discountText = `<span class="badge bg-info fs-6">兌換：${escapeHtml(data.giftItem)}</span>`;
+            }
+
             contentDiv.innerHTML = `
                 <div class="alert alert-success mb-0">
-                    <h6 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>核銷成功！</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                        <h6 class="alert-heading mb-0">核銷成功！</h6>
+                    </div>
                     <hr class="my-2">
-                    <p class="mb-1"><strong>票券名稱：</strong>${escapeHtml(data.couponName)}</p>
-                    <p class="mb-1"><strong>顧客：</strong>${escapeHtml(data.customerName || '未知')}</p>
-                    <p class="mb-1"><strong>票券代碼：</strong><code>${escapeHtml(data.code)}</code></p>
-                    <p class="mb-0"><strong>核銷時間：</strong>${formatDateTime(data.usedAt)}</p>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <strong>票券名稱：</strong>${escapeHtml(data.couponName)}
+                        </div>
+                        ${discountText ? `<div class="col-12 mb-2"><strong>優惠內容：</strong>${discountText}</div>` : ''}
+                        <div class="col-sm-6 mb-2">
+                            <strong>顧客：</strong>${escapeHtml(data.customerName || '未知')}
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong>票券代碼：</strong><code class="bg-light px-2 py-1">${escapeHtml(data.code)}</code>
+                        </div>
+                        <div class="col-12">
+                            <strong>核銷時間：</strong>${formatDateTime(data.usedAt)}
+                        </div>
+                    </div>
                 </div>
             `;
 

@@ -726,16 +726,13 @@ public class LineWebhookService {
             // 發放票券
             CouponInstance instance = couponService.issueToCustomer(couponId, customerId);
 
-            // 回覆成功訊息，包含票券代碼
-            String message = String.format(
-                    "🎉 恭喜！成功領取「%s」票券\n\n" +
-                    "📋 票券代碼：%s\n" +
-                    "💡 使用時請出示此代碼給店家核銷\n\n" +
-                    "可在「我的票券」中查看詳情。",
+            // 回覆成功訊息（使用 Flex Message）
+            JsonNode successMessage = flexMessageBuilder.buildCouponReceiveSuccess(
                     coupon.getName(),
-                    instance.getCode()
+                    instance.getCode(),
+                    instance.getExpiresAt()
             );
-            messageService.replyText(tenantId, replyToken, message);
+            messageService.replyFlex(tenantId, replyToken, "票券領取成功", successMessage);
 
         } catch (Exception e) {
             log.error("領取票券失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
