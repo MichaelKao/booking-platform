@@ -113,6 +113,30 @@ public class LineConfigService {
     }
 
     /**
+     * 根據租戶代碼啟用 LINE Bot（診斷用）
+     *
+     * @param tenantCode 租戶代碼
+     * @return 原本的狀態
+     */
+    @Transactional
+    public String activateByTenantCode(String tenantCode) {
+        Optional<TenantLineConfig> configOpt = getConfigByTenantCode(tenantCode);
+        if (configOpt.isEmpty()) {
+            throw new ResourceNotFoundException(ErrorCode.LINE_CONFIG_NOT_FOUND, "找不到 LINE 設定");
+        }
+
+        TenantLineConfig config = configOpt.get();
+        String previousStatus = config.getStatus().name();
+
+        config.setStatus(LineConfigStatus.ACTIVE);
+        lineConfigRepository.save(config);
+
+        log.info("LINE Bot 已透過診斷端點啟用，租戶代碼：{}，原狀態：{}", tenantCode, previousStatus);
+
+        return previousStatus;
+    }
+
+    /**
      * 取得解密後的 Channel Secret
      *
      * @param tenantId 租戶 ID
