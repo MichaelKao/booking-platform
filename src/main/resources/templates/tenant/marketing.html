@@ -273,15 +273,18 @@
         }
 
         async function saveData() {
+            console.log('saveData() 被呼叫');
             const form = document.getElementById('dataForm');
             const titleEl = document.getElementById('title');
             const contentEl = document.getElementById('content');
 
             let isValid = true;
+            let errorMessages = [];
 
             if (!titleEl.value.trim()) {
                 titleEl.classList.add('is-invalid');
                 isValid = false;
+                errorMessages.push('請輸入推播標題');
             } else {
                 titleEl.classList.remove('is-invalid');
             }
@@ -289,14 +292,18 @@
             if (!contentEl.value.trim()) {
                 contentEl.classList.add('is-invalid');
                 isValid = false;
+                errorMessages.push('請輸入推播內容');
             } else {
                 contentEl.classList.remove('is-invalid');
             }
 
             if (!isValid) {
                 form.classList.add('was-validated');
+                showError(errorMessages.join('、'));
                 return;
             }
+
+            console.log('驗證通過，準備發送請求');
 
             const id = document.getElementById('dataId').value;
             const targetType = document.getElementById('targetType').value;
@@ -313,17 +320,24 @@
                 note: document.getElementById('note').value.trim() || null
             };
 
+            console.log('發送資料:', JSON.stringify(data, null, 2));
+
             const btn = document.getElementById('saveBtn');
             btn.querySelector('.btn-text').classList.add('d-none');
             btn.querySelector('.btn-loading').classList.remove('d-none');
             btn.disabled = true;
 
             try {
+                console.log('開始發送 API 請求...');
                 const r = await api.post('/api/marketing/pushes', data);
+                console.log('API 回應:', r);
                 if (r.success) {
                     showSuccess('推播已建立');
                     bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
                     loadData();
+                } else {
+                    // API 返回 success=false 時顯示錯誤
+                    showError(r.message || '儲存失敗，請稍後再試');
                 }
             } catch (e) {
                 console.error('儲存推播失敗:', e);
