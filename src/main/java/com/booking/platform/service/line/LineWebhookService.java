@@ -91,6 +91,75 @@ public class LineWebhookService {
     // ========================================
 
     /**
+     * 調試會員資訊功能（同步執行，用於排查問題）
+     *
+     * @param tenantId   租戶 ID
+     * @param lineUserId LINE User ID
+     * @return 調試結果
+     */
+    public Map<String, Object> debugMemberInfo(String tenantId, String lineUserId) {
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("tenantId", tenantId);
+        result.put("lineUserId", lineUserId);
+
+        try {
+            // 1. 取得顧客 ID
+            String customerId = lineUserService.getCustomerId(tenantId, lineUserId);
+            result.put("customerId", customerId);
+
+            if (customerId == null) {
+                result.put("error", "用戶尚未成為會員（無 customerId）");
+                return result;
+            }
+
+            // 2. 查詢顧客資料
+            Optional<Customer> customerOpt = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId);
+            if (customerOpt.isEmpty()) {
+                result.put("error", "找不到顧客資料");
+                return result;
+            }
+
+            Customer customer = customerOpt.get();
+            result.put("customerName", customer.getName());
+            result.put("customerPhone", customer.getPhone());
+            result.put("pointBalance", customer.getPointBalance());
+            result.put("membershipLevelId", customer.getMembershipLevelId());
+
+            // 3. 查詢預約統計
+            long bookingCount = bookingRepository.countByCustomerIdAndTenantId(customerId, tenantId);
+            result.put("bookingCount", bookingCount);
+
+            // 4. 查詢會員等級
+            if (customer.getMembershipLevelId() != null) {
+                String levelName = membershipLevelRepository
+                        .findById(customer.getMembershipLevelId())
+                        .map(level -> level.getName())
+                        .orElse(null);
+                result.put("membershipLevelName", levelName);
+            }
+
+            // 5. 嘗試建構 Flex Message
+            try {
+                JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount,
+                        (String) result.get("membershipLevelName"));
+                result.put("flexMessageBuilt", true);
+                result.put("flexMessagePreview", memberInfo.toString().substring(0, Math.min(500, memberInfo.toString().length())) + "...");
+            } catch (Exception e) {
+                result.put("flexMessageBuilt", false);
+                result.put("flexMessageError", e.getMessage());
+            }
+
+            result.put("success", true);
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("error", e.getClass().getName() + ": " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
      * 處理 Webhook 事件
      *
      * @param tenantId 租戶 ID

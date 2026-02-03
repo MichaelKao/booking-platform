@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,6 +55,37 @@ public class LineWebhookController {
     // ========================================
     // Webhook 端點
     // ========================================
+
+    /**
+     * 調試端點：測試會員資訊功能
+     */
+    @GetMapping("/debug/{tenantCode}/member-info/{lineUserId}")
+    public ResponseEntity<ApiResponse<Object>> debugMemberInfo(
+            @PathVariable String tenantCode,
+            @PathVariable String lineUserId
+    ) {
+        log.info("=== 調試會員資訊 ===");
+        log.info("租戶代碼：{}，LINE User ID：{}", tenantCode, lineUserId);
+
+        try {
+            // 1. 查詢租戶設定
+            Optional<TenantLineConfig> configOpt = lineConfigService.getConfigByTenantCode(tenantCode);
+            if (configOpt.isEmpty()) {
+                return ResponseEntity.ok(ApiResponse.error("CONFIG_NOT_FOUND", "找不到租戶 LINE 設定"));
+            }
+
+            String tenantId = configOpt.get().getTenantId();
+            log.info("租戶 ID：{}", tenantId);
+
+            // 2. 調用 WebhookService 的測試方法
+            Object result = webhookService.debugMemberInfo(tenantId, lineUserId);
+            return ResponseEntity.ok(ApiResponse.ok(result));
+
+        } catch (Exception e) {
+            log.error("調試失敗：", e);
+            return ResponseEntity.ok(ApiResponse.error("DEBUG_ERROR", e.getMessage()));
+        }
+    }
 
     /**
      * 接收 LINE Webhook 事件
