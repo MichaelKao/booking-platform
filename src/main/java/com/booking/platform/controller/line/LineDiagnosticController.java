@@ -1,0 +1,85 @@
+package com.booking.platform.controller.line;
+
+import com.booking.platform.common.response.ApiResponse;
+import com.booking.platform.entity.line.TenantLineConfig;
+import com.booking.platform.repository.line.TenantLineConfigRepository;
+import com.booking.platform.service.common.EncryptionService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * LINE Bot 診斷控制器
+ */
+@RestController
+@RequestMapping("/api/line/diagnostic")
+@RequiredArgsConstructor
+@Slf4j
+public class LineDiagnosticController {
+
+    private final TenantLineConfigRepository lineConfigRepository;
+    private final EncryptionService encryptionService;
+    private final RestTemplate restTemplate;
+
+    @GetMapping("/{tenantCode}")
+    public ApiResponse<Map<String, Object>> diagnose(@PathVariable String tenantCode) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 1. 檢查設定是否存在
+            var configOpt = lineConfigRepository.findByTenantCode(tenantCode);
+            if (configOpt.isEmpty()) {
+                result.put("configExists", false);
+                result.put("error", "找不到 LINE 設定");
+                return ApiResponse.ok(result);
+            }
+            
+            TenantLineConfig config = configOpt.get();
+            result.put("configExists", true);
+            result.put("status", config.getStatus().name());
+            result.put("webhookVerified", config.getWebhookVerified());
+            result.put("hasChannelId", config.getChannelId() != null);
+            result.put("hasChannelSecret", config.getChannelSecretEncrypted() != null);
+            result.put("hasAccessToken", config.getChannelAccessTokenEncrypted() != null);
+            
+            // 2. 測試 Access Token
+            if (config.getChannelAccessTokenEncrypted() != null) {
+                try {
+                    String token = encryptionService.decrypt(config.getChannelAccessTokenEncrypted());
+                    result.put("tokenDecrypted", true);
+                    result.put("tokenLength", token.length());
+                    
+                    // 嘗試呼叫 LINE API 驗證 Token
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setBearerAuth(token);
+                    HttpEntity<Void> request = new HttpEntity<>(headers);
+                    
+                    ResponseEntity<String> response = restTemplate.exchange(
+                        "https://api.line.me/v2/bot/info",
+                        HttpMethod.GET,
+                        request,
+                        String.class
+                    );
+                    
+                    result.put("tokenValid", response.getStatusCode().is2xxSuccessful());
+                    result.put("botInfo", response.getBody());
+                    
+                } catch (Exception e) {
+                    result.put("tokenValid", false);
+                    result.put("tokenError", e.getMessage());
+                }
+            }
+            
+            return ApiResponse.ok(result);
+            
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            return ApiResponse.ok(result);
+        }
+    }
+}
