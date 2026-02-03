@@ -54,12 +54,15 @@ test.describe('會員等級 API 測試', () => {
     test('新增會員等級', async ({ request }) => {
       if (!tenantToken) return;
 
+      // 使用正確的 DTO 欄位名稱
       const levelData = {
         name: generateTestData('Level'),
-        minPoints: 0,
-        maxPoints: 1000,
-        discountRate: 5,
-        description: '測試會員等級'
+        upgradeThreshold: 1000,      // 升級門檻（累計消費金額）
+        discountRate: 0.05,          // 折扣比例（0-1 小數）
+        pointRate: 0.1,              // 點數回饋比例（0-1 小數）
+        description: '測試會員等級',
+        isDefault: false,
+        isActive: true
       };
 
       const response = await request.post('/api/membership-levels', {
