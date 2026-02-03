@@ -307,7 +307,11 @@
 
             const id = document.getElementById('dataId').value;
             const targetType = document.getElementById('targetType').value;
-            const customTargetsText = document.getElementById('customTargets').value.trim();
+            const customTargetsEl = document.getElementById('customTargets');
+            const customTargetsText = customTargetsEl ? customTargetsEl.value.trim() : '';
+            const imageUrlEl = document.getElementById('imageUrl');
+            const scheduledAtEl = document.getElementById('scheduledAt');
+            const noteEl = document.getElementById('note');
 
             const data = {
                 title: titleEl.value.trim(),
@@ -315,9 +319,9 @@
                 targetType: targetType,
                 targetValue: targetType === 'MEMBERSHIP_LEVEL' ? document.getElementById('targetValue').value : null,
                 customTargets: targetType === 'CUSTOM' && customTargetsText ? customTargetsText.split('\n').map(s => s.trim()).filter(s => s) : null,
-                imageUrl: document.getElementById('imageUrl').value.trim() || null,
-                scheduledAt: document.getElementById('scheduledAt').value ? document.getElementById('scheduledAt').value + ':00' : null,
-                note: document.getElementById('note').value.trim() || null
+                imageUrl: imageUrlEl ? (imageUrlEl.value.trim() || null) : null,
+                scheduledAt: scheduledAtEl && scheduledAtEl.value ? scheduledAtEl.value + ':00' : null,
+                note: noteEl ? (noteEl.value.trim() || null) : null
             };
 
             console.log('發送資料:', JSON.stringify(data, null, 2));
