@@ -156,46 +156,61 @@ public class LineWebhookService {
             return;
         }
 
-        String text = message.path("text").asText().trim().toLowerCase();
+        String text = message.path("text").asText().trim();
+        String textLower = text.toLowerCase();
+
+        // ========================================
+        // 優先檢查對話狀態 - 備註輸入狀態優先處理
+        // ========================================
+        ConversationContext context = conversationService.getContext(tenantId, userId);
+
+        // 如果正在輸入備註，直接處理為備註（不檢查關鍵字）
+        if (context.getState() == ConversationState.INPUTTING_NOTE) {
+            handleNoteInput(tenantId, userId, replyToken, text);
+            return;
+        }
+
+        // ========================================
+        // 關鍵字檢查（僅在非備註輸入狀態時）
+        // ========================================
 
         // 檢查是否為預約關鍵字
-        if (matchesKeyword(text, BOOKING_KEYWORDS)) {
+        if (matchesKeyword(textLower, BOOKING_KEYWORDS)) {
             startBookingFlow(tenantId, userId, replyToken);
             return;
         }
 
         // 檢查是否為取消關鍵字
-        if (matchesKeyword(text, CANCEL_KEYWORDS)) {
+        if (matchesKeyword(textLower, CANCEL_KEYWORDS)) {
             cancelCurrentFlow(tenantId, userId, replyToken);
             return;
         }
 
         // 檢查是否為幫助關鍵字
-        if (matchesKeyword(text, HELP_KEYWORDS)) {
+        if (matchesKeyword(textLower, HELP_KEYWORDS)) {
             replyHelpMessage(tenantId, replyToken);
             return;
         }
 
         // 檢查是否為票券關鍵字
-        if (matchesKeyword(text, COUPON_KEYWORDS)) {
+        if (matchesKeyword(textLower, COUPON_KEYWORDS)) {
             handleViewCoupons(tenantId, userId, replyToken);
             return;
         }
 
         // 檢查是否為商品關鍵字
-        if (matchesKeyword(text, PRODUCT_KEYWORDS)) {
+        if (matchesKeyword(textLower, PRODUCT_KEYWORDS)) {
             handleStartShopping(tenantId, userId, replyToken);
             return;
         }
 
         // 檢查是否為會員關鍵字
-        if (matchesKeyword(text, MEMBER_KEYWORDS)) {
+        if (matchesKeyword(textLower, MEMBER_KEYWORDS)) {
             handleViewMemberInfo(tenantId, userId, replyToken);
             return;
         }
 
-        // 根據當前對話狀態處理
-        ConversationContext context = conversationService.getContext(tenantId, userId);
+        // 根據當前對話狀態處理其他情況
         handleContextualMessage(tenantId, userId, replyToken, text, context);
     }
 
