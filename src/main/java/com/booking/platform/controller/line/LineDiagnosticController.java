@@ -2,8 +2,8 @@ package com.booking.platform.controller.line;
 
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.entity.line.TenantLineConfig;
-import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.common.EncryptionService;
+import com.booking.platform.service.line.LineConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -22,17 +22,17 @@ import java.util.Map;
 @Slf4j
 public class LineDiagnosticController {
 
-    private final TenantLineConfigRepository lineConfigRepository;
+    private final LineConfigService lineConfigService;
     private final EncryptionService encryptionService;
     private final RestTemplate restTemplate;
 
     @GetMapping("/{tenantCode}")
     public ApiResponse<Map<String, Object>> diagnose(@PathVariable String tenantCode) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
-            // 1. 檢查設定是否存在
-            var configOpt = lineConfigRepository.findByTenantCode(tenantCode);
+            // 1. 檢查設定是否存在（透過 Service 查詢，自動處理 tenantCode -> tenantId 轉換）
+            var configOpt = lineConfigService.getConfigByTenantCode(tenantCode);
             if (configOpt.isEmpty()) {
                 result.put("configExists", false);
                 result.put("error", "找不到 LINE 設定");
