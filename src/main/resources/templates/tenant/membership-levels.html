@@ -152,16 +152,21 @@
                 return;
             }
 
-            tbody.innerHTML = levels.map(level => `
+            tbody.innerHTML = levels.map(level => {
+                // 將小數轉換為百分比顯示
+                const discountPercent = Math.round((level.discountRate || 0) * 100);
+                // 將額外比例轉換為倍率顯示
+                const pointMultiplier = ((level.pointRate || 0) + 1).toFixed(1);
+                return `
                 <tr>
                     <td>${level.sortOrder || 0}</td>
                     <td>
                         <strong>${level.name}</strong>
                         ${level.isDefault ? '<span class="badge bg-primary ms-1">預設</span>' : ''}
                     </td>
-                    <td>NT$ ${formatNumber(level.thresholdAmount || 0)}</td>
-                    <td>${level.discountPercent || 0}%</td>
-                    <td>${level.pointMultiplier || 1}x</td>
+                    <td>NT$ ${formatNumber(level.upgradeThreshold || 0)}</td>
+                    <td>${discountPercent}%</td>
+                    <td>${pointMultiplier}x</td>
                     <td>
                         <span class="badge ${level.isActive ? 'bg-success' : 'bg-secondary'}">
                             ${level.isActive ? '啟用' : '停用'}
@@ -176,7 +181,7 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function openCreateModal() {
@@ -191,12 +196,16 @@
             const result = await api.get(`/api/membership-levels/${id}`);
             if (result.success) {
                 const level = result.data;
+                // 將小數轉換為百分比和倍率顯示
+                const discountPercent = Math.round((level.discountRate || 0) * 100);
+                const pointMultiplier = (level.pointRate || 0) + 1;
+
                 document.getElementById('modalTitle').textContent = '編輯會員等級';
                 document.getElementById('levelId').value = level.id;
                 document.getElementById('levelName').value = level.name;
-                document.getElementById('thresholdAmount').value = level.thresholdAmount || 0;
-                document.getElementById('discountPercent').value = level.discountPercent || 0;
-                document.getElementById('pointMultiplier').value = level.pointMultiplier || 1;
+                document.getElementById('thresholdAmount').value = level.upgradeThreshold || 0;
+                document.getElementById('discountPercent').value = discountPercent;
+                document.getElementById('pointMultiplier').value = pointMultiplier;
                 document.getElementById('description').value = level.description || '';
                 document.getElementById('sortOrder').value = level.sortOrder || 0;
                 document.getElementById('isActive').checked = level.isActive;
@@ -207,11 +216,16 @@
 
         async function saveLevel() {
             const id = document.getElementById('levelId').value;
+            // 將百分比轉換為小數 (10% -> 0.1)
+            const discountPercent = parseInt(document.getElementById('discountPercent').value) || 0;
+            // 將倍率轉換為比例 (2x -> 1.0，表示額外獲得100%，即原本1倍變2倍)
+            const pointMultiplier = parseFloat(document.getElementById('pointMultiplier').value) || 1;
+
             const data = {
                 name: document.getElementById('levelName').value,
-                thresholdAmount: parseInt(document.getElementById('thresholdAmount').value) || 0,
-                discountPercent: parseInt(document.getElementById('discountPercent').value) || 0,
-                pointMultiplier: parseFloat(document.getElementById('pointMultiplier').value) || 1,
+                upgradeThreshold: parseInt(document.getElementById('thresholdAmount').value) || 0,
+                discountRate: discountPercent / 100,  // 轉換為小數
+                pointRate: (pointMultiplier - 1),     // 轉換為額外比例 (2x = 1.0 額外回饋)
                 description: document.getElementById('description').value,
                 sortOrder: parseInt(document.getElementById('sortOrder').value) || 0,
                 isActive: document.getElementById('isActive').checked,

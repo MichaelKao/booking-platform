@@ -50,8 +50,9 @@ public class CreateMarketingPushRequest {
 
     /**
      * 排程發送時間（null 表示儲存為草稿）
+     * 支援 ISO 格式 (yyyy-MM-dd'T'HH:mm:ss) 和標準格式 (yyyy-MM-dd HH:mm:ss)
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime scheduledAt;
 
     @Size(max = 500, message = "備註長度不能超過 500 字")
