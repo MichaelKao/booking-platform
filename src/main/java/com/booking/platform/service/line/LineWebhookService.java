@@ -684,19 +684,43 @@ public class LineWebhookService {
 
             Coupon coupon = couponOpt.get();
 
-            // 檢查是否已領取過
-            Optional<CouponInstance> existingInstance = couponInstanceRepository.findByCustomerIdAndCouponId(customerId, couponId);
-            if (existingInstance.isPresent()) {
-                messageService.replyText(tenantId, replyToken, "您已經領取過此票券了。");
+            // 檢查票券是否可發放
+            if (!coupon.canIssue()) {
+                messageService.replyText(tenantId, replyToken, "此票券已停止發放或已發完。");
                 return;
             }
 
-            // 發放票券
-            couponService.issueToCustomer(couponId, customerId);
+            // 檢查每人限領數量
+            Integer limitPerCustomer = coupon.getLimitPerCustomer();
+            long alreadyClaimed = couponInstanceRepository.countByCustomerAndCoupon(tenantId, couponId, customerId);
 
-            messageService.replyText(tenantId, replyToken,
-                    "恭喜！成功領取「" + coupon.getName() + "」票券。\n" +
-                    "可在「我的票券」中查看。");
+            if (limitPerCustomer != null && limitPerCustomer > 0) {
+                if (alreadyClaimed >= limitPerCustomer) {
+                    messageService.replyText(tenantId, replyToken,
+                            String.format("此票券每人限領 %d 張，您已領取 %d 張。", limitPerCustomer, alreadyClaimed));
+                    return;
+                }
+            } else {
+                // 沒有設定限領數量時，預設每人只能領 1 張
+                if (alreadyClaimed > 0) {
+                    messageService.replyText(tenantId, replyToken, "您已經領取過此票券了。");
+                    return;
+                }
+            }
+
+            // 發放票券
+            CouponInstance instance = couponService.issueToCustomer(couponId, customerId);
+
+            // 回覆成功訊息，包含票券代碼
+            String message = String.format(
+                    "🎉 恭喜！成功領取「%s」票券\n\n" +
+                    "📋 票券代碼：%s\n" +
+                    "💡 使用時請出示此代碼給店家核銷\n\n" +
+                    "可在「我的票券」中查看詳情。",
+                    coupon.getName(),
+                    instance.getCode()
+            );
+            messageService.replyText(tenantId, replyToken, message);
 
         } catch (Exception e) {
             log.error("領取票券失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);

@@ -9,7 +9,10 @@
             <main id="content">
                 <div class="page-header d-flex justify-content-between align-items-center">
                     <div><h1 class="page-title">票券管理</h1><p class="page-subtitle">管理優惠券和折價券</p></div>
-                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增票券</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="openRedeemModal()"><i class="bi bi-qr-code-scan me-1"></i>核銷票券</button>
+                        <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增票券</button>
+                    </div>
                 </div>
                 <div class="data-table-container">
                     <div class="data-table-header"><h6 class="data-table-title">票券列表</h6></div>
@@ -115,6 +118,14 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">每人限領數量</label>
+                            <input type="number" class="form-control" id="limitPerCustomer" min="1" max="100">
+                            <div class="form-text">不填則每人限領 1 張</div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">使用說明</label>
                         <textarea class="form-control" id="description" rows="2" maxlength="500"></textarea>
@@ -124,6 +135,37 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                 <button type="button" class="btn btn-primary" onclick="saveData()">儲存</button>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- 核銷票券 Modal -->
+    <div class="modal fade" id="redeemModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-qr-code-scan me-2"></i>核銷票券</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">輸入票券代碼</label>
+                    <input type="text" class="form-control form-control-lg text-center" id="couponCode"
+                           placeholder="例如: ABC12345" maxlength="20" autocomplete="off"
+                           style="font-family: monospace; letter-spacing: 2px;">
+                    <div class="form-text">請輸入顧客出示的票券代碼</div>
+                </div>
+
+                <!-- 核銷結果區域 -->
+                <div id="redeemResult" class="d-none">
+                    <hr>
+                    <div id="redeemResultContent"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                <button type="button" class="btn btn-success" id="redeemBtn" onclick="redeemCoupon()">
+                    <i class="bi bi-check-circle me-1"></i>確認核銷
+                </button>
             </div>
         </div></div>
     </div>
@@ -205,6 +247,7 @@
                     document.getElementById('giftItem').value = d.giftItem || '';
                     document.getElementById('validDays').value = d.validDays || '';
                     document.getElementById('totalQuantity').value = d.totalQuantity || '';
+                    document.getElementById('limitPerCustomer').value = d.limitPerCustomer || '';
                     document.getElementById('description').value = d.description || '';
                     toggleTypeFields();
                     document.getElementById('modalTitle').textContent = '編輯票券';
@@ -271,7 +314,8 @@
                 type: type,
                 description: document.getElementById('description').value.trim() || null,
                 validDays: document.getElementById('validDays').value ? parseInt(document.getElementById('validDays').value) : null,
-                totalQuantity: document.getElementById('totalQuantity').value ? parseInt(document.getElementById('totalQuantity').value) : null
+                totalQuantity: document.getElementById('totalQuantity').value ? parseInt(document.getElementById('totalQuantity').value) : null,
+                limitPerCustomer: document.getElementById('limitPerCustomer').value ? parseInt(document.getElementById('limitPerCustomer').value) : null
             };
 
             if (type === 'DISCOUNT_AMOUNT') {
@@ -317,6 +361,102 @@
             d.textContent = t;
             return d.innerHTML;
         }
+
+        // ========================================
+        // 核銷功能
+        // ========================================
+
+        function openRedeemModal() {
+            document.getElementById('couponCode').value = '';
+            document.getElementById('redeemResult').classList.add('d-none');
+            document.getElementById('redeemBtn').disabled = false;
+            new bootstrap.Modal(document.getElementById('redeemModal')).show();
+
+            // 自動聚焦到輸入框
+            setTimeout(() => {
+                document.getElementById('couponCode').focus();
+            }, 500);
+        }
+
+        async function redeemCoupon() {
+            const codeInput = document.getElementById('couponCode');
+            const code = codeInput.value.trim().toUpperCase();
+
+            if (!code) {
+                showError('請輸入票券代碼');
+                codeInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('redeemBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>核銷中...';
+
+            try {
+                const r = await api.post(`/api/coupons/redeem-by-code?code=${encodeURIComponent(code)}`);
+
+                if (r.success && r.data) {
+                    const d = r.data;
+                    showRedeemSuccess(d);
+                    showSuccess('票券核銷成功！');
+
+                    // 清空輸入框，準備下一次核銷
+                    codeInput.value = '';
+                    codeInput.focus();
+                }
+            } catch (e) {
+                console.error('核銷失敗:', e);
+                showRedeemError(e.message || '核銷失敗，請檢查票券代碼');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>確認核銷';
+            }
+        }
+
+        function showRedeemSuccess(data) {
+            const resultDiv = document.getElementById('redeemResult');
+            const contentDiv = document.getElementById('redeemResultContent');
+
+            contentDiv.innerHTML = `
+                <div class="alert alert-success mb-0">
+                    <h6 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>核銷成功！</h6>
+                    <hr class="my-2">
+                    <p class="mb-1"><strong>票券名稱：</strong>${escapeHtml(data.couponName)}</p>
+                    <p class="mb-1"><strong>顧客：</strong>${escapeHtml(data.customerName || '未知')}</p>
+                    <p class="mb-1"><strong>票券代碼：</strong><code>${escapeHtml(data.code)}</code></p>
+                    <p class="mb-0"><strong>核銷時間：</strong>${formatDateTime(data.usedAt)}</p>
+                </div>
+            `;
+
+            resultDiv.classList.remove('d-none');
+        }
+
+        function showRedeemError(message) {
+            const resultDiv = document.getElementById('redeemResult');
+            const contentDiv = document.getElementById('redeemResultContent');
+
+            contentDiv.innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    <h6 class="alert-heading"><i class="bi bi-x-circle-fill me-2"></i>核銷失敗</h6>
+                    <p class="mb-0">${escapeHtml(message)}</p>
+                </div>
+            `;
+
+            resultDiv.classList.remove('d-none');
+        }
+
+        // 允許按 Enter 鍵核銷
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeInput = document.getElementById('couponCode');
+            if (codeInput) {
+                codeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        redeemCoupon();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
