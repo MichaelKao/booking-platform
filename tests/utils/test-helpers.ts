@@ -32,7 +32,7 @@ export async function tenantLogin(page: Page, username?: string, password?: stri
   const pass = password || TEST_ACCOUNTS.tenant.password;
 
   await page.goto('/tenant/login');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // 清除可能存在的舊 token
   await page.evaluate(() => {
@@ -57,7 +57,7 @@ export async function tenantLogin(page: Page, username?: string, password?: stri
  */
 export async function adminLogin(page: Page): Promise<void> {
   await page.goto('/admin/login');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // 清除可能存在的舊 token
   await page.evaluate(() => {

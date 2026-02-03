@@ -108,7 +108,7 @@ test.describe('SSE 前端整合測試', () => {
     // 檢查是否有載入 notification.js
     // 注意：超管後台可能不載入 notification.js，改測店家後台
     await page.goto('/admin/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 驗證頁面可正常運作
     const title = await page.title();
@@ -202,7 +202,7 @@ test.describe('SSE 連線行為測試', () => {
 test.describe('通知 UI 元素測試', () => {
   test('tenant layout 有 toast 容器', async ({ page }) => {
     const response = await page.goto('/tenant/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 檢查 HTML 是否有 toast-container
     const html = await page.content();

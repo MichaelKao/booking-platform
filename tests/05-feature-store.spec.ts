@@ -90,7 +90,7 @@ test.describe('功能商店 UI 測試 (超管視角)', () => {
 
   test('功能管理頁面顯示功能列表', async ({ page }) => {
     await page.goto('/admin/features');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(WAIT_TIME.api);
 
     // 檢查是否有功能列表（使用 first() 因為頁面可能有多個表格）
@@ -106,7 +106,7 @@ test.describe('功能商店 UI 測試 (超管視角)', () => {
 
   test('可以查看功能詳情', async ({ page }) => {
     await page.goto('/admin/features');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(WAIT_TIME.api);
 
     // 找到第一個功能的操作按鈕

@@ -499,6 +499,37 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 ---
 
+## LINE 設定疑難排解
+
+### 常見問題
+
+| 問題 | 原因 | 解決方案 |
+|------|------|----------|
+| Rich Menu 顯示亂碼 (□□□□) | Docker 環境缺少中文字型 | 已在 Dockerfile 安裝 font-wqy-zenhei |
+| Rich Menu 電腦版沒顯示 | LINE 平台限制 | Rich Menu 僅支援手機版 LINE |
+| 401 UNAUTHORIZED | Token 無效或過期 | 重新產生 Channel Access Token |
+| Bot 無法回應訊息 | LINE OA 自動回應干擾 | 關閉 LINE Official Account Manager 的自動回應 |
+| Bot ID 顯示雙重 @ | HTML 多餘圖標 | 已修正 line-settings.html |
+| Bot 頭像無法顯示 | LINE API 未設定頭像 | 在 LINE Official Account Manager 設定頭像 |
+
+### LINE 設定流程
+
+1. 前往 [LINE Developers Console](https://developers.line.biz/)
+2. 建立或選擇 Provider 和 Messaging API Channel
+3. 複製 Channel ID、Channel Secret、Channel Access Token
+4. 在店家後台 LINE 設定頁面填入
+5. 設定 Webhook URL 到 LINE Developers Console
+6. **重要**：關閉 LINE Official Account Manager 的自動回應功能
+
+### 關閉 LINE Official Account 自動回應
+
+1. 前往 [LINE Official Account Manager](https://manager.line.biz/)
+2. 進入您的官方帳號 → 設定 → 回應設定
+3. 將「自動回應訊息」設為關閉
+4. 確保「Webhook」設為開啟
+
+---
+
 ## E2E 測試
 
 使用 Playwright 進行端對端測試：
@@ -549,6 +580,12 @@ npx playwright test --list
 - LINE Bot 對話狀態和訊息格式
 - Excel/PDF 匯出功能
 - 靜態資源（CSS/JS）載入
+
+**測試基礎設施注意事項：**
+
+- 使用 `domcontentloaded` 而非 `networkidle` 等待頁面載入
+- 原因：SSE 連線會保持網路活躍，導致 `networkidle` 永遠無法觸發
+- 所有測試檔案已更新使用正確的等待策略
 
 ---
 

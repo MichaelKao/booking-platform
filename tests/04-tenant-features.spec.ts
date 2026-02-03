@@ -183,7 +183,7 @@ test.describe('超管後台 UI 測試', () => {
 
   test('儀表板頁面載入', async ({ page }) => {
     await page.goto('/admin/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 檢查頁面標題
     const title = page.locator('h1, .page-title');
@@ -192,7 +192,7 @@ test.describe('超管後台 UI 測試', () => {
 
   test('店家列表頁面載入', async ({ page }) => {
     await page.goto('/admin/tenants');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(WAIT_TIME.api);
 
     // 檢查表格
@@ -202,7 +202,7 @@ test.describe('超管後台 UI 測試', () => {
 
   test('功能管理頁面載入', async ({ page }) => {
     await page.goto('/admin/features');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(WAIT_TIME.api);
 
     // 檢查頁面內容
@@ -212,7 +212,7 @@ test.describe('超管後台 UI 測試', () => {
 
   test('儲值審核頁面載入', async ({ page }) => {
     await page.goto('/admin/point-topups');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(WAIT_TIME.api);
 
     // 檢查表格
@@ -233,7 +233,7 @@ test.describe('超管後台 UI 測試', () => {
       const link = page.locator(item.selector).first();
       if (await link.isVisible()) {
         await link.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         expect(page.url()).toContain(item.expectedUrl);
         console.log(`✓ 導航到 ${item.expectedUrl} 成功`);
       }

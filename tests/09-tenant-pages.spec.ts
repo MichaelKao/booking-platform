@@ -13,7 +13,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('儀表板', () => {
     test('儀表板頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // 檢查頁面標題
       await expect(page.locator('h1, .page-title').first()).toBeVisible();
@@ -27,7 +27,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('預約管理', () => {
     test('預約列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/bookings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000); // 等待 JavaScript 執行
 
       // 檢查頁面標題
@@ -49,7 +49,7 @@ test.describe('店家後台所有頁面測試', () => {
       });
 
       await page.goto('/tenant/bookings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
       // 確認沒有 JavaScript 錯誤
@@ -59,7 +59,7 @@ test.describe('店家後台所有頁面測試', () => {
 
     test('新增預約 Modal 可開啟', async ({ page }) => {
       await page.goto('/tenant/bookings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       const addBtn = page.locator('button:has-text("新增預約")');
@@ -76,7 +76,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('行事曆', () => {
     test('行事曆頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/calendar');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查 FullCalendar 元素
@@ -88,7 +88,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('營運報表', () => {
     test('報表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/reports');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -103,7 +103,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('顧客管理', () => {
     test('顧客列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/customers');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -116,7 +116,7 @@ test.describe('店家後台所有頁面測試', () => {
 
     test('新增顧客 Modal 可開啟', async ({ page }) => {
       await page.goto('/tenant/customers');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       const addBtn = page.locator('button:has-text("新增顧客"), button:has-text("新增")');
@@ -133,7 +133,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('員工管理', () => {
     test('員工列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/staff');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -148,7 +148,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('服務管理', () => {
     test('服務列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/services');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -163,7 +163,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('商品管理', () => {
     test('商品列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/products');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -174,7 +174,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('票券管理', () => {
     test('票券列表頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/coupons');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -185,7 +185,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('行銷活動', () => {
     test('行銷活動頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/campaigns');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -196,7 +196,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('店家設定', () => {
     test('設定頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/settings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -211,7 +211,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('LINE 設定', () => {
     test('LINE 設定頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/line-settings');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -222,7 +222,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('功能商店', () => {
     test('功能商店頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/feature-store');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -237,7 +237,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('點數管理', () => {
     test('點數管理頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/points');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -248,7 +248,7 @@ test.describe('店家後台所有頁面測試', () => {
   test.describe('會員等級', () => {
     test('會員等級頁面載入成功', async ({ page }) => {
       await page.goto('/tenant/membership-levels');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 檢查頁面標題
@@ -264,7 +264,7 @@ test.describe('店家後台側邊欄導航', () => {
 
   test('所有側邊欄連結可點擊', async ({ page }) => {
     await page.goto('/tenant/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const navLinks = page.locator('#sidebar .nav-link, .sidebar .nav-link');
     const count = await navLinks.count();
@@ -304,7 +304,7 @@ test.describe('店家後台無 JavaScript 錯誤', () => {
       });
 
       await page.goto(p.url);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
       // 過濾掉非關鍵錯誤
