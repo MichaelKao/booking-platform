@@ -789,20 +789,23 @@ public class LineWebhookService {
      * 處理查看會員資訊
      */
     private void handleViewMemberInfo(String tenantId, String userId, String replyToken) {
-        log.info("處理查看會員資訊，租戶：{}，用戶：{}，replyToken：{}", tenantId, userId, replyToken);
+        log.info("=== 開始處理查看會員資訊 ===");
+        log.info("租戶：{}，用戶：{}，replyToken：{}", tenantId, userId, replyToken);
 
         try {
             // 取得顧客 ID
             String customerId = lineUserService.getCustomerId(tenantId, userId);
-            log.info("顧客 ID：{}", customerId);
+            log.info("查詢到顧客 ID：{}", customerId);
 
             if (customerId == null) {
                 log.info("用戶尚未成為會員，回覆提示訊息");
                 messageService.replyText(tenantId, replyToken, "您尚未成為會員。\n完成首次預約即可成為會員。");
+                log.info("已回覆「尚未成為會員」訊息");
                 return;
             }
 
             // 查詢顧客資料
+            log.info("開始查詢顧客資料...");
             Optional<Customer> customerOpt = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId);
             if (customerOpt.isEmpty()) {
                 log.warn("找不到顧客資料，customerId：{}", customerId);
@@ -811,34 +814,44 @@ public class LineWebhookService {
             }
 
             Customer customer = customerOpt.get();
-            log.info("找到顧客：{}，名稱：{}", customer.getId(), customer.getName());
+            log.info("找到顧客 - ID：{}，名稱：{}，點數：{}",
+                    customer.getId(),
+                    customer.getName(),
+                    customer.getPointBalance());
 
             // 查詢預約統計
+            log.info("開始查詢預約統計...");
             long bookingCount = bookingRepository.countByCustomerIdAndTenantId(customerId, tenantId);
             log.info("預約次數：{}", bookingCount);
 
             // 查詢會員等級名稱
             String membershipLevelName = null;
             if (customer.getMembershipLevelId() != null) {
+                log.info("查詢會員等級，levelId：{}", customer.getMembershipLevelId());
                 membershipLevelName = membershipLevelRepository
                         .findById(customer.getMembershipLevelId())
                         .map(level -> level.getName())
                         .orElse(null);
-                log.info("會員等級：{}", membershipLevelName);
+                log.info("會員等級名稱：{}", membershipLevelName);
             }
 
             // 建構會員資訊訊息
-            log.info("開始建構會員資訊 Flex Message");
+            log.info("開始建構會員資訊 Flex Message...");
             JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount, membershipLevelName);
-            log.info("Flex Message 建構完成，準備回覆");
+            log.info("Flex Message 建構完成");
 
+            // 回覆訊息
+            log.info("準備回覆 Flex Message...");
             messageService.replyFlex(tenantId, replyToken, "會員資訊", memberInfo);
-            log.info("會員資訊回覆成功");
+            log.info("=== 會員資訊回覆成功 ===");
 
         } catch (Exception e) {
-            log.error("查詢會員資訊失敗，租戶：{}，用戶：{}，錯誤：{}", tenantId, userId, e.getMessage(), e);
+            log.error("=== 查詢會員資訊失敗 ===");
+            log.error("租戶：{}，用戶：{}，錯誤類型：{}，錯誤訊息：{}",
+                    tenantId, userId, e.getClass().getName(), e.getMessage());
+            log.error("完整堆疊：", e);
             try {
-                messageService.replyText(tenantId, replyToken, "查詢失敗，請稍後再試。");
+                messageService.replyText(tenantId, replyToken, "查詢失敗：" + e.getMessage());
             } catch (Exception replyError) {
                 log.error("錯誤訊息回覆也失敗：{}", replyError.getMessage());
             }
