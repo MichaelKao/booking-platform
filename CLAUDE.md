@@ -141,7 +141,7 @@ POST /api/auth/logout             # 登出
 | 員工排班 | `GET/PUT /staff/{id}/schedule` |
 | 員工請假 | `GET/POST /staff/{id}/leaves`, `DELETE /staff/{id}/leaves/{leaveId}` |
 | 服務 | `GET/POST /services`, `GET/PUT/DELETE /services/{id}`, `GET /services/bookable` |
-| 服務分類 | `GET /service-categories` |
+| 服務分類 | `GET/POST /service-categories`, `GET/PUT/DELETE /service-categories/{id}` |
 | 商品 | `GET/POST /products`, `GET/PUT/DELETE /products/{id}` |
 | 商品操作 | `POST /products/{id}/on-sale\|off-shelf\|adjust-stock` |
 | 票券 | `GET/POST /coupons`, `GET/PUT/DELETE /coupons/{id}` |
@@ -697,6 +697,46 @@ npx playwright test --list
 | `AI_ASSISTANT` | AI 智慧客服 | ⏳ 待開發 | 需付費 API |
 | `MULTI_ACCOUNT` | 多帳號管理 | ⏳ 待開發 | 複雜功能 |
 | `MULTI_BRANCH` | 多分店管理 | ⏳ 待開發 | 複雜功能 |
+
+---
+
+## RWD 響應式設計
+
+支援手機、平板、電腦三種裝置。
+
+### 斷點設定
+
+| 裝置 | 斷點 | 側邊欄 | 表格欄位 |
+|------|------|--------|----------|
+| 手機 | < 576px | 滑出式選單 | 僅顯示關鍵欄位 |
+| 平板 | 576-992px | 收合圖示模式 | 隱藏次要欄位 |
+| 桌面 | >= 992px | 完整展開 | 顯示全部欄位 |
+
+### 觸控優化
+
+- 按鈕最小尺寸：44px x 44px
+- 表單輸入框：最小高度 44px
+- 下拉選單項目：適當間距
+
+### CSS 檔案
+
+| 檔案 | 說明 |
+|------|------|
+| `common.css` | 共用樣式、RWD 工具類 |
+| `tenant.css` | 店家後台響應式佈局 |
+| `admin.css` | 超管後台響應式佈局 |
+
+### 響應式表格
+
+在小螢幕隱藏次要欄位，使用 Bootstrap 的 `d-none d-md-table-cell` 類別：
+
+```html
+<!-- 手機隱藏，平板以上顯示 -->
+<th class="d-none d-md-table-cell">服務</th>
+
+<!-- 手機平板隱藏，桌面顯示 -->
+<th class="d-none d-lg-table-cell">員工</th>
+```
 
 ---
 
