@@ -388,13 +388,15 @@ public class LineMessageService {
                     String.class
             );
 
+            log.info("LINE API 回應，端點：{}，狀態碼：{}", endpoint, response.getStatusCode());
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("LINE API 請求失敗，端點：{}，狀態碼：{}，回應：{}",
                         endpoint, response.getStatusCode(), response.getBody());
             }
 
         } catch (Exception e) {
-            log.error("LINE API 請求發生錯誤，端點：{}，錯誤：{}", endpoint, e.getMessage());
+            log.error("LINE API 請求發生錯誤，端點：{}，錯誤類型：{}，錯誤訊息：{}",
+                    endpoint, e.getClass().getSimpleName(), e.getMessage(), e);
             throw e;
         }
     }
