@@ -58,6 +58,9 @@ public class SecurityConfig {
             // LINE Webhook（使用簽名驗證）
             "/api/line/webhook/**",
 
+            // LINE 診斷（除錯用）
+            "/api/line/diagnostic/**",
+
             // 公開 API
             "/api/public/**",
 
