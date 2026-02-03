@@ -904,15 +904,27 @@ public class LineWebhookService {
                 log.info("會員等級名稱：{}", membershipLevelName);
             }
 
-            // 建構會員資訊訊息
-            log.info("開始建構會員資訊 Flex Message...");
-            JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount, membershipLevelName);
-            log.info("Flex Message 建構完成");
+            // 先嘗試發送簡單文字訊息來測試
+            String displayName = customer.getName() != null ? customer.getName() : "會員";
+            int points = customer.getPointBalance() != null ? customer.getPointBalance() : 0;
+            String simpleMessage = String.format(
+                    "👤 %s 您好！\n\n" +
+                    "💰 點數餘額：%d 點\n" +
+                    "📅 累計預約：%d 次\n" +
+                    "⭐ 會員等級：%s\n\n" +
+                    "感謝您的支持！",
+                    displayName,
+                    points,
+                    bookingCount,
+                    membershipLevelName != null ? membershipLevelName : "一般會員"
+            );
 
-            // 回覆訊息
-            log.info("準備回覆 Flex Message...");
-            messageService.replyFlex(tenantId, replyToken, "會員資訊", memberInfo);
-            log.info("=== 會員資訊回覆成功 ===");
+            log.info("準備回覆簡單文字訊息...");
+            log.info("訊息內容：{}", simpleMessage);
+
+            // 先用簡單文字測試
+            messageService.replyText(tenantId, replyToken, simpleMessage);
+            log.info("=== 會員資訊回覆成功（簡單文字版本）===");
 
         } catch (Exception e) {
             log.error("=== 查詢會員資訊失敗 ===");
