@@ -287,7 +287,9 @@ scheduler:
 
 **主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）
 
-**自訂圖片規格**：2500 x 843 像素，PNG/JPG，最大 1MB
+**自訂圖片**：支援任意尺寸 PNG/JPG，系統自動縮放至 2500x843（cover 策略，置中裁切）
+
+**跨平台字型**：Docker 環境安裝 font-wqy-zenhei（文泉驛正黑），確保中文正確顯示
 
 ### 主選單（Flex Message）
 用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
