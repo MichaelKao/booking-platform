@@ -142,6 +142,28 @@ public class LineMessageService {
         reply(tenantId, replyToken, List.of(message));
     }
 
+    /**
+     * 回覆文字訊息 + Flex Message
+     *
+     * @param tenantId   租戶 ID
+     * @param replyToken 回覆 Token
+     * @param text       文字訊息
+     * @param altText    Flex Message 替代文字
+     * @param contents   Flex Message 內容
+     */
+    public void replyTextAndFlex(String tenantId, String replyToken, String text, String altText, JsonNode contents) {
+        Map<String, Object> textMessage = Map.of(
+                "type", "text",
+                "text", text
+        );
+        Map<String, Object> flexMessage = Map.of(
+                "type", "flex",
+                "altText", altText,
+                "contents", contents
+        );
+        reply(tenantId, replyToken, List.of(textMessage, flexMessage));
+    }
+
     // ========================================
     // 推送訊息
     // ========================================

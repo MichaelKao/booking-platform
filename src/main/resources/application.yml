@@ -232,3 +232,14 @@ ecpay:
   hash-key: ${ECPAY_HASH_KEY:}
   hash-iv: ${ECPAY_HASH_IV:}
   api-url: https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5
+
+# ========================================
+# Groq AI 設定
+# ========================================
+groq:
+  enabled: ${GROQ_ENABLED:true}
+  api-key: ${GROQ_API_KEY:}
+  model: ${GROQ_MODEL:llama-3.1-70b-versatile}
+  api-url: https://api.groq.com/openai/v1
+  max-tokens: 500
+  temperature: 0.7

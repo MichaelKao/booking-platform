@@ -18,6 +18,7 @@ import com.booking.platform.repository.ProductRepository;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.BookingService;
 import com.booking.platform.service.CouponService;
+import com.booking.platform.service.ai.AiAssistantService;
 import com.booking.platform.entity.marketing.Coupon;
 import com.booking.platform.entity.marketing.CouponInstance;
 import com.booking.platform.entity.customer.Customer;
@@ -74,6 +75,7 @@ public class LineWebhookService {
     private final MembershipLevelRepository membershipLevelRepository;
     private final ProductRepository productRepository;
     private final CouponService couponService;
+    private final AiAssistantService aiAssistantService;
 
     // ========================================
     // 關鍵字
@@ -1119,8 +1121,27 @@ public class LineWebhookService {
      */
     private void handleContextualMessage(String tenantId, String userId, String replyToken,
                                          String text, ConversationContext context) {
-        // 如果不在對話中，顯示主選單
+        // 如果不在對話中，嘗試使用 AI 回覆
         if (context.getState() == ConversationState.IDLE) {
+            // 嘗試 AI 智慧回覆
+            if (aiAssistantService.shouldUseAi(text)) {
+                try {
+                    // 取得顧客 ID
+                    String customerId = getCustomerIdByLineUser(tenantId, userId);
+
+                    // 呼叫 AI
+                    String aiResponse = aiAssistantService.chat(tenantId, customerId, text);
+
+                    if (aiResponse != null && !aiResponse.isEmpty()) {
+                        // AI 回覆成功，回傳文字訊息 + 主選單
+                        replyAiResponseWithMenu(tenantId, replyToken, aiResponse);
+                        return;
+                    }
+                } catch (Exception e) {
+                    log.warn("AI 回覆失敗，改用預設回覆：{}", e.getMessage());
+                }
+            }
+            // AI 未啟用或失敗，顯示主選單
             replyDefaultMessage(tenantId, replyToken);
         } else if (context.getState() == ConversationState.INPUTTING_NOTE) {
             // 在備註輸入狀態，處理文字輸入作為備註
@@ -1130,6 +1151,27 @@ public class LineWebhookService {
             JsonNode cancelMessage = flexMessageBuilder.buildCancelPrompt();
             messageService.replyFlex(tenantId, replyToken, "請點選上方選項繼續操作", cancelMessage);
         }
+    }
+
+    /**
+     * 根據 LINE User ID 取得顧客 ID
+     */
+    private String getCustomerIdByLineUser(String tenantId, String userId) {
+        return lineUserService.findByLineUserId(tenantId, userId)
+                .map(LineUser::getCustomerId)
+                .orElse(null);
+    }
+
+    /**
+     * 回覆 AI 回應並附帶主選單
+     */
+    private void replyAiResponseWithMenu(String tenantId, String replyToken, String aiResponse) {
+        // 先回覆 AI 文字訊息
+        // 再附帶主選單讓用戶可以繼續操作
+        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+
+        // 使用多訊息回覆：文字 + Flex Message
+        messageService.replyTextAndFlex(tenantId, replyToken, aiResponse, "需要其他服務嗎？", mainMenu);
     }
 
     /**
