@@ -251,6 +251,8 @@ public class LineRichMenuService {
     /**
      * 使用自訂圖片建立 Rich Menu
      *
+     * <p>圖片會作為背景，選單文字和圖示會疊加在上方
+     *
      * @param tenantId 租戶 ID
      * @param imageBytes 圖片位元組陣列
      * @return Rich Menu ID
@@ -271,37 +273,42 @@ public class LineRichMenuService {
             byte[] resizedImageBytes = resizeImageToRichMenuSize(imageBytes);
 
             // ========================================
-            // 3. 刪除現有的 Rich Menu
+            // 3. 在背景圖片上疊加選單文字和圖示
+            // ========================================
+            byte[] compositeImageBytes = overlayMenuItemsOnImage(resizedImageBytes);
+
+            // ========================================
+            // 4. 刪除現有的 Rich Menu
             // ========================================
             deleteRichMenu(tenantId);
 
             // ========================================
-            // 4. 取得店家名稱
+            // 5. 取得店家名稱
             // ========================================
             String shopName = tenantRepository.findById(tenantId)
                     .map(Tenant::getName)
                     .orElse("預約服務");
 
             // ========================================
-            // 5. 建立 Rich Menu 結構
+            // 6. 建立 Rich Menu 結構
             // ========================================
             String richMenuId = createRichMenu(tenantId, shopName);
             log.info("Rich Menu 建立成功，ID：{}", richMenuId);
 
             // ========================================
-            // 6. 上傳縮放後的圖片
+            // 7. 上傳合成後的圖片
             // ========================================
-            uploadRichMenuImage(tenantId, richMenuId, resizedImageBytes);
+            uploadRichMenuImage(tenantId, richMenuId, compositeImageBytes);
             log.info("Rich Menu 自訂圖片上傳成功");
 
             // ========================================
-            // 7. 設為預設選單
+            // 8. 設為預設選單
             // ========================================
             setDefaultRichMenu(tenantId, richMenuId);
             log.info("Rich Menu 設為預設成功");
 
             // ========================================
-            // 8. 儲存 Rich Menu ID 和主題
+            // 9. 儲存 Rich Menu ID 和主題
             // ========================================
             saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM");
 
@@ -427,6 +434,120 @@ public class LineRichMenuService {
             throw e;
         } catch (IOException e) {
             log.error("圖片縮放失敗：{}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理失敗：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 在背景圖片上疊加選單文字和圖示
+     *
+     * <p>此方法會在自訂背景圖片上繪製：
+     * <ul>
+     *   <li>半透明的格子背景（提高文字可讀性）</li>
+     *   <li>圖示背景圓圈</li>
+     *   <li>向量圖示</li>
+     *   <li>選單文字</li>
+     * </ul>
+     *
+     * @param backgroundImageBytes 背景圖片位元組陣列（已縮放至 2500x843）
+     * @return 合成後的圖片位元組陣列
+     */
+    private byte[] overlayMenuItemsOnImage(byte[] backgroundImageBytes) {
+        try {
+            // 讀取背景圖片
+            BufferedImage backgroundImage = ImageIO.read(new java.io.ByteArrayInputStream(backgroundImageBytes));
+            if (backgroundImage == null) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "無法讀取背景圖片");
+            }
+
+            // 建立可繪製的圖片副本
+            BufferedImage composite = new BufferedImage(MENU_WIDTH, MENU_HEIGHT, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = composite.createGraphics();
+
+            // 設定高品質繪圖
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+            // 繪製背景圖片
+            g2d.drawImage(backgroundImage, 0, 0, MENU_WIDTH, MENU_HEIGHT, null);
+
+            // 在每個格子上繪製半透明遮罩（提高文字可讀性）
+            Color overlayColor = new Color(0, 0, 0, 120);  // 半透明黑色
+            g2d.setColor(overlayColor);
+
+            for (int row = 0; row < ROWS; row++) {
+                for (int col = 0; col < COLS; col++) {
+                    int x = col * CELL_WIDTH;
+                    int y = row * CELL_HEIGHT;
+                    g2d.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+                }
+            }
+
+            // 繪製格線（淡色）
+            g2d.setColor(new Color(255, 255, 255, 50));
+            g2d.setStroke(new BasicStroke(2));
+
+            for (int col = 1; col < COLS; col++) {
+                int x = col * CELL_WIDTH;
+                g2d.drawLine(x, 0, x, MENU_HEIGHT);
+            }
+            for (int row = 1; row < ROWS; row++) {
+                int y = row * CELL_HEIGHT;
+                g2d.drawLine(0, y, MENU_WIDTH, y);
+            }
+
+            // 繪製選單項目
+            Font textFont = loadChineseFont(Font.BOLD, 48);
+
+            for (int row = 0; row < ROWS; row++) {
+                for (int col = 0; col < COLS; col++) {
+                    int index = row * COLS + col;
+                    if (index < MENU_ITEMS.length) {
+                        int centerX = col * CELL_WIDTH + CELL_WIDTH / 2;
+                        int centerY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
+
+                        // 繪製圖示背景圓圈
+                        g2d.setColor(ICON_BG_COLOR);
+                        int circleSize = 140;
+                        g2d.fillOval(centerX - circleSize / 2, centerY - 100, circleSize, circleSize);
+
+                        // 繪製向量圖示
+                        g2d.setColor(TEXT_COLOR);
+                        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 30);
+
+                        // 繪製文字
+                        g2d.setFont(textFont);
+                        FontMetrics textMetrics = g2d.getFontMetrics();
+                        String text = MENU_ITEMS[index][0];
+                        int textWidth = textMetrics.stringWidth(text);
+                        g2d.drawString(text, centerX - textWidth / 2, centerY + 100);
+                    }
+                }
+            }
+
+            g2d.dispose();
+
+            // 轉換為 PNG
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(composite, "png", baos);
+            byte[] result = baos.toByteArray();
+
+            // 檢查大小
+            if (result.length > MAX_IMAGE_SIZE) {
+                log.warn("合成圖片超過 1MB（{}KB），嘗試轉為 JPEG", result.length / 1024);
+                baos = new ByteArrayOutputStream();
+                ImageIO.write(composite, "jpg", baos);
+                result = baos.toByteArray();
+            }
+
+            log.info("圖片合成完成，輸出大小：{}KB", result.length / 1024);
+            return result;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            log.error("圖片合成失敗：{}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理失敗：" + e.getMessage());
         }
     }
