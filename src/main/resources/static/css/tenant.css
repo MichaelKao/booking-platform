@@ -1195,6 +1195,7 @@
     gap: 1px;
     padding: 1px;
     transition: background-color 0.3s ease;
+    position: relative;
 }
 
 .rich-menu-preview.theme-GREEN { background-color: #1DB446; }
@@ -1221,8 +1222,9 @@
 }
 
 .rich-menu-cell-icon {
-    font-size: 1rem;
-    margin-bottom: 2px;
+    font-size: 1.1rem;
+    margin-bottom: 3px;
+    line-height: 1;
 }
 
 .rich-menu-cell-text {

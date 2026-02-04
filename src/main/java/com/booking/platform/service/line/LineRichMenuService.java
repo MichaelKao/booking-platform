@@ -158,14 +158,23 @@ public class LineRichMenuService {
             {"聯絡店家", "contact_shop"}
     };
 
-    // 使用 Unicode Emoji 作為圖示（跨平台支援）
-    private static final String[] MENU_ICONS = {
-            "📅",  // 開始預約
-            "📋",  // 我的預約
-            "🛒",  // 瀏覽商品
-            "🎁",  // 領取票券
-            "👤",  // 會員資訊
-            "📞"   // 聯絡店家
+    // 圖示類型（使用 Java2D 繪製向量圖示，避免 emoji 字型問題）
+    private enum IconType {
+        CALENDAR,    // 開始預約 - 日曆
+        CLIPBOARD,   // 我的預約 - 剪貼板
+        CART,        // 瀏覽商品 - 購物車
+        GIFT,        // 領取票券 - 禮物
+        PERSON,      // 會員資訊 - 人像
+        PHONE        // 聯絡店家 - 電話
+    }
+
+    private static final IconType[] MENU_ICON_TYPES = {
+            IconType.CALENDAR,
+            IconType.CLIPBOARD,
+            IconType.CART,
+            IconType.GIFT,
+            IconType.PERSON,
+            IconType.PHONE
     };
 
     // ========================================
@@ -759,8 +768,7 @@ public class LineRichMenuService {
         }
 
         // 繪製每個選單項目
-        // 使用跨平台字型載入策略（依序嘗試：思源黑體 > 微軟正黑體 > Noto Sans CJK > 邏輯字型）
-        Font iconFont = loadChineseFont(Font.BOLD, 90);
+        // 使用跨平台字型載入策略
         Font textFont = loadChineseFont(Font.BOLD, 48);
 
         for (int row = 0; row < ROWS; row++) {
@@ -775,13 +783,9 @@ public class LineRichMenuService {
                     int circleSize = 140;
                     g2d.fillOval(centerX - circleSize / 2, centerY - 100, circleSize, circleSize);
 
-                    // 繪製圖示
+                    // 繪製向量圖示
                     g2d.setColor(TEXT_COLOR);
-                    g2d.setFont(iconFont);
-                    FontMetrics iconMetrics = g2d.getFontMetrics();
-                    String icon = MENU_ICONS[index];
-                    int iconWidth = iconMetrics.stringWidth(icon);
-                    g2d.drawString(icon, centerX - iconWidth / 2, centerY - 30);
+                    drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 30);
 
                     // 繪製文字
                     g2d.setFont(textFont);
@@ -846,6 +850,178 @@ public class LineRichMenuService {
             config.setRichMenuTheme(theme);
             lineConfigRepository.save(config);
         });
+    }
+
+    /**
+     * 繪製向量圖示（取代 emoji 以確保跨平台相容）
+     *
+     * @param g2d Graphics2D 繪圖物件
+     * @param iconType 圖示類型
+     * @param centerX 圖示中心 X 座標
+     * @param centerY 圖示中心 Y 座標
+     */
+    private void drawIcon(Graphics2D g2d, IconType iconType, int centerX, int centerY) {
+        g2d.setStroke(new BasicStroke(6, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        int size = 50;  // 圖示大小
+
+        switch (iconType) {
+            case CALENDAR:
+                // 日曆圖示
+                drawCalendarIcon(g2d, centerX, centerY, size);
+                break;
+            case CLIPBOARD:
+                // 剪貼板圖示
+                drawClipboardIcon(g2d, centerX, centerY, size);
+                break;
+            case CART:
+                // 購物車圖示
+                drawCartIcon(g2d, centerX, centerY, size);
+                break;
+            case GIFT:
+                // 禮物圖示
+                drawGiftIcon(g2d, centerX, centerY, size);
+                break;
+            case PERSON:
+                // 人像圖示
+                drawPersonIcon(g2d, centerX, centerY, size);
+                break;
+            case PHONE:
+                // 電話圖示
+                drawPhoneIcon(g2d, centerX, centerY, size);
+                break;
+        }
+    }
+
+    /**
+     * 繪製日曆圖示（開始預約）
+     */
+    private void drawCalendarIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 1.1);
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 日曆主體（圓角矩形）
+        g2d.drawRoundRect(x, y + 8, w, h - 8, 8, 8);
+
+        // 日曆頂部夾子
+        g2d.drawLine(x + w / 4, y, x + w / 4, y + 12);
+        g2d.drawLine(x + w * 3 / 4, y, x + w * 3 / 4, y + 12);
+
+        // 日曆頂部分隔線
+        g2d.drawLine(x, y + 22, x + w, y + 22);
+
+        // 日曆內日期點
+        int dotSize = 6;
+        g2d.fillOval(x + w / 4 - dotSize / 2, y + 32, dotSize, dotSize);
+        g2d.fillOval(x + w / 2 - dotSize / 2, y + 32, dotSize, dotSize);
+        g2d.fillOval(x + w * 3 / 4 - dotSize / 2, y + 32, dotSize, dotSize);
+        g2d.fillOval(x + w / 4 - dotSize / 2, y + 44, dotSize, dotSize);
+        g2d.fillOval(x + w / 2 - dotSize / 2, y + 44, dotSize, dotSize);
+    }
+
+    /**
+     * 繪製剪貼板圖示（我的預約）
+     */
+    private void drawClipboardIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 1.2);
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 剪貼板主體
+        g2d.drawRoundRect(x, y + 6, w, h - 6, 6, 6);
+
+        // 頂部夾子
+        g2d.drawRoundRect(x + w / 4, y, w / 2, 12, 4, 4);
+
+        // 清單線條
+        int lineY = y + 24;
+        int lineGap = 12;
+        for (int i = 0; i < 3; i++) {
+            g2d.drawLine(x + 10, lineY + i * lineGap, x + w - 10, lineY + i * lineGap);
+        }
+    }
+
+    /**
+     * 繪製購物車圖示（瀏覽商品）
+     */
+    private void drawCartIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = size;
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 購物車主體
+        int[] xPoints = {x, x + 8, x + w - 8, x + w - 4};
+        int[] yPoints = {y, y + h - 15, y + h - 15, y};
+        g2d.drawPolyline(xPoints, yPoints, 4);
+
+        // 購物車底部
+        g2d.drawLine(x + 8, y + h - 15, x + w - 8, y + h - 15);
+
+        // 輪子
+        g2d.fillOval(x + 12, y + h - 10, 10, 10);
+        g2d.fillOval(x + w - 22, y + h - 10, 10, 10);
+
+        // 把手
+        g2d.drawLine(x - 8, y, x + 5, y);
+    }
+
+    /**
+     * 繪製禮物圖示（領取票券）
+     */
+    private void drawGiftIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 1.1);
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 禮物盒主體
+        g2d.drawRect(x, y + 15, w, h - 15);
+
+        // 禮物盒頂部蓋子
+        g2d.drawRect(x - 4, y + 8, w + 8, 12);
+
+        // 蝴蝶結（中間垂直線）
+        g2d.drawLine(cx, y + 8, cx, y + h);
+
+        // 蝴蝶結頂部
+        g2d.drawOval(cx - 12, y - 2, 12, 12);
+        g2d.drawOval(cx, y - 2, 12, 12);
+    }
+
+    /**
+     * 繪製人像圖示（會員資訊）
+     */
+    private void drawPersonIcon(Graphics2D g2d, int cx, int cy, int size) {
+        // 頭部
+        int headSize = (int)(size * 0.5);
+        g2d.drawOval(cx - headSize / 2, cy - size / 2, headSize, headSize);
+
+        // 身體（半圓弧）
+        int bodyWidth = (int)(size * 0.8);
+        int bodyHeight = (int)(size * 0.5);
+        g2d.drawArc(cx - bodyWidth / 2, cy + 2, bodyWidth, bodyHeight, 0, 180);
+    }
+
+    /**
+     * 繪製電話圖示（聯絡店家）
+     */
+    private void drawPhoneIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = (int)(size * 0.6);
+        int h = size;
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 手機外框
+        g2d.drawRoundRect(x, y, w, h, 8, 8);
+
+        // 螢幕
+        g2d.drawRect(x + 4, y + 8, w - 8, h - 20);
+
+        // 底部圓形按鈕
+        g2d.drawOval(cx - 4, y + h - 10, 8, 8);
     }
 
     /**
