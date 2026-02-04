@@ -1211,10 +1211,12 @@
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     text-align: center;
-    padding: 2px;
+    padding: 4px;
     transition: background-color 0.2s ease;
+    position: relative;
+    z-index: 2;
 }
 
 .rich-menu-cell:hover {
@@ -1222,14 +1224,15 @@
 }
 
 .rich-menu-cell-icon {
-    font-size: 1.1rem;
-    margin-bottom: 3px;
+    font-size: 1.4rem;
+    margin-bottom: 4px;
     line-height: 1;
 }
 
 .rich-menu-cell-text {
-    font-weight: 500;
-    line-height: 1.1;
+    font-weight: 600;
+    line-height: 1.2;
+    font-size: 0.7rem;
 }
 
 /* 自訂圖片預覽疊層 */
@@ -1241,14 +1244,16 @@
     height: 100%;
     object-fit: cover;
     display: none;
+    z-index: 0;
+}
+
+/* 自訂圖片模式：顯示背景圖 + 半透明遮罩 + 文字 */
+.rich-menu-preview.has-custom-image .rich-menu-custom-image {
+    display: block;
 }
 
 .rich-menu-preview.has-custom-image .rich-menu-cell {
-    visibility: hidden;
-}
-
-.rich-menu-preview.has-custom-image .rich-menu-custom-image {
-    display: block;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* 手機底部導航列 */

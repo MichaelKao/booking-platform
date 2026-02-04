@@ -750,6 +750,7 @@
         // ========================================
 
         let selectedTheme = 'GREEN';
+        let uploadedCustomImageUrl = null;  // 保存上傳的自訂圖片
 
         // 更新預覽主題
         function updatePreviewTheme(theme) {
@@ -761,6 +762,7 @@
             // 移除自訂圖片模式
             preview.classList.remove('has-custom-image');
             document.getElementById('richMenuCustomImage').src = '';
+            uploadedCustomImageUrl = null;  // 清除自訂圖片
         }
 
         // 主題按鈕點擊事件
@@ -789,8 +791,12 @@
                 reader.onload = function(event) {
                     const preview = document.getElementById('richMenuPreview');
                     const customImage = document.getElementById('richMenuCustomImage');
-                    customImage.src = event.target.result;
-                    preview.classList.add('has-custom-image');
+                    // 保存上傳的圖片 URL
+                    uploadedCustomImageUrl = event.target.result;
+                    customImage.src = uploadedCustomImageUrl;
+                    // 移除主題色，使用暗色背景搭配自訂圖片
+                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE');
+                    preview.classList.add('theme-DARK', 'has-custom-image');
                 };
                 reader.readAsDataURL(file);
             }
@@ -842,12 +848,14 @@
                     // 自訂圖片模式
                     preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK', 'has-custom-image');
                     preview.classList.add('theme-DARK');
-                    // 只有當有圖片 URL 時才顯示自訂圖片
                     const customImage = document.getElementById('richMenuCustomImage');
-                    if (data.imageUrl && customImage) {
-                        customImage.src = data.imageUrl;
+                    // 優先使用已上傳的圖片，其次使用 API 返回的 URL
+                    const imageUrl = uploadedCustomImageUrl || data.imageUrl;
+                    if (imageUrl && customImage) {
+                        customImage.src = imageUrl;
                         preview.classList.add('has-custom-image');
                     }
+                    // 如果沒有圖片 URL，顯示暗色主題預覽（而非破圖）
                 }
 
                 deleteBtn.classList.remove('d-none');
@@ -923,7 +931,15 @@
                 if (r.success) {
                     showSuccess('自訂 Rich Menu 建立成功！');
                     fileInput.value = '';
-                    loadRichMenuInfo();
+                    // 保持自訂圖片預覽，不重新載入（因為 API 不會返回圖片 URL）
+                    // 更新狀態顯示
+                    const statusBadge = document.getElementById('richMenuStatusBadge');
+                    const themeText = document.getElementById('richMenuThemeText');
+                    const deleteBtn = document.getElementById('deleteRichMenuBtn');
+                    statusBadge.className = 'badge bg-success me-2';
+                    statusBadge.textContent = '已啟用';
+                    themeText.textContent = '主題：自訂圖片';
+                    deleteBtn.classList.remove('d-none');
                 } else {
                     showError('上傳失敗：' + (r.message || '請確認圖片格式正確'));
                 }
