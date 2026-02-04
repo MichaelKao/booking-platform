@@ -497,8 +497,8 @@ public class LineRichMenuService {
                 g2d.drawLine(0, y, MENU_WIDTH, y);
             }
 
-            // 繪製選單項目
-            Font textFont = loadChineseFont(Font.BOLD, 48);
+            // 繪製選單項目（放大版本）
+            Font textFont = loadChineseFont(Font.BOLD, 72);
 
             for (int row = 0; row < ROWS; row++) {
                 for (int col = 0; col < COLS; col++) {
@@ -507,21 +507,21 @@ public class LineRichMenuService {
                         int centerX = col * CELL_WIDTH + CELL_WIDTH / 2;
                         int centerY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
 
-                        // 繪製圖示背景圓圈
+                        // 繪製圖示背景圓圈（放大）
                         g2d.setColor(ICON_BG_COLOR);
-                        int circleSize = 140;
-                        g2d.fillOval(centerX - circleSize / 2, centerY - 100, circleSize, circleSize);
+                        int circleSize = 200;
+                        g2d.fillOval(centerX - circleSize / 2, centerY - 120, circleSize, circleSize);
 
-                        // 繪製向量圖示
+                        // 繪製向量圖示（放大）
                         g2d.setColor(TEXT_COLOR);
-                        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 30);
+                        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 20, 100);
 
-                        // 繪製文字
+                        // 繪製文字（調整位置）
                         g2d.setFont(textFont);
                         FontMetrics textMetrics = g2d.getFontMetrics();
                         String text = MENU_ITEMS[index][0];
                         int textWidth = textMetrics.stringWidth(text);
-                        g2d.drawString(text, centerX - textWidth / 2, centerY + 100);
+                        g2d.drawString(text, centerX - textWidth / 2, centerY + 130);
                     }
                 }
             }
@@ -890,7 +890,7 @@ public class LineRichMenuService {
 
         // 繪製每個選單項目
         // 使用跨平台字型載入策略
-        Font textFont = loadChineseFont(Font.BOLD, 48);
+        Font textFont = loadChineseFont(Font.BOLD, 72);  // 放大字體
 
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
@@ -899,21 +899,21 @@ public class LineRichMenuService {
                     int centerX = col * CELL_WIDTH + CELL_WIDTH / 2;
                     int centerY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
 
-                    // 繪製圖示背景圓圈
+                    // 繪製圖示背景圓圈（放大）
                     g2d.setColor(ICON_BG_COLOR);
-                    int circleSize = 140;
-                    g2d.fillOval(centerX - circleSize / 2, centerY - 100, circleSize, circleSize);
+                    int circleSize = 200;
+                    g2d.fillOval(centerX - circleSize / 2, centerY - 120, circleSize, circleSize);
 
-                    // 繪製向量圖示
+                    // 繪製向量圖示（放大）
                     g2d.setColor(TEXT_COLOR);
-                    drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 30);
+                    drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 20, 100);
 
-                    // 繪製文字
+                    // 繪製文字（調整位置）
                     g2d.setFont(textFont);
                     FontMetrics textMetrics = g2d.getFontMetrics();
                     String text = MENU_ITEMS[index][0];
                     int textWidth = textMetrics.stringWidth(text);
-                    g2d.drawString(text, centerX - textWidth / 2, centerY + 100);
+                    g2d.drawString(text, centerX - textWidth / 2, centerY + 130);
                 }
             }
         }
@@ -980,10 +980,12 @@ public class LineRichMenuService {
      * @param iconType 圖示類型
      * @param centerX 圖示中心 X 座標
      * @param centerY 圖示中心 Y 座標
+     * @param size 圖示大小
      */
-    private void drawIcon(Graphics2D g2d, IconType iconType, int centerX, int centerY) {
-        g2d.setStroke(new BasicStroke(6, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        int size = 50;  // 圖示大小
+    private void drawIcon(Graphics2D g2d, IconType iconType, int centerX, int centerY, int size) {
+        // 線條粗細隨圖示大小調整
+        int strokeWidth = Math.max(6, size / 8);
+        g2d.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
         switch (iconType) {
             case CALENDAR:
