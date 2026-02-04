@@ -228,8 +228,7 @@
                             </div>
                             <div class="card-body text-center">
                                 <!-- Bot 頭像 -->
-                                <img id="botPicture" src="" alt="Bot" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #06C755; background-color: #06C755;"
-                                     onerror="this.src='data:image/svg+xml,' + encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect fill=\'%2306C755\' width=\'80\' height=\'80\' rx=\'40\'/><text x=\'40\' y=\'55\' text-anchor=\'middle\' fill=\'white\' font-size=\'40\' font-family=\'Arial\'>🤖</text></svg>');">
+                                <img id="botPicture" src="" alt="Bot" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #06C755; background-color: #06C755;">
                                 <!-- Bot 名稱 -->
                                 <h5 id="botName" class="mb-1"></h5>
                                 <!-- Bot ID -->
@@ -238,8 +237,7 @@
                                 <!-- QR Code -->
                                 <div class="mb-3">
                                     <p class="small text-muted mb-2">顧客掃描此 QR Code 加入好友：</p>
-                                    <img id="botQrCode" src="" alt="QR Code" class="img-fluid border rounded" style="max-width: 180px;"
-                                         onerror="this.parentElement.innerHTML='<div class=\'text-muted small\'>QR Code 載入失敗</div>';">
+                                    <img id="botQrCode" src="" alt="QR Code" class="img-fluid border rounded" style="max-width: 180px;">
                                 </div>
 
                                 <!-- 加好友按鈕 -->
@@ -674,22 +672,29 @@
             document.getElementById('promotionCard').classList.remove('d-none');
 
             // 填入資料
-            if (data.pictureUrl) {
-                document.getElementById('botPicture').src = data.pictureUrl;
-            } else {
-                // 使用 SVG 作為預設頭像
-                document.getElementById('botPicture').src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect fill="#06C755" width="80" height="80" rx="40"/><text x="40" y="50" text-anchor="middle" fill="white" font-size="32" font-family="Arial">🤖</text></svg>');
+            const botPicture = document.getElementById('botPicture');
+            const botQrCode = document.getElementById('botQrCode');
+
+            if (botPicture) {
+                if (data.pictureUrl) {
+                    botPicture.src = data.pictureUrl;
+                } else {
+                    // 使用 LINE 綠色背景
+                    botPicture.style.backgroundColor = '#06C755';
+                }
             }
 
             document.getElementById('botName').textContent = data.displayName || 'LINE Bot';
             document.getElementById('botId').textContent = data.basicId || '';
             document.getElementById('searchId').textContent = data.basicId || '@xxx';
 
-            if (data.qrCodeUrl) {
-                document.getElementById('botQrCode').src = data.qrCodeUrl;
-            } else {
-                // 隱藏 QR Code 區域如果沒有 URL
-                document.getElementById('botQrCode').parentElement.style.display = 'none';
+            if (botQrCode) {
+                if (data.qrCodeUrl) {
+                    botQrCode.src = data.qrCodeUrl;
+                    botQrCode.style.display = 'block';
+                } else {
+                    botQrCode.style.display = 'none';
+                }
             }
 
             if (data.addFriendUrl) {
