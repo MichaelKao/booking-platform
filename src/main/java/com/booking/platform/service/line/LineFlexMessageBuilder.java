@@ -3306,7 +3306,7 @@ public class LineFlexMessageBuilder {
         ObjectNode levelBadge = objectMapper.createObjectNode();
         levelBadge.put("type", "box");
         levelBadge.put("layout", "vertical");
-        levelBadge.put("backgroundColor", "rgba(255,255,255,0.3)");
+        levelBadge.put("backgroundColor", "#FFFFFF4D");
         levelBadge.put("cornerRadius", "15px");
         levelBadge.put("paddingAll", "5px");
         levelBadge.put("paddingStart", "15px");
