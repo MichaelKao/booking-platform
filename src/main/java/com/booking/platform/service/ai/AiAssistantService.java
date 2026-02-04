@@ -115,27 +115,39 @@ public class AiAssistantService {
      * @return 是否應該使用 AI
      */
     public boolean shouldUseAi(String userMessage) {
-        if (!groqConfig.isEnabled()) {
+        try {
+            // 檢查設定是否存在
+            if (groqConfig == null) {
+                return false;
+            }
+
+            // 檢查是否啟用
+            if (!groqConfig.isEnabled()) {
+                return false;
+            }
+
+            // API Key 檢查
+            String apiKey = groqConfig.getApiKey();
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                return false;
+            }
+
+            // 訊息檢查
+            if (userMessage == null || userMessage.length() < 2 || userMessage.length() > 500) {
+                return false;
+            }
+
+            // 排除純表情或特殊字元
+            String cleaned = userMessage.replaceAll("[\\p{So}\\p{Cn}]", "").trim();
+            if (cleaned.length() < 2) {
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.warn("shouldUseAi 檢查失敗：{}", e.getMessage());
             return false;
         }
-
-        // API Key 檢查
-        if (groqConfig.getApiKey() == null || groqConfig.getApiKey().isEmpty()) {
-            return false;
-        }
-
-        // 訊息長度檢查（太短或太長都不適合）
-        if (userMessage.length() < 2 || userMessage.length() > 500) {
-            return false;
-        }
-
-        // 排除純表情或特殊字元
-        String cleaned = userMessage.replaceAll("[\\p{So}\\p{Cn}]", "").trim();
-        if (cleaned.length() < 2) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

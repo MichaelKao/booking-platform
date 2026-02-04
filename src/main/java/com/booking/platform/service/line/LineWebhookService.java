@@ -1123,9 +1123,9 @@ public class LineWebhookService {
                                          String text, ConversationContext context) {
         // 如果不在對話中，嘗試使用 AI 回覆
         if (context.getState() == ConversationState.IDLE) {
-            // 嘗試 AI 智慧回覆
-            if (aiAssistantService.shouldUseAi(text)) {
-                try {
+            // 嘗試 AI 智慧回覆（完整包裹在 try-catch 中確保不影響主流程）
+            try {
+                if (aiAssistantService != null && aiAssistantService.shouldUseAi(text)) {
                     // 取得顧客 ID
                     String customerId = getCustomerIdByLineUser(tenantId, userId);
 
@@ -1137,9 +1137,9 @@ public class LineWebhookService {
                         replyAiResponseWithMenu(tenantId, replyToken, aiResponse);
                         return;
                     }
-                } catch (Exception e) {
-                    log.warn("AI 回覆失敗，改用預設回覆：{}", e.getMessage());
                 }
+            } catch (Exception e) {
+                log.warn("AI 功能異常，改用預設回覆：{}", e.getMessage());
             }
             // AI 未啟用或失敗，顯示主選單
             replyDefaultMessage(tenantId, replyToken);

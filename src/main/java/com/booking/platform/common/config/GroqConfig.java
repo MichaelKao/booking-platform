@@ -43,7 +43,7 @@ public class GroqConfig {
     private double temperature = 0.7;
 
     /**
-     * 是否啟用 AI 助手
+     * 是否啟用 AI 助手（預設關閉，需設定 GROQ_ENABLED=true 才會啟用）
      */
     private boolean enabled = false;
 }
