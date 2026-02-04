@@ -700,11 +700,11 @@ npx playwright test --list
 
 **技術架構**：Groq API + Llama 3.3 70B
 
-**環境變數**：
+**環境變數**（AI 功能預設關閉，需明確啟用）：
 ```
-GROQ_ENABLED=true
-GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_ENABLED=true              # 啟用 AI（預設 false）
+GROQ_API_KEY=your-groq-api-key # Groq API Key
+GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 ```
 
 **功能說明**：
