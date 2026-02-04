@@ -713,6 +713,12 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildStaffMenuByDate(String tenantId, String serviceId, LocalDate date) {
+        // 如果日期為 null，使用今天
+        if (date == null) {
+            date = LocalDate.now();
+            log.warn("buildStaffMenuByDate 收到 null date，使用今天");
+        }
+
         // 取得所有活躍員工
         List<Staff> allStaff = staffRepository
                 .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
