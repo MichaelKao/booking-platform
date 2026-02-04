@@ -127,16 +127,35 @@ public class LineWebhookController {
         }
 
         // ========================================
-        // 3. 驗證簽名（目前跳過，因為可能有問題）
+        // 3. 驗證簽名
         // ========================================
 
-        // TODO: 修復簽名驗證後再啟用
-        // 簽名驗證暫時停用，直接處理事件
-        if (signature != null && config.getChannelSecretEncrypted() != null) {
-            // 標記 Webhook 已驗證（僅用於 UI 顯示）
-            if (!config.getWebhookVerified()) {
-                lineConfigService.markWebhookVerified(tenantId);
-            }
+        if (signature == null || config.getChannelSecretEncrypted() == null) {
+            log.warn("缺少簽名或 Channel Secret，租戶：{}", tenantId);
+            return ResponseEntity.ok(ApiResponse.ok());
+        }
+
+        // 解密 Channel Secret
+        String channelSecret;
+        try {
+            channelSecret = encryptionService.decrypt(config.getChannelSecretEncrypted());
+        } catch (Exception e) {
+            log.error("Channel Secret 解密失敗，租戶：{}", tenantId, e);
+            return ResponseEntity.ok(ApiResponse.ok());
+        }
+
+        // 驗證簽名
+        boolean isValid = signatureValidator.validate(body, signature, channelSecret);
+        if (!isValid) {
+            log.warn("簽名驗證失敗，租戶：{}，可能是偽造請求", tenantId);
+            return ResponseEntity.ok(ApiResponse.ok());
+        }
+
+        log.debug("簽名驗證通過，租戶：{}", tenantId);
+
+        // 標記 Webhook 已驗證
+        if (!config.getWebhookVerified()) {
+            lineConfigService.markWebhookVerified(tenantId);
         }
 
         // ========================================
