@@ -114,6 +114,18 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
+                                                    <label class="form-label">休息開始時間</label>
+                                                    <input type="time" class="form-control" id="breakStart" placeholder="例如：12:00">
+                                                    <div class="form-text">設定午休時間，該時段不可預約（選填）</div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">休息結束時間</label>
+                                                    <input type="time" class="form-control" id="breakEnd" placeholder="例如：13:00">
+                                                    <div class="form-text">休息結束後恢復可預約</div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
                                                     <label class="form-label">預約時段間隔</label>
                                                     <select class="form-select" id="slotInterval">
                                                         <option value="15">15 分鐘</option>
@@ -396,6 +408,8 @@
                     // 營業設定
                     if (r.data.businessStartTime) document.getElementById('businessStart').value = r.data.businessStartTime.substring(0, 5);
                     if (r.data.businessEndTime) document.getElementById('businessEnd').value = r.data.businessEndTime.substring(0, 5);
+                    if (r.data.breakStartTime) document.getElementById('breakStart').value = r.data.breakStartTime.substring(0, 5);
+                    if (r.data.breakEndTime) document.getElementById('breakEnd').value = r.data.breakEndTime.substring(0, 5);
                     if (r.data.bookingInterval) document.getElementById('slotInterval').value = r.data.bookingInterval;
                     if (r.data.maxAdvanceBookingDays) document.getElementById('advanceBookingDays').value = r.data.maxAdvanceBookingDays;
 
@@ -500,9 +514,14 @@
 
             if (!isValid) return;
 
+            const breakStartEl = document.getElementById('breakStart');
+            const breakEndEl = document.getElementById('breakEnd');
+
             const data = {
                 businessStartTime: startEl.value,
                 businessEndTime: endEl.value,
+                breakStartTime: breakStartEl.value || null,
+                breakEndTime: breakEndEl.value || null,
                 bookingInterval: parseInt(document.getElementById('slotInterval').value),
                 maxAdvanceBookingDays: days
             };

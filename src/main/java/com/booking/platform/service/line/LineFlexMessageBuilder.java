@@ -732,7 +732,11 @@ public class LineFlexMessageBuilder {
             Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
                     .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dayOfWeek);
 
-            if (scheduleOpt.isPresent() && Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay())) {
+            // 如果沒有排班設定，預設為可上班；如果有設定，檢查是否為工作日
+            boolean isWorkingDay = scheduleOpt.isEmpty() ||
+                    Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay());
+
+            if (isWorkingDay) {
                 // 檢查請假
                 boolean onLeave = staffLeaveRepository
                         .findByStaffIdAndLeaveDateAndDeletedAtIsNull(staff.getId(), date)
@@ -2146,6 +2150,7 @@ public class LineFlexMessageBuilder {
         String phone = tenantOpt.map(Tenant::getPhone).orElse(null);
         String address = tenantOpt.map(Tenant::getAddress).orElse(null);
         String email = tenantOpt.map(Tenant::getEmail).orElse(null);
+        String description = tenantOpt.map(Tenant::getDescription).orElse(null);
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -2177,6 +2182,32 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
+        // 店家介紹
+        if (description != null && !description.isEmpty()) {
+            ObjectNode descBox = objectMapper.createObjectNode();
+            descBox.put("type", "box");
+            descBox.put("layout", "vertical");
+            descBox.put("paddingAll", "12px");
+            descBox.put("backgroundColor", "#F8F9FA");
+            descBox.put("cornerRadius", "8px");
+
+            ObjectNode descText = objectMapper.createObjectNode();
+            descText.put("type", "text");
+            descText.put("text", description);
+            descText.put("size", "sm");
+            descText.put("color", "#333333");
+            descText.put("wrap", true);
+
+            descBox.set("contents", objectMapper.createArrayNode().add(descText));
+            bodyContents.add(descBox);
+
+            // 分隔線
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "lg");
+            bodyContents.add(separator);
+        }
+
         // 電話
         if (phone != null && !phone.isEmpty()) {
             bodyContents.add(createContactRow("\uD83D\uDCDE", "電話", phone));
@@ -2192,8 +2223,8 @@ public class LineFlexMessageBuilder {
             bodyContents.add(createContactRow("\u2709", "信箱", email));
         }
 
-        // 如果沒有任何聯絡資訊
-        if (bodyContents.isEmpty()) {
+        // 如果沒有任何聯絡資訊且沒有介紹
+        if (bodyContents.isEmpty() || (bodyContents.size() == 2 && description != null)) {
             ObjectNode noInfoText = objectMapper.createObjectNode();
             noInfoText.put("type", "text");
             noInfoText.put("text", "店家尚未設定聯絡資訊，請透過 LINE 訊息聯繫。");
