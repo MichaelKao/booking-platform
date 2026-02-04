@@ -597,28 +597,64 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 | 問題 | 原因 | 解決方案 |
 |------|------|----------|
+| **Bot 完全沒有回應** | LINE OA 自動回應攔截訊息 | 必須關閉 LINE Official Account Manager 的自動回應（見下方詳細步驟） |
 | Rich Menu 顯示亂碼 (□□□□) | Docker 環境缺少中文字型 | 已在 Dockerfile 安裝 font-wqy-zenhei |
 | Rich Menu 電腦版沒顯示 | LINE 平台限制 | Rich Menu 僅支援手機版 LINE |
 | 401 UNAUTHORIZED | Token 無效或過期 | 重新產生 Channel Access Token |
-| Bot 無法回應訊息 | LINE OA 自動回應干擾 | 關閉 LINE Official Account Manager 的自動回應 |
 | Bot ID 顯示雙重 @ | HTML 多餘圖標 | 已修正 line-settings.html |
 | Bot 頭像無法顯示 | LINE API 未設定頭像 | 在 LINE Official Account Manager 設定頭像 |
+
+### LINE Bot 不回應訊息的完整檢查清單
+
+**如果 LINE Bot 沒有回應訊息，請依序檢查以下項目：**
+
+#### 1. LINE Developers Console 設定
+- 前往 [LINE Developers Console](https://developers.line.biz/) → 您的 Channel → Messaging API
+- 確認 **Webhook URL** 設定正確：`https://booking-platform-production-1e08.up.railway.app/api/line/webhook/{tenantCode}`
+- 確認 **Use webhook** 為 **ON**（開啟）
+- 點擊 **Verify** 按鈕測試連線，必須顯示 **Success**
+
+#### 2. LINE Official Account Manager 設定（最常見問題）
+- 前往 [LINE Official Account Manager](https://manager.line.biz/)
+- 進入 **設定** → **回應設定**
+- **回應方式** 必須設為 **「手動聊天」**（不要勾選「自動回應訊息」）
+- **非回應時間** 也建議設為 **「手動聊天」**
+- 確認 **Webhook** 區塊顯示為啟用狀態
+
+#### 3. 店家後台 LINE 設定
+- 登入店家後台 → LINE 設定
+- 確認 Channel ID、Channel Secret、Channel Access Token 都已填入
+- 點擊「連線測試」確認顯示成功
+- 狀態應顯示為「運作中 (ACTIVE)」
 
 ### LINE 設定流程
 
 1. 前往 [LINE Developers Console](https://developers.line.biz/)
 2. 建立或選擇 Provider 和 Messaging API Channel
 3. 複製 Channel ID、Channel Secret、Channel Access Token
-4. 在店家後台 LINE 設定頁面填入
+4. 在店家後台 LINE 設定頁面填入並儲存
 5. 設定 Webhook URL 到 LINE Developers Console
-6. **重要**：關閉 LINE Official Account Manager 的自動回應功能
+6. **重要**：關閉 LINE Official Account Manager 的自動回應功能（見下方）
+7. 在 LINE Developers Console 點擊 Verify 確認連線成功
 
-### 關閉 LINE Official Account 自動回應
+### 關閉 LINE Official Account 自動回應（必要步驟）
+
+> ⚠️ **這是最常見的問題原因！** 如果不關閉自動回應，LINE 會攔截所有訊息，Webhook 完全收不到。
 
 1. 前往 [LINE Official Account Manager](https://manager.line.biz/)
-2. 進入您的官方帳號 → 設定 → 回應設定
-3. 將「自動回應訊息」設為關閉
-4. 確保「Webhook」設為開啟
+2. 進入您的官方帳號 → **設定** → **回應設定**
+3. 在「**回應方式**」區塊：
+   - 將「回應時間」改為只有 **「手動聊天」**
+   - 將「非回應時間」也改為 **「手動聊天」**
+   - **不要**勾選「自動回應訊息」
+4. 確保「**Webhook**」顯示為啟用狀態
+
+### 技術說明
+
+- LINE 的 replyToken 只有約 **30 秒**有效期
+- `LineMessageService.reply()` 方法**不使用 @Async**，確保在有效期內發送
+- `LineWebhookService.processWebhook()` 使用 @Async 處理，但內部的 reply 是同步的
+- 簽名驗證使用 Channel Secret，確保 Webhook 請求來自 LINE 平台
 
 ---
 
