@@ -6,6 +6,7 @@ import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.enums.line.LineConfigStatus;
 import com.booking.platform.service.common.EncryptionService;
 import com.booking.platform.service.line.LineConfigService;
+import com.booking.platform.service.line.LineMessageService;
 import com.booking.platform.service.line.LineWebhookService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -49,12 +50,57 @@ public class LineWebhookController {
 
     private final LineConfigService lineConfigService;
     private final LineWebhookService webhookService;
+    private final LineMessageService messageService;
     private final LineSignatureValidator signatureValidator;
     private final EncryptionService encryptionService;
 
     // ========================================
     // Webhook 端點
     // ========================================
+
+    /**
+     * 調試端點：發送測試訊息
+     */
+    @GetMapping("/debug/{tenantCode}/push/{lineUserId}")
+    public ResponseEntity<ApiResponse<Object>> debugPushMessage(
+            @PathVariable String tenantCode,
+            @PathVariable String lineUserId
+    ) {
+        log.info("=== 調試發送訊息 ===");
+        log.info("租戶代碼：{}，LINE User ID：{}", tenantCode, lineUserId);
+
+        try {
+            // 1. 查詢租戶設定
+            Optional<TenantLineConfig> configOpt = lineConfigService.getConfigByTenantCode(tenantCode);
+            if (configOpt.isEmpty()) {
+                return ResponseEntity.ok(ApiResponse.error("CONFIG_NOT_FOUND", "找不到租戶 LINE 設定"));
+            }
+
+            String tenantId = configOpt.get().getTenantId();
+            log.info("租戶 ID：{}", tenantId);
+
+            // 2. 發送測試訊息
+            String testMessage = "這是診斷測試訊息 - " + System.currentTimeMillis();
+            log.info("準備發送訊息：{}", testMessage);
+
+            messageService.pushText(tenantId, lineUserId, testMessage);
+
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("tenantId", tenantId);
+            result.put("lineUserId", lineUserId);
+            result.put("message", testMessage);
+            result.put("sent", true);
+
+            return ResponseEntity.ok(ApiResponse.ok("訊息已發送", result));
+
+        } catch (Exception e) {
+            log.error("發送測試訊息失敗：", e);
+            java.util.Map<String, Object> errorResult = new java.util.HashMap<>();
+            errorResult.put("error", e.getClass().getName());
+            errorResult.put("message", e.getMessage());
+            return ResponseEntity.ok(ApiResponse.error("SEND_FAILED", e.getMessage()));
+        }
+    }
 
     /**
      * 調試端點：測試會員資訊功能
