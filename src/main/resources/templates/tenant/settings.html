@@ -144,6 +144,40 @@
                                                     <div class="form-text">顧客最多可提前幾天預約</div>
                                                 </div>
                                             </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">公休日</label>
+                                                <div class="d-flex flex-wrap gap-2" id="closedDaysGroup">
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay0" value="0">
+                                                        <label class="form-check-label" for="closedDay0">週日</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay1" value="1">
+                                                        <label class="form-check-label" for="closedDay1">週一</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay2" value="2">
+                                                        <label class="form-check-label" for="closedDay2">週二</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay3" value="3">
+                                                        <label class="form-check-label" for="closedDay3">週三</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay4" value="4">
+                                                        <label class="form-check-label" for="closedDay4">週四</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay5" value="5">
+                                                        <label class="form-check-label" for="closedDay5">週五</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input closed-day-check" type="checkbox" id="closedDay6" value="6">
+                                                        <label class="form-check-label" for="closedDay6">週六</label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-text">勾選的日期將不開放預約</div>
+                                            </div>
                                             <button type="button" class="btn btn-primary" onclick="saveBusinessSettings()" id="saveBusinessBtn">
                                                 <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存變更</span>
                                                 <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
@@ -413,6 +447,18 @@
                     if (r.data.bookingInterval) document.getElementById('slotInterval').value = r.data.bookingInterval;
                     if (r.data.maxAdvanceBookingDays) document.getElementById('advanceBookingDays').value = r.data.maxAdvanceBookingDays;
 
+                    // 公休日
+                    if (r.data.closedDays) {
+                        try {
+                            const closedDays = JSON.parse(r.data.closedDays);
+                            document.querySelectorAll('.closed-day-check').forEach(cb => cb.checked = false);
+                            closedDays.forEach(day => {
+                                const cb = document.getElementById('closedDay' + day);
+                                if (cb) cb.checked = true;
+                            });
+                        } catch (e) { console.error('解析公休日失敗:', e); }
+                    }
+
                     // 通知設定
                     if (r.data.notifyNewBooking !== undefined) document.getElementById('notifyNewBooking').checked = r.data.notifyNewBooking;
                     if (r.data.notifyBookingReminder !== undefined) document.getElementById('notifyBookingReminder').checked = r.data.notifyBookingReminder;
@@ -517,13 +563,20 @@
             const breakStartEl = document.getElementById('breakStart');
             const breakEndEl = document.getElementById('breakEnd');
 
+            // 收集公休日
+            const closedDays = [];
+            document.querySelectorAll('.closed-day-check:checked').forEach(cb => {
+                closedDays.push(parseInt(cb.value));
+            });
+
             const data = {
                 businessStartTime: startEl.value,
                 businessEndTime: endEl.value,
                 breakStartTime: breakStartEl.value || null,
                 breakEndTime: breakEndEl.value || null,
                 bookingInterval: parseInt(document.getElementById('slotInterval').value),
-                maxAdvanceBookingDays: days
+                maxAdvanceBookingDays: days,
+                closedDays: JSON.stringify(closedDays)
             };
 
             const btn = document.getElementById('saveBusinessBtn');

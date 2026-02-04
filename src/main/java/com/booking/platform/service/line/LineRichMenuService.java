@@ -153,7 +153,7 @@ public class LineRichMenuService {
             {"開始預約", "start_booking"},
             {"我的預約", "view_bookings"},
             {"瀏覽商品", "start_shopping"},
-            {"領取票券", "view_coupons"},
+            {"我的票券", "view_my_coupons"},
             {"會員資訊", "view_member_info"},
             {"聯絡店家", "contact_shop"}
     };

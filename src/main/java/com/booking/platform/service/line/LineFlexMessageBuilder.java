@@ -211,6 +211,9 @@ public class LineFlexMessageBuilder {
         // 會員資訊按鈕
         footerContents.add(createMenuButton("👤 會員資訊", "查看點數與等級", "action=view_member_info", "#673AB7"));
 
+        // 聯絡店家按鈕
+        footerContents.add(createMenuButton("📞 聯絡店家", "地址、電話、營業時間", "action=contact_shop", "#5C6BC0"));
+
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
 
@@ -2152,6 +2155,39 @@ public class LineFlexMessageBuilder {
         String email = tenantOpt.map(Tenant::getEmail).orElse(null);
         String description = tenantOpt.map(Tenant::getDescription).orElse(null);
 
+        // 營業時間
+        String businessHours = tenantOpt.map(t -> {
+            if (t.getBusinessStartTime() != null && t.getBusinessEndTime() != null) {
+                return t.getBusinessStartTime().toString() + " - " + t.getBusinessEndTime().toString();
+            }
+            return null;
+        }).orElse(null);
+
+        // 公休日
+        String closedDaysStr = tenantOpt.map(t -> {
+            String closedDays = t.getClosedDays();
+            if (closedDays == null || closedDays.isEmpty()) {
+                return null;
+            }
+            // 解析 JSON 格式的公休日 [0,6] -> "週日、週六"
+            try {
+                String[] dayNames = {"週日", "週一", "週二", "週三", "週四", "週五", "週六"};
+                java.util.List<String> closedList = new java.util.ArrayList<>();
+                String cleanedDays = closedDays.replace("[", "").replace("]", "").trim();
+                if (!cleanedDays.isEmpty()) {
+                    for (String day : cleanedDays.split(",")) {
+                        int dayNum = Integer.parseInt(day.trim());
+                        if (dayNum >= 0 && dayNum < 7) {
+                            closedList.add(dayNames[dayNum]);
+                        }
+                    }
+                }
+                return closedList.isEmpty() ? null : String.join("、", closedList);
+            } catch (Exception e) {
+                return null;
+            }
+        }).orElse(null);
+
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
@@ -2221,6 +2257,16 @@ public class LineFlexMessageBuilder {
         // 信箱
         if (email != null && !email.isEmpty()) {
             bodyContents.add(createContactRow("\u2709", "信箱", email));
+        }
+
+        // 營業時間
+        if (businessHours != null && !businessHours.isEmpty()) {
+            bodyContents.add(createContactRow("🕐", "營業時間", businessHours));
+        }
+
+        // 公休日
+        if (closedDaysStr != null && !closedDaysStr.isEmpty()) {
+            bodyContents.add(createContactRow("📅", "公休日", closedDaysStr));
         }
 
         // 如果沒有任何聯絡資訊且沒有介紹
