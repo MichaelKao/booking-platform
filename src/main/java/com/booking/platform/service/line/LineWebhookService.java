@@ -577,7 +577,9 @@ public class LineWebhookService {
                 messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
             }
             case SELECTING_STAFF -> {
-                JsonNode staffMenu = flexMessageBuilder.buildStaffMenu(tenantId, context.getSelectedServiceId());
+                // 新流程：返回選員工時需要根據已選日期篩選
+                JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
+                        tenantId, context.getSelectedServiceId(), context.getSelectedDate());
                 messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
             }
             case SELECTING_DATE -> {
