@@ -1233,9 +1233,21 @@ public class LineWebhookService {
         log.info("開始回覆預設訊息（主選單），租戶：{}，replyToken：{}", tenantId, replyToken);
         // 無論如何都顯示主選單，讓用戶可以點選操作
         JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
-        log.info("主選單 Flex Message 建構完成，準備發送");
+        log.info("主選單 Flex Message 建構完成，準備發送 reply");
         messageService.replyFlex(tenantId, replyToken, "請選擇您需要的服務", mainMenu);
         log.info("replyFlex 呼叫完成");
+    }
+
+    /**
+     * 發送測試 Push 訊息（調試用）
+     */
+    public void sendDebugPush(String tenantId, String userId, String message) {
+        try {
+            messageService.pushText(tenantId, userId, message);
+            log.info("Debug push 發送成功，租戶：{}，用戶：{}", tenantId, userId);
+        } catch (Exception e) {
+            log.error("Debug push 發送失敗：{}", e.getMessage());
+        }
     }
 
     /**

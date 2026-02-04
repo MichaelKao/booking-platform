@@ -231,10 +231,40 @@ public class LineWebhookController {
         // 4. 處理事件（非同步）
         // ========================================
 
+        // 解析事件取得 userId 用於調試
+        String debugUserId = null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(body);
+            com.fasterxml.jackson.databind.JsonNode events = root.get("events");
+            if (events != null && events.isArray() && events.size() > 0) {
+                debugUserId = events.get(0).path("source").path("userId").asText(null);
+                String eventType = events.get(0).path("type").asText();
+                log.info("事件類型：{}，用戶 ID：{}", eventType, debugUserId);
+            }
+        } catch (Exception e) {
+            log.warn("解析事件失敗：{}", e.getMessage());
+        }
+
         try {
             log.info("開始呼叫 processWebhook，租戶：{}", tenantId);
             webhookService.processWebhook(tenantId, body);
             log.info("processWebhook 呼叫完成（非同步，已排入佇列）");
+
+            // 調試：發送 push 確認 webhook 有收到
+            if (debugUserId != null && !debugUserId.isEmpty()) {
+                final String userId = debugUserId;
+                final String tid = tenantId;
+                // 使用新執行緒避免阻塞
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(500); // 等待 0.5 秒讓 reply 先執行
+                        webhookService.sendDebugPush(tid, userId, "[DEBUG] Webhook 收到您的訊息，正在處理...");
+                    } catch (Exception e) {
+                        log.error("Debug push 失敗：{}", e.getMessage());
+                    }
+                }).start();
+            }
         } catch (Exception e) {
             log.error("Webhook 處理失敗，租戶：{}，錯誤類型：{}，錯誤訊息：{}",
                     tenantId, e.getClass().getName(), e.getMessage(), e);
