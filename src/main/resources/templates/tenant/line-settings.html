@@ -228,7 +228,10 @@
                             </div>
                             <div class="card-body text-center">
                                 <!-- Bot 頭像 -->
-                                <img id="botPicture" src="" alt="Bot" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #06C755; background-color: #06C755;">
+                                <div id="botPictureWrapper" class="rounded-circle mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border: 3px solid #06C755; background-color: #06C755; margin: 0 auto;">
+                                    <i class="bi bi-robot text-white" style="font-size: 2rem;" id="botPictureIcon"></i>
+                                    <img id="botPicture" src="" alt="Bot" class="rounded-circle d-none" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
                                 <!-- Bot 名稱 -->
                                 <h5 id="botName" class="mb-1"></h5>
                                 <!-- Bot ID -->
@@ -673,14 +676,19 @@
 
             // 填入資料
             const botPicture = document.getElementById('botPicture');
+            const botPictureIcon = document.getElementById('botPictureIcon');
             const botQrCode = document.getElementById('botQrCode');
 
-            if (botPicture) {
+            // 處理 Bot 頭像
+            if (botPicture && botPictureIcon) {
                 if (data.pictureUrl) {
                     botPicture.src = data.pictureUrl;
+                    botPicture.classList.remove('d-none');
+                    botPictureIcon.classList.add('d-none');
                 } else {
-                    // 使用 LINE 綠色背景
-                    botPicture.style.backgroundColor = '#06C755';
+                    // 沒有頭像，顯示圖示
+                    botPicture.classList.add('d-none');
+                    botPictureIcon.classList.remove('d-none');
                 }
             }
 
@@ -688,12 +696,13 @@
             document.getElementById('botId').textContent = data.basicId || '';
             document.getElementById('searchId').textContent = data.basicId || '@xxx';
 
+            // 處理 QR Code
             if (botQrCode) {
                 if (data.qrCodeUrl) {
                     botQrCode.src = data.qrCodeUrl;
-                    botQrCode.style.display = 'block';
+                    botQrCode.parentElement.style.display = 'block';
                 } else {
-                    botQrCode.style.display = 'none';
+                    botQrCode.parentElement.style.display = 'none';
                 }
             }
 
@@ -830,12 +839,14 @@
                     // 更新預覽主題
                     updatePreviewTheme(data.theme);
                 } else if (data.theme === 'CUSTOM') {
-                    // 自訂圖片模式 - 預覽顯示為暗色背景提示
-                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK');
-                    preview.classList.add('theme-DARK', 'has-custom-image');
-                    // 如果有圖片 URL，顯示圖片
-                    if (data.imageUrl) {
-                        document.getElementById('richMenuCustomImage').src = data.imageUrl;
+                    // 自訂圖片模式
+                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK', 'has-custom-image');
+                    preview.classList.add('theme-DARK');
+                    // 只有當有圖片 URL 時才顯示自訂圖片
+                    const customImage = document.getElementById('richMenuCustomImage');
+                    if (data.imageUrl && customImage) {
+                        customImage.src = data.imageUrl;
+                        preview.classList.add('has-custom-image');
                     }
                 }
 
