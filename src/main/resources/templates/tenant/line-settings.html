@@ -494,7 +494,15 @@
                 const r = await api.get('/api/settings/line');
                 if (r.success && r.data) {
                     document.getElementById('channelId').value = r.data.channelId || '';
-                    // Secret 和 Token 不回傳，保持空白讓用戶重新輸入
+                    // Secret 和 Token 不回傳明文，但顯示已儲存提示
+                    const secretEl = document.getElementById('channelSecret');
+                    const tokenEl = document.getElementById('channelAccessToken');
+                    if (r.data.hasChannelSecret) {
+                        secretEl.placeholder = '••••••••（已儲存，留空則不更新）';
+                    }
+                    if (r.data.hasAccessToken) {
+                        tokenEl.placeholder = '••••••••（已儲存，留空則不更新）';
+                    }
 
                     // Webhook URL: 優先使用 API 回傳的，否則使用預設值
                     const baseUrl = 'https://booking-platform-production-1e08.up.railway.app';
@@ -648,11 +656,39 @@
             setButtonLoading(btn, true);
 
             try {
+                // 先檢查是否有填寫新的憑證，如果有就先儲存
+                const channelIdEl = document.getElementById('channelId');
+                const secretEl = document.getElementById('channelSecret');
+                const tokenEl = document.getElementById('channelAccessToken');
+
+                if (channelIdEl.value.trim() && (secretEl.value.trim() || tokenEl.value.trim())) {
+                    // 有新的憑證，先儲存
+                    const saveData = { channelId: channelIdEl.value.trim() };
+                    if (secretEl.value.trim()) saveData.channelSecret = secretEl.value.trim();
+                    if (tokenEl.value.trim()) saveData.channelAccessToken = tokenEl.value.trim();
+
+                    const saveResult = await api.put('/api/settings/line', saveData);
+                    if (!saveResult.success) {
+                        showError('儲存設定失敗，請重試');
+                        return;
+                    }
+                    // 儲存成功，顯示提示但不清空欄位
+                }
+
                 const r = await api.post('/api/settings/line/test');
                 if (r.success && r.data && r.data.connected) {
                     updateConnectionStatus('ACTIVE');
                     showBotInfo(r.data);
-                    showSuccess('連線測試成功！您的 LINE Bot 已準備就緒');
+                    // 測試成功後才清空敏感欄位並顯示已儲存提示
+                    if (secretEl.value.trim()) {
+                        secretEl.value = '';
+                        secretEl.placeholder = '••••••••（已儲存）';
+                    }
+                    if (tokenEl.value.trim()) {
+                        tokenEl.value = '';
+                        tokenEl.placeholder = '••••••••（已儲存）';
+                    }
+                    showSuccess('連線測試成功！LINE Bot 已啟用');
                 } else {
                     updateConnectionStatus('INVALID');
                     hideBotInfo();
