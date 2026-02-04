@@ -1085,3 +1085,226 @@
         grid-template-columns: repeat(4, 1fr);
     }
 }
+
+/* ========================================
+   Rich Menu 即時預覽
+   ======================================== */
+
+.rich-menu-preview-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+}
+
+.phone-mockup {
+    width: 280px;
+    height: 500px;
+    background-color: #000;
+    border-radius: 30px;
+    padding: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.phone-screen {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* LINE 聊天室頭部 */
+.line-header {
+    height: 48px;
+    background: linear-gradient(180deg, #06C755 0%, #00B050 100%);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    flex-shrink: 0;
+}
+
+.line-header-back {
+    color: white;
+    font-size: 1.2rem;
+}
+
+.line-header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.line-header-name {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 10px;
+    flex: 1;
+}
+
+.line-header-icons {
+    display: flex;
+    gap: 12px;
+    color: white;
+    font-size: 1rem;
+}
+
+/* LINE 聊天區域背景 */
+.line-chat-area {
+    flex: 1;
+    background-color: #7AACB3;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 60%, rgba(255,255,255,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(255,255,255,0.06) 0%, transparent 30%);
+    position: relative;
+    overflow: hidden;
+}
+
+.line-chat-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* Rich Menu 預覽區域 */
+.rich-menu-preview {
+    height: 90px;
+    background-color: #1DB446;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1px;
+    padding: 1px;
+    transition: background-color 0.3s ease;
+}
+
+.rich-menu-preview.theme-GREEN { background-color: #1DB446; }
+.rich-menu-preview.theme-BLUE { background-color: #2196F3; }
+.rich-menu-preview.theme-PURPLE { background-color: #9C27B0; }
+.rich-menu-preview.theme-ORANGE { background-color: #FF5722; }
+.rich-menu-preview.theme-DARK { background-color: #263238; }
+
+.rich-menu-cell {
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.55rem;
+    text-align: center;
+    padding: 2px;
+    transition: background-color 0.2s ease;
+}
+
+.rich-menu-cell:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.rich-menu-cell-icon {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.rich-menu-cell-text {
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+/* 自訂圖片預覽疊層 */
+.rich-menu-custom-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.rich-menu-preview.has-custom-image .rich-menu-cell {
+    visibility: hidden;
+}
+
+.rich-menu-preview.has-custom-image .rich-menu-custom-image {
+    display: block;
+}
+
+/* 手機底部導航列 */
+.phone-bottom-bar {
+    height: 28px;
+    background-color: #f8f8f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.phone-home-indicator {
+    width: 80px;
+    height: 4px;
+    background-color: #333;
+    border-radius: 2px;
+}
+
+/* 預覽說明文字 */
+.preview-label {
+    text-align: center;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+}
+
+/* 響應式調整 */
+@media (max-width: 575.98px) {
+    .rich-menu-preview-container {
+        padding: 0.5rem 0;
+    }
+
+    .phone-mockup {
+        width: 240px;
+        height: 420px;
+        border-radius: 25px;
+        padding: 8px;
+    }
+
+    .phone-screen {
+        border-radius: 18px;
+    }
+
+    .line-header {
+        height: 40px;
+    }
+
+    .rich-menu-preview {
+        height: 75px;
+    }
+
+    .rich-menu-cell-icon {
+        font-size: 0.85rem;
+    }
+
+    .rich-menu-cell-text {
+        font-size: 0.5rem;
+    }
+}

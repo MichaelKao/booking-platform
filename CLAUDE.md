@@ -291,6 +291,11 @@ scheduler:
 
 **跨平台字型**：Docker 環境安裝 font-wqy-zenhei（文泉驛正黑），確保中文正確顯示
 
+**即時預覽功能**：在 LINE 設定頁面提供手機模擬預覽，可即時看到：
+- 主題配色切換效果
+- 自訂圖片上傳預覽
+- 6 宮格選單佈局
+
 ### 主選單（Flex Message）
 用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
 - 開始預約
@@ -298,6 +303,19 @@ scheduler:
 - 瀏覽商品
 - 領取票券 / 我的票券（並排按鈕）
 - 會員資訊
+
+### 返回主選單功能
+所有 Flex Message 皆包含「返回主選單」按鈕，方便用戶快速回到主選單：
+
+| 訊息類型 | 按鈕位置 |
+|---------|---------|
+| 會員資訊 | Footer 底部（垂直排列） |
+| 可領取票券列表 | Carousel 末端導航卡片 |
+| 我的票券列表 | Carousel 末端導航卡片 |
+| 商品列表 | Carousel 末端導航卡片 |
+| 預約狀態通知 | Footer 底部 |
+| 預約修改通知 | Footer 底部 |
+| 預約提醒 | Footer 底部 |
 
 ### 預約流程
 ```
@@ -634,7 +652,7 @@ npx playwright test --list
 | `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 25 |
 | `13-tenant-settings.spec.ts` | 設定頁面測試 | 28 |
 | `14-tenant-reports.spec.ts` | 報表&匯出測試 | 30 |
-| `15-line-bot.spec.ts` | LINE Bot 測試 | 18 |
+| `15-line-bot.spec.ts` | LINE Bot 測試 | 19 |
 | `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
 | `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
 
@@ -661,11 +679,32 @@ npx playwright test --list
 
 ## 待開發功能 (Pending Features)
 
-### 需付費 API（暫不實作）
+### AI 智慧客服方案
 
-| 功能代碼 | 說明 | 原因 |
-|---------|------|------|
-| `AI_ASSISTANT` | AI 智慧客服 | 需整合 OpenAI/Claude API，需付費 |
+| 方案 | 提供者 | 免費額度 | 特點 | 整合難度 |
+|------|--------|---------|------|---------|
+| **Ollama** | 本地部署 | 無限（自架） | Llama 3.1、Mistral 等開源模型 | ⭐⭐ |
+| **Groq** | groq.com | 14,400 req/day | Llama 3.1 70B、Mixtral，超快速度 | ⭐ |
+| **Google AI** | Google | 60 req/min | Gemini 1.5 Flash，多模態 | ⭐ |
+| **Cloudflare AI** | Cloudflare | 10,000 neurons/day | Workers AI，邊緣運算 | ⭐⭐ |
+| **Hugging Face** | HF | 有限免費 | 多種開源模型 | ⭐⭐ |
+| **OpenRouter** | openrouter.ai | 免費模型池 | 聚合多家免費 API | ⭐ |
+
+**推薦方案：Groq + Llama 3.1**
+- 免費額度足夠中小型店家使用
+- 回應速度極快（<500ms）
+- 支援繁體中文
+- API 介面與 OpenAI 相容
+
+### AI 功能規劃
+
+| 功能 | 說明 | 實作方式 |
+|------|------|---------|
+| 智慧問答 | 回答常見問題（營業時間、服務價格等） | 檢索店家設定 + LLM 生成回覆 |
+| 預約助手 | 引導顧客完成預約流程 | 意圖識別 + 流程引導 |
+| 個人化推薦 | 根據歷史紀錄推薦服務/商品 | 顧客資料分析 + LLM 推薦 |
+| 自動回覆 | 非營業時間自動回覆 | 預設模板 + LLM 變化 |
+| 情緒分析 | 偵測顧客情緒並調整回應 | 訊息分析 + 回覆風格調整 |
 
 ### 複雜功能（未來規劃）
 

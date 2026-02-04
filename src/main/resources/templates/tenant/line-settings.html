@@ -303,6 +303,62 @@
                                     </div>
                                 </div>
 
+                                <!-- Rich Menu 即時預覽 -->
+                                <div class="rich-menu-preview-container mb-3">
+                                    <div class="phone-mockup">
+                                        <div class="phone-screen">
+                                            <!-- LINE 聊天室頭部 -->
+                                            <div class="line-header">
+                                                <span class="line-header-back"><i class="bi bi-chevron-left"></i></span>
+                                                <div class="line-header-avatar"><i class="bi bi-shop"></i></div>
+                                                <span class="line-header-name">店家名稱</span>
+                                                <div class="line-header-icons">
+                                                    <i class="bi bi-telephone"></i>
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </div>
+                                            </div>
+                                            <!-- LINE 聊天區域 -->
+                                            <div class="line-chat-area">
+                                                <div class="line-chat-hint">顧客聊天區域</div>
+                                            </div>
+                                            <!-- Rich Menu 預覽 -->
+                                            <div class="rich-menu-preview theme-GREEN" id="richMenuPreview">
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">📅</span>
+                                                    <span class="rich-menu-cell-text">開始預約</span>
+                                                </div>
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">📋</span>
+                                                    <span class="rich-menu-cell-text">我的預約</span>
+                                                </div>
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">🛍️</span>
+                                                    <span class="rich-menu-cell-text">瀏覽商品</span>
+                                                </div>
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">🎁</span>
+                                                    <span class="rich-menu-cell-text">領取票券</span>
+                                                </div>
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">👤</span>
+                                                    <span class="rich-menu-cell-text">會員資訊</span>
+                                                </div>
+                                                <div class="rich-menu-cell">
+                                                    <span class="rich-menu-cell-icon">📞</span>
+                                                    <span class="rich-menu-cell-text">聯絡店家</span>
+                                                </div>
+                                                <!-- 自訂圖片疊層 -->
+                                                <img class="rich-menu-custom-image" id="richMenuCustomImage" src="" alt="自訂 Rich Menu">
+                                            </div>
+                                            <!-- 手機底部 -->
+                                            <div class="phone-bottom-bar">
+                                                <div class="phone-home-indicator"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="preview-label">即時預覽效果</p>
+
                                 <!-- 主題選擇 -->
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold">選擇主題配色</label>
@@ -675,6 +731,18 @@
 
         let selectedTheme = 'GREEN';
 
+        // 更新預覽主題
+        function updatePreviewTheme(theme) {
+            const preview = document.getElementById('richMenuPreview');
+            // 移除所有主題 class
+            preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK');
+            // 添加新主題 class
+            preview.classList.add('theme-' + theme);
+            // 移除自訂圖片模式
+            preview.classList.remove('has-custom-image');
+            document.getElementById('richMenuCustomImage').src = '';
+        }
+
         // 主題按鈕點擊事件
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -685,11 +753,28 @@
                 // 設定選中狀態
                 this.style.border = '2px solid #000';
                 selectedTheme = this.dataset.theme;
+                // 更新預覽
+                updatePreviewTheme(selectedTheme);
             });
         });
 
         // 預設選中 GREEN
         document.querySelector('.theme-btn[data-theme="GREEN"]').style.border = '2px solid #000';
+
+        // 圖片上傳即時預覽
+        document.getElementById('richMenuImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('richMenuPreview');
+                    const customImage = document.getElementById('richMenuCustomImage');
+                    customImage.src = event.target.result;
+                    preview.classList.add('has-custom-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
         async function loadRichMenuInfo() {
             try {
@@ -706,6 +791,7 @@
             const statusBadge = document.getElementById('richMenuStatusBadge');
             const themeText = document.getElementById('richMenuThemeText');
             const deleteBtn = document.getElementById('deleteRichMenuBtn');
+            const preview = document.getElementById('richMenuPreview');
 
             if (data && data.richMenuId) {
                 statusBadge.className = 'badge bg-success me-2';
@@ -721,7 +807,7 @@
                 };
                 themeText.textContent = '主題：' + (themeNames[data.theme] || data.theme || '未知');
 
-                // 選中對應的主題按鈕
+                // 選中對應的主題按鈕並更新預覽
                 if (data.theme && data.theme !== 'CUSTOM') {
                     document.querySelectorAll('.theme-btn').forEach(b => {
                         b.style.border = '2px solid transparent';
@@ -730,6 +816,16 @@
                             selectedTheme = data.theme;
                         }
                     });
+                    // 更新預覽主題
+                    updatePreviewTheme(data.theme);
+                } else if (data.theme === 'CUSTOM') {
+                    // 自訂圖片模式 - 預覽顯示為暗色背景提示
+                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK');
+                    preview.classList.add('theme-DARK', 'has-custom-image');
+                    // 如果有圖片 URL，顯示圖片
+                    if (data.imageUrl) {
+                        document.getElementById('richMenuCustomImage').src = data.imageUrl;
+                    }
                 }
 
                 deleteBtn.classList.remove('d-none');
@@ -738,6 +834,8 @@
                 statusBadge.textContent = '未設定';
                 themeText.textContent = '';
                 deleteBtn.classList.add('d-none');
+                // 重置預覽
+                updatePreviewTheme('GREEN');
             }
         }
 

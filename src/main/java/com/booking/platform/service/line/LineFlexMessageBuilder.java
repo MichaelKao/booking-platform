@@ -1814,11 +1814,14 @@ public class LineFlexMessageBuilder {
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
         footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
         footer.put("paddingAll", "15px");
 
-        footer.set("contents", objectMapper.createArrayNode().add(
-                createButton("查看我的預約", "action=view_bookings", LINK_COLOR)
-        ));
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("查看我的預約", "action=view_bookings", LINK_COLOR));
+        footerContents.add(createButton("返回主選單", "action=main_menu", SECONDARY_COLOR));
+
+        footer.set("contents", footerContents);
         bubble.set("footer", footer);
 
         return bubble;
@@ -1954,11 +1957,14 @@ public class LineFlexMessageBuilder {
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
         footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
         footer.put("paddingAll", "15px");
 
-        footer.set("contents", objectMapper.createArrayNode().add(
-                createButton("查看我的預約", "action=view_bookings", LINK_COLOR)
-        ));
+        ArrayNode footerContents = objectMapper.createArrayNode();
+        footerContents.add(createButton("查看我的預約", "action=view_bookings", LINK_COLOR));
+        footerContents.add(createButton("返回主選單", "action=main_menu", SECONDARY_COLOR));
+
+        footer.set("contents", footerContents);
         bubble.set("footer", footer);
 
         return bubble;
@@ -2159,6 +2165,61 @@ public class LineFlexMessageBuilder {
         ));
 
         return footer;
+    }
+
+    /**
+     * 建構 Carousel 導航 Bubble（用於長列表末端的返回按鈕）
+     *
+     * @return 導航 Bubble 節點
+     */
+    private ObjectNode buildCarouselNavigationBubble() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Body - 導航提示
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("paddingAll", "20px");
+        body.put("justifyContent", "center");
+        body.put("alignItems", "center");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 圖示
+        ObjectNode icon = objectMapper.createObjectNode();
+        icon.put("type", "text");
+        icon.put("text", "🏠");
+        icon.put("size", "3xl");
+        icon.put("align", "center");
+        bodyContents.add(icon);
+
+        // 提示文字
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "需要其他服務嗎？");
+        tipText.put("size", "sm");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("align", "center");
+        tipText.put("margin", "md");
+        bodyContents.add(tipText);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 返回主選單按鈕
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("返回主選單", "action=main_menu", SECONDARY_COLOR)
+        ));
+        bubble.set("footer", footer);
+
+        return bubble;
     }
 
     // ========================================
@@ -2459,6 +2520,9 @@ public class LineFlexMessageBuilder {
             bubbles.add(bubble);
         }
 
+        // 末端添加導航 Bubble
+        bubbles.add(buildCarouselNavigationBubble());
+
         carousel.set("contents", bubbles);
         return carousel;
     }
@@ -2662,6 +2726,9 @@ public class LineFlexMessageBuilder {
 
             bubbles.add(bubble);
         }
+
+        // 末端添加導航 Bubble
+        bubbles.add(buildCarouselNavigationBubble());
 
         carousel.set("contents", bubbles);
         return carousel;
@@ -3396,23 +3463,37 @@ public class LineFlexMessageBuilder {
         bubble.set("body", body);
 
         // ========================================
-        // Footer - 操作按鈕
+        // Footer - 操作按鈕（垂直排列）
         // ========================================
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
-        footer.put("layout", "horizontal");
+        footer.put("layout", "vertical");
         footer.put("spacing", "sm");
         footer.put("paddingAll", "15px");
 
         ArrayNode footerContents = objectMapper.createArrayNode();
 
+        // 橫向按鈕組：開始預約 + 我的票券
+        ObjectNode buttonRow = objectMapper.createObjectNode();
+        buttonRow.put("type", "box");
+        buttonRow.put("layout", "horizontal");
+        buttonRow.put("spacing", "sm");
+
+        ArrayNode buttonRowContents = objectMapper.createArrayNode();
+
         ObjectNode bookingBtn = createButton("開始預約", "action=start_booking", PRIMARY_COLOR);
         bookingBtn.put("flex", 1);
-        footerContents.add(bookingBtn);
+        buttonRowContents.add(bookingBtn);
 
         ObjectNode couponBtn = createButton("我的票券", "action=view_my_coupons", LINK_COLOR);
         couponBtn.put("flex", 1);
-        footerContents.add(couponBtn);
+        buttonRowContents.add(couponBtn);
+
+        buttonRow.set("contents", buttonRowContents);
+        footerContents.add(buttonRow);
+
+        // 返回主選單按鈕
+        footerContents.add(createButton("返回主選單", "action=main_menu", SECONDARY_COLOR));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
@@ -3581,6 +3662,9 @@ public class LineFlexMessageBuilder {
 
             bubbles.add(bubble);
         }
+
+        // 末端添加導航 Bubble
+        bubbles.add(buildCarouselNavigationBubble());
 
         carousel.set("contents", bubbles);
         return carousel;
@@ -3944,6 +4028,7 @@ public class LineFlexMessageBuilder {
 
         ArrayNode footerContents = objectMapper.createArrayNode();
         footerContents.add(createButton("查看我的預約", "action=view_bookings", LINK_COLOR));
+        footerContents.add(createButton("返回主選單", "action=main_menu", SECONDARY_COLOR));
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
