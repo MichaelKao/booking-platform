@@ -15,6 +15,7 @@ import com.booking.platform.enums.ServiceStatus;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.ServiceItemRepository;
+import com.booking.platform.repository.StaffLeaveRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.StaffScheduleRepository;
 import com.booking.platform.repository.TenantRepository;
@@ -72,6 +73,7 @@ public class LineFlexMessageBuilder {
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
     private final StaffScheduleRepository staffScheduleRepository;
+    private final StaffLeaveRepository staffLeaveRepository;
     private final BookingRepository bookingRepository;
 
     // ========================================
@@ -689,6 +691,157 @@ public class LineFlexMessageBuilder {
                     bio,
                     staff.getId()
             ));
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer - 返回按鈕
+        bubble.set("footer", createBackFooter());
+
+        return bubble;
+    }
+
+    /**
+     * 建構員工選單（根據日期篩選可用員工）
+     *
+     * <p>只顯示在指定日期有上班且未請假的員工
+     *
+     * @param tenantId  租戶 ID
+     * @param serviceId 服務 ID
+     * @param date      預約日期
+     * @return Flex Message 內容
+     */
+    public JsonNode buildStaffMenuByDate(String tenantId, String serviceId, LocalDate date) {
+        // 取得所有活躍員工
+        List<Staff> allStaff = staffRepository
+                .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
+
+        // 篩選在該日期有上班的員工
+        int dayOfWeek = date.getDayOfWeek().getValue() % 7;  // 轉換為 0=週日
+        List<Staff> availableStaff = new java.util.ArrayList<>();
+
+        for (Staff staff : allStaff) {
+            // 檢查排班
+            Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
+                    .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dayOfWeek);
+
+            if (scheduleOpt.isPresent() && Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay())) {
+                // 檢查請假
+                boolean onLeave = staffLeaveRepository
+                        .findByStaffIdAndLeaveDateAndDeletedAtIsNull(staff.getId(), date)
+                        .isPresent();
+
+                if (!onLeave) {
+                    availableStaff.add(staff);
+                }
+            }
+        }
+
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 3/4");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "👤 選擇服務人員");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        // 顯示日期提示
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("M/d（E）", java.util.Locale.TAIWAN);
+        ObjectNode dateHint = objectMapper.createObjectNode();
+        dateHint.put("type", "text");
+        dateHint.put("text", "📅 " + date.format(formatter));
+        dateHint.put("size", "sm");
+        dateHint.put("color", "#FFFFFF");
+        dateHint.put("align", "center");
+        dateHint.put("margin", "sm");
+        headerContents.add(dateHint);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "sm");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        if (availableStaff.isEmpty()) {
+            // 沒有可用員工
+            ObjectNode noStaffText = objectMapper.createObjectNode();
+            noStaffText.put("type", "text");
+            noStaffText.put("text", "此日期沒有可預約的服務人員");
+            noStaffText.put("size", "sm");
+            noStaffText.put("color", SECONDARY_COLOR);
+            noStaffText.put("wrap", true);
+            noStaffText.put("align", "center");
+            bodyContents.add(noStaffText);
+
+            ObjectNode tipText = objectMapper.createObjectNode();
+            tipText.put("type", "text");
+            tipText.put("text", "請選擇其他日期");
+            tipText.put("size", "xs");
+            tipText.put("color", SECONDARY_COLOR);
+            tipText.put("wrap", true);
+            tipText.put("align", "center");
+            tipText.put("margin", "md");
+            bodyContents.add(tipText);
+        } else {
+            // 提示文字
+            ObjectNode tipText = objectMapper.createObjectNode();
+            tipText.put("type", "text");
+            tipText.put("text", "以下為此日期可預約的服務人員");
+            tipText.put("size", "xs");
+            tipText.put("color", SECONDARY_COLOR);
+            tipText.put("wrap", true);
+            tipText.put("margin", "none");
+            bodyContents.add(tipText);
+
+            // 分隔線
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "md");
+            bodyContents.add(separator);
+
+            // 不指定選項（推薦）
+            bodyContents.add(createStaffButton("🎲 不指定（推薦）", "系統自動安排最佳人員", null));
+
+            // 可用員工列表
+            for (Staff staff : availableStaff) {
+                String bio = staff.getBio() != null && !staff.getBio().isEmpty()
+                        ? staff.getBio()
+                        : "專業服務人員";
+                bodyContents.add(createStaffButton(
+                        staff.getName(),
+                        bio,
+                        staff.getId()
+                ));
+            }
         }
 
         body.set("contents", bodyContents);

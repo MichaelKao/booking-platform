@@ -186,7 +186,8 @@ public class LineConversationService {
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
         context.setService(serviceId, serviceName, duration, price);
-        context.transitionTo(ConversationState.SELECTING_STAFF);
+        // 修改流程：選服務後先選日期，再選員工
+        context.transitionTo(ConversationState.SELECTING_DATE);
         saveContext(context);
 
         log.debug("設定選擇的服務，租戶：{}，LINE User：{}，服務：{}",
@@ -212,7 +213,8 @@ public class LineConversationService {
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
         context.setStaff(staffId, staffName);
-        context.transitionTo(ConversationState.SELECTING_DATE);
+        // 修改流程：選員工後選時間
+        context.transitionTo(ConversationState.SELECTING_TIME);
         saveContext(context);
 
         log.debug("設定選擇的員工，租戶：{}，LINE User：{}，員工：{}",
@@ -236,7 +238,8 @@ public class LineConversationService {
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
         context.setSelectedDate(date);
-        context.transitionTo(ConversationState.SELECTING_TIME);
+        // 修改流程：選日期後選員工
+        context.transitionTo(ConversationState.SELECTING_STAFF);
         saveContext(context);
 
         log.debug("設定選擇的日期，租戶：{}，LINE User：{}，日期：{}",

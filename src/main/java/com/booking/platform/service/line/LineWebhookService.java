@@ -403,6 +403,7 @@ public class LineWebhookService {
 
     /**
      * 處理選擇服務
+     * 新流程：選服務 → 選日期 → 選員工 → 選時間
      */
     private void handleSelectService(String tenantId, String userId, String replyToken, Map<String, String> params) {
         String serviceId = params.get("serviceId");
@@ -416,13 +417,14 @@ public class LineWebhookService {
                 price != null ? Integer.parseInt(price) : null
         );
 
-        // 回覆員工選單
-        JsonNode staffMenu = flexMessageBuilder.buildStaffMenu(tenantId, serviceId);
-        messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+        // 新流程：選完服務後顯示日期選單
+        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
+        messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
     }
 
     /**
      * 處理選擇員工
+     * 新流程：選員工後顯示時段選單
      */
     private void handleSelectStaff(String tenantId, String userId, String replyToken, Map<String, String> params) {
         String staffId = params.get("staffId");
@@ -435,13 +437,22 @@ public class LineWebhookService {
 
         conversationService.setSelectedStaff(tenantId, userId, staffId, staffName);
 
-        // 回覆日期選單
-        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
-        messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
+        // 取得對話上下文
+        ConversationContext context = conversationService.getContext(tenantId, userId);
+
+        // 新流程：選完員工後顯示時段選單
+        JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
+                tenantId,
+                staffId,
+                context.getSelectedDate(),
+                context.getSelectedServiceDuration()
+        );
+        messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
     }
 
     /**
      * 處理選擇日期
+     * 新流程：選日期後顯示員工選單（只顯示當天有上班的員工）
      */
     private void handleSelectDate(String tenantId, String userId, String replyToken, Map<String, String> params) {
         String dateStr = params.get("date");
@@ -452,14 +463,9 @@ public class LineWebhookService {
         // 取得對話上下文
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
-        // 回覆時段選單
-        JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
-                tenantId,
-                context.getSelectedStaffId(),
-                date,
-                context.getSelectedServiceDuration()
-        );
-        messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
+        // 新流程：選完日期後顯示員工選單（根據日期篩選可用員工）
+        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(tenantId, context.getSelectedServiceId(), date);
+        messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
     }
 
     /**
