@@ -750,6 +750,8 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
 | `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群 |
 | `AI_ASSISTANT` | AI 智慧客服 | ✅ 已完成 | Groq Llama 3.3（免費） |
+| `MULTI_ACCOUNT` | 多帳號管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
+| `MULTI_BRANCH` | 多分店管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
 
 ---
 
