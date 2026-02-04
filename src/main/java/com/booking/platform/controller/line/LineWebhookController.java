@@ -59,7 +59,7 @@ public class LineWebhookController {
     // ========================================
 
     /**
-     * 調試端點：發送測試訊息
+     * 調試端點：發送測試訊息（直接呼叫 LINE API）
      */
     @GetMapping("/debug/{tenantCode}/push/{lineUserId}")
     public ResponseEntity<ApiResponse<Object>> debugPushMessage(
@@ -69,35 +69,69 @@ public class LineWebhookController {
         log.info("=== 調試發送訊息 ===");
         log.info("租戶代碼：{}，LINE User ID：{}", tenantCode, lineUserId);
 
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("tenantCode", tenantCode);
+        result.put("lineUserId", lineUserId);
+
         try {
             // 1. 查詢租戶設定
             Optional<TenantLineConfig> configOpt = lineConfigService.getConfigByTenantCode(tenantCode);
             if (configOpt.isEmpty()) {
+                result.put("step", "查詢租戶設定");
+                result.put("error", "找不到租戶 LINE 設定");
                 return ResponseEntity.ok(ApiResponse.error("CONFIG_NOT_FOUND", "找不到租戶 LINE 設定"));
             }
 
-            String tenantId = configOpt.get().getTenantId();
-            log.info("租戶 ID：{}", tenantId);
-
-            // 2. 發送測試訊息
-            String testMessage = "這是診斷測試訊息 - " + System.currentTimeMillis();
-            log.info("準備發送訊息：{}", testMessage);
-
-            messageService.pushText(tenantId, lineUserId, testMessage);
-
-            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            TenantLineConfig config = configOpt.get();
+            String tenantId = config.getTenantId();
             result.put("tenantId", tenantId);
-            result.put("lineUserId", lineUserId);
-            result.put("message", testMessage);
-            result.put("sent", true);
+            result.put("configStatus", config.getStatus().name());
+            result.put("hasToken", config.getChannelAccessTokenEncrypted() != null);
 
-            return ResponseEntity.ok(ApiResponse.ok("訊息已發送", result));
+            // 2. 取得 Access Token
+            if (config.getChannelAccessTokenEncrypted() == null) {
+                result.put("error", "Access Token 未設定");
+                return ResponseEntity.ok(ApiResponse.error("NO_TOKEN", "Access Token 未設定"));
+            }
+
+            String accessToken = encryptionService.decrypt(config.getChannelAccessTokenEncrypted());
+            result.put("tokenLength", accessToken.length());
+            result.put("tokenPrefix", accessToken.substring(0, Math.min(20, accessToken.length())) + "...");
+
+            // 3. 直接呼叫 LINE API
+            String testMessage = "診斷測試 - " + System.currentTimeMillis();
+            result.put("testMessage", testMessage);
+
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            String requestBody = String.format(
+                "{\"to\":\"%s\",\"messages\":[{\"type\":\"text\",\"text\":\"%s\"}]}",
+                lineUserId, testMessage
+            );
+            result.put("requestBody", requestBody);
+
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.line.me/v2/bot/message/push"))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request,
+                    java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            result.put("httpStatus", response.statusCode());
+            result.put("httpResponse", response.body());
+            result.put("success", response.statusCode() == 200);
+
+            if (response.statusCode() == 200) {
+                return ResponseEntity.ok(ApiResponse.ok("訊息發送成功", result));
+            } else {
+                return ResponseEntity.ok(ApiResponse.error("LINE_API_ERROR", "LINE API 回應：" + response.body()));
+            }
 
         } catch (Exception e) {
             log.error("發送測試訊息失敗：", e);
-            java.util.Map<String, Object> errorResult = new java.util.HashMap<>();
-            errorResult.put("error", e.getClass().getName());
-            errorResult.put("message", e.getMessage());
+            result.put("error", e.getClass().getName() + ": " + e.getMessage());
             return ResponseEntity.ok(ApiResponse.error("SEND_FAILED", e.getMessage()));
         }
     }
