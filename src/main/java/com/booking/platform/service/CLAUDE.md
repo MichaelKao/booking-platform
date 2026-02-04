@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (35 個)
+## Service 列表 (36 個)
 
 ### 核心服務
 
@@ -104,6 +104,12 @@ public XxxResponse create(...) { }
 |---------|------|
 | EcpayService | 綠界金流整合 |
 
+### AI 服務
+
+| Service | 說明 |
+|---------|------|
+| AiAssistantService | AI 智慧客服 (Groq Llama 3.3) |
+
 ### 共用服務
 
 | Service | 說明 |
@@ -118,6 +124,8 @@ public XxxResponse create(...) { }
 service/
 ├── admin/              # 超管服務
 │   └── AdminDashboardService
+├── ai/                 # AI 服務
+│   └── AiAssistantService
 ├── common/             # 共用服務
 │   └── EncryptionService
 ├── export/             # 匯出服務

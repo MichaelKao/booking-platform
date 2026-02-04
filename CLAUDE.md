@@ -698,13 +698,13 @@ npx playwright test --list
 
 ### AI 智慧客服（已實作）
 
-**技術架構**：Groq API + Llama 3.1 70B
+**技術架構**：Groq API + Llama 3.3 70B
 
 **環境變數**：
 ```
 GROQ_ENABLED=true
 GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=llama-3.1-70b-versatile
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
 **功能說明**：
@@ -756,7 +756,7 @@ GROQ_MODEL=llama-3.1-70b-versatile
 | `AUTO_RECALL` | 顧客喚回通知 | ✅ 已完成 | 每日 14:00 發送喚回 |
 | `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
 | `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群 |
-| `AI_ASSISTANT` | AI 智慧客服 | ✅ 已完成 | Groq Llama 3.1（免費） |
+| `AI_ASSISTANT` | AI 智慧客服 | ✅ 已完成 | Groq Llama 3.3（免費） |
 | `MULTI_ACCOUNT` | 多帳號管理 | ⏳ 待開發 | 複雜功能 |
 | `MULTI_BRANCH` | 多分店管理 | ⏳ 待開發 | 複雜功能 |
 

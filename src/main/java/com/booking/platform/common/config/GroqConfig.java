@@ -25,7 +25,7 @@ public class GroqConfig {
     /**
      * 模型名稱
      */
-    private String model = "llama-3.1-70b-versatile";
+    private String model = "llama-3.3-70b-versatile";
 
     /**
      * API 端點
