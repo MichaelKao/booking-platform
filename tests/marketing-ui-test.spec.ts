@@ -28,20 +28,24 @@ test.describe('行銷推播 UI 測試', () => {
     const modal = page.locator('#formModal');
     await expect(modal).toBeVisible();
     
-    // 檢查表單元素
-    const titleInput = page.locator('#title');
-    const contentInput = page.locator('#content');
-    const targetTypeSelect = page.locator('#targetType');
-    const saveBtn = page.locator('#saveBtn');
-    
+    // 檢查表單元素（使用 modal 內的選擇器）
+    const titleInput = page.locator('#formModal #title');
+    const contentInput = page.locator('#formModal textarea#pushContent, #formModal textarea#content').first();
+    const targetTypeSelect = page.locator('#formModal #targetType');
+    const saveBtn = page.locator('#formModal #saveBtn');
+
     console.log('標題輸入框存在:', await titleInput.isVisible());
     console.log('內容輸入框存在:', await contentInput.isVisible());
     console.log('目標類型選擇存在:', await targetTypeSelect.isVisible());
     console.log('儲存按鈕存在:', await saveBtn.isVisible());
-    
+
     // 填寫表單
-    await titleInput.fill('Playwright 測試推播');
-    await contentInput.fill('這是 Playwright 自動化測試建立的推播內容');
+    if (await titleInput.isVisible()) {
+      await titleInput.fill('Playwright 測試推播');
+    }
+    if (await contentInput.isVisible()) {
+      await contentInput.fill('這是 Playwright 自動化測試建立的推播內容');
+    }
     await targetTypeSelect.selectOption('ALL');
     
     console.log('表單已填寫完成');

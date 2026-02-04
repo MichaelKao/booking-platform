@@ -81,7 +81,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">推播內容 <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="content" rows="4" required maxlength="1000"
+                            <textarea class="form-control" id="pushContent" rows="4" required maxlength="1000"
                                       placeholder="輸入要發送給顧客的訊息內容..."></textarea>
                             <div class="form-text d-flex justify-content-between">
                                 <span>LINE 訊息內容</span>
@@ -166,7 +166,7 @@
             loadData();
             loadMembershipLevels();
 
-            document.getElementById('content').addEventListener('input', function() {
+            document.getElementById('pushContent').addEventListener('input', function() {
                 document.getElementById('contentCount').textContent = this.value.length;
             });
 
@@ -251,7 +251,7 @@
                     document.getElementById('dataForm').classList.remove('was-validated');
                     document.getElementById('dataId').value = d.id;
                     document.getElementById('title').value = d.title || '';
-                    document.getElementById('content').value = d.content || '';
+                    document.getElementById('pushContent').value = d.content || '';
                     document.getElementById('contentCount').textContent = (d.content || '').length;
                     document.getElementById('targetType').value = d.targetType || 'ALL';
                     document.getElementById('targetValue').value = d.targetValue || '';
@@ -276,7 +276,7 @@
             console.log('saveData() 被呼叫');
             const form = document.getElementById('dataForm');
             const titleEl = document.getElementById('title');
-            const contentEl = document.getElementById('content');
+            const contentEl = document.getElementById('pushContent');
 
             let isValid = true;
             let errorMessages = [];
