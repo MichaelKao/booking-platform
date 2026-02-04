@@ -101,7 +101,9 @@ public class LineWebhookController {
             @RequestHeader(value = "X-Line-Signature", required = false) String signature,
             @RequestBody String body
     ) {
-        log.info("收到 LINE Webhook，租戶代碼：{}", tenantCode);
+        log.info("=== 收到 LINE Webhook ===");
+        log.info("租戶代碼：{}，signature 存在：{}，body 長度：{}",
+                tenantCode, signature != null, body != null ? body.length() : 0);
 
         // ========================================
         // 1. 查詢租戶設定
@@ -116,13 +118,14 @@ public class LineWebhookController {
 
         TenantLineConfig config = configOpt.get();
         String tenantId = config.getTenantId();
+        log.info("找到租戶設定，租戶 ID：{}，狀態：{}", tenantId, config.getStatus());
 
         // ========================================
         // 2. 檢查設定狀態
         // ========================================
 
         if (config.getStatus() == LineConfigStatus.INACTIVE) {
-            log.info("LINE Bot 已停用，租戶：{}", tenantId);
+            log.info("LINE Bot 已停用，租戶：{}，跳過處理", tenantId);
             return ResponseEntity.ok(ApiResponse.ok());
         }
 
@@ -149,12 +152,16 @@ public class LineWebhookController {
         // ========================================
 
         try {
+            log.info("開始呼叫 processWebhook，租戶：{}", tenantId);
             webhookService.processWebhook(tenantId, body);
+            log.info("processWebhook 呼叫完成（非同步，已排入佇列）");
         } catch (Exception e) {
-            log.error("Webhook 處理失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            log.error("Webhook 處理失敗，租戶：{}，錯誤類型：{}，錯誤訊息：{}",
+                    tenantId, e.getClass().getName(), e.getMessage(), e);
         }
 
         // LINE 要求必須回傳 200 OK
+        log.info("=== Webhook 處理完成，回傳 200 OK ===");
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

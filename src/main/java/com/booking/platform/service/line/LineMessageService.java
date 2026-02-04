@@ -75,38 +75,47 @@ public class LineMessageService {
      * 回覆訊息（Reply）
      *
      * <p>使用 replyToken 回覆用戶訊息，不計入推送額度
+     * <p>注意：此方法不使用 @Async，因為 replyToken 只有約 30 秒有效期
+     * <p>呼叫此方法的 processWebhook 已經是 @Async，所以這裡同步執行即可
      *
      * @param tenantId   租戶 ID
      * @param replyToken 回覆 Token
      * @param messages   訊息列表
      */
-    @Async
     public void reply(String tenantId, String replyToken, List<Map<String, Object>> messages) {
-        log.debug("回覆訊息，租戶：{}，replyToken：{}", tenantId, replyToken);
+        log.info("=== 開始回覆訊息 ===");
+        log.info("租戶：{}，replyToken：{}，訊息數量：{}", tenantId, replyToken, messages.size());
 
         try {
             // ========================================
             // 1. 取得 Access Token
             // ========================================
 
+            log.info("正在取得 Access Token...");
             String accessToken = getAccessToken(tenantId);
+            log.info("Access Token 取得成功，長度：{}", accessToken != null ? accessToken.length() : 0);
 
             // ========================================
             // 2. 建立請求
             // ========================================
 
+            log.info("正在建立請求...");
             ObjectNode requestBody = objectMapper.createObjectNode();
             requestBody.put("replyToken", replyToken);
             requestBody.set("messages", objectMapper.valueToTree(messages));
+            log.info("請求 body 建立完成");
 
             // ========================================
             // 3. 發送請求
             // ========================================
 
+            log.info("正在發送 LINE Reply API 請求...");
             sendRequest(REPLY_API, accessToken, requestBody);
+            log.info("=== 回覆訊息成功 ===");
 
         } catch (Exception e) {
-            log.error("回覆訊息失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            log.error("=== 回覆訊息失敗 ===");
+            log.error("租戶：{}，錯誤類型：{}，錯誤訊息：{}", tenantId, e.getClass().getName(), e.getMessage(), e);
         }
     }
 
@@ -396,21 +405,30 @@ public class LineMessageService {
      * 發送 HTTP 請求到 LINE API
      */
     private void sendRequest(String endpoint, String accessToken, ObjectNode requestBody) {
+        String fullUrl = apiEndpoint + endpoint;
+        log.info("準備發送 LINE API 請求，URL：{}", fullUrl);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
+        String bodyString = requestBody.toString();
+        log.info("請求 body 長度：{} 字元", bodyString.length());
+
+        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
 
         try {
+            log.info("正在執行 HTTP POST...");
             ResponseEntity<String> response = restTemplate.exchange(
-                    apiEndpoint + endpoint,
+                    fullUrl,
                     HttpMethod.POST,
                     request,
                     String.class
             );
 
-            log.info("LINE API 回應，端點：{}，狀態碼：{}", endpoint, response.getStatusCode());
+            log.info("LINE API 回應，端點：{}，狀態碼：{}，回應：{}",
+                    endpoint, response.getStatusCode(), response.getBody());
+
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("LINE API 請求失敗，端點：{}，狀態碼：{}，回應：{}",
                         endpoint, response.getStatusCode(), response.getBody());

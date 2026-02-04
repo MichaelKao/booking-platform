@@ -169,6 +169,9 @@ public class LineWebhookService {
      */
     @Async
     public void processWebhook(String tenantId, String body) {
+        log.info("=== processWebhook 開始執行 ===");
+        log.info("租戶：{}，執行緒：{}", tenantId, Thread.currentThread().getName());
+
         try {
             JsonNode root = objectMapper.readTree(body);
             JsonNode events = root.get("events");
@@ -178,12 +181,18 @@ public class LineWebhookService {
                 return;
             }
 
+            log.info("事件數量：{}", events.size());
+
             for (JsonNode event : events) {
+                log.info("處理事件類型：{}", event.path("type").asText());
                 processEvent(tenantId, event);
             }
 
+            log.info("=== processWebhook 執行完成 ===");
+
         } catch (Exception e) {
-            log.error("處理 Webhook 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            log.error("處理 Webhook 失敗，租戶：{}，錯誤類型：{}，錯誤訊息：{}",
+                    tenantId, e.getClass().getName(), e.getMessage(), e);
         }
     }
 
@@ -198,14 +207,15 @@ public class LineWebhookService {
         String eventType = event.path("type").asText();
         LineEventType type = LineEventType.fromValue(eventType);
 
-        log.debug("處理事件，租戶：{}，類型：{}", tenantId, type);
+        log.info("處理事件，租戶：{}，類型：{}，replyToken：{}",
+                tenantId, type, event.path("replyToken").asText());
 
         switch (type) {
             case MESSAGE -> handleMessageEvent(tenantId, event);
             case POSTBACK -> handlePostbackEvent(tenantId, event);
             case FOLLOW -> handleFollowEvent(tenantId, event);
             case UNFOLLOW -> handleUnfollowEvent(tenantId, event);
-            default -> log.debug("未處理的事件類型：{}", type);
+            default -> log.info("未處理的事件類型：{}", type);
         }
     }
 
@@ -1220,9 +1230,12 @@ public class LineWebhookService {
      * 回覆預設訊息（顯示主選單）
      */
     private void replyDefaultMessage(String tenantId, String replyToken) {
+        log.info("開始回覆預設訊息（主選單），租戶：{}，replyToken：{}", tenantId, replyToken);
         // 無論如何都顯示主選單，讓用戶可以點選操作
         JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+        log.info("主選單 Flex Message 建構完成，準備發送");
         messageService.replyFlex(tenantId, replyToken, "請選擇您需要的服務", mainMenu);
+        log.info("replyFlex 呼叫完成");
     }
 
     /**
