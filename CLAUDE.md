@@ -682,7 +682,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (450 tests)：**
+**測試套件 (558 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -693,30 +693,37 @@ npx playwright test --list
 | `04-tenant-features.spec.ts` | API 測試 | 17 |
 | `05-feature-store.spec.ts` | 功能商店 | 10 |
 | `06-sse-notifications.spec.ts` | SSE 即時通知 | 15 |
-| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 28 |
+| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 29 |
 | `08-tenant-booking.spec.ts` | 預約管理完整測試 | 32 |
 | `09-tenant-pages.spec.ts` | 店家後台所有頁面測試 | 33 |
-| `10-admin-pages.spec.ts` | 超管後台所有頁面測試 | 11 |
+| `09-tenant-customer.spec.ts` | 顧客管理測試 | 35 |
+| `10-admin-pages.spec.ts` | 超管後台所有頁面測試 | 13 |
 | `11-public-pages.spec.ts` | 公開頁面測試 | 24 |
-| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 25 |
+| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 26 |
 | `13-tenant-settings.spec.ts` | 設定頁面測試 | 28 |
-| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 30 |
+| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 32 |
 | `15-line-bot.spec.ts` | LINE Bot 測試 | 19 |
 | `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
 | `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
+| `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
 
 - 所有超管頁面（儀表板、店家管理、功能管理、儲值審核）
-- 所有店家頁面（16+ 頁面：儀表板、預約管理、行事曆、報表、顧客、員工、服務、商品、票券、行銷、設定等）
+- 所有店家頁面（18 頁面：儀表板、預約管理、行事曆、報表、顧客、員工、服務、商品、庫存異動、商品訂單、票券、行銷活動、行銷推播、設定、LINE設定、功能商店、點數管理、會員等級）
 - 所有公開頁面（登入、註冊、忘記密碼、顧客自助取消預約）
-- 所有 API 端點
-- 所有表單欄位和按鈕
+- 所有 API 端點（19 個主要 API 完整驗證）
+- 所有表單欄位和按鈕（9 個新增按鈕 Modal 測試）
 - JavaScript 錯誤檢測（SyntaxError、ReferenceError、TypeError）
+- HTTP 錯誤檢測（400/500 回應監控）
+- 「載入失敗」文字檢測
 - 功能訂閱與側邊欄顯示控制
 - LINE Bot 對話狀態和訊息格式
 - Excel/PDF 匯出功能
 - 靜態資源（CSS/JS）載入
+- 顧客點數交易記錄 API
+- 報表摘要統計（回頭客、服務營收）
+- 超管儀表板金額計算
 
 **測試基礎設施注意事項：**
 
@@ -865,4 +872,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 450 |
+| E2E 測試 | 558 |
