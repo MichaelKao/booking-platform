@@ -221,7 +221,9 @@ public class MarketingService {
             case ALL -> (int) lineUserRepository.countByTenantIdAndIsFollowedAndDeletedAtIsNull(tenantId, true);
             case MEMBERSHIP_LEVEL -> (int) lineUserRepository.countByTenantIdAndMembershipLevelAndIsFollowedAndDeletedAtIsNull(
                     tenantId, targetValue, true);
-            case TAG, CUSTOM -> 0; // 需要實際查詢
+            case TAG -> (int) lineUserRepository.countByTenantIdAndTagAndIsFollowedAndDeletedAtIsNull(
+                    tenantId, targetValue);
+            case CUSTOM -> 0; // 自訂名單需要實際解析
         };
     }
 
@@ -294,7 +296,8 @@ public class MarketingService {
                 }
                 yield List.of();
             }
-            case TAG -> List.of(); // TODO: 實作標籤篩選
+            case TAG -> lineUserRepository.findByTenantIdAndTagAndIsFollowedAndDeletedAtIsNull(
+                    tenantId, push.getTargetValue());
         };
     }
 

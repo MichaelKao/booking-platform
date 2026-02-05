@@ -424,12 +424,44 @@
 
         async function loadPointTransactions(page = 0) {
             try {
-                // TODO: 呼叫顧客點數記錄 API
-                document.getElementById('pointsTable').innerHTML =
-                    '<tr><td colspan="5" class="text-center text-muted py-4">暫無點數記錄</td></tr>';
+                const result = await api.get(`/api/customers/${customerId}/points/transactions`, { page, size: 10 });
+                if (result.success && result.data) {
+                    renderPointTransactions(result.data.content);
+                }
             } catch (error) {
                 console.error('載入點數記錄失敗:', error);
+                document.getElementById('pointsTable').innerHTML =
+                    '<tr><td colspan="5" class="text-center text-muted py-4">暫無點數記錄</td></tr>';
             }
+        }
+
+        function renderPointTransactions(transactions) {
+            const tbody = document.getElementById('pointsTable');
+            if (!transactions || transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">暫無點數記錄</td></tr>';
+                return;
+            }
+            tbody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>${formatDateTime(t.createdAt)}</td>
+                    <td>${getPointTypeBadge(t.type)}</td>
+                    <td class="${t.points >= 0 ? 'text-success' : 'text-danger'}">
+                        ${t.points >= 0 ? '+' : ''}${t.points}
+                    </td>
+                    <td>${t.balance}</td>
+                    <td>${escapeHtml(t.description || '-')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getPointTypeBadge(type) {
+            const map = {
+                'EARN': '<span class="badge bg-success">獲得</span>',
+                'REDEEM': '<span class="badge bg-warning text-dark">兌換</span>',
+                'ADJUST': '<span class="badge bg-info">調整</span>',
+                'EXPIRE': '<span class="badge bg-secondary">過期</span>'
+            };
+            return map[type] || `<span class="badge bg-secondary">${type}</span>`;
         }
 
         function openEditModal() {
@@ -506,7 +538,7 @@
         }
 
         function openBookingModal() {
-            // TODO: 開啟建立預約 Modal 或跳轉到預約頁面
+            // 跳轉到預約頁面並帶入顧客 ID，方便快速建立預約
             window.location.href = '/tenant/bookings?customerId=' + customerId;
         }
 

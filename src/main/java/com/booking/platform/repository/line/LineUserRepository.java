@@ -263,4 +263,38 @@ public interface LineUserRepository extends JpaRepository<LineUser, String> {
             @Param("tenantId") String tenantId,
             @Param("lineUserIds") List<String> lineUserIds
     );
+
+    /**
+     * 依標籤統計追蹤中用戶數量
+     */
+    @Query(value = """
+            SELECT COUNT(DISTINCT lu.id)
+            FROM line_users lu
+            JOIN customers c ON lu.customer_id = c.id
+            WHERE lu.tenant_id = :tenantId
+            AND lu.deleted_at IS NULL
+            AND lu.is_followed = true
+            AND c.tags LIKE CONCAT('%', :tag, '%')
+            """, nativeQuery = true)
+    long countByTenantIdAndTagAndIsFollowedAndDeletedAtIsNull(
+            @Param("tenantId") String tenantId,
+            @Param("tag") String tag
+    );
+
+    /**
+     * 依標籤查詢追蹤中用戶
+     */
+    @Query(value = """
+            SELECT lu.*
+            FROM line_users lu
+            JOIN customers c ON lu.customer_id = c.id
+            WHERE lu.tenant_id = :tenantId
+            AND lu.deleted_at IS NULL
+            AND lu.is_followed = true
+            AND c.tags LIKE CONCAT('%', :tag, '%')
+            """, nativeQuery = true)
+    List<LineUser> findByTenantIdAndTagAndIsFollowedAndDeletedAtIsNull(
+            @Param("tenantId") String tenantId,
+            @Param("tag") String tag
+    );
 }

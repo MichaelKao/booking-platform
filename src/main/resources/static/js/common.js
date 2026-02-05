@@ -779,11 +779,14 @@ function exportToCsv(data, filename, headers) {
 // ========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 初始化 Bootstrap Tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+    // 檢查 Bootstrap 是否已載入
+    if (typeof bootstrap !== 'undefined') {
+        // 初始化 Bootstrap Tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
 
-    // 初始化 Bootstrap Popovers
-    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-    popoverTriggerList.forEach(el => new bootstrap.Popover(el));
+        // 初始化 Bootstrap Popovers
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverTriggerList.forEach(el => new bootstrap.Popover(el));
+    }
 });

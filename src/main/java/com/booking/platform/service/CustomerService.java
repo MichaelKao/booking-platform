@@ -495,4 +495,52 @@ public class CustomerService {
                 .sorted()
                 .collect(Collectors.toList());
     }
+
+    // ========================================
+    // 點數交易記錄
+    // ========================================
+
+    /**
+     * 取得顧客的點數交易記錄
+     */
+    public PageResponse<com.booking.platform.dto.response.PointTransactionResponse> getPointTransactions(
+            String customerId, Pageable pageable) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.debug("取得顧客點數交易記錄，顧客 ID：{}", customerId);
+
+        // 驗證顧客存在
+        customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                ));
+
+        Page<PointTransaction> page = pointTransactionRepository.findByCustomerId(
+                tenantId, customerId, pageable
+        );
+
+        List<com.booking.platform.dto.response.PointTransactionResponse> responses = page.getContent()
+                .stream()
+                .map(t -> com.booking.platform.dto.response.PointTransactionResponse.builder()
+                        .id(t.getId())
+                        .customerId(t.getCustomerId())
+                        .type(t.getType())
+                        .points(t.getPoints())
+                        .balance(t.getBalanceAfter())
+                        .description(t.getDescription())
+                        .orderId(t.getOrderId())
+                        .createdAt(t.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return PageResponse.<com.booking.platform.dto.response.PointTransactionResponse>builder()
+                .content(responses)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
 }

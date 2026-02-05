@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,8 +31,16 @@ public class AdminPointController {
 
     private final PointTopUpService pointTopUpService;
 
-    // TODO: 從認證中取得操作者 ID
-    private static final String OPERATOR_ID = "admin";
+    /**
+     * 從 Security Context 取得操作者 ID
+     */
+    private String getOperatorId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
+        }
+        return "admin";
+    }
 
     // ========================================
     // 查詢 API
@@ -100,7 +110,7 @@ public class AdminPointController {
         if (request == null) {
             request = new ReviewTopUpRequest();
         }
-        PointTopUpResponse result = pointTopUpService.approveTopUp(id, OPERATOR_ID, request);
+        PointTopUpResponse result = pointTopUpService.approveTopUp(id, getOperatorId(), request);
         return ApiResponse.ok("審核通過", result);
     }
 
@@ -112,7 +122,7 @@ public class AdminPointController {
             @PathVariable String id,
             @Valid @RequestBody ReviewTopUpRequest request
     ) {
-        PointTopUpResponse result = pointTopUpService.rejectTopUp(id, OPERATOR_ID, request);
+        PointTopUpResponse result = pointTopUpService.rejectTopUp(id, getOperatorId(), request);
         return ApiResponse.ok("審核駁回", result);
     }
 
@@ -128,7 +138,7 @@ public class AdminPointController {
             @PathVariable String tenantId,
             @Valid @RequestBody AdjustPointsRequest request
     ) {
-        pointTopUpService.adjustTenantPoints(tenantId, request, OPERATOR_ID);
+        pointTopUpService.adjustTenantPoints(tenantId, request, getOperatorId());
         return ApiResponse.ok("點數調整成功", null);
     }
 }

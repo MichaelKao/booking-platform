@@ -164,6 +164,7 @@ async function adminLogin(event) {
         }
     } catch (error) {
         console.error('登入失敗:', error);
+        showError(error.message || '登入失敗，請檢查帳號密碼');
     }
 }
 
@@ -199,9 +200,10 @@ async function activateTenant(tenantId) {
     try {
         await api.put(`/api/admin/tenants/${tenantId}/status`, { status: 'ACTIVE' });
         showSuccess('店家已啟用');
-        loadTenants(); // 重新載入列表
+        if (typeof loadTenants === 'function') loadTenants();
     } catch (error) {
         console.error('啟用失敗:', error);
+        showError(error.message || '啟用失敗');
     }
 }
 
@@ -215,9 +217,10 @@ async function suspendTenant(tenantId) {
     try {
         await api.put(`/api/admin/tenants/${tenantId}/status`, { status: 'SUSPENDED' });
         showSuccess('店家已停權');
-        loadTenants();
+        if (typeof loadTenants === 'function') loadTenants();
     } catch (error) {
         console.error('停權失敗:', error);
+        showError(error.message || '停權失敗');
     }
 }
 
@@ -252,9 +255,10 @@ async function approveTopup(topupId) {
     try {
         await api.post(`/api/admin/point-topups/${topupId}/approve`);
         showSuccess('儲值申請已核准');
-        loadTopups();
+        if (typeof loadTopups === 'function') loadTopups();
     } catch (error) {
         console.error('核准失敗:', error);
+        showError(error.message || '核准失敗');
     }
 }
 
@@ -268,9 +272,10 @@ async function rejectTopup(topupId) {
     try {
         await api.post(`/api/admin/point-topups/${topupId}/reject`, { reason });
         showSuccess('儲值申請已拒絕');
-        loadTopups();
+        if (typeof loadTopups === 'function') loadTopups();
     } catch (error) {
         console.error('拒絕失敗:', error);
+        showError(error.message || '拒絕失敗');
     }
 }
 

@@ -9,6 +9,8 @@ import com.booking.platform.enums.FeatureCode;
 import com.booking.platform.service.FeatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +28,16 @@ public class AdminFeatureController {
 
     private final FeatureService featureService;
 
-    // TODO: 從認證中取得操作者 ID
-    private static final String OPERATOR_ID = "admin";
+    /**
+     * 從 Security Context 取得操作者 ID
+     */
+    private String getOperatorId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
+        }
+        return "admin";
+    }
 
     // ========================================
     // 功能定義查詢
@@ -132,7 +142,7 @@ public class AdminFeatureController {
             request = new EnableFeatureRequest();
         }
         TenantFeatureResponse result = featureService.enableFeature(
-                tenantId, code, request, OPERATOR_ID
+                tenantId, code, request, getOperatorId()
         );
         return ApiResponse.ok("功能已啟用", result);
     }
@@ -146,7 +156,7 @@ public class AdminFeatureController {
             @PathVariable String featureCode
     ) {
         FeatureCode code = parseFeatureCode(featureCode);
-        TenantFeatureResponse result = featureService.disableFeature(tenantId, code, OPERATOR_ID);
+        TenantFeatureResponse result = featureService.disableFeature(tenantId, code, getOperatorId());
         return ApiResponse.ok("功能已停用", result);
     }
 
@@ -159,7 +169,7 @@ public class AdminFeatureController {
             @PathVariable String featureCode
     ) {
         FeatureCode code = parseFeatureCode(featureCode);
-        TenantFeatureResponse result = featureService.suspendFeature(tenantId, code, OPERATOR_ID);
+        TenantFeatureResponse result = featureService.suspendFeature(tenantId, code, getOperatorId());
         return ApiResponse.ok("功能已凍結", result);
     }
 
@@ -172,7 +182,7 @@ public class AdminFeatureController {
             @PathVariable String featureCode
     ) {
         FeatureCode code = parseFeatureCode(featureCode);
-        TenantFeatureResponse result = featureService.unsuspendFeature(tenantId, code, OPERATOR_ID);
+        TenantFeatureResponse result = featureService.unsuspendFeature(tenantId, code, getOperatorId());
         return ApiResponse.ok("功能已解凍", result);
     }
 
@@ -186,14 +196,11 @@ public class AdminFeatureController {
     @PostMapping("/tenants/batch/features/{featureCode}/enable")
     public ApiResponse<Void> batchEnableFeature(
             @PathVariable String featureCode,
-            @RequestBody List<String> tenantIds,
-            @Valid @RequestBody(required = false) EnableFeatureRequest request
+            @RequestBody List<String> tenantIds
     ) {
         FeatureCode code = parseFeatureCode(featureCode);
-        if (request == null) {
-            request = new EnableFeatureRequest();
-        }
-        featureService.batchEnableFeature(tenantIds, code, request, OPERATOR_ID);
+        EnableFeatureRequest request = new EnableFeatureRequest();
+        featureService.batchEnableFeature(tenantIds, code, request, getOperatorId());
         return ApiResponse.ok("批次啟用成功", null);
     }
 
@@ -206,7 +213,7 @@ public class AdminFeatureController {
             @RequestBody List<String> tenantIds
     ) {
         FeatureCode code = parseFeatureCode(featureCode);
-        featureService.batchDisableFeature(tenantIds, code, OPERATOR_ID);
+        featureService.batchDisableFeature(tenantIds, code, getOperatorId());
         return ApiResponse.ok("批次停用成功", null);
     }
 

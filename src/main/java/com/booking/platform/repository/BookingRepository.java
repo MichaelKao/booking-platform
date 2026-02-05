@@ -443,4 +443,48 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("tenantId") String tenantId,
             @Param("date") LocalDate date
     );
+
+    /**
+     * 統計回客數（在指定時間範圍內有預約，且在此之前也有過預約的顧客數）
+     */
+    @Query(value = """
+            SELECT COUNT(DISTINCT b.customer_id)
+            FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.deleted_at IS NULL
+            AND b.customer_id IS NOT NULL
+            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.customer_id IN (
+                SELECT DISTINCT b2.customer_id
+                FROM bookings b2
+                WHERE b2.tenant_id = :tenantId
+                AND b2.deleted_at IS NULL
+                AND b2.customer_id IS NOT NULL
+                AND b2.created_at < :startDateTime
+            )
+            """, nativeQuery = true)
+    long countReturningCustomersByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 計算服務營收（熱門服務報表用）
+     */
+    @Query(value = """
+            SELECT COALESCE(SUM(b.price), 0)
+            FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.service_id = :serviceId
+            AND b.deleted_at IS NULL
+            AND b.status = 'COMPLETED'
+            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            """, nativeQuery = true)
+    BigDecimal sumRevenueByTenantIdAndServiceIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("serviceId") String serviceId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

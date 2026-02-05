@@ -32,6 +32,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -568,8 +570,8 @@ public class BookingService {
         // ========================================
 
         entity.setLastModifiedAt(LocalDateTime.now());
-        // TODO: 從 Security Context 取得當前用戶 ID
-        entity.setLastModifiedBy(tenantId);
+        // 從 Security Context 取得當前用戶 ID
+        entity.setLastModifiedBy(getCurrentUserId());
 
         // ========================================
         // 10. 儲存更新
@@ -787,5 +789,20 @@ public class BookingService {
         sseNotificationService.notifyBookingStatusChanged(tenantId, response, "NO_SHOW");
 
         return response;
+    }
+
+    // ========================================
+    // 輔助方法
+    // ========================================
+
+    /**
+     * 從 Security Context 取得當前用戶 ID
+     */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
+        }
+        return TenantContext.getTenantId();
     }
 }

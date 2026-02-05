@@ -237,4 +237,21 @@ public class CustomerController {
         List<String> result = customerService.getAllTags();
         return ApiResponse.ok(result);
     }
+
+    // ========================================
+    // 點數交易記錄 API
+    // ========================================
+
+    /**
+     * 取得顧客的點數交易記錄
+     */
+    @GetMapping("/{id}/points/transactions")
+    public ApiResponse<PageResponse<com.booking.platform.dto.response.PointTransactionResponse>> getPointTransactions(
+            @PathVariable String id,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        PageResponse<com.booking.platform.dto.response.PointTransactionResponse> result =
+                customerService.getPointTransactions(id, pageable);
+        return ApiResponse.ok(result);
+    }
 }

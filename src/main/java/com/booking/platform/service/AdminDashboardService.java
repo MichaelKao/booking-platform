@@ -74,6 +74,12 @@ public class AdminDashboardService {
 
         long pendingTopUps = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.PENDING);
 
+        // 計算待審核金額
+        BigDecimal pendingTopUpAmount = pointTopUpRepository.sumPendingAmount();
+        if (pendingTopUpAmount == null) {
+            pendingTopUpAmount = BigDecimal.ZERO;
+        }
+
         // 計算本月儲值
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
@@ -81,6 +87,12 @@ public class AdminDashboardService {
         Integer monthlyApprovedPoints = pointTopUpRepository.sumApprovedPointsBetween(monthStart, monthEnd);
         if (monthlyApprovedPoints == null) {
             monthlyApprovedPoints = 0;
+        }
+
+        // 計算本月審核通過金額
+        BigDecimal monthlyApprovedAmount = pointTopUpRepository.sumApprovedAmountBetween(monthStart, monthEnd);
+        if (monthlyApprovedAmount == null) {
+            monthlyApprovedAmount = BigDecimal.ZERO;
         }
 
         // ========================================
@@ -125,8 +137,8 @@ public class AdminDashboardService {
                 .pendingTenants(pendingTenants)
                 .suspendedTenants(suspendedTenants)
                 .pendingTopUps(pendingTopUps)
-                .pendingTopUpAmount(BigDecimal.ZERO) // TODO: 計算待審核金額
-                .monthlyApprovedAmount(BigDecimal.ZERO) // TODO: 計算本月審核金額
+                .pendingTopUpAmount(pendingTopUpAmount)
+                .monthlyApprovedAmount(monthlyApprovedAmount)
                 .monthlyApprovedPoints(monthlyApprovedPoints)
                 .todayBookings(todayBookings)
                 .monthlyBookings(monthlyBookings)

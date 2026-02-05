@@ -619,7 +619,8 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildStaffMenu(String tenantId, String serviceId) {
-        // TODO: 根據服務篩選員工
+        // 目前設計為所有員工都可以提供所有服務
+        // 未來如需實作服務與員工的關聯，可在此處根據 serviceId 篩選
         List<Staff> staffList = staffRepository
                 .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
 

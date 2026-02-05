@@ -154,4 +154,28 @@ public interface PointTopUpRepository extends JpaRepository<PointTopUp, String> 
             List<TopUpStatus> statuses,
             Pageable pageable
     );
+
+    /**
+     * 統計全平台待審核金額
+     */
+    @Query("""
+            SELECT COALESCE(SUM(p.amount), 0) FROM PointTopUp p
+            WHERE p.deletedAt IS NULL
+            AND p.status = 'PENDING'
+            """)
+    BigDecimal sumPendingAmount();
+
+    /**
+     * 統計全平台時間範圍內審核通過金額
+     */
+    @Query("""
+            SELECT COALESCE(SUM(p.amount), 0) FROM PointTopUp p
+            WHERE p.deletedAt IS NULL
+            AND p.status = 'APPROVED'
+            AND p.reviewedAt BETWEEN :startTime AND :endTime
+            """)
+    BigDecimal sumApprovedAmountBetween(
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime
+    );
 }

@@ -105,6 +105,11 @@ public class ReportService {
                 tenantId, startDateTime, endDateTime
         );
 
+        // 回客統計（在指定時間範圍內有預約，且在此之前也有過預約的顧客）
+        long returningCustomers = bookingRepository.countReturningCustomersByTenantIdAndDateRange(
+                tenantId, startDateTime, endDateTime
+        );
+
         // 票券統計
         long issuedCoupons = couponInstanceRepository.countIssuedByTenantIdAndDateRange(
                 tenantId, startDateTime, endDateTime
@@ -138,7 +143,7 @@ public class ReportService {
                 .noShowBookings(noShowBookings)
                 .completionRate(completionRate)
                 .newCustomers(newCustomers)
-                .returningCustomers(0L) // TODO: 需要更複雜的查詢
+                .returningCustomers(returningCustomers)
                 .totalServedCustomers(completedBookings) // 簡化：以完成預約數代替
                 .totalRevenue(serviceRevenue) // 服務營收即為總營收
                 .serviceRevenue(serviceRevenue)
@@ -236,11 +241,19 @@ public class ReportService {
                         .multiply(BigDecimal.valueOf(100));
             }
 
+            // 計算該服務的營收
+            BigDecimal amount = bookingRepository.sumRevenueByTenantIdAndServiceIdAndDateRange(
+                    tenantId, serviceId, startDateTime, endDateTime
+            );
+            if (amount == null) {
+                amount = BigDecimal.ZERO;
+            }
+
             result.add(TopItemResponse.builder()
                     .id(serviceId)
                     .name(serviceName)
                     .count(count)
-                    .amount(BigDecimal.ZERO) // TODO: 需要價格資訊
+                    .amount(amount)
                     .percentage(percentage)
                     .build());
         }
