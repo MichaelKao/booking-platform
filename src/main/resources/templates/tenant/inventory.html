@@ -52,7 +52,7 @@
     <script>
         const currentPage = 'inventory';
 
-        document.addEventListener('DOMContentLoaded', loadData);
+        document.addEventListener('DOMContentLoaded', () => loadData(0));
 
         async function loadData(page = 0) {
             try {
