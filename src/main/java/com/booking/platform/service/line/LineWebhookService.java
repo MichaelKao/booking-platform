@@ -1170,15 +1170,13 @@ public class LineWebhookService {
     }
 
     /**
-     * 回覆 AI 回應並附帶主選單
+     * 回覆 AI 回應（純文字，不附帶主選單）
+     * 讓 AI 對話更自然，用戶有需要時再自行開啟選單
      */
     private void replyAiResponseWithMenu(String tenantId, String replyToken, String aiResponse) {
-        // 先回覆 AI 文字訊息
-        // 再附帶主選單讓用戶可以繼續操作
-        JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
-
-        // 使用多訊息回覆：文字 + Flex Message
-        messageService.replyTextAndFlex(tenantId, replyToken, aiResponse, "需要其他服務嗎？", mainMenu);
+        // 只回覆 AI 文字訊息，不附帶主選單
+        // 用戶可以透過 Rich Menu 或輸入關鍵字來開啟服務選單
+        messageService.replyText(tenantId, replyToken, aiResponse);
     }
 
     /**
