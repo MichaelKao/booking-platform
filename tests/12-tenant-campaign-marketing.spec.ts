@@ -246,6 +246,40 @@ test.describe('行銷推播 API 測試', () => {
 
       console.log(`建立推播回應: ${response.status()}`);
     });
+
+    test('驗證推播目標類型', async ({ request }) => {
+      if (!tenantToken) return;
+
+      // 測試建立不同目標類型的推播
+      const targetTypes = ['ALL', 'MEMBERSHIP_LEVEL', 'TAG'];
+
+      for (const targetType of targetTypes) {
+        const pushData: any = {
+          title: `測試推播_${targetType}`,
+          content: '測試內容',
+          targetType: targetType
+        };
+
+        // TAG 和 MEMBERSHIP_LEVEL 需要 targetValue
+        if (targetType === 'TAG') {
+          pushData.targetValue = 'VIP';
+        } else if (targetType === 'MEMBERSHIP_LEVEL') {
+          pushData.targetValue = 'GOLD';
+        }
+
+        const response = await request.post('/api/marketing/pushes', {
+          headers: {
+            'Authorization': `Bearer ${tenantToken}`,
+            'Content-Type': 'application/json'
+          },
+          data: pushData
+        });
+
+        // API 應該成功（即使沒有符合條件的用戶）
+        expect(response.status()).toBeLessThan(500);
+        console.log(`建立 ${targetType} 推播: ${response.ok() ? '成功' : response.status()}`);
+      }
+    });
   });
 });
 

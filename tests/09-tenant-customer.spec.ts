@@ -224,6 +224,28 @@ test.describe('顧客管理 API 測試', () => {
         console.log(`點數扣除回應: ${response.status()}`);
       }
     });
+
+    test('取得顧客點數交易記錄', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const listResponse = await request.get('/api/customers?page=0&size=1', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      const listData = await listResponse.json();
+
+      if (listData.data?.content?.length > 0) {
+        const customerId = listData.data.content[0].id;
+        const response = await request.get(`/api/customers/${customerId}/points/transactions?page=0&size=10`, {
+          headers: { 'Authorization': `Bearer ${tenantToken}` }
+        });
+        expect(response.ok()).toBeTruthy();
+        const data = await response.json();
+        expect(data.success).toBeTruthy();
+        expect(data.data).toHaveProperty('content');
+        expect(data.data).toHaveProperty('totalElements');
+        console.log(`點數交易記錄: ${data.data.totalElements} 筆`);
+      }
+    });
   });
 
   test.describe('顧客封鎖操作 API', () => {

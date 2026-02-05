@@ -78,6 +78,37 @@ test.describe('報表 API 測試', () => {
         console.log(`報表摘要 ${range}: ${response.ok() ? '成功' : response.status()}`);
       }
     });
+
+    test('驗證報表摘要統計欄位', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/summary?range=month', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      expect(data.success).toBeTruthy();
+
+      const summary = data.data;
+      // 驗證回頭客統計欄位
+      expect(summary).toHaveProperty('returningCustomers');
+      expect(typeof summary.returningCustomers).toBe('number');
+      expect(summary.returningCustomers).toBeGreaterThanOrEqual(0);
+
+      // 驗證服務營收統計欄位
+      expect(summary).toHaveProperty('serviceRevenue');
+      expect(typeof summary.serviceRevenue).toBe('number');
+      expect(summary.serviceRevenue).toBeGreaterThanOrEqual(0);
+
+      // 驗證總營收計算合理
+      expect(summary).toHaveProperty('totalRevenue');
+      expect(summary).toHaveProperty('productRevenue');
+
+      console.log(`回頭客: ${summary.returningCustomers}`);
+      console.log(`服務營收: ${summary.serviceRevenue}`);
+      console.log(`商品營收: ${summary.productRevenue}`);
+      console.log(`總營收: ${summary.totalRevenue}`);
+    });
   });
 
   test.describe('每日報表 API', () => {
@@ -127,6 +158,30 @@ test.describe('報表 API 測試', () => {
       expect(response.ok()).toBeTruthy();
       const data = await response.json();
       console.log(`熱門員工數: ${data.data?.length || 0}`);
+    });
+
+    test('驗證熱門服務營收計算', async ({ request }) => {
+      if (!tenantToken) return;
+
+      const response = await request.get('/api/reports/top-services?range=month&limit=10', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      expect(data.success).toBeTruthy();
+
+      if (data.data && data.data.length > 0) {
+        // 驗證每個服務都有必要欄位
+        for (const service of data.data) {
+          expect(service).toHaveProperty('id');
+          expect(service).toHaveProperty('name');
+          expect(service).toHaveProperty('count');
+          expect(service).toHaveProperty('amount');
+          expect(typeof service.count).toBe('number');
+          expect(typeof service.amount).toBe('number');
+          console.log(`服務: ${service.name}, 次數: ${service.count}, 營收: ${service.amount}`);
+        }
+      }
     });
 
     test('排行榜 - 不同限制', async ({ request }) => {

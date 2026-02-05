@@ -325,6 +325,31 @@ test.describe('超管後台 CRUD 完整測試', () => {
         console.log('儀表板資料:', JSON.stringify(data.data, null, 2));
       }
     });
+
+    test('驗證儀表板金額計算欄位', async ({ request }) => {
+      const response = await request.get('/api/admin/dashboard', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      expect(response.ok()).toBeTruthy();
+      const data = await response.json();
+      expect(data.success).toBeTruthy();
+
+      // 驗證必要欄位存在且為數值
+      const dashboard = data.data;
+      expect(dashboard).toHaveProperty('pendingTopUpAmount');
+      expect(dashboard).toHaveProperty('monthlyApprovedAmount');
+      expect(dashboard).toHaveProperty('totalTenants');
+      expect(dashboard).toHaveProperty('activeTenants');
+
+      // 驗證數值合理性
+      expect(typeof dashboard.pendingTopUpAmount).toBe('number');
+      expect(typeof dashboard.monthlyApprovedAmount).toBe('number');
+      expect(dashboard.pendingTopUpAmount).toBeGreaterThanOrEqual(0);
+      expect(dashboard.monthlyApprovedAmount).toBeGreaterThanOrEqual(0);
+
+      console.log(`待審核金額: ${dashboard.pendingTopUpAmount}`);
+      console.log(`本月已通過金額: ${dashboard.monthlyApprovedAmount}`);
+    });
   });
 });
 
