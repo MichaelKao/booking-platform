@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- SEO Meta Tags -->
+    <title>服務條款 | 預約平台 - 線上預約系統</title>
+    <meta name="description" content="預約平台服務條款。了解使用本平台的權利與義務、服務範圍、用戶責任、隱私保護等重要條款。">
+    <meta name="keywords" content="預約平台服務條款,使用條款,用戶協議,服務協議">
+    <meta name="author" content="Booking Platform">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/terms">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/terms">
+    <meta property="og:title" content="服務條款 | 預約平台">
+    <meta property="og:description" content="預約平台服務條款。了解使用本平台的權利與義務。">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Structured Data / Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首頁",
+                "item": "https://booking-platform-production-1e08.up.railway.app/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "服務條款",
+                "item": "https://booking-platform-production-1e08.up.railway.app/terms"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #333;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 60px;
+        }
+
+        .content-section {
+            padding: 60px 0;
+        }
+
+        .terms-content h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .terms-content h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .terms-content p, .terms-content li {
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .terms-content ul {
+            padding-left: 20px;
+        }
+
+        .terms-content ul li {
+            margin-bottom: 8px;
+        }
+
+        .update-date {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 0 20px;
+        }
+
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="padding-top: 120px;">
+        <div class="container text-center">
+            <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                <i class="bi bi-file-earmark-text me-2"></i>服務條款
+            </h1>
+            <p style="font-size: 1.2rem; opacity: 0.9;">
+                使用預約平台前，請詳閱以下條款
+            </p>
+        </div>
+    </section>
+
+    <!-- Content Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="update-date">
+                        <i class="bi bi-calendar3 me-2"></i>
+                        <strong>最後更新日期：</strong>2024 年 12 月 1 日
+                    </div>
+
+                    <div class="terms-content">
+                        <p>歡迎使用預約平台（以下簡稱「本平台」）。使用本平台的服務，即表示您同意遵守以下服務條款。請仔細閱讀。</p>
+
+                        <h2><i class="bi bi-1-circle me-2"></i>服務說明</h2>
+                        <p>本平台提供線上預約管理系統服務，包括但不限於：</p>
+                        <ul>
+                            <li>預約排程管理</li>
+                            <li>LINE 預約機器人整合</li>
+                            <li>顧客資料管理</li>
+                            <li>員工排班管理</li>
+                            <li>票券與行銷功能</li>
+                            <li>營運報表分析</li>
+                        </ul>
+
+                        <h2><i class="bi bi-2-circle me-2"></i>帳號註冊與安全</h2>
+                        <h3>2.1 帳號註冊</h3>
+                        <p>使用本平台服務需註冊帳號。註冊時您必須提供真實、準確、完整的資訊，並有義務維護資訊的即時更新。</p>
+
+                        <h3>2.2 帳號安全</h3>
+                        <p>您有責任保管帳號密碼的安全性。任何透過您帳號進行的活動，均視為您本人的行為。如發現帳號遭未經授權使用，請立即通知我們。</p>
+
+                        <h3>2.3 帳號限制</h3>
+                        <p>每位用戶僅能註冊一個帳號。我們保留終止重複帳號的權利。</p>
+
+                        <h2><i class="bi bi-3-circle me-2"></i>使用規範</h2>
+                        <h3>3.1 合法使用</h3>
+                        <p>您同意僅以合法目的使用本平台，不得：</p>
+                        <ul>
+                            <li>違反任何適用法律或法規</li>
+                            <li>侵犯他人智慧財產權或其他權利</li>
+                            <li>上傳或傳輸任何惡意程式</li>
+                            <li>干擾或破壞本平台的正常運作</li>
+                            <li>未經授權存取本平台的系統或資料</li>
+                            <li>利用本平台進行垃圾郵件或其他騷擾行為</li>
+                        </ul>
+
+                        <h3>3.2 內容責任</h3>
+                        <p>您對透過本平台上傳或發布的所有內容負責。您保證擁有該等內容的所有必要權利，且該等內容不會侵犯任何第三方權利。</p>
+
+                        <h2><i class="bi bi-4-circle me-2"></i>付費服務</h2>
+                        <h3>4.1 點數與功能</h3>
+                        <p>本平台採用點數制度。部分進階功能需要訂閱並消耗點數。點數價格與功能費用以平台公告為準。</p>
+
+                        <h3>4.2 付款方式</h3>
+                        <p>目前支援透過綠界科技 ECPay 進行儲值付款，包括信用卡、ATM 轉帳等方式。</p>
+
+                        <h3>4.3 退款政策</h3>
+                        <p>已儲值的點數恕不退款。如因系統異常導致的錯誤扣款，請聯繫客服處理。</p>
+
+                        <h2><i class="bi bi-5-circle me-2"></i>智慧財產權</h2>
+                        <p>本平台及其所有內容（包括但不限於文字、圖片、軟體、程式碼）均受著作權法及其他智慧財產權法律保護。未經授權，不得複製、修改、散布或以其他方式使用。</p>
+
+                        <h2><i class="bi bi-6-circle me-2"></i>免責聲明</h2>
+                        <h3>6.1 服務可用性</h3>
+                        <p>我們致力於提供穩定的服務，但不保證服務不會中斷或無錯誤。因維護、升級或不可抗力因素導致的服務中斷，我們不承擔責任。</p>
+
+                        <h3>6.2 第三方服務</h3>
+                        <p>本平台整合 LINE、綠界等第三方服務。第三方服務的可用性和條款由各服務提供商負責。</p>
+
+                        <h3>6.3 資料損失</h3>
+                        <p>雖然我們會定期備份資料，但不保證資料不會遺失。建議您定期匯出重要資料以備份。</p>
+
+                        <h2><i class="bi bi-7-circle me-2"></i>責任限制</h2>
+                        <p>在法律允許的最大範圍內，本平台及其關聯方不對任何間接、附帶、特殊、懲罰性或衍生性損害負責，包括但不限於利潤損失、資料損失、商譽損失等。</p>
+
+                        <h2><i class="bi bi-8-circle me-2"></i>服務終止</h2>
+                        <h3>8.1 用戶終止</h3>
+                        <p>您可以隨時停止使用本平台服務。如需刪除帳號，請聯繫客服。</p>
+
+                        <h3>8.2 平台終止</h3>
+                        <p>如您違反本條款，我們保留暫停或終止您帳號的權利，恕不另行通知。</p>
+
+                        <h2><i class="bi bi-9-circle me-2"></i>條款修改</h2>
+                        <p>我們保留隨時修改本條款的權利。重大變更將透過平台公告或電子郵件通知。繼續使用本平台即表示您接受修改後的條款。</p>
+
+                        <h2><i class="bi bi-10-circle me-2"></i>準據法與管轄</h2>
+                        <p>本條款受中華民國法律管轄。因本條款引起的爭議，雙方同意以台灣台北地方法院為第一審管轄法院。</p>
+
+                        <h2><i class="bi bi-envelope me-2"></i>聯絡我們</h2>
+                        <p>如您對本服務條款有任何疑問，請透過以下方式聯繫我們：</p>
+                        <ul>
+                            <li><strong>電子郵件：</strong>support@booking.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>預約平台
+                    </h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人<br>讓預約管理變得超簡單</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/">首頁</a></li>
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">法律資訊</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/terms">服務條款</a></li>
+                        <li><a href="/privacy">隱私權政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <small>&copy; 2024 預約平台. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

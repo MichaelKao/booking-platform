@@ -96,6 +96,8 @@ public class SecurityConfig {
             "/faq",
             "/features",
             "/pricing",
+            "/terms",
+            "/privacy",
             "/beauty",
             "/hair-salon",
             "/spa",

@@ -116,6 +116,48 @@ test.describe('SEO 頁面測試', () => {
         }
     });
 
+    test.describe('法律頁面', () => {
+        test('服務條款頁面載入成功', async ({ page }) => {
+            await page.goto(`${BASE_URL}/terms`, { waitUntil: 'domcontentloaded' });
+            await expect(page).toHaveTitle(/服務條款/);
+        });
+
+        test('服務條款頁面有內容', async ({ page }) => {
+            await page.goto(`${BASE_URL}/terms`, { waitUntil: 'domcontentloaded' });
+            await expect(page.locator('text=服務說明').first()).toBeVisible();
+            await expect(page.locator('text=帳號註冊').first()).toBeVisible();
+            await expect(page.locator('text=使用規範').first()).toBeVisible();
+        });
+
+        test('服務條款頁面有 CTA 按鈕', async ({ page }) => {
+            await page.goto(`${BASE_URL}/terms`, { waitUntil: 'domcontentloaded' });
+            await expect(page.locator('a[href="/tenant/register"]').first()).toBeVisible();
+        });
+
+        test('隱私權政策頁面載入成功', async ({ page }) => {
+            await page.goto(`${BASE_URL}/privacy`, { waitUntil: 'domcontentloaded' });
+            await expect(page).toHaveTitle(/隱私權政策/);
+        });
+
+        test('隱私權政策頁面有內容', async ({ page }) => {
+            await page.goto(`${BASE_URL}/privacy`, { waitUntil: 'domcontentloaded' });
+            await expect(page.locator('text=資料收集').first()).toBeVisible();
+            await expect(page.locator('text=資料保護措施').first()).toBeVisible();
+            await expect(page.locator('text=您的權利').first()).toBeVisible();
+        });
+
+        test('隱私權政策頁面有 CTA 按鈕', async ({ page }) => {
+            await page.goto(`${BASE_URL}/privacy`, { waitUntil: 'domcontentloaded' });
+            await expect(page.locator('a[href="/tenant/register"]').first()).toBeVisible();
+        });
+
+        test('法律頁面有 BreadcrumbList 結構化資料', async ({ page }) => {
+            await page.goto(`${BASE_URL}/terms`, { waitUntil: 'domcontentloaded' });
+            const schemaScripts = await page.locator('script[type="application/ld+json"]').count();
+            expect(schemaScripts).toBeGreaterThanOrEqual(1);
+        });
+    });
+
     test.describe('SEO 資源', () => {
         test('robots.txt 可存取', async ({ request }) => {
             const response = await request.get(`${BASE_URL}/robots.txt`);
@@ -140,6 +182,8 @@ test.describe('SEO 頁面測試', () => {
             expect(text).toContain('/features');
             expect(text).toContain('/pricing');
             expect(text).toContain('/faq');
+            expect(text).toContain('/terms');
+            expect(text).toContain('/privacy');
             expect(text).toContain('/beauty');
             expect(text).toContain('/hair-salon');
             expect(text).toContain('/spa');

@@ -8,8 +8,13 @@
             <header th:replace="~{tenant/layout :: topbar}"></header>
             <main id="content">
                 <div class="page-header d-flex justify-content-between align-items-center">
-                    <div><h1 class="page-title">商品管理</h1><p class="page-subtitle">管理販售商品</p></div>
-                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增商品</button>
+                    <div><h1 class="page-title">商品管理</h1><p class="page-subtitle">管理販售商品與庫存</p></div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-warning" onclick="showLowStockProducts()" id="lowStockBtn">
+                            <i class="bi bi-exclamation-triangle me-1"></i>低庫存 <span id="lowStockCount" class="badge bg-danger ms-1 d-none">0</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增商品</button>
+                    </div>
                 </div>
                 <div class="data-table-container">
                     <div class="data-table-header"><h6 class="data-table-title">商品列表</h6></div>
@@ -69,6 +74,20 @@
                             <div class="form-text">不填則不追蹤庫存</div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">安全庫存量</label>
+                            <input type="number" class="form-control" id="safetyStock" min="0" step="1" placeholder="低於此數量會提醒">
+                            <div class="form-text">庫存低於此數量會顯示警示</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">是否追蹤庫存</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="trackInventory" checked>
+                                <label class="form-check-label" for="trackInventory">啟用庫存追蹤</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">商品描述</label>
                         <textarea class="form-control" id="description" rows="3" maxlength="500"></textarea>
@@ -85,25 +104,53 @@
     <!-- 庫存調整 Modal -->
     <div class="modal fade" id="stockModal" tabindex="-1">
         <div class="modal-dialog modal-sm"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">調整庫存</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>調整庫存</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" id="stockProductId">
                 <div class="mb-3">
                     <label class="form-label">商品名稱</label>
                     <p id="stockProductName" class="mb-0 fw-bold"></p>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">目前庫存</label>
-                    <p id="stockCurrentQty" class="mb-0 fw-bold text-primary"></p>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">目前庫存</label>
+                        <p id="stockCurrentQty" class="mb-0 fw-bold text-primary fs-4"></p>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">安全庫存</label>
+                        <p id="stockSafetyQty" class="mb-0 text-muted"></p>
+                    </div>
+                </div>
+                <div id="stockWarning" class="alert alert-warning py-2 d-none">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <small>目前庫存低於安全庫存</small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">調整數量 <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="stockAdjustQty" placeholder="正數增加，負數減少">
-                    <div class="form-text">例如：+10 增加 10 個，-5 減少 5 個</div>
+                    <div class="input-group">
+                        <button class="btn btn-outline-danger" type="button" onclick="quickAdjust(-10)">-10</button>
+                        <button class="btn btn-outline-danger" type="button" onclick="quickAdjust(-1)">-1</button>
+                        <input type="number" class="form-control text-center" id="stockAdjustQty" value="0">
+                        <button class="btn btn-outline-success" type="button" onclick="quickAdjust(1)">+1</button>
+                        <button class="btn btn-outline-success" type="button" onclick="quickAdjust(10)">+10</button>
+                    </div>
+                    <div class="form-text">調整後庫存：<span id="stockAfterAdjust" class="fw-bold">-</span></div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">原因（選填）</label>
-                    <input type="text" class="form-control" id="stockReason" placeholder="例如：進貨、盤點調整">
+                    <label class="form-label">調整原因</label>
+                    <select class="form-select" id="stockReasonSelect">
+                        <option value="">請選擇原因</option>
+                        <option value="進貨補充">進貨補充</option>
+                        <option value="銷售出貨">銷售出貨</option>
+                        <option value="盤點調整">盤點調整</option>
+                        <option value="損耗報廢">損耗報廢</option>
+                        <option value="退貨入庫">退貨入庫</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="mb-3 d-none" id="stockReasonOtherDiv">
+                    <label class="form-label">其他原因</label>
+                    <input type="text" class="form-control" id="stockReason" placeholder="請輸入原因">
                 </div>
             </div>
             <div class="modal-footer">
@@ -121,51 +168,105 @@
             NAIL_CARE: '美甲產品', ACCESSORIES: '配件', GIFT_CARD: '禮品卡', OTHER: '其他'
         };
 
+        let showingLowStock = false;
+        let allProducts = [];
+
         document.addEventListener('DOMContentLoaded', loadData);
 
         async function loadData() {
             try {
                 const r = await api.get('/api/products');
-                const items = r.data?.content || r.data || [];
-                document.getElementById('dataTable').innerHTML = items.length === 0
-                    ? '<tr><td colspan="6" class="text-center text-muted py-5">暫無商品</td></tr>'
-                    : items.map(p => {
-                        const isLowStock = p.stockQuantity !== null && p.safetyStock !== null && p.stockQuantity <= p.safetyStock;
-                        const stockDisplay = p.stockQuantity !== null && p.stockQuantity !== undefined
-                            ? (isLowStock ? `<span class="text-danger fw-bold">${p.stockQuantity} <i class="bi bi-exclamation-triangle-fill"></i></span>` : p.stockQuantity)
-                            : '-';
-                        const isOnSale = p.status === 'ON_SALE';
-                        const toggleBtnClass = isOnSale ? 'btn-success' : 'btn-outline-secondary';
-                        const toggleBtnIcon = isOnSale ? 'bi-toggle-on' : 'bi-toggle-off';
-                        const toggleBtnTitle = isOnSale ? '點擊下架' : '點擊上架';
+                allProducts = r.data?.content || r.data || [];
 
-                        return `<tr>
-                            <td><strong>${escapeHtml(p.name)}</strong></td>
-                            <td>${CATEGORY_MAP[p.category] || p.category || '-'}</td>
-                            <td>${formatMoney(p.price)}</td>
-                            <td>${stockDisplay}</td>
-                            <td>${getProductStatusBadge(p.status)}</td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn ${toggleBtnClass}" onclick="toggleStatus('${p.id}', '${p.status}')" title="${toggleBtnTitle}">
-                                        <i class="bi ${toggleBtnIcon}"></i>
-                                    </button>
-                                    <button class="btn btn-outline-info" onclick="openStockModal('${p.id}', '${escapeHtml(p.name)}', ${p.stockQuantity ?? 'null'})" title="調整庫存">
-                                        <i class="bi bi-box-seam"></i>
-                                    </button>
-                                    <button class="btn btn-outline-primary" onclick="editData('${p.id}')" title="編輯">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger" onclick="deleteData('${p.id}')" title="刪除">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
-                    }).join('');
+                // 計算低庫存商品數量
+                const lowStockCount = allProducts.filter(p =>
+                    p.trackInventory !== false &&
+                    p.stockQuantity !== null &&
+                    p.safetyStock !== null &&
+                    p.stockQuantity <= p.safetyStock
+                ).length;
+
+                // 更新低庫存計數
+                const countBadge = document.getElementById('lowStockCount');
+                if (lowStockCount > 0) {
+                    countBadge.textContent = lowStockCount;
+                    countBadge.classList.remove('d-none');
+                } else {
+                    countBadge.classList.add('d-none');
+                }
+
+                renderProducts(showingLowStock ? allProducts.filter(p =>
+                    p.trackInventory !== false &&
+                    p.stockQuantity !== null &&
+                    p.safetyStock !== null &&
+                    p.stockQuantity <= p.safetyStock
+                ) : allProducts);
             } catch (e) {
                 console.error('載入商品失敗:', e);
                 document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function renderProducts(items) {
+            document.getElementById('dataTable').innerHTML = items.length === 0
+                ? `<tr><td colspan="6" class="text-center text-muted py-5">${showingLowStock ? '沒有低庫存商品' : '暫無商品'}</td></tr>`
+                : items.map(p => {
+                    const isLowStock = p.trackInventory !== false && p.stockQuantity !== null && p.safetyStock !== null && p.stockQuantity <= p.safetyStock;
+                    const stockDisplay = p.trackInventory === false
+                        ? '<span class="text-muted">不追蹤</span>'
+                        : (p.stockQuantity !== null && p.stockQuantity !== undefined
+                            ? (isLowStock
+                                ? `<span class="text-danger fw-bold">${p.stockQuantity} <i class="bi bi-exclamation-triangle-fill" title="低於安全庫存 ${p.safetyStock}"></i></span>`
+                                : `${p.stockQuantity}${p.safetyStock ? ` <small class="text-muted">(安全:${p.safetyStock})</small>` : ''}`)
+                            : '-');
+                    const isOnSale = p.status === 'ON_SALE';
+                    const toggleBtnClass = isOnSale ? 'btn-success' : 'btn-outline-secondary';
+                    const toggleBtnIcon = isOnSale ? 'bi-toggle-on' : 'bi-toggle-off';
+                    const toggleBtnTitle = isOnSale ? '點擊下架' : '點擊上架';
+                    const rowClass = isLowStock ? 'table-warning' : '';
+
+                    return `<tr class="${rowClass}">
+                        <td><strong>${escapeHtml(p.name)}</strong></td>
+                        <td>${CATEGORY_MAP[p.category] || p.category || '-'}</td>
+                        <td>${formatMoney(p.price)}</td>
+                        <td>${stockDisplay}</td>
+                        <td>${getProductStatusBadge(p.status)}</td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn ${toggleBtnClass}" onclick="toggleStatus('${p.id}', '${p.status}')" title="${toggleBtnTitle}">
+                                    <i class="bi ${toggleBtnIcon}"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="openStockModal('${p.id}', '${escapeHtml(p.name)}', ${p.stockQuantity ?? 'null'}, ${p.safetyStock ?? 'null'})" title="調整庫存">
+                                    <i class="bi bi-box-seam"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="editData('${p.id}')" title="編輯">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteData('${p.id}')" title="刪除">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+        }
+
+        function showLowStockProducts() {
+            showingLowStock = !showingLowStock;
+            const btn = document.getElementById('lowStockBtn');
+            if (showingLowStock) {
+                btn.classList.remove('btn-outline-warning');
+                btn.classList.add('btn-warning');
+                renderProducts(allProducts.filter(p =>
+                    p.trackInventory !== false &&
+                    p.stockQuantity !== null &&
+                    p.safetyStock !== null &&
+                    p.stockQuantity <= p.safetyStock
+                ));
+            } else {
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-outline-warning');
+                renderProducts(allProducts);
             }
         }
 
@@ -173,6 +274,7 @@
             document.getElementById('dataForm').reset();
             document.getElementById('dataForm').classList.remove('was-validated');
             document.getElementById('dataId').value = '';
+            document.getElementById('trackInventory').checked = true;
             document.getElementById('modalTitle').textContent = '新增商品';
             new bootstrap.Modal(document.getElementById('formModal')).show();
         }
@@ -188,6 +290,8 @@
                     document.getElementById('category').value = d.category || '';
                     document.getElementById('price').value = d.price || 0;
                     document.getElementById('stockQuantity').value = d.stockQuantity ?? '';
+                    document.getElementById('safetyStock').value = d.safetyStock ?? '';
+                    document.getElementById('trackInventory').checked = d.trackInventory !== false;
                     document.getElementById('description').value = d.description || '';
                     document.getElementById('modalTitle').textContent = '編輯商品';
                     new bootstrap.Modal(document.getElementById('formModal')).show();
@@ -239,11 +343,14 @@
 
             const id = document.getElementById('dataId').value;
             const stockVal = document.getElementById('stockQuantity').value;
+            const safetyVal = document.getElementById('safetyStock').value;
             const data = {
                 name: nameEl.value.trim(),
                 category: categoryEl.value,
                 price: price,
                 stockQuantity: stockVal !== '' ? parseInt(stockVal) : null,
+                safetyStock: safetyVal !== '' ? parseInt(safetyVal) : null,
+                trackInventory: document.getElementById('trackInventory').checked,
                 description: document.getElementById('description').value.trim() || null
             };
 
@@ -308,22 +415,88 @@
         // 庫存調整
         // ========================================
 
-        function openStockModal(id, name, currentQty) {
+        let currentStockQty = 0;
+        let currentSafetyQty = null;
+
+        function openStockModal(id, name, currentQty, safetyQty) {
             document.getElementById('stockProductId').value = id;
             document.getElementById('stockProductName').textContent = name;
             document.getElementById('stockCurrentQty').textContent = currentQty !== null ? currentQty : '未追蹤';
-            document.getElementById('stockAdjustQty').value = '';
+            document.getElementById('stockSafetyQty').textContent = safetyQty !== null ? safetyQty : '未設定';
+            document.getElementById('stockAdjustQty').value = 0;
+            document.getElementById('stockReasonSelect').value = '';
             document.getElementById('stockReason').value = '';
+            document.getElementById('stockReasonOtherDiv').classList.add('d-none');
+
+            currentStockQty = currentQty !== null ? currentQty : 0;
+            currentSafetyQty = safetyQty;
+
+            // 顯示低庫存警示
+            const warningDiv = document.getElementById('stockWarning');
+            if (safetyQty !== null && currentQty !== null && currentQty <= safetyQty) {
+                warningDiv.classList.remove('d-none');
+            } else {
+                warningDiv.classList.add('d-none');
+            }
+
+            updateStockPreview();
             new bootstrap.Modal(document.getElementById('stockModal')).show();
         }
+
+        function quickAdjust(amount) {
+            const input = document.getElementById('stockAdjustQty');
+            input.value = parseInt(input.value || 0) + amount;
+            updateStockPreview();
+        }
+
+        function updateStockPreview() {
+            const adjustQty = parseInt(document.getElementById('stockAdjustQty').value) || 0;
+            const afterQty = currentStockQty + adjustQty;
+            const previewEl = document.getElementById('stockAfterAdjust');
+            previewEl.textContent = afterQty;
+
+            if (afterQty < 0) {
+                previewEl.classList.add('text-danger');
+                previewEl.classList.remove('text-success', 'text-warning');
+            } else if (currentSafetyQty !== null && afterQty <= currentSafetyQty) {
+                previewEl.classList.add('text-warning');
+                previewEl.classList.remove('text-success', 'text-danger');
+            } else {
+                previewEl.classList.add('text-success');
+                previewEl.classList.remove('text-warning', 'text-danger');
+            }
+        }
+
+        // 監聽調整數量變化
+        document.getElementById('stockAdjustQty').addEventListener('input', updateStockPreview);
+
+        // 監聽原因選擇變化
+        document.getElementById('stockReasonSelect').addEventListener('change', function() {
+            const otherDiv = document.getElementById('stockReasonOtherDiv');
+            if (this.value === '其他') {
+                otherDiv.classList.remove('d-none');
+            } else {
+                otherDiv.classList.add('d-none');
+            }
+        });
 
         async function saveStockAdjustment() {
             const id = document.getElementById('stockProductId').value;
             const adjustQty = parseInt(document.getElementById('stockAdjustQty').value);
-            const reason = document.getElementById('stockReason').value.trim();
+
+            // 取得原因
+            let reason = document.getElementById('stockReasonSelect').value;
+            if (reason === '其他') {
+                reason = document.getElementById('stockReason').value.trim();
+            }
 
             if (isNaN(adjustQty) || adjustQty === 0) {
                 showError('請輸入有效的調整數量');
+                return;
+            }
+
+            if (currentStockQty + adjustQty < 0) {
+                showError('調整後庫存不能為負數');
                 return;
             }
 
@@ -332,7 +505,7 @@
                 if (reason) params.append('reason', reason);
                 const r = await api.post(`/api/products/${id}/adjust-stock?${params.toString()}`);
                 if (r.success) {
-                    showSuccess('庫存調整成功');
+                    showSuccess(`庫存調整成功！${adjustQty > 0 ? '+' : ''}${adjustQty}，目前庫存：${r.data.stockQuantity}`);
                     bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
                     loadData();
                 }

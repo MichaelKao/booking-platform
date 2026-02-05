@@ -99,4 +99,24 @@ public class PublicPageController {
     public String clinic() {
         return "public/industry/clinic";
     }
+
+    // ========================================
+    // 法律頁面
+    // ========================================
+
+    /**
+     * 服務條款頁面
+     */
+    @GetMapping("/terms")
+    public String terms() {
+        return "public/terms";
+    }
+
+    /**
+     * 隱私權政策頁面
+     */
+    @GetMapping("/privacy")
+    public String privacy() {
+        return "public/privacy";
+    }
 }
