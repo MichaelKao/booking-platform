@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <title>餐廳訂位系統 | 免費 LINE 訂位機器人 | 預約平台</title>
+    <meta name="description" content="專為餐廳、咖啡廳、小吃店打造的免費訂位系統。整合 LINE 訂位機器人，顧客可線上訂位、選擇用餐時段。自動提醒、候位管理、營運報表。">
+    <meta name="keywords" content="餐廳訂位系統,LINE訂位,餐廳預約系統,訂位管理,餐廳管理系統,免費訂位系統">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/restaurant">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/restaurant">
+    <meta property="og:title" content="餐廳訂位系統 | 免費 LINE 訂位機器人">
+    <meta property="og:description" content="專為餐廳打造的免費訂位系統，整合 LINE 訂位機器人。">
+    <meta property="og:locale" content="zh_TW">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "餐廳訂位系統 - 預約平台",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"},
+        "description": "專為餐廳打造的免費訂位系統，整合 LINE 訂位機器人。"
+    }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .hero-section { background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; padding: 100px 0 80px; }
+        .feature-card { background: white; border-radius: 16px; padding: 2rem; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-5px); }
+        .benefit-section { padding: 80px 0; background: #f8f9fa; }
+        .cta-section { background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); color: white; padding: 80px 0; text-align: center; }
+        .footer { background: #212529; color: #adb5bd; padding: 40px 0 20px; }
+        .footer a { color: #adb5bd; text-decoration: none; }
+        .footer a:hover { color: white; }
+        .pain-point { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+        .solution { background: #d1e7dd; border-left: 4px solid #198754; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-calendar-check text-primary me-2"></i>預約平台</a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                        <i class="bi bi-cup-hot me-2"></i>餐廳訂位系統
+                    </h1>
+                    <p class="mb-4" style="font-size: 1.3rem; opacity: 0.95;">
+                        專為餐廳、咖啡廳、小吃店打造<br>
+                        顧客用 LINE 即可線上訂位
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/tenant/register" class="btn btn-light btn-lg"><i class="bi bi-rocket-takeoff me-2"></i>免費開始使用</a>
+                        <a href="/features" class="btn btn-outline-light btn-lg">查看完整功能</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center d-none d-lg-block">
+                    <i class="bi bi-cup-hot" style="font-size: 12rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">餐廳老闆的困擾，我們來解決</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>尖峰時段電話接不完</h5>
+                        <p class="mb-0 text-muted">忙著出餐時電話一直響，訂位漏接</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>LINE 24 小時接受訂位</h5>
+                        <p class="mb-0 text-muted">顧客用 LINE 自己訂位，選日期、時段、人數</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>訂位後顧客不來</h5>
+                        <p class="mb-0 text-muted">空留位置等不到人，影響翻桌率</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>自動訂位提醒</h5>
+                        <p class="mb-0 text-muted">用餐前自動發 LINE 提醒顧客</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>常客優惠難管理</h5>
+                        <p class="mb-0 text-muted">想回饋常客，但沒有好方法</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>會員集點與優惠券</h5>
+                        <p class="mb-0 text-muted">消費集點、發放優惠券，增加回訪率</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="benefit-section">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">為餐飲業量身打造</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-line text-success" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">LINE 訂位機器人</h4>
+                        <p class="text-muted">顧客用 LINE 選日期、時段、人數完成訂位</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-calendar-check text-primary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">時段管理</h4>
+                        <p class="text-muted">設定營業時段、每時段可接受訂位數</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-bell text-warning" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">自動訂位提醒</h4>
+                        <p class="text-muted">用餐前自動發 LINE 提醒顧客</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-ticket-perforated text-danger" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">優惠券行銷</h4>
+                        <p class="text-muted">發放餐飲優惠券，吸引新客回流</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-star text-info" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">會員集點</h4>
+                        <p class="text-muted">消費累積點數，兌換餐點或折扣</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-graph-up text-secondary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">營運報表</h4>
+                        <p class="text-muted">每日訂位數、尖峰時段分析</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">讓訂位管理更輕鬆</h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">免費註冊，立即開始使用</p>
+            <a href="/tenant/register" class="btn btn-light btn-lg"><i class="bi bi-rocket-takeoff me-2"></i>免費開始使用</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3"><i class="bi bi-calendar-check me-2"></i>預約平台</h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">行業方案</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/beauty">美容預約系統</a></li>
+                        <li><a href="/hair-salon">美髮預約系統</a></li>
+                        <li><a href="/spa">SPA 按摩預約</a></li>
+                        <li><a href="/fitness">健身教練預約</a></li>
+                        <li><a href="/restaurant">餐廳訂位系統</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center"><small>&copy; 2024 預約平台. All rights reserved.</small></div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

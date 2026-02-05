@@ -96,6 +96,12 @@ public class SecurityConfig {
             "/faq",
             "/features",
             "/pricing",
+            "/beauty",
+            "/hair-salon",
+            "/spa",
+            "/fitness",
+            "/restaurant",
+            "/clinic",
 
             // 錯誤頁面
             "/error/**"

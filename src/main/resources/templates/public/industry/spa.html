@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <title>SPA 按摩預約系統 | 免費 LINE 預約機器人 | 預約平台</title>
+    <meta name="description" content="專為 SPA、按摩、養生館打造的免費預約系統。整合 LINE 預約機器人，顧客可線上預約按摩療程、指定按摩師。自動提醒、會員管理、營運報表。">
+    <meta name="keywords" content="SPA預約系統,按摩預約系統,養生館預約,LINE按摩預約,按摩師排班,SPA管理系統">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/spa">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/spa">
+    <meta property="og:title" content="SPA 按摩預約系統 | 免費 LINE 預約機器人">
+    <meta property="og:description" content="專為 SPA、按摩業打造的免費預約系統，整合 LINE 預約機器人。">
+    <meta property="og:locale" content="zh_TW">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "SPA 按摩預約系統 - 預約平台",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"},
+        "description": "專為 SPA、按摩業打造的免費預約系統，整合 LINE 預約機器人。"
+    }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .hero-section { background: linear-gradient(135deg, #06C755 0%, #00B900 100%); color: white; padding: 100px 0 80px; }
+        .feature-card { background: white; border-radius: 16px; padding: 2rem; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-5px); }
+        .benefit-section { padding: 80px 0; background: #f8f9fa; }
+        .cta-section { background: linear-gradient(135deg, #06C755 0%, #00B900 100%); color: white; padding: 80px 0; text-align: center; }
+        .footer { background: #212529; color: #adb5bd; padding: 40px 0 20px; }
+        .footer a { color: #adb5bd; text-decoration: none; }
+        .footer a:hover { color: white; }
+        .pain-point { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+        .solution { background: #d1e7dd; border-left: 4px solid #198754; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-calendar-check text-primary me-2"></i>預約平台</a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                        <i class="bi bi-flower1 me-2"></i>SPA 按摩預約系統
+                    </h1>
+                    <p class="mb-4" style="font-size: 1.3rem; opacity: 0.95;">
+                        專為 SPA、按摩、養生館打造的免費預約系統<br>
+                        顧客用 LINE 輕鬆預約放鬆療程
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/tenant/register" class="btn btn-light btn-lg"><i class="bi bi-rocket-takeoff me-2"></i>免費開始使用</a>
+                        <a href="/features" class="btn btn-outline-light btn-lg">查看完整功能</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center d-none d-lg-block">
+                    <i class="bi bi-flower1" style="font-size: 12rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">SPA 經營的困擾，我們來解決</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>按摩師都在服務，電話沒人接</h5>
+                        <p class="mb-0 text-muted">正在幫客人按摩時無法接電話，錯過預約</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>LINE 24 小時自動接單</h5>
+                        <p class="mb-0 text-muted">顧客用 LINE 自己預約，選療程、選按摩師</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>療程時間長，排班容易衝突</h5>
+                        <p class="mb-0 text-muted">90 分鐘、120 分鐘療程交錯，很難排</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>系統自動計算可用時段</h5>
+                        <p class="mb-0 text-muted">根據療程時間自動顯示可預約時段，不會衝突</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>會員卡管理麻煩</h5>
+                        <p class="mb-0 text-muted">紙本會員卡、次數卡難追蹤</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>電子會員系統</h5>
+                        <p class="mb-0 text-muted">顧客用 LINE 查詢會員資訊、剩餘次數</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="benefit-section">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">為 SPA 按摩業量身打造</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-line text-success" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">LINE 預約機器人</h4>
+                        <p class="text-muted">顧客用 LINE 預約按摩療程，選擇按摩師與時段</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-clock text-primary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">療程時間管理</h4>
+                        <p class="text-muted">不同療程設定不同時長，系統自動計算可用時段</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-bell text-warning" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">自動預約提醒</h4>
+                        <p class="text-muted">預約前自動發 LINE 提醒顧客</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-ticket-perforated text-danger" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">療程優惠券</h4>
+                        <p class="text-muted">發放療程折扣券，促進顧客回訪</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-star text-info" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">會員集點系統</h4>
+                        <p class="text-muted">消費累積點數，兌換免費療程</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-graph-up text-secondary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">營運報表分析</h4>
+                        <p class="text-muted">熱門療程、按摩師業績統計</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">讓 SPA 預約管理更輕鬆</h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">免費註冊，立即開始使用</p>
+            <a href="/tenant/register" class="btn btn-light btn-lg"><i class="bi bi-rocket-takeoff me-2"></i>免費開始使用</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3"><i class="bi bi-calendar-check me-2"></i>預約平台</h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">行業方案</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/beauty">美容預約系統</a></li>
+                        <li><a href="/hair-salon">美髮預約系統</a></li>
+                        <li><a href="/spa">SPA 按摩預約</a></li>
+                        <li><a href="/fitness">健身教練預約</a></li>
+                        <li><a href="/restaurant">餐廳訂位系統</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center"><small>&copy; 2024 預約平台. All rights reserved.</small></div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

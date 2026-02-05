@@ -47,4 +47,56 @@ public class PublicPageController {
     public String pricing() {
         return "public/pricing";
     }
+
+    // ========================================
+    // 行業專屬頁面（SEO 長尾關鍵字）
+    // ========================================
+
+    /**
+     * 美容預約系統
+     */
+    @GetMapping("/beauty")
+    public String beauty() {
+        return "public/industry/beauty";
+    }
+
+    /**
+     * 美髮預約系統
+     */
+    @GetMapping("/hair-salon")
+    public String hairSalon() {
+        return "public/industry/hair-salon";
+    }
+
+    /**
+     * SPA 按摩預約系統
+     */
+    @GetMapping("/spa")
+    public String spa() {
+        return "public/industry/spa";
+    }
+
+    /**
+     * 健身教練預約系統
+     */
+    @GetMapping("/fitness")
+    public String fitness() {
+        return "public/industry/fitness";
+    }
+
+    /**
+     * 餐廳訂位系統
+     */
+    @GetMapping("/restaurant")
+    public String restaurant() {
+        return "public/industry/restaurant";
+    }
+
+    /**
+     * 診所預約系統
+     */
+    @GetMapping("/clinic")
+    public String clinic() {
+        return "public/industry/clinic";
+    }
 }
