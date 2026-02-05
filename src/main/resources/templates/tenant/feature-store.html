@@ -100,9 +100,351 @@
             top: 12px;
             right: 12px;
         }
+        /* 功能詳細說明樣式 */
+        .feature-detail-toggle {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.8125rem;
+        }
+        .feature-detail-toggle:hover {
+            color: #0d6efd;
+        }
+        .feature-detail-toggle .bi-chevron-down {
+            transition: transform 0.2s ease;
+        }
+        .feature-detail-toggle[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+        .feature-detail-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.875rem;
+            margin-top: 0.75rem;
+        }
+        .feature-detail-section {
+            margin-bottom: 0.75rem;
+        }
+        .feature-detail-section:last-child {
+            margin-bottom: 0;
+        }
+        .feature-detail-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.375rem;
+        }
+        .feature-highlight-list {
+            padding-left: 1.125rem;
+            margin-bottom: 0;
+            font-size: 0.8125rem;
+            color: #6c757d;
+        }
+        .feature-highlight-list li {
+            margin-bottom: 0.125rem;
+        }
+        .feature-location-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.8125rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+        .feature-location-item i {
+            width: 18px;
+            margin-right: 0.375rem;
+            color: #0d6efd;
+        }
+        .feature-comparison-table {
+            font-size: 0.8125rem;
+            margin-bottom: 0;
+        }
+        .feature-comparison-table td {
+            padding: 0.375rem 0.5rem;
+            vertical-align: top;
+        }
+        .feature-comparison-table td:first-child {
+            width: 60px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .feature-comparison-before {
+            background: #fff3cd;
+        }
+        .feature-comparison-after {
+            background: #d1e7dd;
+        }
     </style>
     <script>
         const currentPage = 'feature-store';
+
+        // 功能詳細說明配置
+        const featureDetails = {
+            COUPON_SYSTEM: {
+                highlights: [
+                    '建立折扣券、現金券、免費服務券',
+                    '顧客可在 LINE 領取票券',
+                    '設定限量發放和使用期限',
+                    '後台一鍵核銷票券'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 票券管理' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '主選單 → 領取票券' }
+                ],
+                comparison: {
+                    before: '無法建立任何優惠票券',
+                    after: '可建立多種票券，LINE 自動發放核銷'
+                }
+            },
+            PRODUCT_SALES: {
+                highlights: [
+                    '在 LINE 上展示商品目錄',
+                    '顧客可瀏覽並下單購買',
+                    '支援商品分類管理',
+                    '庫存追蹤與提醒'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 商品管理' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '主選單 → 瀏覽商品' }
+                ],
+                comparison: {
+                    before: '只能現場銷售商品',
+                    after: '顧客可隨時透過 LINE 瀏覽購買'
+                }
+            },
+            POINT_SYSTEM: {
+                highlights: [
+                    '顧客完成預約自動累積點數',
+                    '自訂消費金額兌換比例',
+                    '點數可折抵消費金額',
+                    '顧客可在 LINE 查看點數餘額'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '設定 → 點數設定' },
+                    { icon: 'bi-person', text: '顧客詳情', path: '點數餘額與交易紀錄' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '會員資訊 → 點數餘額' }
+                ],
+                comparison: {
+                    before: '無法追蹤顧客累積消費',
+                    after: '自動集點，提升顧客回訪率'
+                }
+            },
+            MEMBERSHIP_SYSTEM: {
+                highlights: [
+                    '建立多個會員等級（如：銀卡、金卡、白金）',
+                    '設定升級門檻（累計消費/預約次數）',
+                    '不同等級享有不同優惠',
+                    '自動升降級通知'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 顧客管理 → 會員等級' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '會員資訊 → 等級顯示' }
+                ],
+                comparison: {
+                    before: '所有顧客享有相同待遇',
+                    after: '區分 VIP 顧客，提供差異化服務'
+                }
+            },
+            UNLIMITED_STAFF: {
+                highlights: [
+                    '突破 3 位員工限制',
+                    '適合中大型店家',
+                    '每位員工可獨立設定排班',
+                    '完整的請假管理功能'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 員工管理' }
+                ],
+                comparison: {
+                    before: '最多只能新增 3 位員工',
+                    after: '無限制員工數量'
+                }
+            },
+            ADVANCED_REPORT: {
+                highlights: [
+                    '顧客消費分析與分群',
+                    '服務熱門度趨勢圖',
+                    '員工業績排行榜',
+                    '營收趨勢預測'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 營運報表' }
+                ],
+                comparison: {
+                    before: '僅有基本統計數據',
+                    after: '深度分析，協助經營決策'
+                }
+            },
+            AUTO_REMINDER: {
+                highlights: [
+                    '預約前自動發送 LINE 提醒',
+                    '可選擇 SMS 簡訊提醒',
+                    '自訂提醒時間（如：前 1 天、前 2 小時）',
+                    '減少顧客爽約率'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '設定 → 通知設定' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '自動推播提醒訊息' }
+                ],
+                comparison: {
+                    before: '需手動提醒顧客預約',
+                    after: '系統自動提醒，降低爽約率'
+                }
+            },
+            AUTO_BIRTHDAY: {
+                highlights: [
+                    '自動發送生日祝福訊息',
+                    '可附帶生日優惠券',
+                    '自訂祝福訊息內容',
+                    '每日早上 9:00 自動發送'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '設定 → 通知設定' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '自動推播生日祝福' }
+                ],
+                comparison: {
+                    before: '容易遺忘顧客生日',
+                    after: '自動送祝福，提升顧客好感'
+                }
+            },
+            AUTO_RECALL: {
+                highlights: [
+                    '自動偵測久未到訪顧客',
+                    '發送喚回通知訊息',
+                    '自訂未到訪天數門檻',
+                    '每日下午 2:00 自動發送'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '設定 → 通知設定' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '自動推播喚回訊息' }
+                ],
+                comparison: {
+                    before: '流失顧客難以追蹤',
+                    after: '主動喚回，提升回訪率'
+                }
+            },
+            AI_ASSISTANT: {
+                highlights: [
+                    'AI 自動回答顧客常見問題',
+                    '24 小時不間斷服務',
+                    '根據店家資訊智慧回覆',
+                    '無法回答時自動引導至人工'
+                ],
+                locations: [
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '顧客發送訊息時自動回覆' }
+                ],
+                comparison: {
+                    before: '需人工回覆每則訊息',
+                    after: 'AI 代勞，節省時間精力'
+                }
+            },
+            ADVANCED_CUSTOMER: {
+                highlights: [
+                    '顧客標籤分類管理',
+                    '依消費金額/次數篩選',
+                    '批次發送行銷訊息',
+                    '匯出顧客名單 Excel'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 顧客管理' }
+                ],
+                comparison: {
+                    before: '顧客資料只能逐筆查看',
+                    after: '快速篩選目標客群，精準行銷'
+                }
+            },
+            EXTRA_PUSH: {
+                highlights: [
+                    '突破每月推播額度限制',
+                    '適合行銷活動頻繁的店家',
+                    '每月額外增加 500 則',
+                    '多份可累加'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 行銷推播' }
+                ],
+                comparison: {
+                    before: '每月推播有額度限制',
+                    after: '額外額度，行銷更靈活'
+                }
+            },
+            BASIC_BOOKING: {
+                highlights: [
+                    '線上接受顧客預約',
+                    '自動檢查時段衝突',
+                    '預約狀態追蹤管理',
+                    '顧客可自助取消預約'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 預約管理' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '主選單 → 開始預約' }
+                ],
+                comparison: {
+                    before: '電話/現場接受預約',
+                    after: '24 小時線上預約，不漏單'
+                }
+            },
+            BASIC_CUSTOMER: {
+                highlights: [
+                    '顧客資料自動建檔',
+                    '預約紀錄完整保存',
+                    '顧客基本資料管理',
+                    'LINE 綁定自動同步'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 顧客管理' }
+                ],
+                comparison: {
+                    before: '紙本或 Excel 管理顧客',
+                    after: '雲端管理，隨時查詢'
+                }
+            },
+            BASIC_STAFF: {
+                highlights: [
+                    '員工基本資料管理',
+                    '每週排班時間設定',
+                    '請假管理功能',
+                    '最多可新增 3 位員工'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 員工管理' }
+                ],
+                comparison: {
+                    before: '無法管理員工排班',
+                    after: '輕鬆設定員工班表'
+                }
+            },
+            BASIC_SERVICE: {
+                highlights: [
+                    '建立服務項目與分類',
+                    '設定服務時長與價格',
+                    '指定可服務的員工',
+                    '顧客可在 LINE 選擇'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 服務管理' },
+                    { icon: 'bi-chat-dots', text: 'LINE Bot', path: '預約流程 → 選擇服務' }
+                ],
+                comparison: {
+                    before: '口頭說明服務項目',
+                    after: '清楚展示服務內容與價格'
+                }
+            },
+            BASIC_REPORT: {
+                highlights: [
+                    '每日/每週/每月統計',
+                    '預約數量與完成率',
+                    '營收總覽',
+                    '熱門服務排行'
+                ],
+                locations: [
+                    { icon: 'bi-display', text: '店家後台', path: '側邊欄 → 營運報表' }
+                ],
+                comparison: {
+                    before: '手動計算營業數據',
+                    after: '即時查看營運狀況'
+                }
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             loadFeatures();
@@ -144,6 +486,7 @@
                     const iconClass = getFeatureIcon(f.code);
                     const bgColor = f.isFree ? 'bg-success' : 'bg-primary';
                     const cardClass = f.isEnabled ? 'subscribed' : '';
+                    const detail = featureDetails[f.code];
 
                     return `
                         <div class="col-lg-4 col-md-6 mb-4">
@@ -159,14 +502,57 @@
                                     </div>
                                 </div>
                                 <div class="feature-card-body">
-                                    <p class="text-muted small mb-3">${escapeHtml(f.description || '暫無說明')}</p>
+                                    <p class="text-muted small mb-2">${escapeHtml(f.description || '暫無說明')}</p>
+
+                                    ${detail ? `
+                                    <a class="feature-detail-toggle" data-bs-toggle="collapse" href="#detail-${f.code}" role="button" aria-expanded="false" aria-controls="detail-${f.code}">
+                                        <i class="bi bi-info-circle me-1"></i>查看詳細功能
+                                        <i class="bi bi-chevron-down ms-1"></i>
+                                    </a>
+
+                                    <div class="collapse" id="detail-${f.code}">
+                                        <div class="feature-detail-content">
+                                            <div class="feature-detail-section">
+                                                <div class="feature-detail-title">✨ 功能亮點</div>
+                                                <ul class="feature-highlight-list">
+                                                    ${detail.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+                                                </ul>
+                                            </div>
+
+                                            <div class="feature-detail-section">
+                                                <div class="feature-detail-title">📍 使用位置</div>
+                                                ${detail.locations.map(loc => `
+                                                    <div class="feature-location-item">
+                                                        <i class="${loc.icon}"></i>
+                                                        <span><strong>${escapeHtml(loc.text)}</strong> → ${escapeHtml(loc.path)}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+
+                                            <div class="feature-detail-section">
+                                                <div class="feature-detail-title">🔄 訂閱前後差異</div>
+                                                <table class="table feature-comparison-table">
+                                                    <tr class="feature-comparison-before">
+                                                        <td>訂閱前</td>
+                                                        <td>${escapeHtml(detail.comparison.before)}</td>
+                                                    </tr>
+                                                    <tr class="feature-comparison-after">
+                                                        <td>訂閱後</td>
+                                                        <td>${escapeHtml(detail.comparison.after)}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+
                                     ${!f.isFree ? `
-                                        <div class="feature-price">
+                                        <div class="feature-price mt-2">
                                             ${formatNumber(f.monthlyPrice || 0)}
                                             <span class="feature-price-unit">點 / 月</span>
                                         </div>
                                     ` : `
-                                        <div class="feature-price text-success">
+                                        <div class="feature-price text-success mt-2">
                                             免費
                                         </div>
                                     `}
@@ -204,6 +590,26 @@
 
         function getFeatureIcon(code) {
             const icons = {
+                // 付費功能
+                COUPON_SYSTEM: 'ticket-perforated-fill',
+                PRODUCT_SALES: 'bag-fill',
+                POINT_SYSTEM: 'coin',
+                MEMBERSHIP_SYSTEM: 'award-fill',
+                UNLIMITED_STAFF: 'people-fill',
+                ADVANCED_REPORT: 'graph-up-arrow',
+                AUTO_REMINDER: 'bell-fill',
+                AUTO_BIRTHDAY: 'gift-fill',
+                AUTO_RECALL: 'arrow-repeat',
+                AI_ASSISTANT: 'robot',
+                ADVANCED_CUSTOMER: 'person-lines-fill',
+                EXTRA_PUSH: 'send-plus-fill',
+                // 免費功能
+                BASIC_BOOKING: 'calendar-check-fill',
+                BASIC_CUSTOMER: 'person-fill',
+                BASIC_STAFF: 'person-badge-fill',
+                BASIC_SERVICE: 'list-ul',
+                BASIC_REPORT: 'bar-chart-fill',
+                // 舊版相容
                 LINE_BOT: 'chat-dots-fill',
                 CAMPAIGN: 'megaphone-fill',
                 COUPON: 'ticket-perforated-fill',
