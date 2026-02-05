@@ -11,13 +11,15 @@
 
 ---
 
-## Scheduler 列表 (3 個)
+## Scheduler 列表 (5 個)
 
-| Scheduler | Cron | 說明 |
-|-----------|------|------|
-| BookingReminderScheduler | `0 0 * * * *` | 每小時檢查並發送預約提醒 (LINE/SMS) |
-| MonthlyQuotaResetScheduler | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 |
-| MarketingPushScheduler | `0 * * * * *` | 每分鐘檢查排程推播任務 |
+| Scheduler | Cron | 說明 | 需訂閱功能 |
+|-----------|------|------|-----------|
+| BookingReminderScheduler | `0 0 * * * *` | 每小時檢查並發送預約提醒 (LINE/SMS) | AUTO_REMINDER |
+| MonthlyQuotaResetScheduler | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 | - |
+| MarketingPushScheduler | `0 * * * * *` | 每分鐘檢查排程推播任務 | - |
+| BirthdayGreetingScheduler | `0 0 9 * * *` | 每日 9:00 發送生日祝福 | AUTO_BIRTHDAY |
+| CustomerRecallScheduler | `0 0 14 * * *` | 每日 14:00 發送顧客喚回通知 | AUTO_RECALL |
 
 ---
 
@@ -34,6 +36,13 @@ scheduler:
   marketing-push:
     enabled: true
     cron: "0 * * * * *"
+  birthday-greeting:
+    enabled: true
+    cron: "0 0 9 * * *"
+  customer-recall:
+    enabled: true
+    cron: "0 0 14 * * *"
+    max-per-tenant: 50
 ```
 
 ---
@@ -97,6 +106,53 @@ public void processScheduledPushes() {
 
 ---
 
+## BirthdayGreetingScheduler
+
+生日祝福排程器，每日發送當天生日顧客的祝福訊息。
+
+```java
+@Scheduled(cron = "${scheduler.birthday-greeting.cron:0 0 9 * * *}")
+@Transactional
+public void sendBirthdayGreetings() {
+    // 1. 查詢啟用生日祝福且訂閱 AUTO_BIRTHDAY 功能的店家
+    // 2. 查詢各店家今天生日的顧客
+    // 3. 發送 LINE 生日祝福訊息
+}
+```
+
+**相關欄位**：
+- `Tenant.enableBirthdayGreeting` - 是否啟用生日祝福
+- `Tenant.birthdayGreetingMessage` - 自訂祝福訊息
+- `Customer.birthDate` - 顧客生日
+
+---
+
+## CustomerRecallScheduler
+
+顧客喚回排程器，每日發送久未到訪顧客的喚回通知。
+
+```java
+@Scheduled(cron = "${scheduler.customer-recall.cron:0 0 14 * * *}")
+@Transactional
+public void sendRecallNotifications() {
+    // 1. 查詢啟用顧客喚回且訂閱 AUTO_RECALL 功能的店家
+    // 2. 查詢各店家超過 N 天未到訪的顧客
+    // 3. 發送 LINE 喚回通知（每次最多 50 位）
+    // 4. 更新顧客的 lastRecallAt 時間
+}
+```
+
+**相關欄位**：
+- `Tenant.enableCustomerRecall` - 是否啟用顧客喚回
+- `Tenant.customerRecallDays` - 未到訪天數閾值（預設 30 天）
+- `Tenant.customerRecallMessage` - 自訂喚回訊息
+- `Customer.lastRecallAt` - 上次喚回時間
+
+**設定參數**：
+- `scheduler.customer-recall.max-per-tenant` - 每次每店家最多發送數量（預設 50）
+
+---
+
 ## 開發測試
 
 開發環境可設定較短週期測試：
@@ -106,4 +162,11 @@ scheduler:
   booking-reminder:
     enabled: true
     cron: "0 */5 * * * *"  # 每 5 分鐘
+  birthday-greeting:
+    enabled: true
+    cron: "0 */10 * * * *"  # 每 10 分鐘
+  customer-recall:
+    enabled: true
+    cron: "0 */15 * * * *"  # 每 15 分鐘
+    max-per-tenant: 5
 ```

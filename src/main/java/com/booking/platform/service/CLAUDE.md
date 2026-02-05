@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (36 個)
+## Service 列表 (37 個)
 
 ### 核心服務
 

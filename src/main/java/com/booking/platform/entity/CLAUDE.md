@@ -55,8 +55,17 @@ public class Xxx extends BaseEntity {
 
 | Entity | 表名 | 說明 |
 |--------|------|------|
-| Tenant | tenants | 店家資訊 (含 reminderHoursBefore, smsEnabled 等) |
+| Tenant | tenants | 店家資訊 (含 reminderHoursBefore, smsEnabled, enableBirthdayGreeting, enableCustomerRecall 等) |
 | AdminUser | admin_users | 超級管理員 |
+
+**Tenant 自動化欄位**：
+| 欄位 | 類型 | 說明 | 預設值 |
+|------|------|------|--------|
+| enableBirthdayGreeting | Boolean | 啟用生日祝福 | false |
+| birthdayGreetingMessage | String | 生日祝福訊息 | "親愛的顧客，祝您生日快樂！🎂..." |
+| enableCustomerRecall | Boolean | 啟用顧客喚回 | false |
+| customerRecallDays | Integer | 喚回天數閾值 | 30 |
+| customerRecallMessage | String | 喚回訊息 | "好久不見！我們想念您了 💕..." |
 
 ### 員工相關
 
@@ -76,7 +85,7 @@ public class Xxx extends BaseEntity {
 
 | Entity | 表名 | 說明 |
 |--------|------|------|
-| Customer | customers | 顧客資訊 |
+| Customer | customers | 顧客資訊 (含 lastRecallAt 喚回時間追蹤) |
 | MembershipLevel | membership_levels | 會員等級定義 |
 | PointTransaction | point_transactions | 點數交易記錄 |
 

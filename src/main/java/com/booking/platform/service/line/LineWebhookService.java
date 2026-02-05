@@ -1136,12 +1136,12 @@ public class LineWebhookService {
                     // 取得顧客 ID
                     String customerId = getCustomerIdByLineUser(tenantId, userId);
 
-                    // 呼叫 AI
-                    String aiResponse = aiAssistantService.chat(tenantId, customerId, text);
+                    // 呼叫 AI（包含選單顯示標記）
+                    var aiResponse = aiAssistantService.chatWithMenuFlag(tenantId, customerId, text);
 
-                    if (aiResponse != null && !aiResponse.isEmpty()) {
-                        // AI 回覆成功，回傳文字訊息 + 主選單
-                        replyAiResponseWithMenu(tenantId, replyToken, aiResponse);
+                    if (aiResponse != null && !aiResponse.text().isEmpty()) {
+                        // AI 回覆成功，根據 AI 判斷決定是否顯示選單
+                        replyAiResponse(tenantId, replyToken, aiResponse.text(), aiResponse.showMenu());
                         return;
                     }
                 }
@@ -1170,13 +1170,22 @@ public class LineWebhookService {
     }
 
     /**
-     * 回覆 AI 回應（純文字，不附帶主選單）
-     * 讓 AI 對話更自然，用戶有需要時再自行開啟選單
+     * 回覆 AI 回應，根據 AI 判斷決定是否附帶主選單
+     *
+     * @param tenantId   租戶 ID
+     * @param replyToken 回覆 Token
+     * @param aiResponse AI 回覆文字
+     * @param showMenu   是否顯示主選單（由 AI 根據對話內容判斷）
      */
-    private void replyAiResponseWithMenu(String tenantId, String replyToken, String aiResponse) {
-        // 只回覆 AI 文字訊息，不附帶主選單
-        // 用戶可以透過 Rich Menu 或輸入關鍵字來開啟服務選單
-        messageService.replyText(tenantId, replyToken, aiResponse);
+    private void replyAiResponse(String tenantId, String replyToken, String aiResponse, boolean showMenu) {
+        if (showMenu) {
+            // AI 判斷用戶有服務意圖，顯示主選單
+            JsonNode mainMenu = flexMessageBuilder.buildMainMenu(tenantId);
+            messageService.replyTextAndFlex(tenantId, replyToken, aiResponse, "需要什麼服務呢？", mainMenu);
+        } else {
+            // AI 判斷用戶只是詢問，不顯示選單
+            messageService.replyText(tenantId, replyToken, aiResponse);
+        }
     }
 
     /**

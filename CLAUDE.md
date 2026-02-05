@@ -44,19 +44,19 @@ com.booking.platform
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (29 個)
+├── controller/                # 控制器 (30 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
 │   ├── line/                 # LINE Webhook (1 個)
 │   ├── page/                 # 頁面路由 (2 個)
-│   └── tenant/               # 店家 API (21 個)
-├── service/                   # 服務層 (34 個)
+│   └── tenant/               # 店家 API (22 個)
+├── service/                   # 服務層 (36 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
 │   ├── notification/         # 通知服務 (Email, SSE, SMS)
 │   ├── payment/              # 金流服務 (ECPay)
 │   └── export/               # 匯出服務 (Excel, PDF)
-├── scheduler/                 # 排程任務 (3 個)
+├── scheduler/                 # 排程任務 (5 個)
 ├── repository/                # 資料存取層 (23 個)
 ├── entity/                    # 資料庫實體 (23 個)
 │   ├── system/               # 系統實體 (含 Payment, SmsLog)
@@ -198,6 +198,8 @@ POST /api/payments/callback      # ECPay 付款結果回調
 | 預約提醒 | `0 0 * * * *` | 每小時檢查並發送 LINE/SMS 提醒 | AUTO_REMINDER |
 | 額度重置 | `0 5 0 1 * *` | 每月1日重置推送/SMS 額度 | - |
 | 行銷推播 | `0 * * * * *` | 每分鐘檢查排程推播任務 | - |
+| 生日祝福 | `0 0 9 * * *` | 每日 9:00 發送生日祝福 | AUTO_BIRTHDAY |
+| 顧客喚回 | `0 0 14 * * *` | 每日 14:00 發送久未到訪顧客喚回通知 | AUTO_RECALL |
 
 設定於 `application.yml`：
 ```yaml
@@ -211,6 +213,13 @@ scheduler:
   marketing-push:
     enabled: true
     cron: "0 * * * * *"
+  birthday-greeting:
+    enabled: true
+    cron: "0 0 9 * * *"
+  customer-recall:
+    enabled: true
+    cron: "0 0 14 * * *"
+    max-per-tenant: 50
 ```
 
 ---
@@ -673,7 +682,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (436 tests)：**
+**測試套件 (450 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -714,6 +723,12 @@ npx playwright test --list
 - 使用 `domcontentloaded` 而非 `networkidle` 等待頁面載入
 - 原因：SSE 連線會保持網路活躍，導致 `networkidle` 永遠無法觸發
 - 所有測試檔案已更新使用正確的等待策略
+
+**測試安全注意事項：**
+
+- LINE 設定測試（`13-tenant-settings.spec.ts`）**不會覆蓋**真實的 LINE credentials
+- 測試只會更新訊息設定（welcomeMessage、defaultReply），不動 channelId/channelSecret/channelAccessToken
+- 啟用/停用測試會**確保最終保持啟用狀態**，避免影響生產環境
 
 ---
 
@@ -839,15 +854,15 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 29 |
-| Service | 34 |
+| Controller | 30 |
+| Service | 36 |
 | Entity | 23 |
 | Repository | 23 |
 | DTO | 70+ |
 | Enum | 26 |
-| Scheduler | 3 |
-| HTML 頁面 | 36 |
+| Scheduler | 5 |
+| HTML 頁面 | 37 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 436 |
+| E2E 測試 | 450 |

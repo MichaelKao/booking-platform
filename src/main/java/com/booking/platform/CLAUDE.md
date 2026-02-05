@@ -36,14 +36,14 @@ public interface XxxRepository extends JpaRepository<Xxx, String> { }
 | controller/line | LINE Webhook |
 | controller/page | 頁面路由 (Admin/Tenant PageController) |
 | controller/tenant | 店家 API (LineConfigController) |
-| controller/ | 業務 API (20 個 Controller) |
-| service/ | 業務邏輯 (34 個 Service) |
+| controller/ | 業務 API (21 個 Controller) |
+| service/ | 業務邏輯 (36 個 Service) |
 | service/admin | 超管服務 |
-| service/line | LINE 相關服務 (7 個) |
+| service/line | LINE 相關服務 (8 個) |
 | service/notification | 通知服務 (4 個) |
 | service/export | 匯出服務 (Excel/PDF) |
 | service/payment | 金流服務 (ECPay) |
-| scheduler/ | 排程任務 (3 個) |
+| scheduler/ | 排程任務 (5 個) |
 | repository/ | 資料存取 (23 個 Repository) |
 | entity/ | 資料庫實體 (23 個 Entity) |
 | dto/request | 請求 DTO |
@@ -146,10 +146,10 @@ String decrypted = encryptionService.decrypt(encryptedToken);
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 29 |
-| Service | 34 |
+| Controller | 30 |
+| Service | 36 |
 | Entity | 23 |
 | Repository | 23 |
 | DTO | 70+ |
 | Enum | 26 |
-| Scheduler | 3 |
+| Scheduler | 5 |

@@ -78,16 +78,46 @@ public class AiAssistantService {
         7. 如果問題超出你的知識範圍，說「這個問題我不太確定，建議您直接打電話詢問店家會更準確喔！」
         8. 回答控制在 50-150 字左右，不要太長
 
+        【重要！選單顯示規則】
+        在你的回覆最後，必須加上以下其中一個標記（標記不會顯示給顧客看）：
+
+        加上 [SHOW_MENU] 的情況（顯示服務選單）：
+        - 顧客表達想要預約、訂位
+        - 顧客詢問服務項目、價格後表示有興趣
+        - 顧客說「我要預約」、「幫我預約」、「想預約」
+        - 顧客詢問商品、想購買東西
+        - 顧客詢問票券、優惠券
+        - 顧客問「有什麼服務」、「可以做什麼」
+        - 顧客打招呼（如「你好」、「嗨」）
+
+        加上 [NO_MENU] 的情況（不顯示選單）：
+        - 顧客只是閒聊、問候
+        - 顧客問營業時間、地址、電話等資訊性問題
+        - 顧客問「謝謝」、「好的」、「了解」等回應
+        - 顧客詢問但沒有表達要使用服務的意圖
+        - 顧客在問問題、尋求建議但還在考慮中
+
         【範例對話】
         顧客：「請問剪髮多少錢？」
-        回答：「我們的剪髮服務是 NT$500，大約需要 60 分鐘，包含洗髮和造型喔！✂️ 想預約的話，點選下方『開始預約』就可以選擇喜歡的時間囉～」
+        回答：「我們的剪髮服務是 NT$500，大約需要 60 分鐘，包含洗髮和造型喔！✂️ 有興趣的話隨時跟我說，我可以幫您預約～[NO_MENU]」
+
+        顧客：「好，我想預約剪髮」
+        回答：「太棒了！點選下方的『開始預約』就可以選擇喜歡的時間和設計師囉！期待為您服務～ 😊[SHOW_MENU]」
 
         顧客：「你們在哪裡？」
-        回答：「我們的地址是 [地址]，搭捷運到 XX 站走路約 5 分鐘就到了！📍 如果找不到的話，可以打電話給我們，我們幫您指路～」
+        回答：「我們的地址是 [地址]，搭捷運到 XX 站走路約 5 分鐘就到了！📍 如果找不到的話，可以打電話給我們，我們幫您指路～[NO_MENU]」
 
         顧客：「有推薦什麼服務嗎？」
-        回答：「要看您的需求耶～如果想換個新造型，可以試試我們的染髮服務 NT$1,500，設計師會根據您的膚色推薦適合的顏色！🎨 或是單純想放鬆的話，護髮療程也很受歡迎喔～」
+        回答：「要看您的需求耶～如果想換個新造型，可以試試我們的染髮服務 NT$1,500，設計師會根據您的膚色推薦適合的顏色！🎨 或是單純想放鬆的話，護髮療程也很受歡迎喔～想了解更多或預約嗎？[NO_MENU]」
+
+        顧客：「你好」
+        回答：「嗨～歡迎光臨！😊 我是小助手，有什麼我可以幫您的嗎？您可以問我服務項目、價格，或是直接預約喔！[SHOW_MENU]」
         """;
+
+    /**
+     * AI 回覆結果，包含文字內容和是否顯示選單
+     */
+    public record AiResponse(String text, boolean showMenu) {}
 
     /**
      * 處理顧客訊息並回覆
@@ -98,6 +128,19 @@ public class AiAssistantService {
      * @return AI 回覆內容
      */
     public String chat(String tenantId, String customerId, String userMessage) {
+        AiResponse response = chatWithMenuFlag(tenantId, customerId, userMessage);
+        return response != null ? response.text() : null;
+    }
+
+    /**
+     * 處理顧客訊息並回覆（包含選單顯示標記）
+     *
+     * @param tenantId   租戶 ID
+     * @param customerId 顧客 ID（可為 null）
+     * @param userMessage 用戶訊息
+     * @return AI 回覆結果（包含文字和是否顯示選單）
+     */
+    public AiResponse chatWithMenuFlag(String tenantId, String customerId, String userMessage) {
         // 檢查是否啟用 AI
         if (!groqConfig.isEnabled()) {
             log.debug("AI 助手未啟用");
@@ -115,15 +158,42 @@ public class AiAssistantService {
             String systemPrompt = buildSystemPrompt(tenantId, customerId);
 
             // 呼叫 Groq API
-            String response = callGroqApi(systemPrompt, userMessage);
+            String rawResponse = callGroqApi(systemPrompt, userMessage);
 
-            log.info("AI 回覆成功，租戶：{}，訊息長度：{}", tenantId, response.length());
+            // 解析回覆，提取選單標記
+            AiResponse response = parseResponse(rawResponse);
+
+            log.info("AI 回覆成功，租戶：{}，顯示選單：{}，訊息長度：{}",
+                    tenantId, response.showMenu(), response.text().length());
             return response;
 
         } catch (Exception e) {
             log.error("AI 回覆失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 解析 AI 回覆，提取選單顯示標記
+     *
+     * @param rawResponse AI 原始回覆
+     * @return 解析後的回覆（移除標記）
+     */
+    private AiResponse parseResponse(String rawResponse) {
+        if (rawResponse == null || rawResponse.isEmpty()) {
+            return new AiResponse("", false);
+        }
+
+        // 檢查是否包含 [SHOW_MENU] 標記
+        boolean showMenu = rawResponse.contains("[SHOW_MENU]");
+
+        // 移除標記
+        String cleanedText = rawResponse
+                .replace("[SHOW_MENU]", "")
+                .replace("[NO_MENU]", "")
+                .trim();
+
+        return new AiResponse(cleanedText, showMenu);
     }
 
     /**
