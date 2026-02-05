@@ -413,8 +413,8 @@ test.describe('登入表單驗證', () => {
 
       await page.waitForTimeout(WAIT_TIME.api);
 
-      // 應該顯示錯誤訊息
-      const errorMessage = page.locator('.alert-danger, .error, .text-danger');
+      // 使用 .first() 避免 strict mode 違規（頁面可能有多個錯誤元素）
+      const errorMessage = page.locator('.alert-danger, .error, .text-danger').first();
       const isError = await errorMessage.isVisible();
       console.log(`顯示錯誤訊息: ${isError}`);
     });
@@ -454,7 +454,8 @@ test.describe('登入表單驗證', () => {
 
       await page.waitForTimeout(WAIT_TIME.api);
 
-      const errorMessage = page.locator('.alert-danger, .error, .text-danger');
+      // 使用 .first() 避免 strict mode 違規（頁面可能有多個錯誤元素）
+      const errorMessage = page.locator('.alert-danger, .error, .text-danger').first();
       const isError = await errorMessage.isVisible();
       console.log(`顯示錯誤訊息: ${isError}`);
     });
