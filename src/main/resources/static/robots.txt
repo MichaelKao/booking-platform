@@ -1,0 +1,31 @@
+# Booking Platform - robots.txt
+# https://booking-platform-production-1e08.up.railway.app
+
+User-agent: *
+
+# 允許爬取的頁面
+Allow: /
+Allow: /tenant/login
+Allow: /tenant/register
+
+# 禁止爬取的頁面（後台、API）
+Disallow: /api/
+Disallow: /admin/
+Disallow: /tenant/dashboard
+Disallow: /tenant/bookings
+Disallow: /tenant/calendar
+Disallow: /tenant/customers
+Disallow: /tenant/staff
+Disallow: /tenant/services
+Disallow: /tenant/products
+Disallow: /tenant/coupons
+Disallow: /tenant/campaigns
+Disallow: /tenant/marketing
+Disallow: /tenant/settings
+Disallow: /tenant/line-settings
+Disallow: /tenant/feature-store
+Disallow: /tenant/points
+Disallow: /tenant/reports
+
+# Sitemap 位置
+Sitemap: https://booking-platform-production-1e08.up.railway.app/sitemap.xml

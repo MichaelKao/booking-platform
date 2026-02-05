@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- SEO Meta Tags -->
+    <title>預約平台 | 免費線上預約系統 | LINE 預約機器人</title>
+    <meta name="description" content="免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練、診所、餐廳等服務業。自動提醒、顧客管理、營運報表一站搞定！">
+    <meta name="keywords" content="預約系統,線上預約,預約管理,LINE預約,預約機器人,美容預約,美髮預約,SPA預約,餐廳訂位,免費預約系統">
+    <meta name="author" content="Booking Platform">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/">
+    <meta property="og:title" content="預約平台 | 免費線上預約系統">
+    <meta property="og:description" content="免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練等服務業。">
+    <meta property="og:image" content="https://booking-platform-production-1e08.up.railway.app/images/og-image.png">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="預約平台 | 免費線上預約系統">
+    <meta name="twitter:description" content="免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練等服務業。">
+
+    <!-- Structured Data / Schema.org -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "預約平台",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TWD"
+        },
+        "description": "免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練、診所、餐廳等服務業。",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150"
+        }
+    }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --line-color: #06C755;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #333;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta {
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+        }
+
+        .btn-cta-primary {
+            background: white;
+            color: #667eea;
+            border: none;
+        }
+
+        .btn-cta-primary:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .btn-cta-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-cta-outline:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-desc {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        /* LINE Section */
+        .line-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
+            color: white;
+        }
+
+        .line-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 80px 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .pricing-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .pricing-features {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .pricing-features li i {
+            color: var(--success-color);
+            margin-right: 0.5rem;
+        }
+
+        /* Industries Section */
+        .industries-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .industry-item {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .industry-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        /* Footer */
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 0 20px;
+        }
+
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="padding-top: 120px;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title">
+                        讓預約管理<br>變得超簡單
+                    </h1>
+                    <p class="hero-subtitle">
+                        免費線上預約系統，整合 LINE 預約機器人<br>
+                        顧客用 LINE 就能預約，您用手機就能管理
+                    </p>
+                    <div class="hero-cta">
+                        <a href="/tenant/register" class="btn btn-cta btn-cta-primary">
+                            <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+                        </a>
+                        <a href="#features" class="btn btn-cta btn-cta-outline">
+                            <i class="bi bi-play-circle me-2"></i>了解更多
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block text-center">
+                    <i class="bi bi-phone" style="font-size: 15rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2 class="section-title">為什麼選擇我們？</h2>
+            <p class="section-subtitle">強大功能，簡單操作，讓您專注於服務顧客</p>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #06C755, #00B900);">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <h3 class="feature-title">LINE 預約機器人</h3>
+                        <p class="feature-desc">顧客用 LINE 就能完成預約，不需要下載 APP，操作直覺簡單。24 小時接受預約不漏單。</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <h3 class="feature-title">智慧排班管理</h3>
+                        <p class="feature-desc">員工排班、請假一目了然。系統自動檢查時段衝突，避免重複預約的困擾。</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h3 class="feature-title">自動提醒通知</h3>
+                        <p class="feature-desc">預約前自動發送 LINE 提醒，大幅降低顧客爽約率。也支援 SMS 簡訊通知。</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="feature-title">顧客關係管理</h3>
+                        <p class="feature-desc">顧客資料自動建檔，預約紀錄、消費金額、點數餘額一目了然。建立專屬會員等級。</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                            <i class="bi bi-ticket-perforated"></i>
+                        </div>
+                        <h3 class="feature-title">票券優惠系統</h3>
+                        <p class="feature-desc">發放優惠券、折扣券吸引顧客。顧客可在 LINE 領取並使用，店家後台一鍵核銷。</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="feature-title">營運數據分析</h3>
+                        <p class="feature-desc">每日/週/月報表，熱門服務排行、員工業績統計。數據驅動，讓經營決策更精準。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LINE Section -->
+    <section class="line-section">
+        <div class="container text-center">
+            <i class="bi bi-line line-icon"></i>
+            <h2 class="mb-3" style="font-size: 2rem; font-weight: 700;">整合 LINE，預約超方便</h2>
+            <p class="mb-4" style="font-size: 1.2rem; opacity: 0.9;">
+                顧客不需要下載新 APP，用熟悉的 LINE 就能完成預約<br>
+                支援 Rich Menu 快捷選單、Flex Message 精美介面
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
+                    <i class="bi bi-check-circle me-2"></i>LINE 預約
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
+                    <i class="bi bi-check-circle me-2"></i>LINE 通知
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
+                    <i class="bi bi-check-circle me-2"></i>AI 智慧客服
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Industries Section -->
+    <section class="industries-section">
+        <div class="container">
+            <h2 class="section-title">適合各種服務業</h2>
+            <p class="section-subtitle">不論您經營什麼行業，都能輕鬆使用</p>
+
+            <div class="row">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-scissors"></i></div>
+                        <div>美容美髮</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-flower1"></i></div>
+                        <div>按摩 SPA</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-heart-pulse"></i></div>
+                        <div>健身教練</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-hospital"></i></div>
+                        <div>診所醫療</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-cup-hot"></i></div>
+                        <div>餐廳訂位</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="industry-item">
+                        <div class="industry-icon"><i class="bi bi-mortarboard"></i></div>
+                        <div>補習家教</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <h2 class="section-title">簡單透明的價格</h2>
+            <p class="section-subtitle">基本功能免費使用，依需求選購加值功能</p>
+
+            <div class="row justify-content-center g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="pricing-card">
+                        <div class="pricing-title">免費版</div>
+                        <div class="pricing-price">$0 <span>/ 月</span></div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill"></i> LINE 預約機器人</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 基本預約管理</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 顧客資料管理</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 3 位員工</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 基本報表</li>
+                        </ul>
+                        <a href="/tenant/register" class="btn btn-outline-primary w-100">免費開始</a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="pricing-card featured">
+                        <span class="pricing-badge">最受歡迎</span>
+                        <div class="pricing-title">專業版</div>
+                        <div class="pricing-price">依功能 <span>計價</span></div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill"></i> 所有免費版功能</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 無限員工數量</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 自動預約提醒</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 票券優惠系統</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 會員等級制度</li>
+                            <li><i class="bi bi-check-circle-fill"></i> AI 智慧客服</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 進階報表分析</li>
+                        </ul>
+                        <a href="/tenant/register" class="btn btn-primary w-100">免費試用</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
+                準備好提升您的預約管理了嗎？
+            </h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">
+                立即免費註冊，5 分鐘內完成設定
+            </p>
+            <a href="/tenant/register" class="btn btn-cta btn-cta-primary btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>預約平台
+                    </h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人<br>讓預約管理變得超簡單</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/tenant/login">店家登入</a></li>
+                        <li><a href="/tenant/register">免費註冊</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">聯絡我們</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-envelope me-2"></i>support@booking.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <small>&copy; 2024 預約平台. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
