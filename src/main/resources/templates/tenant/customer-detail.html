@@ -383,7 +383,7 @@
             }
 
             // 統計
-            document.getElementById('totalBookings').textContent = formatNumber(c.totalBookings || 0);
+            document.getElementById('totalBookings').textContent = formatNumber(c.visitCount || 0);
             document.getElementById('totalSpent').textContent = formatMoney(c.totalSpent || 0);
             document.getElementById('completedBookings').textContent = formatNumber(c.completedBookings || 0);
             document.getElementById('cancelledBookings').textContent = formatNumber(c.cancelledBookings || 0);

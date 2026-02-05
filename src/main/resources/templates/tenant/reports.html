@@ -271,7 +271,7 @@
             }
 
             const labels = data.map(d => d.date.substring(5)); // 只顯示 MM-DD
-            const bookings = data.map(d => d.bookings || 0);
+            const bookings = data.map(d => d.bookingCount || 0);
             const revenue = data.map(d => d.revenue || 0);
 
             dailyChart = new Chart(ctx, {
@@ -349,9 +349,9 @@
             document.getElementById('topServicesTable').innerHTML = data.map((s, i) => `
                 <tr>
                     <td><span class="badge ${i < 3 ? 'bg-primary' : 'bg-secondary'}">${i + 1}</span></td>
-                    <td>${escapeHtml(s.serviceName)}</td>
-                    <td class="text-end">${formatNumber(s.bookingCount)}</td>
-                    <td class="text-end">${formatMoney(s.revenue)}</td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td class="text-end">${formatNumber(s.count)}</td>
+                    <td class="text-end">${formatMoney(s.amount)}</td>
                 </tr>
             `).join('');
         }
@@ -363,8 +363,8 @@
                 serviceChart.destroy();
             }
 
-            const labels = data.map(d => d.serviceName);
-            const values = data.map(d => d.bookingCount);
+            const labels = data.map(d => d.name);
+            const values = data.map(d => d.count);
             const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'];
 
             serviceChart = new Chart(ctx, {
@@ -409,9 +409,9 @@
             document.getElementById('topStaffTable').innerHTML = data.map((s, i) => `
                 <tr>
                     <td><span class="badge ${i < 3 ? 'bg-success' : 'bg-secondary'}">${i + 1}</span></td>
-                    <td>${escapeHtml(s.staffName)}</td>
-                    <td class="text-end">${formatNumber(s.bookingCount)}</td>
-                    <td class="text-end">${formatMoney(s.revenue)}</td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td class="text-end">${formatNumber(s.count)}</td>
+                    <td class="text-end">${formatMoney(s.amount)}</td>
                 </tr>
             `).join('');
         }

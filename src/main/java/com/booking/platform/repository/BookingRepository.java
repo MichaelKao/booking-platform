@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -405,5 +406,41 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("hour") int hour,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    // ========================================
+    // 營收統計查詢
+    // ========================================
+
+    /**
+     * 計算指定狀態的預約總營收（只計算已完成的預約）
+     */
+    @Query("""
+            SELECT COALESCE(SUM(b.price), 0) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.status = :status
+            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            """)
+    BigDecimal sumRevenueByTenantIdAndStatusAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("status") BookingStatus status,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    /**
+     * 計算指定日期已完成預約的營收
+     */
+    @Query("""
+            SELECT COALESCE(SUM(b.price), 0) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.status = 'COMPLETED'
+            AND b.bookingDate = :date
+            """)
+    BigDecimal sumRevenueByTenantIdAndDate(
+            @Param("tenantId") String tenantId,
+            @Param("date") LocalDate date
     );
 }

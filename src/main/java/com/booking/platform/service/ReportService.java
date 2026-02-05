@@ -113,6 +113,22 @@ public class ReportService {
                 tenantId, startDateTime, endDateTime
         );
 
+        // 營收統計（只計算已完成的預約）
+        BigDecimal serviceRevenue = bookingRepository.sumRevenueByTenantIdAndStatusAndDateRange(
+                tenantId, BookingStatus.COMPLETED, startDateTime, endDateTime
+        );
+        if (serviceRevenue == null) {
+            serviceRevenue = BigDecimal.ZERO;
+        }
+
+        // 計算平均客單價
+        BigDecimal averageOrderValue = BigDecimal.ZERO;
+        if (completedBookings > 0) {
+            averageOrderValue = serviceRevenue.divide(
+                    BigDecimal.valueOf(completedBookings), 2, RoundingMode.HALF_UP
+            );
+        }
+
         return ReportSummaryResponse.builder()
                 .startDate(startDate)
                 .endDate(endDate)
@@ -124,10 +140,10 @@ public class ReportService {
                 .newCustomers(newCustomers)
                 .returningCustomers(0L) // TODO: 需要更複雜的查詢
                 .totalServedCustomers(completedBookings) // 簡化：以完成預約數代替
-                .totalRevenue(BigDecimal.ZERO) // TODO: 需要訂單系統
-                .serviceRevenue(BigDecimal.ZERO)
-                .productRevenue(BigDecimal.ZERO)
-                .averageOrderValue(BigDecimal.ZERO)
+                .totalRevenue(serviceRevenue) // 服務營收即為總營收
+                .serviceRevenue(serviceRevenue)
+                .productRevenue(BigDecimal.ZERO) // 商品營收另計
+                .averageOrderValue(averageOrderValue)
                 .issuedCoupons(issuedCoupons)
                 .usedCoupons(usedCoupons)
                 .couponDiscountAmount(BigDecimal.ZERO)
@@ -163,12 +179,18 @@ public class ReportService {
                     tenantId, dayStart, dayEnd
             );
 
+            // 計算當日營收（只計算已完成的預約）
+            BigDecimal dailyRevenue = bookingRepository.sumRevenueByTenantIdAndDate(tenantId, current);
+            if (dailyRevenue == null) {
+                dailyRevenue = BigDecimal.ZERO;
+            }
+
             result.add(DailyReportResponse.builder()
                     .date(current)
                     .bookingCount(bookingCount)
                     .completedCount(completedCount)
                     .newCustomerCount(newCustomerCount)
-                    .revenue(BigDecimal.ZERO) // TODO: 需要訂單系統
+                    .revenue(dailyRevenue)
                     .build());
 
             current = current.plusDays(1);
@@ -316,8 +338,14 @@ public class ReportService {
         long totalCustomers = customerRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
         summary.setTotalCustomers(totalCustomers);
 
-        // 本月營收（目前設為 0，需要訂單系統支援）
-        summary.setMonthlyRevenue(BigDecimal.ZERO);
+        // 本月營收（只計算已完成的預約）
+        LocalDate startOfMonth = today.withDayOfMonth(1);
+        LocalDateTime monthStart = startOfMonth.atStartOfDay();
+        LocalDateTime monthEnd = today.atTime(LocalTime.MAX);
+        BigDecimal monthlyRevenue = bookingRepository.sumRevenueByTenantIdAndStatusAndDateRange(
+                tenantId, BookingStatus.COMPLETED, monthStart, monthEnd
+        );
+        summary.setMonthlyRevenue(monthlyRevenue != null ? monthlyRevenue : BigDecimal.ZERO);
 
         return summary;
     }

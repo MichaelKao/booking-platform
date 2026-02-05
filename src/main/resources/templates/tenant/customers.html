@@ -259,7 +259,7 @@
                     ${c.email ? `<div class="small text-muted"><i class="bi bi-envelope me-1"></i>${escapeHtml(c.email)}</div>` : ''}
                 </td>
                 <td>${c.membershipLevelName ? `<span class="badge bg-primary">${escapeHtml(c.membershipLevelName)}</span>` : '<span class="text-muted">-</span>'}</td>
-                <td class="text-center">${formatNumber(c.totalBookings || 0)}</td>
+                <td class="text-center">${formatNumber(c.visitCount || 0)}</td>
                 <td class="text-end">${formatMoney(c.totalSpent || 0)}</td>
                 <td class="text-center">${getCustomerStatusBadge(c.status || 'ACTIVE')}</td>
                 <td class="text-center">

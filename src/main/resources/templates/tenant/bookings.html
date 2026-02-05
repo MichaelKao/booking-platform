@@ -379,7 +379,7 @@
                 </td>
                 <td class="d-none d-md-table-cell">${escapeHtml(b.serviceName || '-')}</td>
                 <td class="d-none d-lg-table-cell">${escapeHtml(b.staffName || '未指定')}</td>
-                <td class="d-none d-sm-table-cell text-nowrap">${formatMoney(b.totalAmount || 0)}</td>
+                <td class="d-none d-sm-table-cell text-nowrap">${formatMoney(b.price || 0)}</td>
                 <td class="text-center">${getBookingStatusBadge(b.status)}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
@@ -577,7 +577,7 @@
                             <div class="col-md-6"><strong>時間：</strong>${b.startTime?.substring(0, 5) || '-'} - ${b.endTime?.substring(0, 5) || '-'}</div>
                         </div>
                         <div class="row mb-2">
-                            <div class="col-md-6"><strong>金額：</strong>${formatMoney(b.totalAmount || 0)}</div>
+                            <div class="col-md-6"><strong>金額：</strong>${formatMoney(b.price || 0)}</div>
                             <div class="col-md-6"><strong>建立時間：</strong>${formatDateTime(b.createdAt)}</div>
                         </div>
                         ${b.note ? `<hr><h6 class="mb-2"><i class="bi bi-chat-text me-1"></i>備註</h6><p class="mb-0">${escapeHtml(b.note)}</p>` : ''}
