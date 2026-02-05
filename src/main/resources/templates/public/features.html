@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- SEO Meta Tags -->
+    <title>功能介紹 | 預約平台 - LINE 預約機器人、顧客管理、營運報表</title>
+    <meta name="description" content="預約平台完整功能介紹：LINE 預約機器人、智慧排班管理、自動提醒通知、顧客關係管理、票券優惠系統、營運數據分析。免費試用，5分鐘快速上手。">
+    <meta name="keywords" content="預約系統功能,LINE預約機器人,顧客管理系統,排班管理,票券系統,營運報表">
+    <meta name="author" content="Booking Platform">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/features">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/features">
+    <meta property="og:title" content="功能介紹 | 預約平台">
+    <meta property="og:description" content="預約平台完整功能介紹：LINE 預約機器人、智慧排班、自動提醒、票券系統等。">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Structured Data / Schema.org - ItemList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "預約平台功能列表",
+        "description": "預約平台提供的完整功能介紹",
+        "numberOfItems": 10,
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "LINE 預約機器人",
+                "description": "顧客用 LINE 就能完成預約，24 小時接受預約不漏單"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "智慧排班管理",
+                "description": "員工排班、請假一目了然，自動檢查時段衝突"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "自動提醒通知",
+                "description": "預約前自動發送 LINE 或 SMS 提醒，降低爽約率"
+            },
+            {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "顧客關係管理",
+                "description": "顧客資料自動建檔，預約紀錄、消費金額一目了然"
+            },
+            {
+                "@type": "ListItem",
+                "position": 5,
+                "name": "票券優惠系統",
+                "description": "發放優惠券吸引顧客，LINE 領取、後台核銷"
+            },
+            {
+                "@type": "ListItem",
+                "position": 6,
+                "name": "會員等級制度",
+                "description": "建立會員等級，根據消費金額自動升降級"
+            },
+            {
+                "@type": "ListItem",
+                "position": 7,
+                "name": "集點獎勵系統",
+                "description": "消費自動累積點數，增加顧客回訪率"
+            },
+            {
+                "@type": "ListItem",
+                "position": 8,
+                "name": "營運數據分析",
+                "description": "每日/週/月報表，熱門服務排行、員工業績統計"
+            },
+            {
+                "@type": "ListItem",
+                "position": 9,
+                "name": "商品銷售管理",
+                "description": "顧客可在 LINE 瀏覽並購買商品，管理庫存"
+            },
+            {
+                "@type": "ListItem",
+                "position": 10,
+                "name": "AI 智慧客服",
+                "description": "AI 自動回答顧客常見問題，24 小時不打烊"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首頁",
+                "item": "https://booking-platform-production-1e08.up.railway.app/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "功能介紹",
+                "item": "https://booking-platform-production-1e08.up.railway.app/features"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #333;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 60px;
+        }
+
+        .feature-section {
+            padding: 80px 0;
+        }
+
+        .feature-section:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .feature-icon-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            font-size: 1.1rem;
+            color: #6c757d;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li i {
+            color: #198754;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 0 20px;
+        }
+
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="padding-top: 120px;">
+        <div class="container text-center">
+            <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                強大功能，簡單操作
+            </h1>
+            <p style="font-size: 1.2rem; opacity: 0.9;">
+                一站式預約管理解決方案，讓您專注於服務顧客
+            </p>
+        </div>
+    </section>
+
+    <!-- Feature 1: LINE 預約機器人 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #06C755, #00B900);">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <h2 class="feature-title">LINE 預約機器人</h2>
+                    <p class="feature-desc">
+                        顧客使用最熟悉的 LINE 就能完成預約，不需要下載任何 APP。
+                        24 小時全天候接受預約，不再漏接任何商機。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> 顧客用 LINE 即可預約</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 精美 Flex Message 介面</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Rich Menu 快捷選單</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 24 小時自動接單</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-line" style="font-size: 12rem; color: #06C755; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: 智慧排班管理 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center flex-lg-row-reverse">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h2 class="feature-title">智慧排班管理</h2>
+                    <p class="feature-desc">
+                        輕鬆管理員工排班和請假，系統自動檢查時段衝突，
+                        確保預約不會重疊，讓排班管理變得簡單。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> 每週排班設定</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 休息時段設定</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 請假管理</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 自動衝突檢查</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-calendar3" style="font-size: 12rem; color: #667eea; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: 自動提醒通知 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    <h2 class="feature-title">自動提醒通知</h2>
+                    <p class="feature-desc">
+                        預約前自動發送 LINE 訊息或 SMS 簡訊提醒顧客，
+                        大幅降低爽約率，提升服務效率。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> LINE 推播提醒</li>
+                        <li><i class="bi bi-check-circle-fill"></i> SMS 簡訊提醒</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 自訂提醒時間</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 降低爽約率</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-bell" style="font-size: 12rem; color: #f5576c; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4: 顧客關係管理 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center flex-lg-row-reverse">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h2 class="feature-title">顧客關係管理</h2>
+                    <p class="feature-desc">
+                        顧客資料自動建檔，預約紀錄、消費金額、點數餘額一目了然。
+                        建立專屬會員等級，提升顧客忠誠度。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> 顧客資料自動建檔</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 完整預約紀錄</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 消費金額統計</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 會員等級制度</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-people" style="font-size: 12rem; color: #4facfe; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 5: 票券優惠系統 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                        <i class="bi bi-ticket-perforated"></i>
+                    </div>
+                    <h2 class="feature-title">票券優惠系統</h2>
+                    <p class="feature-desc">
+                        發放優惠券、折扣券吸引顧客。顧客可在 LINE 輕鬆領取，
+                        消費時出示代碼，店家後台一鍵核銷。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> 折扣券 / 現金券</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 免費服務券</li>
+                        <li><i class="bi bi-check-circle-fill"></i> LINE 領取與展示</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 後台快速核銷</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-ticket-perforated" style="font-size: 12rem; color: #fa709a; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 6: 營運數據分析 -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="row align-items-center flex-lg-row-reverse">
+                <div class="col-lg-6">
+                    <div class="feature-icon-large" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h2 class="feature-title">營運數據分析</h2>
+                    <p class="feature-desc">
+                        每日、每週、每月報表，熱門服務排行、員工業績統計。
+                        數據驅動經營決策，讓您的生意更上一層樓。
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> 每日/週/月報表</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 熱門服務排行</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 員工業績統計</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Excel/PDF 匯出</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-graph-up" style="font-size: 12rem; color: #6c757d; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- More Features Grid -->
+    <section class="feature-section" style="background: white;">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-size: 2rem; font-weight: 700;">更多強大功能</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-stars text-warning" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">集點獎勵系統</h3>
+                            <p class="text-muted small">消費自動累積點數，增加顧客回訪率</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-robot text-info" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">AI 智慧客服</h3>
+                            <p class="text-muted small">AI 自動回答常見問題，24 小時不打烊</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-bag text-success" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">商品銷售管理</h3>
+                            <p class="text-muted small">顧客可在 LINE 瀏覽並購買商品</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-megaphone text-danger" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">行銷推播</h3>
+                            <p class="text-muted small">發送 LINE 推播訊息，宣傳活動與優惠</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-cake2 text-primary" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">生日祝福</h3>
+                            <p class="text-muted small">自動發送生日祝福訊息，增進顧客關係</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-arrow-repeat text-secondary" style="font-size: 2.5rem;"></i>
+                            <h3 class="h5 mt-3">顧客喚回</h3>
+                            <p class="text-muted small">自動通知久未到訪顧客，喚回流失客戶</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
+                準備好提升您的預約管理了嗎？
+            </h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">
+                立即免費註冊，5 分鐘內完成設定
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/tenant/register" class="btn btn-light btn-lg">
+                    <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+                </a>
+                <a href="/pricing" class="btn btn-outline-light btn-lg">
+                    查看價格方案
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>預約平台
+                    </h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人<br>讓預約管理變得超簡單</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/">首頁</a></li>
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">聯絡我們</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-envelope me-2"></i>support@booking.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <small>&copy; 2024 預約平台. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

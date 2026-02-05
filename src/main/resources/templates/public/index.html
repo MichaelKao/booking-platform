@@ -29,7 +29,7 @@
     <meta name="twitter:title" content="預約平台 | 免費線上預約系統">
     <meta name="twitter:description" content="免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練等服務業。">
 
-    <!-- Structured Data / Schema.org -->
+    <!-- Structured Data / Schema.org - SoftwareApplication -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -48,6 +48,102 @@
             "ratingValue": "4.8",
             "ratingCount": "150"
         }
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - Organization -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "預約平台",
+        "url": "https://booking-platform-production-1e08.up.railway.app",
+        "logo": "https://booking-platform-production-1e08.up.railway.app/images/logo.png",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "support@booking.com",
+            "contactType": "customer service",
+            "availableLanguage": ["zh-TW", "zh-CN", "en"]
+        }
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - FAQ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "預約平台是否免費使用？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "是的，預約平台提供免費版本，包含基本預約管理、LINE 預約機器人、顧客管理、3 位員工和基本報表功能。如需更多進階功能，可選購加值功能。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "如何整合 LINE 預約機器人？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "註冊帳號後，在店家後台的「LINE 設定」頁面，填入您的 LINE Official Account 的 Channel ID、Channel Secret 和 Channel Access Token，設定 Webhook URL 後即可使用。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "顧客如何使用 LINE 預約？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "顧客只需加入您的 LINE 官方帳號，點選選單中的「開始預約」，按照步驟選擇服務、日期、時段即可完成預約。預約前會自動收到 LINE 提醒通知。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "支援哪些行業使用？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "預約平台適合各種服務業，包括：美容美髮、按摩 SPA、健身教練、診所醫療、餐廳訂位、補習家教、攝影工作室、寵物美容等需要預約管理的行業。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "是否支援自動提醒功能？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "是的，訂閱「自動預約提醒」功能後，系統會在預約前自動發送 LINE 訊息或 SMS 簡訊提醒顧客，有效降低爽約率。"
+                }
+            }
+        ]
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - WebSite with SearchAction -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "預約平台",
+        "url": "https://booking-platform-production-1e08.up.railway.app",
+        "description": "免費線上預約系統，整合 LINE 預約機器人",
+        "inLanguage": "zh-TW"
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首頁",
+                "item": "https://booking-platform-production-1e08.up.railway.app/"
+            }
+        ]
     }
     </script>
 
@@ -333,9 +429,25 @@
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
             </a>
-            <div class="d-flex gap-2">
-                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
-                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/features">功能介紹</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pricing">價格方案</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/faq">常見問題</a>
+                    </li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                    <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -579,6 +691,10 @@
                 <div class="col-md-3">
                     <h6 class="text-white mb-3">快速連結</h6>
                     <ul class="list-unstyled">
+                        <li><a href="/">首頁</a></li>
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
                         <li><a href="/tenant/login">店家登入</a></li>
                         <li><a href="/tenant/register">免費註冊</a></li>
                     </ul>

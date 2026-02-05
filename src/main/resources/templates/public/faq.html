@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- SEO Meta Tags -->
+    <title>常見問題 FAQ | 預約平台 - 線上預約系統</title>
+    <meta name="description" content="預約平台常見問題解答。了解如何使用 LINE 預約機器人、如何註冊、功能介紹、價格方案等常見問題。">
+    <meta name="keywords" content="預約平台FAQ,預約系統常見問題,LINE預約機器人教學,預約系統使用說明">
+    <meta name="author" content="Booking Platform">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/faq">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/faq">
+    <meta property="og:title" content="常見問題 FAQ | 預約平台">
+    <meta property="og:description" content="預約平台常見問題解答。了解如何使用 LINE 預約機器人、功能介紹等。">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Structured Data / Schema.org - FAQ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "預約平台是否免費使用？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "是的，預約平台提供免費版本，包含基本預約管理、LINE 預約機器人、顧客管理、3 位員工和基本報表功能。如需更多進階功能，可選購加值功能。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "如何整合 LINE 預約機器人？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "註冊帳號後，在店家後台的「LINE 設定」頁面，填入您的 LINE Official Account 的 Channel ID、Channel Secret 和 Channel Access Token，設定 Webhook URL 後即可使用。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "顧客如何使用 LINE 預約？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "顧客只需加入您的 LINE 官方帳號，點選選單中的「開始預約」，按照步驟選擇服務、日期、時段即可完成預約。預約前會自動收到 LINE 提醒通知。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "支援哪些行業使用？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "預約平台適合各種服務業，包括：美容美髮、按摩 SPA、健身教練、診所醫療、餐廳訂位、補習家教、攝影工作室、寵物美容等需要預約管理的行業。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "是否支援自動提醒功能？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "是的，訂閱「自動預約提醒」功能後，系統會在預約前自動發送 LINE 訊息或 SMS 簡訊提醒顧客，有效降低爽約率。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "如何管理員工排班？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "在店家後台的「員工管理」頁面，可以設定每位員工的每週排班時間、休息時段，以及特定日期的請假。系統會自動根據排班狀況顯示可預約時段。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "票券優惠功能如何使用？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "訂閱「票券系統」功能後，可在後台建立折扣券、現金券、免費服務券等。顧客可在 LINE 領取票券，消費時出示票券代碼，店家在後台進行核銷。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "顧客集點功能如何運作？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "訂閱「集點系統」功能後，可在設定中設定集點比例（例如消費 NT$10 得 1 點）。顧客完成消費後會自動累積點數，可用於兌換優惠或折抵消費。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "資料是否安全？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "是的，我們採用 SSL 加密傳輸、JWT 認證機制、AES-256 加密儲存敏感資料（如 LINE Token），並定期備份資料庫。您的顧客資料受到完善保護。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "如何聯絡客服？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "您可以透過電子郵件 support@booking.com 聯絡我們的客服團隊，我們會在 24 小時內回覆您的問題。"
+                }
+            }
+        ]
+    }
+    </script>
+
+    <!-- Structured Data / Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首頁",
+                "item": "https://booking-platform-production-1e08.up.railway.app/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "常見問題",
+                "item": "https://booking-platform-production-1e08.up.railway.app/faq"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #333;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 60px;
+        }
+
+        .faq-section {
+            padding: 60px 0;
+        }
+
+        .faq-category {
+            margin-bottom: 40px;
+        }
+
+        .faq-category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #f0f3ff;
+            color: #667eea;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: #667eea;
+        }
+
+        .accordion-body {
+            line-height: 1.8;
+        }
+
+        .cta-section {
+            background: #f8f9fa;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .footer {
+            background: #212529;
+            color: #adb5bd;
+            padding: 40px 0 20px;
+        }
+
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="padding-top: 120px;">
+        <div class="container text-center">
+            <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                <i class="bi bi-question-circle me-2"></i>常見問題
+            </h1>
+            <p style="font-size: 1.2rem; opacity: 0.9;">
+                找不到答案？歡迎聯絡我們的客服團隊
+            </p>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <!-- 基本問題 -->
+            <div class="faq-category">
+                <h2 class="faq-category-title">
+                    <i class="bi bi-info-circle me-2"></i>基本問題
+                </h2>
+                <div class="accordion" id="faqBasic">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                預約平台是否免費使用？
+                            </button>
+                        </h3>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqBasic">
+                            <div class="accordion-body">
+                                是的，預約平台提供<strong>免費版本</strong>，包含：
+                                <ul class="mt-2">
+                                    <li>基本預約管理</li>
+                                    <li>LINE 預約機器人</li>
+                                    <li>顧客資料管理</li>
+                                    <li>3 位員工</li>
+                                    <li>基本營運報表</li>
+                                </ul>
+                                如需更多進階功能（如無限員工、票券系統、AI 客服等），可在功能商店選購加值功能。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                支援哪些行業使用？
+                            </button>
+                        </h3>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqBasic">
+                            <div class="accordion-body">
+                                預約平台適合各種需要預約管理的服務業，包括：
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <ul>
+                                            <li>美容美髮</li>
+                                            <li>按摩 SPA</li>
+                                            <li>健身教練</li>
+                                            <li>診所醫療</li>
+                                            <li>餐廳訂位</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul>
+                                            <li>補習家教</li>
+                                            <li>攝影工作室</li>
+                                            <li>寵物美容</li>
+                                            <li>瑜珈教室</li>
+                                            <li>諮詢服務</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                資料是否安全？
+                            </button>
+                        </h3>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqBasic">
+                            <div class="accordion-body">
+                                是的，我們非常重視資料安全：
+                                <ul class="mt-2">
+                                    <li><strong>SSL 加密傳輸</strong>：所有資料傳輸皆經過加密</li>
+                                    <li><strong>JWT 認證機制</strong>：安全的身份驗證</li>
+                                    <li><strong>AES-256 加密</strong>：敏感資料（如 LINE Token）採用業界標準加密</li>
+                                    <li><strong>定期備份</strong>：資料庫每日自動備份</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LINE 相關 -->
+            <div class="faq-category">
+                <h2 class="faq-category-title">
+                    <i class="bi bi-line me-2" style="color: #06C755;"></i>LINE 相關
+                </h2>
+                <div class="accordion" id="faqLine">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                如何整合 LINE 預約機器人？
+                            </button>
+                        </h3>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqLine">
+                            <div class="accordion-body">
+                                整合步驟：
+                                <ol class="mt-2">
+                                    <li>在 <a href="https://developers.line.biz/" target="_blank">LINE Developers</a> 建立 Messaging API Channel</li>
+                                    <li>複製 Channel ID、Channel Secret、Channel Access Token</li>
+                                    <li>登入店家後台 → LINE 設定 → 填入上述資訊</li>
+                                    <li>設定 Webhook URL 到 LINE Developers Console</li>
+                                    <li>關閉 LINE Official Account Manager 的自動回應功能</li>
+                                    <li>完成！顧客即可透過 LINE 預約</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                顧客如何使用 LINE 預約？
+                            </button>
+                        </h3>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqLine">
+                            <div class="accordion-body">
+                                顧客預約流程非常簡單：
+                                <ol class="mt-2">
+                                    <li>加入您的 LINE 官方帳號</li>
+                                    <li>點選選單中的「開始預約」</li>
+                                    <li>選擇想要的服務</li>
+                                    <li>選擇預約日期</li>
+                                    <li>選擇指定員工（或不指定）</li>
+                                    <li>選擇時段</li>
+                                    <li>確認預約資訊</li>
+                                    <li>完成！預約前會自動收到 LINE 提醒</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                LINE Bot 沒有回應怎麼辦？
+                            </button>
+                        </h3>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqLine">
+                            <div class="accordion-body">
+                                請依序檢查以下項目：
+                                <ol class="mt-2">
+                                    <li><strong>Webhook URL</strong>：確認 LINE Developers 設定的 URL 正確</li>
+                                    <li><strong>Use webhook</strong>：確認為 ON（開啟）</li>
+                                    <li><strong>自動回應</strong>：<span class="text-danger">必須關閉</span> LINE Official Account Manager 的自動回應功能</li>
+                                    <li><strong>Token 有效</strong>：確認 Channel Access Token 未過期</li>
+                                    <li><strong>連線測試</strong>：在店家後台的 LINE 設定點擊「連線測試」</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能相關 -->
+            <div class="faq-category">
+                <h2 class="faq-category-title">
+                    <i class="bi bi-gear me-2"></i>功能相關
+                </h2>
+                <div class="accordion" id="faqFeatures">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                                如何管理員工排班？
+                            </button>
+                        </h3>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqFeatures">
+                            <div class="accordion-body">
+                                在店家後台的「員工管理」頁面：
+                                <ul class="mt-2">
+                                    <li><strong>排班設定</strong>：設定每位員工的每週上班時間</li>
+                                    <li><strong>休息時段</strong>：設定午休或其他休息時間</li>
+                                    <li><strong>請假管理</strong>：設定特定日期的請假</li>
+                                </ul>
+                                系統會自動根據排班狀況顯示可預約時段，避免重複預約。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                                票券優惠功能如何使用？
+                            </button>
+                        </h3>
+                        <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqFeatures">
+                            <div class="accordion-body">
+                                訂閱「票券系統」功能後：
+                                <ol class="mt-2">
+                                    <li>在後台「票券管理」建立票券（折扣券、現金券、免費服務券）</li>
+                                    <li>設定發放數量、使用期限、每人限領數量</li>
+                                    <li>顧客在 LINE 點選「領取票券」即可領取</li>
+                                    <li>消費時，顧客出示「我的票券」中的代碼</li>
+                                    <li>店家在後台進行核銷</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                                顧客集點功能如何運作？
+                            </button>
+                        </h3>
+                        <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqFeatures">
+                            <div class="accordion-body">
+                                訂閱「集點系統」功能後：
+                                <ol class="mt-2">
+                                    <li>在「店家設定」設定集點比例（例如消費 NT$10 得 1 點）</li>
+                                    <li>顧客完成消費後，點數會自動累積</li>
+                                    <li>顧客可在 LINE 的「會員資訊」查看點數餘額</li>
+                                    <li>店家可在後台手動調整顧客點數</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                                自動提醒功能如何設定？
+                            </button>
+                        </h3>
+                        <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqFeatures">
+                            <div class="accordion-body">
+                                訂閱「自動預約提醒」功能後：
+                                <ul class="mt-2">
+                                    <li>系統會在預約前一定時間自動發送提醒</li>
+                                    <li>支援 LINE 訊息和 SMS 簡訊兩種方式</li>
+                                    <li>可在「店家設定」調整提醒時間</li>
+                                    <li>有效降低顧客爽約率</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 客服與支援 -->
+            <div class="faq-category">
+                <h2 class="faq-category-title">
+                    <i class="bi bi-headset me-2"></i>客服與支援
+                </h2>
+                <div class="accordion" id="faqSupport">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq11">
+                                如何聯絡客服？
+                            </button>
+                        </h3>
+                        <div id="faq11" class="accordion-collapse collapse" data-bs-parent="#faqSupport">
+                            <div class="accordion-body">
+                                您可以透過以下方式聯絡我們：
+                                <ul class="mt-2">
+                                    <li><strong>電子郵件</strong>：support@booking.com</li>
+                                </ul>
+                                我們會在 24 小時內回覆您的問題。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem;">
+                還有其他問題嗎？
+            </h2>
+            <p style="color: #6c757d; margin-bottom: 2rem;">
+                立即免費註冊，親身體驗預約平台的強大功能
+            </p>
+            <a href="/tenant/register" class="btn btn-primary btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>預約平台
+                    </h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人<br>讓預約管理變得超簡單</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/">首頁</a></li>
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">聯絡我們</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-envelope me-2"></i>support@booking.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <small>&copy; 2024 預約平台. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

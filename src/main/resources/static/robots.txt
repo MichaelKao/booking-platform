@@ -1,14 +1,33 @@
+# ========================================
 # Booking Platform - robots.txt
-# https://booking-platform-production-1e08.up.railway.app
+# SEO 優化設定
+# ========================================
 
+# 主要搜尋引擎
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# 所有其他爬蟲
 User-agent: *
 
-# 允許爬取的頁面
+# 允許爬取的頁面（公開頁面）
 Allow: /
 Allow: /tenant/login
 Allow: /tenant/register
+Allow: /faq
+Allow: /features
+Allow: /pricing
 
-# 禁止爬取的頁面（後台、API）
+# 禁止爬取的頁面（後台、API、敏感資料）
 Disallow: /api/
 Disallow: /admin/
 Disallow: /tenant/dashboard
@@ -26,6 +45,22 @@ Disallow: /tenant/line-settings
 Disallow: /tenant/feature-store
 Disallow: /tenant/points
 Disallow: /tenant/reports
+Disallow: /tenant/forgot-password
+Disallow: /tenant/reset-password
+Disallow: /booking/cancel/
+
+# 禁止爬蟲工具（節省伺服器資源）
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
 
 # Sitemap 位置
 Sitemap: https://booking-platform-production-1e08.up.railway.app/sitemap.xml

@@ -83,13 +83,19 @@ public class SecurityConfig {
             "/images/**",
             "/sounds/**",
             "/favicon.ico",
+            "/robots.txt",
+            "/sitemap.xml",
 
             // 頁面（由頁面 Controller 處理認證）
             "/admin/**",
             "/tenant/**",
 
-            // 公開頁面
+            // 公開頁面（SEO 優化）
+            "/",
             "/public/**",
+            "/faq",
+            "/features",
+            "/pricing",
 
             // 錯誤頁面
             "/error/**"
@@ -172,6 +178,20 @@ public class SecurityConfig {
 
                 // 啟用 CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // 安全標頭（SEO 與安全性優化）
+                .headers(headers -> headers
+                        // X-Content-Type-Options: 防止 MIME 類型嗅探
+                        .contentTypeOptions(contentTypeOptions -> {})
+                        // X-Frame-Options: 防止點擊劫持
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                        // X-XSS-Protection: 啟用 XSS 過濾
+                        .xssProtection(xss -> xss.headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                        // Referrer-Policy: 控制 Referer 資訊
+                        .referrerPolicy(referrer -> referrer.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        // Permissions-Policy: 控制瀏覽器功能
+                        .permissionsPolicy(permissions -> permissions.policy("geolocation=(), microphone=(), camera=()"))
+                )
 
                 // 停用 Session（使用 JWT）
                 .sessionManagement(session ->

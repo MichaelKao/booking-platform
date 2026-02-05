@@ -3,7 +3,7 @@
     <!-- 首頁 -->
     <url>
         <loc>https://booking-platform-production-1e08.up.railway.app/</loc>
-        <lastmod>2024-01-01</lastmod>
+        <lastmod>2024-12-01</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
@@ -11,7 +11,7 @@
     <!-- 店家登入 -->
     <url>
         <loc>https://booking-platform-production-1e08.up.railway.app/tenant/login</loc>
-        <lastmod>2024-01-01</lastmod>
+        <lastmod>2024-12-01</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
@@ -19,8 +19,32 @@
     <!-- 店家註冊 -->
     <url>
         <loc>https://booking-platform-production-1e08.up.railway.app/tenant/register</loc>
-        <lastmod>2024-01-01</lastmod>
+        <lastmod>2024-12-01</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
+    </url>
+
+    <!-- 常見問題 FAQ -->
+    <url>
+        <loc>https://booking-platform-production-1e08.up.railway.app/faq</loc>
+        <lastmod>2024-12-01</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- 功能介紹 -->
+    <url>
+        <loc>https://booking-platform-production-1e08.up.railway.app/features</loc>
+        <lastmod>2024-12-01</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- 價格方案 -->
+    <url>
+        <loc>https://booking-platform-production-1e08.up.railway.app/pricing</loc>
+        <lastmod>2024-12-01</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
     </url>
 </urlset>

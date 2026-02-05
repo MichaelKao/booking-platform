@@ -82,9 +82,33 @@ server:
   port: ${PORT:8080}
   servlet:
     context-path: /
+  # Gzip 壓縮（SEO 優化）
   compression:
     enabled: true
-    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/plain
+      - text/css
+      - application/javascript
+      - text/javascript
+      - image/svg+xml
+
+# ========================================
+# 靜態資源快取（SEO 優化 - 提升速度分數）
+# ========================================
+spring.web.resources:
+  cache:
+    cachecontrol:
+      max-age: 31536000
+      public: true
+  chain:
+    strategy:
+      content:
+        enabled: true
+        paths: /js/**,/css/**,/images/**
 
 # ========================================
 # Logging 設定（生產環境減少日誌）
