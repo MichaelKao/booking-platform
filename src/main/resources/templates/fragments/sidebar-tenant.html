@@ -108,6 +108,24 @@
             </a>
         </li>
 
+        <!-- 商品訂單（需訂閱 PRODUCT_SALES 功能） -->
+        <li class="nav-item" data-feature="PRODUCT_SALES">
+            <a class="nav-link" href="/tenant/product-orders"
+               th:classappend="${#strings.equals(currentPage, 'product-orders')} ? 'active' : ''">
+                <i class="bi bi-bag"></i>
+                <span>商品訂單</span>
+            </a>
+        </li>
+
+        <!-- 庫存異動（需訂閱 PRODUCT_SALES 功能） -->
+        <li class="nav-item" data-feature="PRODUCT_SALES">
+            <a class="nav-link" href="/tenant/inventory"
+               th:classappend="${#strings.equals(currentPage, 'inventory')} ? 'active' : ''">
+                <i class="bi bi-clipboard-data"></i>
+                <span>庫存異動</span>
+            </a>
+        </li>
+
         <hr class="sidebar-divider">
         <div class="sidebar-heading">行銷推廣</div>
 

@@ -162,6 +162,26 @@ public class TenantPageController {
         return "tenant/products";
     }
 
+    /**
+     * 商品訂單頁面
+     */
+    @GetMapping("/product-orders")
+    public String productOrders(Model model) {
+        model.addAttribute("currentPage", "product-orders");
+        model.addAttribute("pageTitle", "商品訂單");
+        return "tenant/product-orders";
+    }
+
+    /**
+     * 庫存異動歷史頁面
+     */
+    @GetMapping("/inventory")
+    public String inventory(Model model) {
+        model.addAttribute("currentPage", "inventory");
+        model.addAttribute("pageTitle", "庫存異動");
+        return "tenant/inventory";
+    }
+
     // ========================================
     // 行銷推廣
     // ========================================

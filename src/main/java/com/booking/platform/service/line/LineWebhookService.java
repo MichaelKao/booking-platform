@@ -76,6 +76,7 @@ public class LineWebhookService {
     private final ProductRepository productRepository;
     private final CouponService couponService;
     private final AiAssistantService aiAssistantService;
+    private final com.booking.platform.service.ProductOrderService productOrderService;
 
     // ========================================
     // 關鍵字
@@ -1069,31 +1070,38 @@ public class LineWebhookService {
                 return;
             }
 
-            // 這裡僅記錄購買意向，實際付款需線下處理或整合金流
+            String productId = context.getSelectedProductId();
             String productName = context.getSelectedProductName();
             Integer quantity = context.getSelectedQuantity();
             Integer unitPrice = context.getSelectedProductPrice();
 
             // 防禦性空值檢查
-            if (quantity == null || unitPrice == null) {
+            if (productId == null || quantity == null || unitPrice == null) {
                 messageService.replyText(tenantId, replyToken, "購買資訊不完整，請重新選擇。");
                 conversationService.reset(tenantId, userId);
                 return;
             }
 
+            // 建立訂單並扣減庫存
+            var orderResponse = productOrderService.createFromLine(tenantId, userId, productId, quantity);
+
             int totalPrice = unitPrice * quantity;
 
             // 回覆成功訊息
             String successMessage = String.format(
-                    "感謝您的訂購！\n\n" +
+                    "訂單建立成功！\n\n" +
+                    "訂單編號：%s\n" +
                     "商品：%s\n" +
                     "數量：%d\n" +
                     "金額：NT$ %d\n\n" +
-                    "請至店家完成付款取貨。",
-                    productName, quantity, totalPrice
+                    "請至店家出示訂單編號完成付款取貨。",
+                    orderResponse.getOrderNo(), productName, quantity, totalPrice
             );
             messageService.replyText(tenantId, replyToken, successMessage);
 
+        } catch (com.booking.platform.common.exception.BusinessException e) {
+            log.warn("確認購買失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage());
+            messageService.replyText(tenantId, replyToken, e.getMessage());
         } catch (Exception e) {
             log.error("確認購買失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
             messageService.replyText(tenantId, replyToken, "處理失敗，請稍後再試。");

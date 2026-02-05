@@ -36,6 +36,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final InventoryService inventoryService;
 
     // ========================================
     // 查詢方法
@@ -277,17 +278,31 @@ public class ProductService {
                         ErrorCode.PRODUCT_NOT_FOUND, "找不到指定的商品"
                 ));
 
+        // 記錄調整前庫存
+        int quantityBefore = entity.getStockQuantity() != null ? entity.getStockQuantity() : 0;
+
         if (adjustment > 0) {
             entity.addStock(adjustment);
         } else if (adjustment < 0) {
-            int currentStock = entity.getStockQuantity() != null ? entity.getStockQuantity() : 0;
-            if (currentStock + adjustment < 0) {
+            if (quantityBefore + adjustment < 0) {
                 throw new BusinessException(ErrorCode.PRODUCT_STOCK_INSUFFICIENT, "庫存不足");
             }
-            entity.setStockQuantity(currentStock + adjustment);
+            entity.setStockQuantity(quantityBefore + adjustment);
         }
 
         entity = productRepository.save(entity);
+
+        // 記錄庫存異動歷史
+        int quantityAfter = entity.getStockQuantity() != null ? entity.getStockQuantity() : 0;
+        inventoryService.recordManualAdjustment(
+                id,
+                entity.getName(),
+                adjustment,
+                quantityBefore,
+                quantityAfter,
+                reason,
+                "店家"
+        );
 
         log.info("商品庫存調整成功，ID：{}，新庫存：{}", id, entity.getStockQuantity());
 

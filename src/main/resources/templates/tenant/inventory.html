@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>庫存異動 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">庫存異動歷史</h1>
+                        <p class="page-subtitle">查看所有商品的庫存異動記錄</p>
+                    </div>
+                </div>
+
+                <!-- 異動記錄列表 -->
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">異動記錄</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>時間</th>
+                                        <th>商品</th>
+                                        <th>異動類型</th>
+                                        <th class="text-center">數量</th>
+                                        <th class="text-center">異動前</th>
+                                        <th class="text-center">異動後</th>
+                                        <th>原因</th>
+                                        <th>操作者</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                    <tr><td colspan="8" class="text-center text-muted py-5">載入中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁 -->
+                <div id="pagination" class="d-flex justify-content-center mt-3"></div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'inventory';
+
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        async function loadData(page = 0) {
+            try {
+                const r = await api.get('/api/inventory/logs', { page, size: 30 });
+                const items = r.data?.content || [];
+
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="8" class="text-center text-muted py-5">暫無異動記錄</td></tr>'
+                    : items.map(log => {
+                        const qtyClass = log.quantity > 0 ? 'text-success' : 'text-danger';
+                        const qtySign = log.quantity > 0 ? '+' : '';
+
+                        return `<tr>
+                            <td><small>${formatDateTime(log.createdAt)}</small></td>
+                            <td><strong>${escapeHtml(log.productName)}</strong></td>
+                            <td>${getActionTypeBadge(log.actionType)}</td>
+                            <td class="text-center ${qtyClass} fw-bold">${qtySign}${log.quantity}</td>
+                            <td class="text-center text-muted">${log.quantityBefore}</td>
+                            <td class="text-center fw-bold">${log.quantityAfter}</td>
+                            <td><small class="text-muted">${escapeHtml(log.reason || '-')}</small></td>
+                            <td><small>${escapeHtml(log.operatorName || '-')}</small></td>
+                        </tr>`;
+                    }).join('');
+
+                // 分頁
+                if (r.data?.totalPages > 1) {
+                    renderPagination(r.data, loadData);
+                } else {
+                    document.getElementById('pagination').innerHTML = '';
+                }
+            } catch (e) {
+                console.error('載入異動記錄失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="8" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function getActionTypeBadge(type) {
+            const map = {
+                STOCK_IN: '<span class="badge bg-success">進貨入庫</span>',
+                SALE_OUT: '<span class="badge bg-primary">銷售出庫</span>',
+                ADJUSTMENT: '<span class="badge bg-info">手動調整</span>',
+                INVENTORY_CHECK: '<span class="badge bg-secondary">盤點調整</span>',
+                DAMAGE: '<span class="badge bg-danger">損耗報廢</span>',
+                RETURN_IN: '<span class="badge bg-warning">退貨入庫</span>',
+                ORDER_CANCEL: '<span class="badge bg-warning">訂單取消</span>'
+            };
+            return map[type] || `<span class="badge bg-secondary">${type}</span>`;
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

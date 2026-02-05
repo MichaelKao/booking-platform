@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>商品訂單 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">商品訂單</h1>
+                        <p class="page-subtitle">管理 LINE 商品購買訂單</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-warning fs-6" id="pendingBadge">待處理: 0</span>
+                    </div>
+                </div>
+
+                <!-- 篩選 -->
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <label class="form-label mb-0 small">狀態篩選：</label>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select form-select-sm" id="statusFilter" onchange="loadData()">
+                                    <option value="">全部</option>
+                                    <option value="PENDING">待確認</option>
+                                    <option value="CONFIRMED">已確認</option>
+                                    <option value="COMPLETED">已完成</option>
+                                    <option value="CANCELLED">已取消</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 訂單列表 -->
+                <div class="data-table-container">
+                    <div class="data-table-header"><h6 class="data-table-title">訂單列表</h6></div>
+                    <div class="data-table-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>訂單編號</th>
+                                        <th>顧客</th>
+                                        <th>商品</th>
+                                        <th class="text-center">數量</th>
+                                        <th class="text-end">金額</th>
+                                        <th class="text-center">狀態</th>
+                                        <th>建立時間</th>
+                                        <th class="text-center" style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                    <tr><td colspan="8" class="text-center text-muted py-5">載入中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁 -->
+                <div id="pagination" class="d-flex justify-content-center mt-3"></div>
+            </main>
+            <footer th:replace="~{tenant/layout :: footer}"></footer>
+        </div>
+    </div>
+    <div class="sidebar-overlay"></div><div class="toast-container"></div>
+    <div th:replace="~{tenant/layout :: confirm-modal}"></div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+    <script>
+        const currentPage = 'product-orders';
+        let currentPageNum = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            loadPendingCount();
+        });
+
+        async function loadPendingCount() {
+            try {
+                const r = await api.get('/api/product-orders/pending/count');
+                if (r.success) {
+                    document.getElementById('pendingBadge').textContent = `待處理: ${r.data}`;
+                }
+            } catch (e) {
+                console.error('載入待處理數量失敗:', e);
+            }
+        }
+
+        async function loadData(page = 0) {
+            currentPageNum = page;
+            const status = document.getElementById('statusFilter').value;
+
+            try {
+                const params = { page, size: 20 };
+                if (status) params.status = status;
+
+                const r = await api.get('/api/product-orders', params);
+                const items = r.data?.content || [];
+
+                document.getElementById('dataTable').innerHTML = items.length === 0
+                    ? '<tr><td colspan="8" class="text-center text-muted py-5">暫無訂單</td></tr>'
+                    : items.map(o => `<tr>
+                        <td><strong>${o.orderNo}</strong></td>
+                        <td>${escapeHtml(o.customerName || 'LINE 顧客')}</td>
+                        <td>${escapeHtml(o.productName)}</td>
+                        <td class="text-center">${o.quantity}</td>
+                        <td class="text-end">${formatMoney(o.totalAmount)}</td>
+                        <td class="text-center">${getOrderStatusBadge(o.status)}</td>
+                        <td>${formatDateTime(o.createdAt)}</td>
+                        <td class="text-center">${getActionButtons(o)}</td>
+                    </tr>`).join('');
+
+                // 分頁
+                if (r.data?.totalPages > 1) {
+                    renderPagination(r.data, loadData);
+                } else {
+                    document.getElementById('pagination').innerHTML = '';
+                }
+            } catch (e) {
+                console.error('載入訂單失敗:', e);
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="8" class="text-center text-danger py-5">載入失敗</td></tr>';
+            }
+        }
+
+        function getOrderStatusBadge(status) {
+            const map = {
+                PENDING: '<span class="badge bg-warning">待確認</span>',
+                CONFIRMED: '<span class="badge bg-info">已確認</span>',
+                COMPLETED: '<span class="badge bg-success">已完成</span>',
+                CANCELLED: '<span class="badge bg-secondary">已取消</span>'
+            };
+            return map[status] || status;
+        }
+
+        function getActionButtons(order) {
+            if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+                return '<span class="text-muted small">-</span>';
+            }
+
+            let buttons = '';
+
+            if (order.status === 'PENDING') {
+                buttons += `<button class="btn btn-sm btn-outline-primary me-1" onclick="confirmOrder('${order.id}')" title="確認"><i class="bi bi-check-lg"></i></button>`;
+            }
+
+            if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
+                buttons += `<button class="btn btn-sm btn-outline-success me-1" onclick="completeOrder('${order.id}')" title="完成取貨"><i class="bi bi-bag-check"></i></button>`;
+                buttons += `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('${order.id}')" title="取消"><i class="bi bi-x-lg"></i></button>`;
+            }
+
+            return buttons;
+        }
+
+        async function confirmOrder(id) {
+            if (!await showConfirm('確定要確認此訂單嗎？')) return;
+            try {
+                const r = await api.post(`/api/product-orders/${id}/confirm`);
+                if (r.success) {
+                    showSuccess('訂單已確認');
+                    loadData(currentPageNum);
+                    loadPendingCount();
+                }
+            } catch (e) {
+                showError(e.message || '操作失敗');
+            }
+        }
+
+        async function completeOrder(id) {
+            if (!await showConfirm('確定顧客已取貨完成？')) return;
+            try {
+                const r = await api.post(`/api/product-orders/${id}/complete`);
+                if (r.success) {
+                    showSuccess('訂單已完成');
+                    loadData(currentPageNum);
+                    loadPendingCount();
+                }
+            } catch (e) {
+                showError(e.message || '操作失敗');
+            }
+        }
+
+        async function cancelOrder(id) {
+            const reason = prompt('請輸入取消原因（選填）：');
+            if (reason === null) return; // 按取消
+
+            try {
+                const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+                const r = await api.post(`/api/product-orders/${id}/cancel${params}`);
+                if (r.success) {
+                    showSuccess('訂單已取消，庫存已回補');
+                    loadData(currentPageNum);
+                    loadPendingCount();
+                }
+            } catch (e) {
+                showError(e.message || '操作失敗');
+            }
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>
