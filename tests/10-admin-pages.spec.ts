@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { adminLogin, WAIT_TIME, TEST_ACCOUNTS } from './utils/test-helpers';
 
 const BASE_URL = process.env.BASE_URL || 'https://booking-platform-production-1e08.up.railway.app';

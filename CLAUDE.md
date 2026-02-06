@@ -682,7 +682,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (558 tests)：**
+**測試套件 (590 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -698,13 +698,19 @@ npx playwright test --list
 | `09-tenant-pages.spec.ts` | 店家後台所有頁面測試 | 33 |
 | `09-tenant-customer.spec.ts` | 顧客管理測試 | 35 |
 | `10-admin-pages.spec.ts` | 超管後台所有頁面測試 | 13 |
+| `10-tenant-staff-service.spec.ts` | 員工&服務管理測試 | - |
 | `11-public-pages.spec.ts` | 公開頁面測試 | 24 |
+| `11-tenant-product-coupon.spec.ts` | 商品&票券管理測試 | - |
 | `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 26 |
 | `13-tenant-settings.spec.ts` | 設定頁面測試 | 28 |
 | `14-tenant-reports.spec.ts` | 報表&匯出測試 | 32 |
 | `15-line-bot.spec.ts` | LINE Bot 測試 | 19 |
 | `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
 | `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
+| `18-feature-store-details.spec.ts` | 功能商店詳情測試 | - |
+| `19-seo-pages.spec.ts` | SEO 頁面測試 | - |
+| `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
+| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 32 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -712,8 +718,10 @@ npx playwright test --list
 - 所有超管頁面（儀表板、店家管理、功能管理、儲值審核）
 - 所有店家頁面（18 頁面：儀表板、預約管理、行事曆、報表、顧客、員工、服務、商品、庫存異動、商品訂單、票券、行銷活動、行銷推播、設定、LINE設定、功能商店、點數管理、會員等級）
 - 所有公開頁面（登入、註冊、忘記密碼、顧客自助取消預約）
+- 所有 SEO 頁面（首頁、功能介紹、價格方案、FAQ、行業頁面、法律頁面）
 - 所有 API 端點（19 個主要 API 完整驗證）
 - 所有表單欄位和按鈕（9 個新增按鈕 Modal 測試）
+- **F12 Console 自動監控**（所有 UI 測試自動檢測 JS 錯誤、HTTP 500、console.error）
 - JavaScript 錯誤檢測（SyntaxError、ReferenceError、TypeError）
 - HTTP 錯誤檢測（400/500 回應監控）
 - 「載入失敗」文字檢測
@@ -724,6 +732,15 @@ npx playwright test --list
 - 顧客點數交易記錄 API
 - 報表摘要統計（回頭客、服務營收）
 - 超管儀表板金額計算
+- SEO 資源驗證（robots.txt、sitemap.xml、OG 圖片、Meta Tags）
+
+**F12 Console 自動監控（fixtures.ts）：**
+
+- 所有 UI 測試檔案透過 `import { test, expect } from './fixtures'` 自動啟用 F12 監控
+- 監控三類錯誤：`pageerror`（JS 執行錯誤）、HTTP 500+（伺服器錯誤）、`console.error`（過濾瀏覽器雜訊）
+- 任何未過濾的 F12 錯誤會讓測試直接失敗
+- 過濾清單包含：瀏覽器內建訊息（favicon、net::ERR_、SSE 等）和應用程式預期的 API 錯誤處理（handleResponse、登入失敗、換頁中斷等）
+- 共 21 個 UI 測試檔案已整合此 fixture
 
 **測試基礎設施注意事項：**
 
@@ -872,4 +889,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 558 |
+| E2E 測試 | 590 |

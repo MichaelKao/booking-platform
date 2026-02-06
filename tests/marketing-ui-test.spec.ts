@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { tenantLogin, WAIT_TIME } from './utils/test-helpers';
 
 test.describe('行銷推播 UI 測試', () => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { tenantLogin, adminLogin, logout, waitForToast, WAIT_TIME } from './utils/test-helpers';
 
 /**

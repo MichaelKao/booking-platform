@@ -1,4 +1,4 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
+import { test, expect, APIRequestContext } from './fixtures';
 import {
   tenantLogin,
   waitForLoading,
