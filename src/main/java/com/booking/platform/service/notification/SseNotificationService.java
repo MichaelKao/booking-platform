@@ -1,6 +1,7 @@
 package com.booking.platform.service.notification;
 
 import com.booking.platform.dto.response.BookingResponse;
+import com.booking.platform.dto.response.ProductOrderResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,6 +149,46 @@ public class SseNotificationService {
      */
     public void notifyBookingCancelled(String tenantId, BookingResponse booking) {
         sendEvent(tenantId, "booking_cancelled", booking);
+    }
+
+    // ========================================
+    // 商品訂單通知
+    // ========================================
+
+    /**
+     * 推送新商品訂單通知
+     */
+    public void notifyNewProductOrder(String tenantId, ProductOrderResponse order) {
+        sendEvent(tenantId, "new_product_order", order);
+    }
+
+    /**
+     * 推送商品訂單狀態變更通知
+     */
+    public void notifyProductOrderStatusChanged(String tenantId, ProductOrderResponse order, String newStatus) {
+        sendEvent(tenantId, "product_order_status_changed", Map.of("order", order, "newStatus", newStatus));
+    }
+
+    // ========================================
+    // 票券通知
+    // ========================================
+
+    /**
+     * 推送票券領取通知
+     */
+    public void notifyCouponClaimed(String tenantId, Map<String, Object> data) {
+        sendEvent(tenantId, "coupon_claimed", data);
+    }
+
+    // ========================================
+    // 顧客通知
+    // ========================================
+
+    /**
+     * 推送新顧客通知
+     */
+    public void notifyNewCustomer(String tenantId, Map<String, Object> data) {
+        sendEvent(tenantId, "new_customer", data);
     }
 
     // ========================================

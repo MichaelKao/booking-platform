@@ -110,6 +110,16 @@ function connectSSE() {
         // 預約取消事件
         eventSource.addEventListener('booking_cancelled', handleBookingCancelled);
 
+        // 商品訂單事件
+        eventSource.addEventListener('new_product_order', handleNewProductOrder);
+        eventSource.addEventListener('product_order_status_changed', handleProductOrderStatusChanged);
+
+        // 票券領取事件
+        eventSource.addEventListener('coupon_claimed', handleCouponClaimed);
+
+        // 新顧客事件
+        eventSource.addEventListener('new_customer', handleNewCustomer);
+
         // 錯誤處理
         eventSource.onerror = handleSSEError;
 
@@ -265,6 +275,100 @@ function handleBookingCancelled(event) {
 
     } catch (e) {
         console.error('處理預約取消事件失敗:', e);
+    }
+}
+
+/**
+ * 處理新商品訂單事件
+ */
+function handleNewProductOrder(event) {
+    try {
+        const order = JSON.parse(event.data);
+        console.log('收到新商品訂單:', order);
+
+        playNotificationSound();
+
+        showNotificationToast(
+            '新商品訂單',
+            `${order.customerName || '顧客'} - ${order.productName || '商品'} x${order.quantity || 1}`,
+            'success'
+        );
+
+        refreshPageData('new_product_order', order);
+
+    } catch (e) {
+        console.error('處理新商品訂單事件失敗:', e);
+    }
+}
+
+/**
+ * 處理商品訂單狀態變更事件
+ */
+function handleProductOrderStatusChanged(event) {
+    try {
+        const data = JSON.parse(event.data);
+        const order = data.order;
+        const newStatus = data.newStatus;
+        console.log('商品訂單狀態變更:', newStatus, order);
+
+        const statusText = getStatusText(newStatus);
+
+        showNotificationToast(
+            '訂單狀態變更',
+            `${order.orderNo || ''} - ${statusText}`,
+            'info'
+        );
+
+        refreshPageData('product_order_status_changed', order);
+
+    } catch (e) {
+        console.error('處理商品訂單狀態變更事件失敗:', e);
+    }
+}
+
+/**
+ * 處理票券領取事件
+ */
+function handleCouponClaimed(event) {
+    try {
+        const data = JSON.parse(event.data);
+        console.log('票券已領取:', data);
+
+        playNotificationSound();
+
+        showNotificationToast(
+            '票券已領取',
+            `${data.customerName || '顧客'} 領取了「${data.couponName || '票券'}」`,
+            'success'
+        );
+
+        refreshPageData('coupon_claimed', data);
+
+    } catch (e) {
+        console.error('處理票券領取事件失敗:', e);
+    }
+}
+
+/**
+ * 處理新顧客事件
+ */
+function handleNewCustomer(event) {
+    try {
+        const data = JSON.parse(event.data);
+        console.log('新顧客:', data);
+
+        playNotificationSound();
+
+        showNotificationToast(
+            '新顧客',
+            `${data.name || '新顧客'}${data.phone ? ' (' + data.phone + ')' : ''}`,
+            'success'
+        );
+
+        refreshPageData('new_customer', data);
+
+    } catch (e) {
+        console.error('處理新顧客事件失敗:', e);
     }
 }
 
@@ -448,6 +552,27 @@ function refreshPageData(eventType, data) {
                 // 儀表板頁面 - 刷新統計
                 if (typeof loadDashboardData === 'function') {
                     loadDashboardData();
+                }
+                break;
+
+            case 'product-orders':
+                // 商品訂單頁面 - 刷新列表
+                if (typeof loadData === 'function') {
+                    loadData(typeof currentPageNum !== 'undefined' ? currentPageNum : 0);
+                }
+                break;
+
+            case 'customers':
+                // 顧客頁面 - 刷新列表
+                if (typeof loadData === 'function') {
+                    loadData(typeof currentPageNum !== 'undefined' ? currentPageNum : 0);
+                }
+                break;
+
+            case 'coupons':
+                // 票券頁面 - 刷新列表
+                if (typeof loadData === 'function') {
+                    loadData(typeof currentPageNum !== 'undefined' ? currentPageNum : 0);
                 }
                 break;
         }

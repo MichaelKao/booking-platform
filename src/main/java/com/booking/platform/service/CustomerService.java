@@ -15,6 +15,7 @@ import com.booking.platform.mapper.CustomerMapper;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.MembershipLevelRepository;
 import com.booking.platform.repository.PointTransactionRepository;
+import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,7 @@ public class CustomerService {
     private final MembershipLevelRepository membershipLevelRepository;
     private final PointTransactionRepository pointTransactionRepository;
     private final CustomerMapper customerMapper;
+    private final SseNotificationService sseNotificationService;
 
     // ========================================
     // 查詢方法
@@ -187,6 +190,16 @@ public class CustomerService {
         entity = customerRepository.save(entity);
 
         log.info("顧客建立成功，ID：{}", entity.getId());
+
+        // 推送 SSE 通知
+        try {
+            sseNotificationService.notifyNewCustomer(tenantId, Map.of(
+                    "name", entity.getName() != null ? entity.getName() : "新顧客",
+                    "phone", entity.getPhone() != null ? entity.getPhone() : ""
+            ));
+        } catch (Exception e) {
+            log.warn("推送新顧客通知失敗：{}", e.getMessage());
+        }
 
         return customerMapper.toResponse(entity);
     }

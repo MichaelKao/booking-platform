@@ -22,6 +22,7 @@ import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.line.LineUserRepository;
 import com.booking.platform.entity.line.LineUser;
 import com.booking.platform.service.line.LineMessageService;
+import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,7 @@ public class CouponService {
     private final CouponMapper couponMapper;
     private final LineUserRepository lineUserRepository;
     private final LineMessageService lineMessageService;
+    private final SseNotificationService sseNotificationService;
 
     // ========================================
     // 票券定義查詢
@@ -407,6 +410,21 @@ public class CouponService {
         couponRepository.save(coupon);
 
         log.info("票券發放成功，票券實例ID：{}，代碼：{}", instance.getId(), code);
+
+        // 推送 SSE 通知
+        try {
+            String customerName = customerRepository
+                    .findByIdAndTenantIdAndDeletedAtIsNull(customerId, tenantId)
+                    .map(Customer::getDisplayName)
+                    .orElse("顧客");
+            sseNotificationService.notifyCouponClaimed(tenantId, Map.of(
+                    "couponName", coupon.getName(),
+                    "customerName", customerName,
+                    "code", code
+            ));
+        } catch (Exception e) {
+            log.warn("推送票券領取通知失敗：{}", e.getMessage());
+        }
 
         return instance;
     }

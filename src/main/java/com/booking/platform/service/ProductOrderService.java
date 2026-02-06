@@ -16,6 +16,8 @@ import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.line.LineUserRepository;
 import com.booking.platform.repository.ProductOrderRepository;
 import com.booking.platform.repository.ProductRepository;
+import com.booking.platform.service.line.LineMessageService;
+import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,6 +49,8 @@ public class ProductOrderService {
     private final CustomerRepository customerRepository;
     private final LineUserRepository lineUserRepository;
     private final InventoryService inventoryService;
+    private final SseNotificationService sseNotificationService;
+    private final LineMessageService lineMessageService;
 
     // ========================================
     // 查詢方法
@@ -214,7 +218,9 @@ public class ProductOrderService {
 
         log.info("LINE 商品訂單建立成功，訂單編號：{}", orderNo);
 
-        return toResponse(order);
+        ProductOrderResponse response = toResponse(order);
+        sseNotificationService.notifyNewProductOrder(tenantId, response);
+        return response;
     }
 
     // ========================================
@@ -242,7 +248,10 @@ public class ProductOrderService {
 
         log.info("訂單已確認，訂單編號：{}", order.getOrderNo());
 
-        return toResponse(order);
+        ProductOrderResponse response = toResponse(order);
+        sseNotificationService.notifyProductOrderStatusChanged(tenantId, response, "CONFIRMED");
+        sendOrderLineNotification(tenantId, order, "已確認", "訂單已確認，我們將盡快為您準備！");
+        return response;
     }
 
     /**
@@ -266,7 +275,10 @@ public class ProductOrderService {
 
         log.info("訂單已完成，訂單編號：{}", order.getOrderNo());
 
-        return toResponse(order);
+        ProductOrderResponse response = toResponse(order);
+        sseNotificationService.notifyProductOrderStatusChanged(tenantId, response, "COMPLETED");
+        sendOrderLineNotification(tenantId, order, "已完成", "訂單已備妥，請至店家出示訂單編號完成取貨！");
+        return response;
     }
 
     /**
@@ -312,12 +324,31 @@ public class ProductOrderService {
 
         log.info("訂單已取消，訂單編號：{}", order.getOrderNo());
 
-        return toResponse(order);
+        ProductOrderResponse response = toResponse(order);
+        sseNotificationService.notifyProductOrderStatusChanged(tenantId, response, "CANCELLED");
+        String msg = "訂單已取消" + (reason != null ? "，原因：" + reason : "");
+        sendOrderLineNotification(tenantId, order, "已取消", msg);
+        return response;
     }
 
     // ========================================
     // 輔助方法
     // ========================================
+
+    /**
+     * 發送訂單 LINE 通知給顧客
+     */
+    private void sendOrderLineNotification(String tenantId, ProductOrder order, String action, String message) {
+        try {
+            if (order.getLineUserId() == null) return;
+            String text = String.format("📦 訂單%s通知\n\n訂單編號：%s\n商品：%s\n數量：%d\n金額：NT$ %s\n\n%s",
+                    action, order.getOrderNo(), order.getProductName(), order.getQuantity(),
+                    order.getTotalAmount().stripTrailingZeros().toPlainString(), message);
+            lineMessageService.pushText(tenantId, order.getLineUserId(), text);
+        } catch (Exception e) {
+            log.warn("發送訂單 LINE 通知失敗：{}", e.getMessage());
+        }
+    }
 
     /**
      * 產生訂單編號
