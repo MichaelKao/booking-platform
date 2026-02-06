@@ -102,25 +102,6 @@ JavaScript 會在頁面載入時檢查訂閱狀態，自動隱藏未訂閱功能
 | 檔案 | 功能 | 路由 |
 |------|------|------|
 | cancel-booking.html | 顧客自助取消預約 | /booking/cancel/{token} |
-| index.html | 首頁 Landing Page | / |
-| features.html | 功能介紹 | /features |
-| pricing.html | 價格方案 | /pricing |
-| faq.html | 常見問題 | /faq |
-| terms.html | 服務條款 | /terms |
-| privacy.html | 隱私權政策 | /privacy |
-| industry/beauty.html | 美容預約系統 | /beauty |
-| industry/hair-salon.html | 美髮預約系統 | /hair-salon |
-| industry/spa.html | SPA 按摩預約 | /spa |
-| industry/fitness.html | 健身教練預約 | /fitness |
-| industry/restaurant.html | 餐廳訂位系統 | /restaurant |
-| industry/clinic.html | 診所預約系統 | /clinic |
-| city/taipei.html | 台北預約系統 | /taipei |
-| city/new-taipei.html | 新北預約系統 | /new-taipei |
-| city/taoyuan.html | 桃園預約系統 | /taoyuan |
-| city/taichung.html | 台中預約系統 | /taichung |
-| city/tainan.html | 台南預約系統 | /tainan |
-| city/kaohsiung.html | 高雄預約系統 | /kaohsiung |
-| city/hsinchu.html | 新竹預約系統 | /hsinchu |
 
 ---
 

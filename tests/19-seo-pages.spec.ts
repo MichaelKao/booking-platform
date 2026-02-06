@@ -116,53 +116,6 @@ test.describe('SEO 頁面測試', () => {
         }
     });
 
-    test.describe('城市專屬頁面', () => {
-        const cityPages = [
-            { path: '/taipei', title: '台北預約系統', keyword: '台北' },
-            { path: '/new-taipei', title: '新北預約系統', keyword: '新北' },
-            { path: '/taoyuan', title: '桃園預約系統', keyword: '桃園' },
-            { path: '/taichung', title: '台中預約系統', keyword: '台中' },
-            { path: '/tainan', title: '台南預約系統', keyword: '台南' },
-            { path: '/kaohsiung', title: '高雄預約系統', keyword: '高雄' },
-            { path: '/hsinchu', title: '新竹預約系統', keyword: '新竹' },
-        ];
-
-        for (const city of cityPages) {
-            test(`${city.title}頁面載入成功`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                await expect(page).toHaveTitle(new RegExp(city.title));
-            });
-
-            test(`${city.title}頁面有城市關鍵字`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                const content = await page.content();
-                expect(content).toContain(city.keyword);
-            });
-
-            test(`${city.title}頁面有 CTA 按鈕`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                await expect(page.locator('a[href="/tenant/register"]').first()).toBeVisible();
-            });
-
-            test(`${city.title}頁面有結構化資料`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                const schemaScripts = await page.locator('script[type="application/ld+json"]').count();
-                expect(schemaScripts).toBeGreaterThanOrEqual(1);
-            });
-
-            test(`${city.title}頁面有 Open Graph meta tags`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
-                await expect(page.locator('meta[property="og:description"]')).toHaveCount(1);
-            });
-
-            test(`${city.title}頁面有 canonical URL`, async ({ page }) => {
-                await page.goto(`${BASE_URL}${city.path}`, { waitUntil: 'domcontentloaded' });
-                await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-            });
-        }
-    });
-
     test.describe('法律頁面', () => {
         test('服務條款頁面載入成功', async ({ page }) => {
             await page.goto(`${BASE_URL}/terms`, { waitUntil: 'domcontentloaded' });
@@ -237,14 +190,6 @@ test.describe('SEO 頁面測試', () => {
             expect(text).toContain('/fitness');
             expect(text).toContain('/restaurant');
             expect(text).toContain('/clinic');
-            // 城市頁面
-            expect(text).toContain('/taipei');
-            expect(text).toContain('/new-taipei');
-            expect(text).toContain('/taoyuan');
-            expect(text).toContain('/taichung');
-            expect(text).toContain('/tainan');
-            expect(text).toContain('/kaohsiung');
-            expect(text).toContain('/hsinchu');
         });
 
         test('OG 圖片可存取', async ({ request }) => {

@@ -91,56 +91,6 @@
         <priority>0.8</priority>
     </url>
 
-    <!-- 城市專屬頁面 -->
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/taipei</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/new-taipei</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/taoyuan</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/taichung</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/tainan</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/kaohsiung</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://booking-platform-production-1e08.up.railway.app/hsinchu</loc>
-        <lastmod>2024-12-01</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
     <!-- 法律頁面 -->
     <url>
         <loc>https://booking-platform-production-1e08.up.railway.app/terms</loc>

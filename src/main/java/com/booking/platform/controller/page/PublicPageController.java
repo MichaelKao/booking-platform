@@ -101,66 +101,6 @@ public class PublicPageController {
     }
 
     // ========================================
-    // 城市專屬頁面（SEO 地區長尾關鍵字）
-    // ========================================
-
-    /**
-     * 台北預約系統
-     */
-    @GetMapping("/taipei")
-    public String taipei() {
-        return "public/city/taipei";
-    }
-
-    /**
-     * 新北預約系統
-     */
-    @GetMapping("/new-taipei")
-    public String newTaipei() {
-        return "public/city/new-taipei";
-    }
-
-    /**
-     * 桃園預約系統
-     */
-    @GetMapping("/taoyuan")
-    public String taoyuan() {
-        return "public/city/taoyuan";
-    }
-
-    /**
-     * 台中預約系統
-     */
-    @GetMapping("/taichung")
-    public String taichung() {
-        return "public/city/taichung";
-    }
-
-    /**
-     * 台南預約系統
-     */
-    @GetMapping("/tainan")
-    public String tainan() {
-        return "public/city/tainan";
-    }
-
-    /**
-     * 高雄預約系統
-     */
-    @GetMapping("/kaohsiung")
-    public String kaohsiung() {
-        return "public/city/kaohsiung";
-    }
-
-    /**
-     * 新竹預約系統
-     */
-    @GetMapping("/hsinchu")
-    public String hsinchu() {
-        return "public/city/hsinchu";
-    }
-
-    // ========================================
     // 法律頁面
     // ========================================
 
