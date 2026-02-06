@@ -104,14 +104,6 @@ public class SecurityConfig {
             "/fitness",
             "/restaurant",
             "/clinic",
-            // 城市專屬頁面
-            "/taipei",
-            "/new-taipei",
-            "/taoyuan",
-            "/taichung",
-            "/tainan",
-            "/kaohsiung",
-            "/hsinchu",
 
             // 錯誤頁面
             "/error/**"
