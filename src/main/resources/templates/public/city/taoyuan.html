@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 效能優化 -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- SEO Meta Tags -->
+    <title>桃園預約系統 | 免費 LINE 預約機器人 | 預約平台</title>
+    <meta name="description" content="桃園地區最好用的免費預約系統。整合 LINE 預約機器人，適合桃園中壢、八德、楊梅等地區美容美髮、SPA按摩、健身教練、診所、餐廳等服務業。">
+    <meta name="keywords" content="桃園預約系統,桃園線上預約,中壢預約系統,桃園美容預約,桃園美髮預約,桃園SPA預約,桃園餐廳訂位,桃園LINE預約">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/taoyuan">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://booking-platform-production-1e08.up.railway.app/taoyuan">
+    <meta property="og:title" content="桃園預約系統 | 免費 LINE 預約機器人">
+    <meta property="og:description" content="桃園地區最好用的免費預約系統，整合 LINE 預約機器人。">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "桃園預約系統 - 預約平台",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TWD"
+        },
+        "description": "桃園地區最好用的免費預約系統，整合 LINE 預約機器人，自動提醒、顧客管理、營運報表。",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "75"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "首頁", "item": "https://booking-platform-production-1e08.up.railway.app/"},
+            {"@type": "ListItem", "position": 2, "name": "桃園預約系統", "item": "https://booking-platform-production-1e08.up.railway.app/taoyuan"}
+        ]
+    }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .hero-section {
+            background: linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%);
+            color: white;
+            padding: 100px 0 80px;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .feature-card:hover { transform: translateY(-5px); }
+        .benefit-section { padding: 80px 0; background: #f8f9fa; }
+        .cta-section {
+            background: linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .footer { background: #212529; color: #adb5bd; padding: 40px 0 20px; }
+        .footer a { color: #adb5bd; text-decoration: none; }
+        .footer a:hover { color: white; }
+        .pain-point { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+        .solution { background: #d1e7dd; border-left: 4px solid #198754; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+        .city-stats { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 16px; padding: 2rem; color: #333; }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: #fc5c7d; }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/tenant/login" class="btn btn-outline-primary">登入</a>
+                <a href="/tenant/register" class="btn btn-primary">免費註冊</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="mb-3" style="font-size: 2.5rem; font-weight: 700;">
+                        <i class="bi bi-geo-alt me-2"></i>桃園預約系統
+                    </h1>
+                    <p class="mb-4" style="font-size: 1.3rem; opacity: 0.95;">
+                        專為桃園地區服務業打造的免費預約管理系統<br>
+                        整合 LINE 預約機器人，讓顧客輕鬆預約
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/tenant/register" class="btn btn-light btn-lg">
+                            <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+                        </a>
+                        <a href="/features" class="btn btn-outline-light btn-lg">
+                            查看完整功能
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center d-none d-lg-block">
+                    <i class="bi bi-geo-alt" style="font-size: 12rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- City Stats Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="city-stats">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="stat-number">2,280,000+</div>
+                        <div class="text-muted">桃園市人口</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-number">35,000+</div>
+                        <div class="text-muted">服務業店家</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-number">13</div>
+                        <div class="text-muted">行政區覆蓋</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pain Points Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">桃園店家的經營困擾</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>新興商圈快速發展</h5>
+                        <p class="mb-0 text-muted">桃園發展快速，新店家不斷湧入，需要現代化管理</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>數位化預約管理</h5>
+                        <p class="mb-0 text-muted">免費預約系統讓店家快速數位轉型，搶佔先機</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>工業區員工多，午休預約集中</h5>
+                        <p class="mb-0 text-muted">桃園工業區多，顧客預約時段集中難以調配</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>智慧排班避免衝突</h5>
+                        <p class="mb-0 text-muted">系統自動分配時段，避免重複預約的困擾</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pain-point">
+                        <h5><i class="bi bi-emoji-frown me-2"></i>跨區顧客不易經營</h5>
+                        <p class="mb-0 text-muted">桃園、中壢雙核心，顧客分佈廣泛</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="solution">
+                        <h5><i class="bi bi-emoji-smile me-2"></i>LINE 推播精準行銷</h5>
+                        <p class="mb-0 text-muted">透過 LINE 推播優惠訊息，吸引各區顧客上門</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="benefit-section">
+        <div class="container">
+            <h2 class="text-center mb-5" style="font-weight: 700;">適合桃園各種服務業</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-scissors text-primary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">美容美髮</h4>
+                        <p class="text-muted">桃園、中壢的美容美髮店，用 LINE 接受預約最方便</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-flower1 text-info" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">SPA 按摩</h4>
+                        <p class="text-muted">桃園 SPA 會館、按摩店，智慧排班管理最省心</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-heart-pulse text-danger" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">健身教練</h4>
+                        <p class="text-muted">桃園健身房、私人教練工作室，線上預約課程更便利</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-hospital text-success" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">診所醫療</h4>
+                        <p class="text-muted">桃園各區診所，線上預約減少候診時間</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-cup-hot text-warning" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">餐廳訂位</h4>
+                        <p class="text-muted">桃園人氣餐廳、咖啡廳，LINE 訂位不漏單</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <i class="bi bi-mortarboard text-secondary" style="font-size: 2.5rem;"></i>
+                        <h4 class="mt-3">補習家教</h4>
+                        <p class="text-muted">桃園補習班、家教中心，課程預約管理更有效率</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
+                桃園店家都在用的預約系統
+            </h2>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">
+                免費註冊，5 分鐘內完成設定，讓顧客開始用 LINE 預約
+            </p>
+            <a href="/tenant/register" class="btn btn-light btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3"><i class="bi bi-calendar-check me-2"></i>預約平台</h5>
+                    <p>免費線上預約系統，整合 LINE 預約機器人</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">城市預約</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/taipei">台北預約系統</a></li>
+                        <li><a href="/new-taipei">新北預約系統</a></li>
+                        <li><a href="/taoyuan">桃園預約系統</a></li>
+                        <li><a href="/taichung">台中預約系統</a></li>
+                        <li><a href="/tainan">台南預約系統</a></li>
+                        <li><a href="/kaohsiung">高雄預約系統</a></li>
+                        <li><a href="/hsinchu">新竹預約系統</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">快速連結</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/features">功能介紹</a></li>
+                        <li><a href="/pricing">價格方案</a></li>
+                        <li><a href="/faq">常見問題</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center"><small>&copy; 2024 預約平台. All rights reserved.</small></div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

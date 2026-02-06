@@ -266,6 +266,18 @@ scheduler:
 | /tenant/feature-store | 功能商店 |
 | /tenant/points | 點數管理 |
 
+### 城市專屬頁面（SEO 地區長尾關鍵字）
+
+| 路徑 | 頁面 | 檔案 |
+|------|------|------|
+| /taipei | 台北預約系統 | `public/city/taipei.html` |
+| /new-taipei | 新北預約系統 | `public/city/new-taipei.html` |
+| /taoyuan | 桃園預約系統 | `public/city/taoyuan.html` |
+| /taichung | 台中預約系統 | `public/city/taichung.html` |
+| /tainan | 台南預約系統 | `public/city/tainan.html` |
+| /kaohsiung | 高雄預約系統 | `public/city/kaohsiung.html` |
+| /hsinchu | 新竹預約系統 | `public/city/hsinchu.html` |
+
 ---
 
 ## 資料表
@@ -723,7 +735,7 @@ npx playwright test --list
 - 所有超管頁面（儀表板、店家管理、功能管理、儲值審核）
 - 所有店家頁面（18 頁面：儀表板、預約管理、行事曆、報表、顧客、員工、服務、商品、庫存異動、商品訂單、票券、行銷活動、行銷推播、設定、LINE設定、功能商店、點數管理、會員等級）
 - 所有公開頁面（登入、註冊、忘記密碼、顧客自助取消預約）
-- 所有 SEO 頁面（首頁、功能介紹、價格方案、FAQ、行業頁面、法律頁面）
+- 所有 SEO 頁面（首頁、功能介紹、價格方案、FAQ、行業頁面、城市頁面、法律頁面）
 - 所有 API 端點（19 個主要 API 完整驗證）
 - 所有表單欄位和按鈕（9 個新增按鈕 Modal 測試）
 - **F12 Console 自動監控**（所有 UI 測試自動檢測 JS 錯誤、HTTP 500、console.error）
@@ -890,7 +902,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | DTO | 70+ |
 | Enum | 26 |
 | Scheduler | 5 |
-| HTML 頁面 | 37 |
+| HTML 頁面 | 44 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
