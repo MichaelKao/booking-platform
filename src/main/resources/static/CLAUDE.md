@@ -107,6 +107,10 @@ document.addEventListener('DOMContentLoaded', function() {
 | booking_updated | 預約更新通知 |
 | booking_status_changed | 預約狀態變更 |
 | booking_cancelled | 預約取消通知 |
+| new_product_order | 新商品訂單通知 |
+| product_order_status_changed | 訂單狀態變更 |
+| coupon_claimed | 票券領取通知 |
+| new_customer | 新顧客通知 |
 
 ### 使用方式
 

@@ -180,6 +180,10 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | `booking_updated` | 預約編輯 | 刷新列表 |
 | `booking_status_changed` | 狀態變更 | 確認/完成/爽約時觸發 |
 | `booking_cancelled` | 預約取消 | 刷新列表 |
+| `new_product_order` | 新商品訂單 | 顯示通知、播放音效、刷新訂單列表 |
+| `product_order_status_changed` | 訂單狀態變更 | 確認/完成/取消時觸發，同時推送 LINE 通知 |
+| `coupon_claimed` | 票券領取 | 顯示通知、播放音效、刷新票券列表 |
+| `new_customer` | 新顧客建立 | 顯示通知、播放音效、刷新顧客列表 |
 
 ### 公開頁面
 
@@ -682,7 +686,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (590 tests)：**
+**測試套件 (615 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -711,6 +715,7 @@ npx playwright test --list
 | `19-seo-pages.spec.ts` | SEO 頁面測試 | - |
 | `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
 | `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 32 |
+| `21-notification-system.spec.ts` | 通知系統補齊+顧客刪除按鈕測試 | 25 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -889,4 +894,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 590 |
+| E2E 測試 | 615 |

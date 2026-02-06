@@ -87,7 +87,7 @@ public XxxResponse create(...) { }
 | Service | 說明 |
 |---------|------|
 | EmailService | Email 通知發送 |
-| SseNotificationService | SSE 即時通知 (新預約推送) |
+| SseNotificationService | SSE 即時通知 (預約/商品訂單/票券/顧客推送) |
 | SmsService | SMS 介面 |
 | MitakeSmsService | 三竹簡訊實作 |
 

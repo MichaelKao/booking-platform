@@ -141,7 +141,7 @@ test.describe('店家後台 SSE 測試', () => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
-    // 檢查所有必要的事件處理函數
+    // 檢查所有必要的事件處理函數 - 預約
     expect(content).toContain('new_booking');
     expect(content).toContain('booking_updated');
     expect(content).toContain('booking_status_changed');
@@ -150,6 +150,16 @@ test.describe('店家後台 SSE 測試', () => {
     expect(content).toContain('handleBookingUpdated');
     expect(content).toContain('handleBookingStatusChanged');
     expect(content).toContain('handleBookingCancelled');
+
+    // 檢查新增的事件處理函數 - 商品訂單/票券/顧客
+    expect(content).toContain('new_product_order');
+    expect(content).toContain('product_order_status_changed');
+    expect(content).toContain('coupon_claimed');
+    expect(content).toContain('new_customer');
+    expect(content).toContain('handleNewProductOrder');
+    expect(content).toContain('handleProductOrderStatusChanged');
+    expect(content).toContain('handleCouponClaimed');
+    expect(content).toContain('handleNewCustomer');
   });
 
   test('音效播放功能存在', async ({ page }) => {
@@ -253,11 +263,19 @@ test.describe('預約通知流程測試（模擬）', () => {
     expect(response.ok()).toBeTruthy();
 
     console.log('SSE 通知服務已整合到以下操作：');
+    console.log('  預約：');
     console.log('  - 新增預約 (notifyNewBooking)');
     console.log('  - 更新預約 (notifyBookingUpdated)');
     console.log('  - 確認預約 (notifyBookingStatusChanged)');
     console.log('  - 完成預約 (notifyBookingStatusChanged)');
     console.log('  - 取消預約 (notifyBookingCancelled)');
     console.log('  - 標記爽約 (notifyBookingStatusChanged)');
+    console.log('  商品訂單：');
+    console.log('  - 新訂單 (notifyNewProductOrder)');
+    console.log('  - 確認/完成/取消 (notifyProductOrderStatusChanged)');
+    console.log('  票券：');
+    console.log('  - 領取 (notifyCouponClaimed)');
+    console.log('  顧客：');
+    console.log('  - 新顧客 (notifyNewCustomer)');
   });
 });
