@@ -648,10 +648,22 @@ a:hover {
     }
 }
 
+/* 響應式表格捲動 */
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+}
+
 /* 響應式表格欄位隱藏 */
 @media (max-width: 575.98px) {
     .table .hide-xs {
         display: none !important;
+    }
+
+    /* 手機版表格內按鈕群組垂直排列 */
+    .table .btn-group-vertical-xs {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
     }
 }
 
