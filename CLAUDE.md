@@ -708,7 +708,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (665 tests)：**
+**測試套件 (886 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -736,8 +736,10 @@ npx playwright test --list
 | `18-feature-store-details.spec.ts` | 功能商店詳情測試 | - |
 | `19-seo-pages.spec.ts` | SEO 頁面測試 | - |
 | `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
-| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 32 |
+| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 40 |
 | `21-notification-system.spec.ts` | 通知系統補齊+顧客刪除按鈕測試 | 25 |
+| `22-full-coverage-ui.spec.ts` | 全覆蓋 UI 測試 | 94 |
+| `23-deep-interaction-test.spec.ts` | 深度互動測試 | 33 |
 | `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
@@ -922,4 +924,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 665 |
+| E2E 測試 | 886 |

@@ -218,6 +218,16 @@ test.describe('F12 檢查 - 公開頁面', () => {
     { name: '功能介紹', url: '/features' },
     { name: '價格方案', url: '/pricing' },
     { name: '常見問題', url: '/faq' },
+    // 行業專屬頁面
+    { name: '美容預約系統', url: '/beauty' },
+    { name: '美髮預約系統', url: '/hair-salon' },
+    { name: 'SPA 預約系統', url: '/spa' },
+    { name: '健身預約系統', url: '/fitness' },
+    { name: '餐廳預約系統', url: '/restaurant' },
+    { name: '診所預約系統', url: '/clinic' },
+    // 法律頁面
+    { name: '隱私政策', url: '/privacy' },
+    { name: '服務條款', url: '/terms' },
   ];
 
   for (const p of publicPages) {
@@ -282,9 +292,9 @@ test.describe('F12 檢查 - 總結', () => {
     console.log('F12 Console 全面檢查範圍：');
     console.log('  - 店家後台：18 個頁面');
     console.log('  - 超管後台：4 個頁面');
-    console.log('  - 公開頁面：8 個頁面');
+    console.log('  - 公開頁面：15 個頁面（含 7 城市頁面）');
     console.log('  - 顧客詳情頁：1 個頁面');
-    console.log('  - 總計：31 個頁面');
+    console.log('  - 總計：38 個頁面');
     console.log('');
     console.log('檢查項目：');
     console.log('  1. JavaScript 執行錯誤 (pageerror)');

@@ -11,6 +11,25 @@
 #wrapper {
     display: flex;
     min-height: 100vh;
+    position: relative;
+}
+
+/* 側邊欄背景延伸 - 防止右側內容滾動時左側出現空白 */
+#wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: var(--bg-gradient-primary);
+    pointer-events: none;
+    z-index: 0;
+    transition: width 0.3s ease;
+}
+
+#wrapper:has(#sidebar.collapsed)::before {
+    width: var(--sidebar-collapsed-width);
 }
 
 #content-wrapper {
@@ -19,6 +38,8 @@
     width: 100%;
     min-height: 100vh;
     background-color: var(--light-color);
+    position: relative;
+    z-index: 1;
 }
 
 #content {
@@ -39,6 +60,7 @@
     flex-direction: column;
     background: var(--bg-gradient-primary);
     transition: width 0.3s ease, transform 0.3s ease;
+    z-index: 1;
 }
 
 /* nav 列表獨立捲動區域 */
@@ -508,6 +530,10 @@
    ======================================== */
 
 @media (max-width: 575.98px) {
+    #wrapper::before {
+        display: none;
+    }
+
     #sidebar {
         position: fixed;
         top: 0;
@@ -624,6 +650,10 @@
    ======================================== */
 
 @media (min-width: 576px) and (max-width: 767.98px) {
+    #wrapper::before {
+        display: none;
+    }
+
     #sidebar {
         position: fixed;
         top: 0;
@@ -682,6 +712,10 @@
    ======================================== */
 
 @media (min-width: 768px) and (max-width: 991.98px) {
+    #wrapper::before {
+        width: var(--sidebar-collapsed-width);
+    }
+
     #sidebar {
         width: var(--sidebar-collapsed-width);
     }
