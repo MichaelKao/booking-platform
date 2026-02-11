@@ -818,15 +818,31 @@ test.describe('快取版本號', () => {
     await page.goto('/tenant/dashboard');
     await waitForLoading(page);
 
-    // Thymeleaf 渲染後 th:href 變成 href，用 evaluate 找所有 link 標籤
-    const href = await page.evaluate(() => {
-      const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-      const tenantCss = links.find(l => l.getAttribute('href')?.includes('tenant.css'));
-      return tenantCss ? tenantCss.getAttribute('href') : null;
+    // 檢查頁面 HTML 中 tenant.css 的版本號
+    const html = await page.content();
+    // 嘗試多種匹配模式
+    const cssMatch = html.match(/tenant\.css\?v=(\d+)/) || html.match(/tenant\.css[^"']*v=(\d+)/);
+    // 也用 DOM 查找
+    const domHref = await page.evaluate(() => {
+      const allLinks = document.querySelectorAll('link');
+      for (const link of allLinks) {
+        const h = link.href || link.getAttribute('href') || '';
+        if (h.includes('tenant.css') || h.includes('tenant')) {
+          return h;
+        }
+      }
+      // 搜尋所有 stylesheets
+      const sheets = Array.from(document.styleSheets);
+      for (const s of sheets) {
+        if (s.href && s.href.includes('tenant')) return s.href;
+      }
+      return null;
     });
-    console.log(`tenant.css href: ${href}`);
-    expect(href).toBeTruthy();
-    expect(href).toContain('v=5');
+    console.log(`tenant.css regex match: ${cssMatch ? cssMatch[0] : 'not found'}`);
+    console.log(`tenant.css DOM href: ${domHref}`);
+    // 從 HTML 或 DOM 任一來源驗證
+    const version = cssMatch ? cssMatch[1] : (domHref?.match(/v=(\d+)/)?.[1] || null);
+    expect(version).toBe('5');
   });
 
   test('tenant.js 版本號已更新至 v10', async ({ page }) => {
@@ -834,14 +850,24 @@ test.describe('快取版本號', () => {
     await page.goto('/tenant/dashboard');
     await waitForLoading(page);
 
-    // Thymeleaf 渲染後 th:src 變成 src，用 evaluate 找所有 script 標籤
-    const src = await page.evaluate(() => {
-      const scripts = Array.from(document.querySelectorAll('script[src]'));
-      const tenantJs = scripts.find(s => s.getAttribute('src')?.includes('tenant.js'));
-      return tenantJs ? tenantJs.getAttribute('src') : null;
+    // 檢查頁面 HTML 中 tenant.js 的版本號
+    const html = await page.content();
+    const jsMatch = html.match(/tenant\.js\?v=(\d+)/) || html.match(/tenant\.js[^"']*v=(\d+)/);
+    // 也用 DOM 查找
+    const domSrc = await page.evaluate(() => {
+      const allScripts = document.querySelectorAll('script');
+      for (const s of allScripts) {
+        const src = s.src || s.getAttribute('src') || '';
+        if (src.includes('tenant.js') || (src.includes('tenant') && src.includes('.js'))) {
+          return src;
+        }
+      }
+      return null;
     });
-    console.log(`tenant.js src: ${src}`);
-    expect(src).toBeTruthy();
-    expect(src).toContain('v=10');
+    console.log(`tenant.js regex match: ${jsMatch ? jsMatch[0] : 'not found'}`);
+    console.log(`tenant.js DOM src: ${domSrc}`);
+    // 從 HTML 或 DOM 任一來源驗證
+    const version = jsMatch ? jsMatch[1] : (domSrc?.match(/v=(\d+)/)?.[1] || null);
+    expect(version).toBe('10');
   });
 });
