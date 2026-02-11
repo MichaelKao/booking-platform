@@ -677,17 +677,14 @@ function updateSidebarSetupProgress(data) {
 
     // 全部完成 → 隱藏進度環
     if (data.completedSteps >= data.totalSteps) {
-        container.style.display = 'none';
-        container.style.removeProperty('display');
-        container.classList.add('d-none');
+        container.style.setProperty('display', 'none', 'important');
         return;
     }
 
-    // 顯示進度環
+    // 顯示進度環（移除初始隱藏）
     container.style.removeProperty('display');
     container.classList.remove('d-none');
-    // 在非手機版也要能顯示
-    container.style.display = '';
+    container.classList.add('d-md-block');
 
     // 更新 SVG 進度
     const ring = document.getElementById('progressRingFill');

@@ -818,9 +818,14 @@ test.describe('快取版本號', () => {
     await page.goto('/tenant/dashboard');
     await waitForLoading(page);
 
-    const cssLink = page.locator('link[href*="tenant.css"]');
-    const href = await cssLink.getAttribute('href');
+    // Thymeleaf 渲染後 th:href 變成 href，用 evaluate 找所有 link 標籤
+    const href = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      const tenantCss = links.find(l => l.getAttribute('href')?.includes('tenant.css'));
+      return tenantCss ? tenantCss.getAttribute('href') : null;
+    });
     console.log(`tenant.css href: ${href}`);
+    expect(href).toBeTruthy();
     expect(href).toContain('v=5');
   });
 
@@ -829,9 +834,14 @@ test.describe('快取版本號', () => {
     await page.goto('/tenant/dashboard');
     await waitForLoading(page);
 
-    const jsScript = page.locator('script[src*="tenant.js"]');
-    const src = await jsScript.getAttribute('src');
+    // Thymeleaf 渲染後 th:src 變成 src，用 evaluate 找所有 script 標籤
+    const src = await page.evaluate(() => {
+      const scripts = Array.from(document.querySelectorAll('script[src]'));
+      const tenantJs = scripts.find(s => s.getAttribute('src')?.includes('tenant.js'));
+      return tenantJs ? tenantJs.getAttribute('src') : null;
+    });
     console.log(`tenant.js src: ${src}`);
+    expect(src).toBeTruthy();
     expect(src).toContain('v=10');
   });
 });
