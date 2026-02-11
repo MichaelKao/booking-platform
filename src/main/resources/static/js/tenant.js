@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadPointsBalance();
     checkFeatureSubscriptions();
+    loadSidebarSetupStatus();
+    loadSidebarTenantName();
 });
 
 /**
@@ -624,5 +626,138 @@ async function exportCustomers(params = {}) {
         }
     } catch (error) {
         console.error('匯出失敗:', error);
+    }
+}
+
+// ========================================
+// 側邊欄設定狀態
+// ========================================
+
+/**
+ * 載入側邊欄設定狀態（含 sessionStorage 快取 5 分鐘）
+ */
+async function loadSidebarSetupStatus() {
+    if (!isLoggedIn()) return;
+
+    // 公開頁面不載入
+    const publicPages = ['/login', '/register', '/forgot-password', '/reset-password'];
+    if (publicPages.some(page => window.location.pathname.includes(page))) return;
+
+    try {
+        // 檢查 sessionStorage 快取
+        const cached = sessionStorage.getItem('setup_status');
+        const cachedTime = sessionStorage.getItem('setup_status_time');
+        if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 300000) {
+            const data = JSON.parse(cached);
+            updateSidebarSetupProgress(data);
+            updateSidebarAttentionDots(data);
+            return;
+        }
+
+        const r = await api.get('/api/settings/setup-status');
+        if (r.success && r.data) {
+            // 存入快取
+            sessionStorage.setItem('setup_status', JSON.stringify(r.data));
+            sessionStorage.setItem('setup_status_time', Date.now().toString());
+
+            updateSidebarSetupProgress(r.data);
+            updateSidebarAttentionDots(r.data);
+        }
+    } catch (e) {
+        // 靜默失敗，不影響正常使用
+    }
+}
+
+/**
+ * 更新側邊欄進度環
+ */
+function updateSidebarSetupProgress(data) {
+    const container = document.getElementById('sidebarSetupProgress');
+    if (!container) return;
+
+    // 全部完成 → 隱藏進度環
+    if (data.completedSteps >= data.totalSteps) {
+        container.style.display = 'none';
+        container.style.removeProperty('display');
+        container.classList.add('d-none');
+        return;
+    }
+
+    // 顯示進度環
+    container.style.removeProperty('display');
+    container.classList.remove('d-none');
+    // 在非手機版也要能顯示
+    container.style.display = '';
+
+    // 更新 SVG 進度
+    const ring = document.getElementById('progressRingFill');
+    const text = document.getElementById('progressRingText');
+    if (ring) {
+        const circumference = 2 * Math.PI * 18; // r=18
+        const offset = circumference - (data.completionPercentage / 100) * circumference;
+        ring.style.strokeDasharray = circumference;
+        ring.style.strokeDashoffset = offset;
+    }
+    if (text) {
+        text.textContent = data.completionPercentage + '%';
+    }
+}
+
+/**
+ * 更新側邊欄注意圓點
+ */
+function updateSidebarAttentionDots(data) {
+    // 先清除所有圓點
+    document.querySelectorAll('.setup-attention-dot').forEach(el => el.remove());
+
+    // 全部完成 → 不顯示圓點
+    if (data.completedSteps >= data.totalSteps) return;
+
+    // 步驟與側邊欄 href 的映射
+    const stepMap = [
+        { done: data.hasBasicInfo, href: '/tenant/settings' },
+        { done: data.staffCount > 0, href: '/tenant/staff' },
+        { done: data.serviceCount > 0, href: '/tenant/services' },
+        { done: data.hasBusinessHours, href: '/tenant/settings' },
+        { done: data.lineConfigured, href: '/tenant/line-settings' }
+    ];
+
+    let foundNext = false;
+    const markedHrefs = new Set();
+
+    stepMap.forEach(step => {
+        if (step.done) return;
+
+        // 避免同一 href 重複標記
+        if (markedHrefs.has(step.href)) return;
+        markedHrefs.add(step.href);
+
+        // 找到對應的 nav-item
+        const link = document.querySelector(`#sidebar .nav-link[href="${step.href}"]`);
+        if (!link) return;
+        const navItem = link.closest('.nav-item');
+        if (!navItem) return;
+
+        // 建立圓點
+        const dot = document.createElement('span');
+        dot.className = 'setup-attention-dot';
+        if (!foundNext) {
+            dot.classList.add('next-step');
+            foundNext = true;
+        }
+        navItem.appendChild(dot);
+    });
+}
+
+/**
+ * 載入側邊欄店家名稱
+ */
+function loadSidebarTenantName() {
+    const nameEl = document.getElementById('sidebarTenantName');
+    if (!nameEl) return;
+
+    const user = getCurrentUser();
+    if (user && user.tenantName) {
+        nameEl.textContent = user.tenantName;
     }
 }

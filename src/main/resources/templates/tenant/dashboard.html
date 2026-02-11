@@ -12,6 +12,76 @@
                     <p class="page-subtitle">店家營運總覽</p>
                 </div>
 
+                <!-- 新手引導卡片 -->
+                <div class="onboarding-card" id="onboardingCard" style="display: none;">
+                    <div class="onboarding-header">
+                        <div>
+                            <h5 class="onboarding-title">
+                                <i class="bi bi-rocket-takeoff me-2"></i>快速開始設定您的店家
+                            </h5>
+                            <p class="onboarding-subtitle mb-0">完成以下步驟，讓顧客可以透過 LINE 預約您的服務</p>
+                        </div>
+                        <button class="onboarding-close" onclick="dismissOnboarding()" title="關閉引導">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="onboarding-progress-bar">
+                        <div class="onboarding-progress-fill" id="onboardingProgressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="onboarding-body">
+                        <div class="onboarding-steps" id="onboardingSteps">
+                            <a href="/tenant/settings" class="onboarding-step" id="step-basicInfo">
+                                <div class="step-icon"><i class="bi bi-shop"></i></div>
+                                <div class="step-content">
+                                    <div class="step-title">完善店家資訊</div>
+                                    <div class="step-desc">填寫電話、地址等基本資料</div>
+                                </div>
+                                <div class="step-status"><i class="bi bi-circle"></i></div>
+                            </a>
+                            <a href="/tenant/staff" class="onboarding-step" id="step-staff" onclick="sessionStorage.setItem('openCreateModal','staff')">
+                                <div class="step-icon"><i class="bi bi-person-badge"></i></div>
+                                <div class="step-content">
+                                    <div class="step-title">新增員工</div>
+                                    <div class="step-desc">新增服務人員並設定排班</div>
+                                </div>
+                                <div class="step-status"><i class="bi bi-circle"></i></div>
+                            </a>
+                            <a href="/tenant/services" class="onboarding-step" id="step-service" onclick="sessionStorage.setItem('openCreateModal','service')">
+                                <div class="step-icon"><i class="bi bi-list-check"></i></div>
+                                <div class="step-content">
+                                    <div class="step-title">新增服務項目</div>
+                                    <div class="step-desc">設定可預約的服務與價格</div>
+                                </div>
+                                <div class="step-status"><i class="bi bi-circle"></i></div>
+                            </a>
+                            <a href="/tenant/settings" class="onboarding-step" id="step-hours">
+                                <div class="step-icon"><i class="bi bi-clock"></i></div>
+                                <div class="step-content">
+                                    <div class="step-title">設定營業時間</div>
+                                    <div class="step-desc">設定營業時段與公休日</div>
+                                </div>
+                                <div class="step-status"><i class="bi bi-circle"></i></div>
+                            </a>
+                            <a href="/tenant/line-settings" class="onboarding-step" id="step-line">
+                                <div class="step-icon"><i class="bi bi-chat-dots"></i></div>
+                                <div class="step-content">
+                                    <div class="step-title">連接 LINE Bot</div>
+                                    <div class="step-desc">讓顧客透過 LINE 線上預約</div>
+                                </div>
+                                <div class="step-status"><i class="bi bi-circle"></i></div>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- 全部完成訊息 -->
+                    <div class="onboarding-complete" id="onboardingComplete" style="display: none;">
+                        <div class="complete-icon"><i class="bi bi-check-circle-fill"></i></div>
+                        <div class="complete-text">
+                            <strong>太棒了！基本設定已完成</strong>
+                            <p class="mb-0 mt-1 small text-muted">您的店家已準備好接受預約了</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 統計卡片 -->
                 <div class="row dashboard-stats">
                     <div class="col-xl-3 col-md-6 mb-4">
@@ -153,11 +223,94 @@
         let weeklyChartInstance = null;
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadSetupStatus();
             loadDashboardData();
             loadTodayBookings();
             loadRecentActivities();
             loadWeeklyChart();
         });
+
+        // ========================================
+        // 新手引導
+        // ========================================
+
+        async function loadSetupStatus() {
+            // 如果已永久關閉，不載入
+            if (localStorage.getItem('onboarding_dismissed') === 'true') return;
+
+            try {
+                const r = await api.get('/api/settings/setup-status');
+                if (r.success && r.data) {
+                    renderOnboarding(r.data);
+                }
+            } catch (e) {
+                console.error('載入設定狀態失敗:', e);
+            }
+        }
+
+        function renderOnboarding(data) {
+            const card = document.getElementById('onboardingCard');
+            if (!card) return;
+
+            // 全部完成且已有預約 → 不顯示
+            if (data.completedSteps >= data.totalSteps && data.hasBookings) return;
+
+            // 顯示引導卡片
+            card.style.display = '';
+
+            // 更新進度條
+            const fill = document.getElementById('onboardingProgressFill');
+            if (fill) fill.style.width = data.completionPercentage + '%';
+
+            // 步驟映射
+            const steps = [
+                { id: 'step-basicInfo', done: data.hasBasicInfo },
+                { id: 'step-staff', done: data.staffCount > 0 },
+                { id: 'step-service', done: data.serviceCount > 0 },
+                { id: 'step-hours', done: data.hasBusinessHours },
+                { id: 'step-line', done: data.lineConfigured }
+            ];
+
+            let foundNext = false;
+            steps.forEach(s => {
+                const el = document.getElementById(s.id);
+                if (!el) return;
+                const statusIcon = el.querySelector('.step-status i');
+
+                if (s.done) {
+                    el.classList.add('completed');
+                    el.classList.remove('next-step');
+                    if (statusIcon) statusIcon.className = 'bi bi-check-circle-fill';
+                } else if (!foundNext) {
+                    el.classList.add('next-step');
+                    el.classList.remove('completed');
+                    if (statusIcon) statusIcon.className = 'bi bi-arrow-right-circle';
+                    foundNext = true;
+                } else {
+                    el.classList.remove('completed', 'next-step');
+                    if (statusIcon) statusIcon.className = 'bi bi-circle';
+                }
+            });
+
+            // 全部完成顯示慶祝訊息
+            if (data.completedSteps >= data.totalSteps) {
+                const stepsEl = document.getElementById('onboardingSteps');
+                const completeEl = document.getElementById('onboardingComplete');
+                if (stepsEl) stepsEl.style.display = 'none';
+                if (completeEl) completeEl.style.display = '';
+            }
+        }
+
+        function dismissOnboarding() {
+            localStorage.setItem('onboarding_dismissed', 'true');
+            const card = document.getElementById('onboardingCard');
+            if (card) {
+                card.style.transition = 'opacity 0.3s, transform 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-10px)';
+                setTimeout(() => card.style.display = 'none', 300);
+            }
+        }
 
         async function loadDashboardData() {
             try {

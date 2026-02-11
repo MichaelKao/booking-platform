@@ -18,7 +18,7 @@ public XxxResponse create(...) { }
 
 ---
 
-## Service 列表 (37 個)
+## Service 列表 (38 個)
 
 ### 核心服務
 
@@ -66,6 +66,7 @@ public XxxResponse create(...) { }
 |---------|------|
 | TenantService | 租戶管理 (建立、更新、狀態變更) |
 | SettingsService | 店家設定管理 |
+| SetupStatusService | 店家設定完成狀態（新手引導） |
 | AuthService | 認證與授權 (登入、註冊、密碼重設) |
 | I18nService | 多語系服務 (繁中、簡中、英文) |
 

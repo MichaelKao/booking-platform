@@ -487,4 +487,10 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
     );
+
+    // ========================================
+    // 存在性檢查
+    // ========================================
+
+    boolean existsByTenantIdAndDeletedAtIsNull(String tenantId);
 }

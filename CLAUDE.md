@@ -151,7 +151,7 @@ POST /api/auth/logout             # 登出
 | 活動操作 | `POST /campaigns/{id}/publish\|pause\|resume\|end` |
 | 會員等級 | `GET/POST /membership-levels`, `GET/PUT/DELETE /membership-levels/{id}` |
 | 報表 | `GET /reports/dashboard\|summary\|today\|weekly\|monthly\|daily\|top-services\|top-staff` |
-| 設定 | `GET/PUT /settings` |
+| 設定 | `GET/PUT /settings`, `GET /settings/setup-status` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
 | Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
@@ -708,7 +708,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (615 tests)：**
+**測試套件 (665 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -738,6 +738,7 @@ npx playwright test --list
 | `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
 | `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 32 |
 | `21-notification-system.spec.ts` | 通知系統補齊+顧客刪除按鈕測試 | 25 |
+| `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -753,6 +754,11 @@ npx playwright test --list
 - HTTP 錯誤檢測（400/500 回應監控）
 - 「載入失敗」文字檢測
 - 功能訂閱與側邊欄顯示控制
+- 新手引導卡片（顯示/步驟/進度條/關閉/導航/持久化）
+- 側邊欄進度環（SVG/百分比/完成隱藏）
+- 側邊欄注意圓點（脈動動畫/next-step）
+- 側邊欄店家 footer（店家名稱/跨頁面載入）
+- 設定完成狀態 API（欄位驗證/邊界值）
 - LINE Bot 對話狀態和訊息格式
 - Excel/PDF 匯出功能
 - 靜態資源（CSS/JS）載入
@@ -906,7 +912,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | 項目 | 數量 |
 |------|------|
 | Controller | 30 |
-| Service | 36 |
+| Service | 37 |
 | Entity | 23 |
 | Repository | 23 |
 | DTO | 70+ |
@@ -916,4 +922,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 615 |
+| E2E 測試 | 665 |

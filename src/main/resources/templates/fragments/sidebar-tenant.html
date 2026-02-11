@@ -196,6 +196,26 @@
         </li>
     </ul>
 
+    <!-- 設定進度（未完成時顯示） -->
+    <div class="sidebar-setup-progress d-none d-md-block" id="sidebarSetupProgress" style="display: none !important;">
+        <a href="/tenant/settings" class="setup-progress-link" title="設定進度">
+            <svg class="progress-ring" width="44" height="44" viewBox="0 0 44 44">
+                <circle class="progress-ring-bg" cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+                <circle class="progress-ring-fill" id="progressRingFill" cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 22 22)"/>
+                <text x="22" y="26" text-anchor="middle" fill="white" font-size="11" font-weight="700" id="progressRingText">0%</text>
+            </svg>
+            <span class="setup-progress-label">設定進度</span>
+        </a>
+    </div>
+
+    <!-- 店家資訊 footer -->
+    <div class="sidebar-footer d-none d-md-block">
+        <div class="sidebar-footer-content">
+            <i class="bi bi-shop sidebar-footer-icon"></i>
+            <span class="sidebar-footer-name" id="sidebarTenantName">我的店家</span>
+        </div>
+    </div>
+
     <hr class="sidebar-divider">
 
     <!-- 摺疊按鈕 -->

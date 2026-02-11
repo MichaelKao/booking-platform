@@ -160,6 +160,7 @@ public class CreateXxxRequest {
 |-----|------|
 | UpdateSettingsRequest | 更新設定 |
 | SettingsResponse | 設定資訊 |
+| SetupStatusResponse | 店家設定完成狀態 |
 | SaveLineConfigRequest | 儲存 LINE 設定 |
 | LineConfigResponse | LINE 設定資訊 |
 

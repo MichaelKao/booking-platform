@@ -700,6 +700,293 @@
 }
 
 /* ========================================
+   側邊欄設定進度環
+   ======================================== */
+
+.sidebar-setup-progress {
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+}
+
+.setup-progress-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background 0.15s ease;
+}
+
+.setup-progress-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.progress-ring {
+    flex-shrink: 0;
+}
+
+.progress-ring-fill {
+    transition: stroke-dashoffset 0.6s ease;
+}
+
+.setup-progress-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+#sidebar.collapsed .setup-progress-label {
+    display: none;
+}
+
+#sidebar.collapsed .setup-progress-link {
+    justify-content: center;
+}
+
+/* ========================================
+   側邊欄店家 footer
+   ======================================== */
+
+.sidebar-footer {
+    padding: 0.5rem 1rem;
+    flex-shrink: 0;
+}
+
+.sidebar-footer-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+}
+
+.sidebar-footer-icon {
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.sidebar-footer-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#sidebar.collapsed .sidebar-footer-name {
+    display: none;
+}
+
+#sidebar.collapsed .sidebar-footer-content {
+    justify-content: center;
+}
+
+/* ========================================
+   側邊欄注意圓點
+   ======================================== */
+
+.setup-attention-dot {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #f59e0b;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.setup-attention-dot.next-step {
+    background-color: #10b981;
+    animation: pulse-dot-green 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+    50% { opacity: 0.6; transform: translateY(-50%) scale(1.3); }
+}
+
+@keyframes pulse-dot-green {
+    0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+    50% { opacity: 0.7; transform: translateY(-50%) scale(1.4); }
+}
+
+#sidebar.collapsed .setup-attention-dot {
+    right: 6px;
+    top: 8px;
+    transform: none;
+}
+
+/* ========================================
+   新手引導卡片
+   ======================================== */
+
+.onboarding-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--border-radius-lg, 0.75rem);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.onboarding-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem 1.5rem 0.75rem;
+    color: white;
+}
+
+.onboarding-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.onboarding-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.25rem;
+}
+
+.onboarding-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.onboarding-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.onboarding-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 1.5rem;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.onboarding-progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+.onboarding-body {
+    padding: 1rem 1.5rem 1.25rem;
+}
+
+.onboarding-steps {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+}
+
+.onboarding-steps::-webkit-scrollbar {
+    display: none;
+}
+
+.onboarding-step {
+    flex: 1;
+    min-width: 160px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 0.625rem;
+    padding: 1rem;
+    text-decoration: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: background 0.15s, transform 0.15s;
+    position: relative;
+}
+
+.onboarding-step:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    color: white;
+}
+
+.onboarding-step .step-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.onboarding-step .step-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.onboarding-step .step-desc {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.3;
+}
+
+.onboarding-step .step-status {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.onboarding-step.completed {
+    opacity: 0.55;
+}
+
+.onboarding-step.completed .step-status {
+    opacity: 1;
+    color: #a7f3d0;
+}
+
+.onboarding-step.next-step {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.onboarding-step.next-step .step-status {
+    opacity: 1;
+    color: white;
+}
+
+.onboarding-complete {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    color: white;
+}
+
+.onboarding-complete .complete-icon {
+    font-size: 2.5rem;
+    color: #a7f3d0;
+}
+
+.onboarding-complete .complete-text strong {
+    font-size: 1.1rem;
+}
+
+.onboarding-complete .complete-text p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ========================================
    響應式 - 手機 (< 576px)
    ======================================== */
 
@@ -720,6 +1007,41 @@
 
     #sidebar .nav.flex-column {
         padding-bottom: 2rem;
+    }
+
+    /* 手機版隱藏進度環 */
+    .sidebar-setup-progress {
+        display: none !important;
+    }
+
+    /* 新手引導卡片手機版 */
+    .onboarding-card {
+        margin-bottom: 1rem;
+    }
+
+    .onboarding-header {
+        padding: 1rem 1rem 0.5rem;
+    }
+
+    .onboarding-title {
+        font-size: 0.95rem;
+    }
+
+    .onboarding-progress-bar {
+        margin: 0 1rem;
+    }
+
+    .onboarding-body {
+        padding: 0.75rem 1rem 1rem;
+    }
+
+    .onboarding-steps {
+        gap: 0.5rem;
+    }
+
+    .onboarding-step {
+        min-width: 140px;
+        padding: 0.75rem;
     }
 
     .topbar {
@@ -960,6 +1282,23 @@
 
     #sidebar .nav-link i {
         margin-right: 0;
+    }
+
+    /* 平板版隱藏進度環文字和 footer 文字 */
+    .setup-progress-label,
+    .sidebar-footer-name {
+        display: none;
+    }
+
+    .setup-progress-link,
+    .sidebar-footer-content {
+        justify-content: center;
+    }
+
+    .setup-attention-dot {
+        right: 6px;
+        top: 8px;
+        transform: none;
     }
 
     .topbar {

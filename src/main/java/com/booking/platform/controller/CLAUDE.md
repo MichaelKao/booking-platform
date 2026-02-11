@@ -202,6 +202,7 @@ POST /{code}/cancel # 取消訂閱
 ```
 GET /               # 取得設定
 PUT /               # 更新設定
+GET /setup-status   # 取得設定完成狀態（新手引導用）
 GET /line           # LINE 設定
 PUT /line           # 更新 LINE 設定
 POST /line/activate   # 啟用 LINE Bot

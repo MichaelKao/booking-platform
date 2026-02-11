@@ -90,4 +90,10 @@ public interface ServiceItemRepository extends JpaRepository<ServiceItem, String
     boolean existsByTenantIdAndNameAndDeletedAtIsNull(String tenantId, String name);
 
     boolean existsByTenantIdAndNameAndIdNotAndDeletedAtIsNull(String tenantId, String name, String excludeId);
+
+    // ========================================
+    // 統計查詢
+    // ========================================
+
+    long countByTenantIdAndDeletedAtIsNull(String tenantId);
 }

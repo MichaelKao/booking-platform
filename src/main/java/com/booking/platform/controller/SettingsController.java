@@ -3,7 +3,9 @@ package com.booking.platform.controller;
 import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.dto.request.UpdateSettingsRequest;
 import com.booking.platform.dto.response.SettingsResponse;
+import com.booking.platform.dto.response.SetupStatusResponse;
 import com.booking.platform.service.SettingsService;
+import com.booking.platform.service.SetupStatusService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ public class SettingsController {
     // ========================================
 
     private final SettingsService settingsService;
+    private final SetupStatusService setupStatusService;
 
     // ========================================
     // API
@@ -62,5 +65,16 @@ public class SettingsController {
     ) {
         log.info("收到更新店家設定請求");
         return ApiResponse.ok(settingsService.updateSettings(request));
+    }
+
+    /**
+     * 取得店家設定完成狀態
+     *
+     * @return 設定完成狀態
+     */
+    @GetMapping("/setup-status")
+    public ApiResponse<SetupStatusResponse> getSetupStatus() {
+        log.info("收到取得設定完成狀態請求");
+        return ApiResponse.ok(setupStatusService.getSetupStatus());
     }
 }
