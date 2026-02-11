@@ -53,8 +53,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: ${MAIL_USERNAME:g0909095118@gmail.com}
+    password: ${MAIL_PASSWORD:subregojjmnbbjvr}
     properties:
       mail:
         smtp:
@@ -153,7 +153,7 @@ encryption:
 app:
   base-url: ${RAILWAY_PUBLIC_DOMAIN:https://your-app.railway.app}
   email:
-    from: ${MAIL_USERNAME:noreply@example.com}
+    from: ${MAIL_USERNAME:g0909095118@gmail.com}
     from-name: 預約平台
   pagination:
     default-size: 20

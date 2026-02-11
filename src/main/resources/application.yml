@@ -53,8 +53,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:your-email@gmail.com}
-    password: ${MAIL_PASSWORD:your-app-password}
+    username: ${MAIL_USERNAME:g0909095118@gmail.com}
+    password: ${MAIL_PASSWORD:subregojjmnbbjvr}
     properties:
       mail:
         smtp:
@@ -167,7 +167,7 @@ app:
 
   # 郵件設定
   email:
-    from: ${MAIL_USERNAME:your-email@gmail.com}
+    from: ${MAIL_USERNAME:g0909095118@gmail.com}
     from-name: 預約平台
 
   # 分頁設定
