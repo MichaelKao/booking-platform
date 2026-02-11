@@ -174,6 +174,25 @@ public class EmailService {
     }
 
     /**
+     * 測試郵件發送（同步，回傳結果）
+     */
+    public String testSendEmail(String toEmail) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("【預約平台】郵件測試");
+            helper.setText("<h2>郵件測試成功！</h2><p>如果您看到這封信，表示郵件功能正常運作。</p>", true);
+            mailSender.send(message);
+            return "SUCCESS: 郵件已發送到 " + toEmail;
+        } catch (Exception e) {
+            log.error("測試郵件發送失敗：{}", e.getMessage(), e);
+            return "FAILED: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+        }
+    }
+
+    /**
      * 發送純文字郵件
      *
      * @param to 收件人
