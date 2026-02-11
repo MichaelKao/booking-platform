@@ -26,6 +26,12 @@ Allow: /tenant/register
 Allow: /faq
 Allow: /features
 Allow: /pricing
+Allow: /beauty
+Allow: /hair-salon
+Allow: /spa
+Allow: /fitness
+Allow: /restaurant
+Allow: /clinic
 
 # 禁止爬取的頁面（後台、API、敏感資料）
 Disallow: /api/

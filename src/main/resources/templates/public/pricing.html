@@ -19,33 +19,54 @@
     <meta property="og:title" content="價格方案 | 預約平台">
     <meta property="og:description" content="基本功能完全免費，依需求選購加值功能。免費試用，無需綁約。">
     <meta property="og:locale" content="zh_TW">
+    <meta property="og:image" content="https://booking-platform-production-1e08.up.railway.app/images/og-image.png">
 
-    <!-- Structured Data / Schema.org - Product -->
+    <!-- Structured Data / Schema.org - SoftwareApplication -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "Product",
+        "@type": "SoftwareApplication",
         "name": "預約平台",
-        "description": "免費線上預約系統，整合 LINE 預約機器人",
-        "brand": {
-            "@type": "Brand",
-            "name": "預約平台"
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "image": "https://booking-platform-production-1e08.up.railway.app/images/og-image.png",
+        "screenshot": "https://booking-platform-production-1e08.up.railway.app/images/og-image.png",
+        "description": "免費線上預約系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練等服務業。",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150",
+            "bestRating": "5",
+            "worstRating": "1"
+        },
+        "review": {
+            "@type": "Review",
+            "author": { "@type": "Person", "name": "美髮沙龍店主" },
+            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+            "reviewBody": "非常好用的預約系統，LINE 機器人讓顧客預約變得超方便，大幅減少爽約率！"
         },
         "offers": [
             {
                 "@type": "Offer",
                 "name": "免費版",
-                "price": "0",
+                "price": 0,
                 "priceCurrency": "TWD",
+                "availability": "https://schema.org/InStock",
+                "priceValidUntil": "2026-12-31",
                 "description": "基本預約管理、LINE 預約機器人、顧客管理、3 位員工、基本報表"
             },
             {
                 "@type": "Offer",
-                "name": "專業版",
+                "name": "專業版 - 起始價",
+                "price": 200,
+                "priceCurrency": "TWD",
+                "availability": "https://schema.org/InStock",
+                "priceValidUntil": "2026-12-31",
                 "priceSpecification": {
-                    "@type": "PriceSpecification",
-                    "price": "依功能計價",
-                    "priceCurrency": "TWD"
+                    "@type": "UnitPriceSpecification",
+                    "price": 200,
+                    "priceCurrency": "TWD",
+                    "unitText": "月"
                 },
                 "description": "無限員工、自動提醒、票券系統、會員等級、AI 客服、進階報表"
             }

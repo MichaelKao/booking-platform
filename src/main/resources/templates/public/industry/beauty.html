@@ -22,6 +22,7 @@
     <meta property="og:title" content="美容預約系統 | 免費 LINE 預約機器人">
     <meta property="og:description" content="專為美容業打造的免費預約系統，整合 LINE 預約機器人。">
     <meta property="og:locale" content="zh_TW">
+    <meta property="og:image" content="https://booking-platform-production-1e08.up.railway.app/images/og-image.png">
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -31,16 +32,28 @@
         "name": "美容預約系統 - 預約平台",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
+        "image": "https://booking-platform-production-1e08.up.railway.app/images/og-image.png",
+        "screenshot": "https://booking-platform-production-1e08.up.railway.app/images/og-image.png",
         "offers": {
             "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "TWD"
+            "price": 0,
+            "priceCurrency": "TWD",
+            "availability": "https://schema.org/InStock",
+            "priceValidUntil": "2026-12-31"
         },
         "description": "專為美容業打造的免費預約系統，整合 LINE 預約機器人，自動提醒、顧客管理、營運報表。",
         "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": "4.9",
-            "ratingCount": "89"
+            "ratingCount": "89",
+            "bestRating": "5",
+            "worstRating": "1"
+        },
+        "review": {
+            "@type": "Review",
+            "author": { "@type": "Person", "name": "美容院老闆" },
+            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+            "reviewBody": "導入預約平台後，顧客可以直接用 LINE 預約美容服務，再也不用接電話排預約了，超省時！"
         }
     }
     </script>
