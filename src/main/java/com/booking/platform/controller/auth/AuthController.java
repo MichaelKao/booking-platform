@@ -10,7 +10,6 @@ import com.booking.platform.dto.request.ResetPasswordRequest;
 import com.booking.platform.dto.request.TenantRegisterRequest;
 import com.booking.platform.dto.response.LoginResponse;
 import com.booking.platform.service.AuthService;
-import com.booking.platform.service.notification.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final EmailService emailService;
 
     // ========================================
     // 超級管理員認證
@@ -252,16 +250,6 @@ public class AuthController {
         authService.changePassword(tenantId, request);
 
         return ApiResponse.ok("密碼已更改", null);
-    }
-
-    // ========================================
-    // 郵件測試（臨時，確認後移除）
-    // ========================================
-
-    @PostMapping("/test-email")
-    public ApiResponse<String> testEmail(@RequestBody ForgotPasswordRequest request) {
-        String result = emailService.testSendEmail(request.getEmail());
-        return ApiResponse.ok(result, result);
     }
 
     // ========================================

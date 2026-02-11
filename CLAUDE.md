@@ -21,6 +21,7 @@
 | 圖表 | Chart.js |
 | 報表匯出 | Apache POI (Excel) + OpenPDF (PDF) |
 | 金流 | ECPay 綠界 |
+| 郵件 | Resend (HTTP API) |
 | SMS | 三竹簡訊 |
 | 部署 | Railway (Docker) |
 
@@ -458,6 +459,27 @@ Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 
 ---
 
+## 郵件通知功能
+
+使用 Resend HTTP API 發送郵件（Railway 封鎖 SMTP port 587/465，無法使用 Gmail SMTP）：
+
+```yaml
+app:
+  email:
+    from: ${MAIL_FROM:onboarding@resend.dev}
+    from-name: 預約平台
+    resend-api-key: ${RESEND_API_KEY}
+```
+
+**郵件類型**：
+- 密碼重設（忘記密碼）
+- 歡迎郵件（店家註冊）
+- 密碼變更通知
+
+**Resend 免費方案**：3000 封/月，預設寄件人 `onboarding@resend.dev`，可綁定自訂網域
+
+---
+
 ## SMS 通知功能
 
 支援三竹簡訊（Mitake）：
@@ -599,8 +621,8 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 | `ECPAY_MERCHANT_ID` | ECPay 商店代號 | - |
 | `ECPAY_HASH_KEY` | ECPay HashKey | - |
 | `ECPAY_HASH_IV` | ECPay HashIV | - |
-| `MAIL_USERNAME` | 郵件帳號 | - |
-| `MAIL_PASSWORD` | 郵件密碼 | - |
+| `RESEND_API_KEY` | Resend 郵件 API Key | - |
+| `MAIL_FROM` | 郵件寄件人地址 | onboarding@resend.dev |
 
 ---
 
