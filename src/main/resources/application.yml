@@ -165,10 +165,11 @@ app:
   # 基礎 URL（用於郵件中的連結）
   base-url: ${APP_BASE_URL:http://localhost:8080}
 
-  # 郵件設定
+  # 郵件設定（使用 Resend HTTP API）
   email:
-    from: ${MAIL_USERNAME:g0909095118@gmail.com}
+    from: ${MAIL_FROM:onboarding@resend.dev}
     from-name: 預約平台
+    resend-api-key: ${RESEND_API_KEY:re_PQDgEzkG_4GSTPk26ERmyEKq47RhcPfUf}
 
   # 分頁設定
   pagination:

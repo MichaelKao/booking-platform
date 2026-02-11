@@ -1,14 +1,12 @@
 package com.booking.platform.service.notification;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -17,7 +15,7 @@ import java.util.Map;
 /**
  * 郵件發送服務
  *
- * <p>使用 Spring Mail 發送郵件，支援 HTML 模板
+ * <p>使用 Resend HTTP API 發送郵件，支援 HTML 模板
  *
  * @author Developer
  * @since 1.0.0
@@ -31,8 +29,8 @@ public class EmailService {
     // 依賴注入
     // ========================================
 
-    private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final RestTemplate restTemplate;
 
     // ========================================
     // 設定值
@@ -46,6 +44,9 @@ public class EmailService {
 
     @Value("${app.base-url}")
     private String baseUrl;
+
+    @Value("${app.email.resend-api-key:}")
+    private String resendApiKey;
 
     // ========================================
     // 公開方法
@@ -134,57 +135,13 @@ public class EmailService {
         );
     }
 
-    // ========================================
-    // 私有方法
-    // ========================================
-
-    /**
-     * 發送 HTML 郵件
-     *
-     * @param to 收件人
-     * @param subject 主旨
-     * @param templateName 模板名稱（不含 .html）
-     * @param variables 模板變數
-     */
-    private void sendHtmlEmail(String to, String subject, String templateName, Map<String, Object> variables) {
-        try {
-            // 處理模板
-            Context context = new Context();
-            context.setVariables(variables);
-            String htmlContent = templateEngine.process(templateName, context);
-
-            // 建立郵件
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            // 發送
-            mailSender.send(message);
-            log.info("郵件發送成功，收件人：{}，主旨：{}", to, subject);
-
-        } catch (MessagingException e) {
-            log.error("郵件發送失敗，收件人：{}，錯誤：{}", to, e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("郵件發送異常，收件人：{}，錯誤：{}", to, e.getMessage(), e);
-        }
-    }
-
     /**
      * 測試郵件發送（同步，回傳結果）
      */
     public String testSendEmail(String toEmail) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(toEmail);
-            helper.setSubject("【預約平台】郵件測試");
-            helper.setText("<h2>郵件測試成功！</h2><p>如果您看到這封信，表示郵件功能正常運作。</p>", true);
-            mailSender.send(message);
+            String html = "<h2>郵件測試成功！</h2><p>如果您看到這封信，表示郵件功能正常運作。</p>";
+            sendViaResend(toEmail, "【預約平台】郵件測試", html);
             return "SUCCESS: 郵件已發送到 " + toEmail;
         } catch (Exception e) {
             log.error("測試郵件發送失敗：{}", e.getMessage(), e);
@@ -201,19 +158,93 @@ public class EmailService {
      */
     public void sendSimpleEmail(String to, String subject, String text) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(text, false);
-
-            mailSender.send(message);
+            sendViaResend(to, subject, text);
             log.info("純文字郵件發送成功，收件人：{}，主旨：{}", to, subject);
-
         } catch (Exception e) {
             log.error("純文字郵件發送失敗，收件人：{}，錯誤：{}", to, e.getMessage(), e);
         }
+    }
+
+    // ========================================
+    // 私有方法
+    // ========================================
+
+    /**
+     * 發送 HTML 郵件
+     */
+    private void sendHtmlEmail(String to, String subject, String templateName, Map<String, Object> variables) {
+        try {
+            // 處理模板
+            Context context = new Context();
+            context.setVariables(variables);
+            String htmlContent = templateEngine.process(templateName, context);
+
+            // 透過 Resend API 發送
+            sendViaResend(to, subject, htmlContent);
+            log.info("郵件發送成功，收件人：{}，主旨：{}", to, subject);
+
+        } catch (Exception e) {
+            log.error("郵件發送失敗，收件人：{}，錯誤：{}", to, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 透過 Resend HTTP API 發送郵件
+     */
+    private void sendViaResend(String to, String subject, String htmlContent) {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            log.warn("Resend API Key 未設定，跳過郵件發送");
+            return;
+        }
+
+        String url = "https://api.resend.com/emails";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
+
+        // 組合寄件人
+        String from = fromName + " <" + fromEmail + ">";
+
+        // 建立請求 body
+        String body = String.format(
+                "{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":%s}",
+                escapeJson(from),
+                escapeJson(to),
+                escapeJson(subject),
+                toJsonString(htmlContent)
+        );
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Resend API 回傳錯誤: " + response.getStatusCode() + " - " + response.getBody());
+        }
+
+        log.debug("Resend API 回傳：{}", response.getBody());
+    }
+
+    /**
+     * JSON 字串跳脫
+     */
+    private String escapeJson(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * 將字串轉為 JSON 字串格式（含雙引號和跳脫）
+     */
+    private String toJsonString(String value) {
+        if (value == null) return "\"\"";
+        return "\"" + value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                + "\"";
     }
 }

@@ -156,8 +156,9 @@ encryption:
 app:
   base-url: ${RAILWAY_PUBLIC_DOMAIN:https://your-app.railway.app}
   email:
-    from: ${MAIL_USERNAME:g0909095118@gmail.com}
+    from: ${MAIL_FROM:onboarding@resend.dev}
     from-name: 預約平台
+    resend-api-key: ${RESEND_API_KEY:re_PQDgEzkG_4GSTPk26ERmyEKq47RhcPfUf}
   pagination:
     default-size: 20
     max-size: 100
