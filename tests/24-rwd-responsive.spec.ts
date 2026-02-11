@@ -123,9 +123,9 @@ test.describe('店家後台 - 手機版側邊欄', () => {
       await toggleBtn.click();
       await page.waitForTimeout(WAIT_TIME.short);
 
-      // 檢查側邊欄 overflow-y 是否為 auto 或 scroll
-      const sidebar = page.locator('#sidebar');
-      const overflowY = await sidebar.evaluate((el: Element) => {
+      // 檢查側邊欄內的 nav 捲動區域 overflow-y 是否為 auto 或 scroll
+      const navColumn = page.locator('#sidebar .nav.flex-column');
+      const overflowY = await navColumn.evaluate((el: Element) => {
         return window.getComputedStyle(el).overflowY;
       });
       expect(['auto', 'scroll']).toContain(overflowY);
@@ -143,8 +143,8 @@ test.describe('店家後台 - 手機版側邊欄', () => {
       await page.waitForTimeout(WAIT_TIME.short);
 
       // 捲動到最底部
-      const sidebar = page.locator('#sidebar');
-      await sidebar.evaluate((el: Element) => {
+      const navColumn = page.locator('#sidebar .nav.flex-column');
+      await navColumn.evaluate((el: Element) => {
         el.scrollTop = el.scrollHeight;
       });
       await page.waitForTimeout(WAIT_TIME.short);
@@ -193,8 +193,9 @@ test.describe('超管後台 - 手機版側邊欄', () => {
       await toggleBtn.click();
       await page.waitForTimeout(WAIT_TIME.short);
 
-      const sidebar = page.locator('#sidebar');
-      const overflowY = await sidebar.evaluate((el: Element) => {
+      // 檢查側邊欄內的 nav 捲動區域 overflow-y 是否為 auto 或 scroll
+      const navColumn = page.locator('#sidebar .nav.flex-column');
+      const overflowY = await navColumn.evaluate((el: Element) => {
         return window.getComputedStyle(el).overflowY;
       });
       expect(['auto', 'scroll']).toContain(overflowY);
