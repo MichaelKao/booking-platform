@@ -590,7 +590,7 @@
                 if (!r.success || !r.data) return;
 
                 const feature = r.data.find(f => f.code === 'ADVANCED_CUSTOMER');
-                if (feature && feature.subscribed) {
+                if (feature && feature.isEnabled) {
                     document.getElementById('tagsCard').style.display = '';
                 }
             } catch (e) {

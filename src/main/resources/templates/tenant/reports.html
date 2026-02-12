@@ -576,7 +576,7 @@
                 if (!r.success || !r.data) return;
 
                 const advFeature = r.data.find(f => f.code === 'ADVANCED_REPORT');
-                const isSubscribed = advFeature && advFeature.subscribed;
+                const isSubscribed = advFeature && advFeature.isEnabled;
 
                 if (isSubscribed) {
                     document.getElementById('advancedReportSection').style.display = '';
