@@ -1,5 +1,6 @@
 package com.booking.platform.service;
 
+import com.booking.platform.common.exception.BusinessException;
 import com.booking.platform.common.exception.ErrorCode;
 import com.booking.platform.common.exception.ResourceNotFoundException;
 import com.booking.platform.common.tenant.TenantContext;
@@ -109,7 +110,50 @@ public class SettingsService {
                 ));
 
         // ========================================
-        // 3. 更新欄位
+        // 3. 驗證時間邏輯
+        // ========================================
+
+        // 營業時間驗證：開始時間不能晚於結束時間
+        if (request.getBusinessStartTime() != null && request.getBusinessEndTime() != null
+                && !request.getBusinessStartTime().isBefore(request.getBusinessEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "營業開始時間必須早於結束時間");
+        }
+        // 單邊更新時，與現有值比較
+        if (request.getBusinessStartTime() != null && request.getBusinessEndTime() == null
+                && tenant.getBusinessEndTime() != null
+                && !request.getBusinessStartTime().isBefore(tenant.getBusinessEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "營業開始時間必須早於結束時間");
+        }
+        if (request.getBusinessEndTime() != null && request.getBusinessStartTime() == null
+                && tenant.getBusinessStartTime() != null
+                && !tenant.getBusinessStartTime().isBefore(request.getBusinessEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "營業開始時間必須早於結束時間");
+        }
+
+        // 休息時間驗證：開始時間不能晚於結束時間
+        if (request.getBreakStartTime() != null && request.getBreakEndTime() != null
+                && !request.getBreakStartTime().isBefore(request.getBreakEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "休息開始時間必須早於結束時間");
+        }
+        if (request.getBreakStartTime() != null && request.getBreakEndTime() == null
+                && tenant.getBreakEndTime() != null
+                && !request.getBreakStartTime().isBefore(tenant.getBreakEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "休息開始時間必須早於結束時間");
+        }
+        if (request.getBreakEndTime() != null && request.getBreakStartTime() == null
+                && tenant.getBreakStartTime() != null
+                && !tenant.getBreakStartTime().isBefore(request.getBreakEndTime())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                    "休息開始時間必須早於結束時間");
+        }
+
+        // ========================================
+        // 4. 更新欄位
         // ========================================
 
         if (request.getName() != null) {
@@ -132,7 +176,7 @@ public class SettingsService {
         }
 
         // ========================================
-        // 3.1 更新營業設定
+        // 4.1 更新營業設定
         // ========================================
 
         if (request.getBusinessStartTime() != null) {
@@ -158,7 +202,7 @@ public class SettingsService {
         }
 
         // ========================================
-        // 3.2 更新通知設定
+        // 4.2 更新通知設定
         // ========================================
 
         if (request.getNotifyNewBooking() != null) {
@@ -172,7 +216,7 @@ public class SettingsService {
         }
 
         // ========================================
-        // 3.3 更新顧客點數累積設定
+        // 4.3 更新顧客點數累積設定
         // ========================================
 
         if (request.getPointEarnEnabled() != null) {
@@ -190,14 +234,14 @@ public class SettingsService {
         }
 
         // ========================================
-        // 4. 儲存更新
+        // 5. 儲存更新
         // ========================================
 
         tenant = tenantRepository.save(tenant);
         log.info("店家設定更新成功，租戶 ID：{}", tenantId);
 
         // ========================================
-        // 5. 返回結果
+        // 6. 返回結果
         // ========================================
 
         return toSettingsResponse(tenant);

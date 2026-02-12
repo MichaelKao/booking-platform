@@ -497,8 +497,19 @@ public class BookingService {
             hasTimeChange = true;
         }
 
-        // 重新計算結束時間（使用目前的 duration）
-        if (hasTimeChange || request.getDuration() != null) {
+        // 如果有直接指定結束時間，驗證開始時間必須早於結束時間
+        if (request.getEndTime() != null) {
+            LocalTime effectiveStart = request.getStartTime() != null ? request.getStartTime() : entity.getStartTime();
+            if (!effectiveStart.isBefore(request.getEndTime())) {
+                throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                        "預約開始時間必須早於結束時間");
+            }
+            entity.setEndTime(request.getEndTime());
+            hasTimeChange = true;
+        }
+
+        // 重新計算結束時間（使用目前的 duration，僅在沒有直接指定 endTime 時）
+        if (request.getEndTime() == null && (hasTimeChange || request.getDuration() != null)) {
             entity.setEndTime(entity.getStartTime().plusMinutes(entity.getDuration()));
         }
 

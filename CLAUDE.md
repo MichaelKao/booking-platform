@@ -585,6 +585,19 @@ ecpay:
 
 不指定員工時，每個時段會檢查是否至少有一位員工無 CONFIRMED 衝突，全部滿了則不顯示該時段。
 
+### 時間/日期驗證規則
+
+所有涉及開始/結束時間配對的 API 都在 Service 層驗證：**開始時間必須早於結束時間**。
+
+| 功能 | 驗證項目 |
+|------|---------|
+| 員工排班 | startTime < endTime、breakStartTime < breakEndTime、休息在上班範圍內 |
+| 員工請假（半天） | startTime < endTime |
+| 店家營業設定 | businessStartTime < businessEndTime、breakStartTime < breakEndTime |
+| 更新預約 | startTime < endTime（直接指定結束時間時） |
+| 票券有效期 | validStartAt < validEndAt |
+| 行銷活動期間 | startAt < endAt |
+
 ---
 
 ## 功能訂閱與側邊欄
@@ -714,13 +727,19 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 ### LINE 設定流程
 
+> **注意**：LINE 已更改建立流程，現在無法直接在 Developers Console 建立 Messaging API Channel，必須先從 Official Account Manager 建立官方帳號。
+
 1. 前往 [LINE Developers Console](https://developers.line.biz/)
-2. 建立或選擇 Provider 和 Messaging API Channel
-3. 複製 Channel ID、Channel Secret、Channel Access Token
-4. 在店家後台 LINE 設定頁面填入並儲存
-5. 設定 Webhook URL 到 LINE Developers Console
-6. **重要**：關閉 LINE Official Account Manager 的自動回應功能（見下方）
-7. 在 LINE Developers Console 點擊 Verify 確認連線成功
+2. 點擊畫面上的綠色按鈕「**Create a LINE Official Account**」，會跳轉到 LINE Official Account Manager
+3. 在 Official Account Manager 建立一個 LINE 官方帳號（填寫帳號名稱、類別等基本資料）
+4. 官方帳號建好後，進入該帳號管理後台 → **設定** → **Messaging API** → 點擊「**啟用 Messaging API**」
+5. 啟用時選擇一個 Provider（選擇既有的或建立新的），完成後系統會自動在 LINE Developers Console 建立對應的 Messaging API Channel
+6. 回到 [LINE Developers Console](https://developers.line.biz/)，進入新建的 Messaging API Channel
+7. 複製 **Channel ID**、**Channel Secret**、**Channel Access Token**（Token 需點「Issue」產生）
+8. 在店家後台 LINE 設定頁面填入並儲存
+9. 設定 **Webhook URL** 到 LINE Developers Console：`https://你的網域/api/line/webhook/{tenantCode}`
+10. **重要**：關閉 LINE Official Account Manager 的自動回應功能（見下方）
+11. 在 LINE Developers Console 點擊 **Verify** 確認連線成功
 
 ### 關閉 LINE Official Account 自動回應（必要步驟）
 
@@ -795,6 +814,7 @@ npx playwright test --list
 | `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
 | `27-line-category-selection.spec.ts` | LINE Bot 服務分類選擇功能測試 | 26 |
 | `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 16 |
+| `29-time-validation.spec.ts` | 時間/日期驗證測試（開始<結束） | 18 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -1025,6 +1045,7 @@ tests/
 ├── 26-api-contract-validator.spec.ts ← API 契約驗證
 ├── 27-line-category-selection.spec.ts ← LINE Bot 分類選擇功能
 ├── 28-booking-slot-conflict.spec.ts ← 預約時段衝突與自動分配員工
+├── 29-time-validation.spec.ts      ← 時間/日期驗證（開始<結束）
 ├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
 ├── fixtures.ts                 ← 共用 Fixture（F12 監控）
 └── utils/test-helpers.ts       ← 共用輔助函式
@@ -1230,4 +1251,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 976 |
+| E2E 測試 | 994 |

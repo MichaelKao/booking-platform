@@ -192,6 +192,21 @@ boolean isStaffOnLeave(String staffId, LocalDate date);
 
 ---
 
+## 時間/日期驗證規則
+
+所有涉及開始/結束時間的 Service 方法都必須驗證：**開始時間必須早於結束時間**。
+
+| Service | 方法 | 驗證項目 |
+|---------|------|---------|
+| StaffService | updateSchedule() | startTime < endTime、breakStartTime < breakEndTime、休息時間在上班時間範圍內 |
+| StaffService | createLeaves() | 半天假 startTime < endTime |
+| SettingsService | updateSettings() | businessStartTime < businessEndTime、breakStartTime < breakEndTime（含單邊更新） |
+| BookingService | update() | startTime < endTime（直接指定結束時間時） |
+| CouponService | create()/update() | validStartAt < validEndAt |
+| CampaignService | create()/update() | startAt < endAt |
+
+---
+
 ## 方法模板
 
 ```java

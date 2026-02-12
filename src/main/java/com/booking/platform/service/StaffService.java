@@ -290,6 +290,35 @@ public class StaffService {
         Map<Integer, StaffSchedule> existingMap = existingSchedules.stream()
                 .collect(Collectors.toMap(StaffSchedule::getDayOfWeek, s -> s));
 
+        // 驗證時間邏輯
+        for (StaffScheduleRequest.DaySchedule daySchedule : request.getSchedules()) {
+            if (Boolean.TRUE.equals(daySchedule.getIsWorkingDay())) {
+                // 上班時間驗證：開始時間不能晚於結束時間
+                if (daySchedule.getStartTime() != null && daySchedule.getEndTime() != null
+                        && !daySchedule.getStartTime().isBefore(daySchedule.getEndTime())) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的上班開始時間必須早於結束時間");
+                }
+                // 休息時間驗證：開始時間不能晚於結束時間
+                if (daySchedule.getBreakStartTime() != null && daySchedule.getBreakEndTime() != null
+                        && !daySchedule.getBreakStartTime().isBefore(daySchedule.getBreakEndTime())) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的休息開始時間必須早於結束時間");
+                }
+                // 休息時間必須在上班時間範圍內
+                if (daySchedule.getBreakStartTime() != null && daySchedule.getStartTime() != null
+                        && daySchedule.getBreakStartTime().isBefore(daySchedule.getStartTime())) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的休息時間不能早於上班時間");
+                }
+                if (daySchedule.getBreakEndTime() != null && daySchedule.getEndTime() != null
+                        && daySchedule.getBreakEndTime().isAfter(daySchedule.getEndTime())) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的休息時間不能晚於下班時間");
+                }
+            }
+        }
+
         // 更新或建立排班
         List<StaffSchedule> toSave = new ArrayList<>();
         for (StaffScheduleRequest.DaySchedule daySchedule : request.getSchedules()) {
@@ -403,6 +432,18 @@ public class StaffService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.STAFF_NOT_FOUND, "找不到指定的員工"
                 ));
+
+        // 半天假時間驗證：開始時間不能晚於結束時間
+        if (Boolean.FALSE.equals(request.getIsFullDay())) {
+            if (request.getStartTime() != null && request.getEndTime() != null) {
+                LocalTime leaveStart = LocalTime.parse(request.getStartTime());
+                LocalTime leaveEnd = LocalTime.parse(request.getEndTime());
+                if (!leaveStart.isBefore(leaveEnd)) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            "請假開始時間必須早於結束時間");
+                }
+            }
+        }
 
         List<StaffLeave> createdLeaves = new ArrayList<>();
 

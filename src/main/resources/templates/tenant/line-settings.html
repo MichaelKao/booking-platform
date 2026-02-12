@@ -33,9 +33,9 @@
                                         </button>
                                     </div>
                                     <ol class="mb-0 mt-2 ps-3">
-                                        <li>前往 <a href="https://developers.line.biz/" target="_blank" class="fw-bold">LINE Developers Console <i class="bi bi-box-arrow-up-right"></i></a></li>
-                                        <li>建立或選擇您的 Provider 和 Messaging API Channel</li>
-                                        <li>複製 Channel ID、Channel Secret 和 Access Token 填入下方</li>
+                                        <li>前往 <a href="https://developers.line.biz/" target="_blank" class="fw-bold">LINE Developers Console <i class="bi bi-box-arrow-up-right"></i></a>，點擊「Create a LINE Official Account」建立官方帳號</li>
+                                        <li>在官方帳號管理後台 → 設定 → Messaging API → 啟用 Messaging API</li>
+                                        <li>回到 LINE Developers Console，進入新建的 Channel，複製 Channel ID、Channel Secret 和 Access Token 填入下方</li>
                                         <li>將下方的 Webhook URL 設定到 LINE Developers Console</li>
                                         <li>儲存設定並測試連線</li>
                                     </ol>
@@ -44,23 +44,20 @@
                                 <!-- 詳細圖文教學（預設收合） -->
                                 <div class="collapse mb-4" id="detailedTutorial">
                                     <div class="card card-body bg-light">
-                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-1-circle me-2"></i>步驟一：登入 LINE Developers</h6>
-                                        <p class="small mb-2">1. 點擊上方連結前往 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a></p>
-                                        <p class="small mb-2">2. 使用您的 LINE 帳號登入（與您的 LINE 官方帳號相同）</p>
-                                        <p class="small mb-3">3. 如果是首次使用，需要先同意開發者條款</p>
+                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-1-circle me-2"></i>步驟一：建立 LINE 官方帳號</h6>
+                                        <p class="small mb-2">1. 前往 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a>，使用您的 LINE 帳號登入</p>
+                                        <p class="small mb-2">2. 點擊畫面上的綠色按鈕「<strong>Create a LINE Official Account</strong>」</p>
+                                        <p class="small mb-2">3. 系統會跳轉到 LINE Official Account Manager，在此建立一個官方帳號</p>
+                                        <p class="small mb-3">4. 填寫帳號名稱、類別等基本資料後完成建立</p>
 
-                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-2-circle me-2"></i>步驟二：建立 Provider 和 Channel</h6>
-                                        <p class="small mb-2">1. 點擊「Create a new provider」建立提供者（輸入您的店名即可）</p>
-                                        <p class="small mb-2">2. 在 Provider 中點擊「Create a Messaging API channel」</p>
-                                        <p class="small mb-2">3. 填寫 Channel 基本資訊：</p>
-                                        <ul class="small mb-3">
-                                            <li>Channel name：您的 LINE 官方帳號名稱</li>
-                                            <li>Channel description：簡短描述</li>
-                                            <li>Category：選擇「美容・サロン」或相關分類</li>
-                                            <li>Email：您的聯絡信箱</li>
-                                        </ul>
+                                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-2-circle me-2"></i>步驟二：啟用 Messaging API</h6>
+                                        <p class="small mb-2">1. 在官方帳號管理後台，進入「<strong>設定</strong>」→「<strong>Messaging API</strong>」</p>
+                                        <p class="small mb-2">2. 點擊「<strong>啟用 Messaging API</strong>」</p>
+                                        <p class="small mb-2">3. 選擇一個 Provider（選擇既有的或建立新的，輸入您的店名即可）</p>
+                                        <p class="small mb-3">4. 完成後，系統會自動在 LINE Developers Console 建立對應的 Messaging API Channel</p>
 
                                         <h6 class="fw-bold text-primary mb-3"><i class="bi bi-3-circle me-2"></i>步驟三：取得設定資訊</h6>
+                                        <p class="small mb-2">回到 <a href="https://developers.line.biz/" target="_blank">LINE Developers Console</a>，進入剛建立的 Messaging API Channel：</p>
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="border rounded p-2 mb-2 bg-white">

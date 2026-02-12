@@ -120,6 +120,12 @@ public class CouponService {
             throw new BusinessException(ErrorCode.COUPON_NAME_DUPLICATE, "票券名稱已存在");
         }
 
+        // 驗證有效期間：起始日不能晚於結束日
+        if (request.getValidStartAt() != null && request.getValidEndAt() != null
+                && !request.getValidStartAt().isBefore(request.getValidEndAt())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "票券有效起始日必須早於結束日");
+        }
+
         Coupon entity = Coupon.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -164,6 +170,12 @@ public class CouponService {
         if (couponRepository.existsByTenantIdAndNameAndIdNotAndDeletedAtIsNull(
                 tenantId, request.getName(), id)) {
             throw new BusinessException(ErrorCode.COUPON_NAME_DUPLICATE, "票券名稱已存在");
+        }
+
+        // 驗證有效期間：起始日不能晚於結束日
+        if (request.getValidStartAt() != null && request.getValidEndAt() != null
+                && !request.getValidStartAt().isBefore(request.getValidEndAt())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "票券有效起始日必須早於結束日");
         }
 
         entity.setName(request.getName());

@@ -121,6 +121,12 @@ public class CampaignService {
             throw new BusinessException(ErrorCode.CAMPAIGN_NAME_DUPLICATE, "活動名稱已存在");
         }
 
+        // 驗證活動期間：開始時間不能晚於結束時間
+        if (request.getStartAt() != null && request.getEndAt() != null
+                && !request.getStartAt().isBefore(request.getEndAt())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "活動開始時間必須早於結束時間");
+        }
+
         // 驗證關聯票券
         if (request.getCouponId() != null) {
             if (!couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(request.getCouponId(), tenantId).isPresent()) {
@@ -168,6 +174,12 @@ public class CampaignService {
         if (campaignRepository.existsByTenantIdAndNameAndIdNotAndDeletedAtIsNull(
                 tenantId, request.getName(), id)) {
             throw new BusinessException(ErrorCode.CAMPAIGN_NAME_DUPLICATE, "活動名稱已存在");
+        }
+
+        // 驗證活動期間：開始時間不能晚於結束時間
+        if (request.getStartAt() != null && request.getEndAt() != null
+                && !request.getStartAt().isBefore(request.getEndAt())) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "活動開始時間必須早於結束時間");
         }
 
         entity.setName(request.getName());

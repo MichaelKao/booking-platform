@@ -239,6 +239,21 @@ public class CreateXxxRequest {
 
 ---
 
+## 時間配對欄位（Service 層驗證）
+
+以下 DTO 的開始/結束時間在 Service 層驗證（非 DTO 標註），確保開始時間早於結束時間：
+
+| DTO | 開始欄位 | 結束欄位 |
+|-----|---------|---------|
+| StaffScheduleRequest.DaySchedule | startTime / breakStartTime | endTime / breakEndTime |
+| CreateStaffLeaveRequest | startTime | endTime |
+| UpdateSettingsRequest | businessStartTime / breakStartTime | businessEndTime / breakEndTime |
+| UpdateBookingRequest | startTime | endTime |
+| CreateCouponRequest / UpdateCouponRequest | validStartAt | validEndAt |
+| CreateCampaignRequest / UpdateCampaignRequest | startAt | endAt |
+
+---
+
 ## Request DTO 範例
 
 ```java
