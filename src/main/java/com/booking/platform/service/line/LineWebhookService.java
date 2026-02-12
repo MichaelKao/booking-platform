@@ -9,10 +9,13 @@ import com.booking.platform.entity.line.LineUser;
 import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.enums.line.ConversationState;
 import com.booking.platform.enums.line.LineEventType;
+import com.booking.platform.entity.catalog.ServiceCategory;
 import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.CouponRepository;
 import com.booking.platform.repository.CouponInstanceRepository;
 import com.booking.platform.repository.CustomerRepository;
+import com.booking.platform.repository.ServiceCategoryRepository;
+import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.MembershipLevelRepository;
 import com.booking.platform.repository.ProductRepository;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
@@ -70,6 +73,8 @@ public class LineWebhookService {
     private final BookingService bookingService;
     private final BookingRepository bookingRepository;
     private final CouponRepository couponRepository;
+    private final ServiceCategoryRepository serviceCategoryRepository;
+    private final ServiceItemRepository serviceItemRepository;
     private final CouponInstanceRepository couponInstanceRepository;
     private final CustomerRepository customerRepository;
     private final MembershipLevelRepository membershipLevelRepository;
@@ -309,6 +314,7 @@ public class LineWebhookService {
 
         switch (action) {
             case "start_booking" -> startBookingFlow(tenantId, userId, replyToken);
+            case "select_category" -> handleSelectCategory(tenantId, userId, replyToken, params);
             case "select_service" -> handleSelectService(tenantId, userId, replyToken, params);
             case "select_staff" -> handleSelectStaff(tenantId, userId, replyToken, params);
             case "select_date" -> handleSelectDate(tenantId, userId, replyToken, params);
@@ -384,6 +390,7 @@ public class LineWebhookService {
 
     /**
      * 開始預約流程
+     * 有多個分類時先選分類，否則直接選服務
      */
     private void startBookingFlow(String tenantId, String userId, String replyToken) {
         // 檢查是否啟用預約功能
@@ -393,11 +400,37 @@ public class LineWebhookService {
             return;
         }
 
-        // 轉換狀態
-        conversationService.startBooking(tenantId, userId);
+        // 查詢啟用中的服務分類
+        List<ServiceCategory> categories = serviceCategoryRepository.findByTenantId(tenantId, true);
 
-        // 回覆服務選單
-        JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+        // 檢查有多少分類實際包含可預約的服務
+        List<String> categoriesWithServices = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
+
+        if (categories.size() >= 2 && categoriesWithServices.size() >= 2) {
+            // 多個分類且有服務歸屬，先選分類
+            conversationService.startBooking(tenantId, userId, ConversationState.SELECTING_CATEGORY);
+            JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
+            messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
+        } else {
+            // 沒有分類、只有一個分類、或服務未歸屬分類，直接選服務
+            conversationService.startBooking(tenantId, userId);
+            JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+            messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+        }
+    }
+
+    /**
+     * 處理選擇分類
+     * 設定分類後顯示該分類下的服務
+     */
+    private void handleSelectCategory(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String categoryId = params.get("categoryId");
+        String categoryName = params.get("categoryName");
+
+        conversationService.setSelectedCategory(tenantId, userId, categoryId, categoryName);
+
+        // 顯示該分類下的服務
+        JsonNode serviceMenu = flexMessageBuilder.buildServiceMenuByCategory(tenantId, categoryId);
         messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
     }
 
@@ -572,9 +605,19 @@ public class LineWebhookService {
         ConversationContext context = conversationService.goBack(tenantId, userId);
 
         switch (context.getState()) {
+            case SELECTING_CATEGORY -> {
+                JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
+                messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
+            }
             case SELECTING_SERVICE -> {
-                JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
-                messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                // 如果有選過分類，顯示該分類的服務；否則顯示全部服務
+                if (context.getSelectedCategoryId() != null) {
+                    JsonNode serviceMenu = flexMessageBuilder.buildServiceMenuByCategory(tenantId, context.getSelectedCategoryId());
+                    messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                } else {
+                    JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+                    messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                }
             }
             case SELECTING_STAFF -> {
                 // 新流程：返回選員工時需要根據已選日期篩選

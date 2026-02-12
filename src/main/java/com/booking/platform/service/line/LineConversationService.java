@@ -166,6 +166,32 @@ public class LineConversationService {
     }
 
     /**
+     * 設定選擇的分類
+     *
+     * @param tenantId     租戶 ID
+     * @param lineUserId   LINE User ID
+     * @param categoryId   分類 ID
+     * @param categoryName 分類名稱
+     * @return 更新後的對話上下文
+     */
+    public ConversationContext setSelectedCategory(
+            String tenantId,
+            String lineUserId,
+            String categoryId,
+            String categoryName
+    ) {
+        ConversationContext context = getContext(tenantId, lineUserId);
+        context.setCategory(categoryId, categoryName);
+        context.transitionTo(ConversationState.SELECTING_SERVICE);
+        saveContext(context);
+
+        log.debug("設定選擇的分類，租戶：{}，LINE User：{}，分類：{}",
+                tenantId, lineUserId, categoryName);
+
+        return context;
+    }
+
+    /**
      * 設定選擇的服務
      *
      * @param tenantId    租戶 ID
@@ -334,12 +360,24 @@ public class LineConversationService {
      * @return 更新後的對話上下文
      */
     public ConversationContext startBooking(String tenantId, String lineUserId) {
+        return startBooking(tenantId, lineUserId, ConversationState.SELECTING_SERVICE);
+    }
+
+    /**
+     * 開始預約流程（指定初始狀態）
+     *
+     * @param tenantId     租戶 ID
+     * @param lineUserId   LINE User ID
+     * @param initialState 初始狀態（SELECTING_CATEGORY 或 SELECTING_SERVICE）
+     * @return 更新後的對話上下文
+     */
+    public ConversationContext startBooking(String tenantId, String lineUserId, ConversationState initialState) {
         ConversationContext context = getContext(tenantId, lineUserId);
         context.clearBookingData();
-        context.transitionTo(ConversationState.SELECTING_SERVICE);
+        context.transitionTo(initialState);
         saveContext(context);
 
-        log.debug("開始預約流程，租戶：{}，LINE User：{}", tenantId, lineUserId);
+        log.debug("開始預約流程，租戶：{}，LINE User：{}，初始狀態：{}", tenantId, lineUserId, initialState);
 
         return context;
     }

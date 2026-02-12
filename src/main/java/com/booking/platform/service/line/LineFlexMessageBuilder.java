@@ -2,6 +2,7 @@ package com.booking.platform.service.line;
 
 import com.booking.platform.dto.line.ConversationContext;
 import com.booking.platform.entity.booking.Booking;
+import com.booking.platform.entity.catalog.ServiceCategory;
 import com.booking.platform.entity.catalog.ServiceItem;
 import com.booking.platform.entity.marketing.Coupon;
 import com.booking.platform.entity.marketing.CouponInstance;
@@ -14,6 +15,7 @@ import com.booking.platform.enums.CouponInstanceStatus;
 import com.booking.platform.enums.ServiceStatus;
 import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.repository.BookingRepository;
+import com.booking.platform.repository.ServiceCategoryRepository;
 import com.booking.platform.repository.ServiceItemRepository;
 import com.booking.platform.repository.StaffLeaveRepository;
 import com.booking.platform.repository.StaffRepository;
@@ -70,6 +72,7 @@ public class LineFlexMessageBuilder {
 
     private final ObjectMapper objectMapper;
     private final TenantRepository tenantRepository;
+    private final ServiceCategoryRepository serviceCategoryRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
     private final StaffScheduleRepository staffScheduleRepository;
@@ -603,6 +606,327 @@ public class LineFlexMessageBuilder {
 
         body.set("contents", objectMapper.createArrayNode().add(text));
         bubble.set("body", body);
+
+        return bubble;
+    }
+
+    // ========================================
+    // 2.5 服務分類選單
+    // ========================================
+
+    /**
+     * 建構服務分類選單（Carousel）
+     *
+     * @param tenantId 租戶 ID
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCategoryMenu(String tenantId) {
+        List<ServiceCategory> categories = serviceCategoryRepository.findByTenantId(tenantId, true);
+
+        // 只顯示有可預約服務的分類
+        List<String> categoryIdsWithServices = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
+        List<ServiceCategory> filteredCategories = categories.stream()
+                .filter(c -> categoryIdsWithServices.contains(c.getId()))
+                .toList();
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // 第一個 Bubble：指引說明
+        bubbles.add(buildCategoryGuide());
+
+        for (ServiceCategory category : filteredCategories) {
+            bubbles.add(buildCategoryBubble(category));
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構分類選單指引
+     */
+    private ObjectNode buildCategoryGuide() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 1/5");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "\uD83D\uDCC2 選擇分類");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "\uD83D\uDC48 往左滑動查看所有分類\n\n點擊「選擇此分類」繼續下一步");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        bodyContents.add(guideText);
+
+        // 流程說明
+        ObjectNode flowBox = objectMapper.createObjectNode();
+        flowBox.put("type", "box");
+        flowBox.put("layout", "vertical");
+        flowBox.put("backgroundColor", "#F5F5F5");
+        flowBox.put("cornerRadius", "8px");
+        flowBox.put("paddingAll", "10px");
+        flowBox.put("margin", "md");
+
+        ArrayNode flowContents = objectMapper.createArrayNode();
+
+        String[] steps = {"1️⃣ 選擇分類", "2️⃣ 選擇服務", "3️⃣ 選擇日期", "4️⃣ 選擇人員", "5️⃣ 選擇時間"};
+        for (String step : steps) {
+            ObjectNode stepItem = objectMapper.createObjectNode();
+            stepItem.put("type", "text");
+            stepItem.put("text", step);
+            stepItem.put("size", "xs");
+            stepItem.put("color", "#666666");
+            flowContents.add(stepItem);
+        }
+
+        flowBox.set("contents", flowContents);
+        bodyContents.add(flowBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        bubble.set("footer", createCancelFooter());
+
+        return bubble;
+    }
+
+    /**
+     * 建構單一分類 Bubble
+     */
+    private ObjectNode buildCategoryBubble(ServiceCategory category) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header - 分類名稱
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "12px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", category.getName());
+        headerText.put("size", "md");
+        headerText.put("weight", "bold");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("align", "center");
+        headerText.put("wrap", true);
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 分類說明（如有）
+        if (category.getDescription() != null && !category.getDescription().isEmpty()) {
+            ObjectNode descText = objectMapper.createObjectNode();
+            descText.put("type", "text");
+            descText.put("text", category.getDescription());
+            descText.put("size", "sm");
+            descText.put("color", SECONDARY_COLOR);
+            descText.put("wrap", true);
+            bodyContents.add(descText);
+        } else {
+            ObjectNode placeholderText = objectMapper.createObjectNode();
+            placeholderText.put("type", "text");
+            placeholderText.put("text", "點擊下方按鈕查看此分類的服務");
+            placeholderText.put("size", "sm");
+            placeholderText.put("color", SECONDARY_COLOR);
+            placeholderText.put("wrap", true);
+            bodyContents.add(placeholderText);
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        String postbackData = String.format(
+                "action=select_category&categoryId=%s&categoryName=%s",
+                category.getId(),
+                category.getName()
+        );
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("✓ 選擇此分類", postbackData, PRIMARY_COLOR)
+        ));
+
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    /**
+     * 建構按分類篩選的服務選單（Carousel）
+     *
+     * @param tenantId   租戶 ID
+     * @param categoryId 分類 ID
+     * @return Flex Message 內容
+     */
+    public JsonNode buildServiceMenuByCategory(String tenantId, String categoryId) {
+        List<ServiceItem> services = serviceItemRepository
+                .findBookableServicesByCategory(tenantId, categoryId);
+
+        if (services.isEmpty()) {
+            return buildNoServiceMessage();
+        }
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // 第一個 Bubble：指引說明（分類流程用 5 步版本）
+        bubbles.add(buildServiceGuideWithCategory());
+
+        for (ServiceItem service : services) {
+            bubbles.add(buildServiceBubble(service));
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構服務選單指引（分類流程版，步驟 2/5）
+     */
+    private ObjectNode buildServiceGuideWithCategory() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", "#4A90D9");
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        ObjectNode stepText = objectMapper.createObjectNode();
+        stepText.put("type", "text");
+        stepText.put("text", "步驟 2/5");
+        stepText.put("size", "xs");
+        stepText.put("color", "#FFFFFF");
+        stepText.put("align", "center");
+        headerContents.add(stepText);
+
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", "✂️ 選擇服務");
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "\uD83D\uDC48 往左滑動查看所有服務項目\n\n點擊「選擇此服務」繼續下一步");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        bodyContents.add(guideText);
+
+        // 流程說明
+        ObjectNode flowBox = objectMapper.createObjectNode();
+        flowBox.put("type", "box");
+        flowBox.put("layout", "vertical");
+        flowBox.put("backgroundColor", "#F5F5F5");
+        flowBox.put("cornerRadius", "8px");
+        flowBox.put("paddingAll", "10px");
+        flowBox.put("margin", "md");
+
+        ArrayNode flowContents = objectMapper.createArrayNode();
+
+        String[] steps = {"1️⃣ 選擇分類 ✓", "2️⃣ 選擇服務", "3️⃣ 選擇日期", "4️⃣ 選擇人員", "5️⃣ 選擇時間"};
+        for (String step : steps) {
+            ObjectNode stepItem = objectMapper.createObjectNode();
+            stepItem.put("type", "text");
+            stepItem.put("text", step);
+            stepItem.put("size", "xs");
+            stepItem.put("color", "#666666");
+            flowContents.add(stepItem);
+        }
+
+        flowBox.set("contents", flowContents);
+        bodyContents.add(flowBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        bubble.set("footer", createCancelFooter());
 
         return bubble;
     }

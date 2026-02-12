@@ -335,10 +335,14 @@ scheduler:
 | 預約提醒 | Footer 底部 |
 
 ### 預約流程
+
+**有分類時（>= 2 個啟用分類且有服務歸屬）：**
 ```
 IDLE（閒置）
   ↓ 點選「開始預約」
-SELECTING_SERVICE（選擇服務）
+SELECTING_CATEGORY（選擇分類）- Carousel 顯示有服務的分類
+  ↓ 選擇分類
+SELECTING_SERVICE（選擇服務）- 只顯示該分類下的服務
   ↓ 選擇服務
 SELECTING_DATE（選擇日期）- 支援 Carousel 顯示完整可預約天數
   ↓ 選擇日期
@@ -352,6 +356,20 @@ CONFIRMING_BOOKING（確認預約）
   ↓ 確認
 IDLE（完成，回到閒置）
 ```
+
+**無分類時（< 2 個分類或服務未歸屬分類）：**
+```
+IDLE（閒置）
+  ↓ 點選「開始預約」
+SELECTING_SERVICE（選擇服務）- 顯示全部服務
+  ↓ 選擇服務
+SELECTING_DATE → SELECTING_STAFF → SELECTING_TIME → INPUTTING_NOTE → CONFIRMING_BOOKING → IDLE
+```
+
+**分類流程啟動條件：**
+- 至少 2 個啟用中的服務分類 **且**
+- 至少 2 個分類底下有可預約的服務（ACTIVE + isVisible）
+- 不符合條件時自動退回原有 4 步驟流程
 
 **流程說明：**
 - 先選日期再選員工，確保顧客只能看到當天有上班且未請假的員工
@@ -711,7 +729,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (938 tests)：**
+**測試套件 (960 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -746,6 +764,7 @@ npx playwright test --list
 | `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
 | `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
 | `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
+| `27-line-category-selection.spec.ts` | LINE Bot 服務分類選擇功能測試 | 26 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -767,6 +786,7 @@ npx playwright test --list
 - 側邊欄店家 footer（店家名稱/跨頁面載入）
 - 設定完成狀態 API（欄位驗證/邊界值）
 - LINE Bot 對話狀態和訊息格式
+- LINE Bot 服務分類選擇流程（狀態機、Postback、goBack、邊界情況）
 - Excel/PDF 匯出功能
 - 靜態資源（CSS/JS）載入
 - 顧客點數交易記錄 API
@@ -973,6 +993,7 @@ tests/
 ├── 20-f12-console-check.spec.ts ← 全頁面 Console 錯誤檢測
 ├── 21~25-*.spec.ts             ← 專項驗證測試
 ├── 26-api-contract-validator.spec.ts ← API 契約驗證
+├── 27-line-category-selection.spec.ts ← LINE Bot 分類選擇功能
 ├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
 ├── fixtures.ts                 ← 共用 Fixture（F12 監控）
 └── utils/test-helpers.ts       ← 共用輔助函式
@@ -1178,4 +1199,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 930 |
+| E2E 測試 | 960 |

@@ -72,6 +72,16 @@ public class ConversationContext implements Serializable {
     // ========================================
 
     /**
+     * 選擇的服務分類 ID
+     */
+    private String selectedCategoryId;
+
+    /**
+     * 選擇的服務分類名稱
+     */
+    private String selectedCategoryName;
+
+    /**
      * 選擇的服務 ID
      */
     private String selectedServiceId;
@@ -208,6 +218,8 @@ public class ConversationContext implements Serializable {
      * 清除預約暫存資料
      */
     public void clearBookingData() {
+        this.selectedCategoryId = null;
+        this.selectedCategoryName = null;
         this.selectedServiceId = null;
         this.selectedServiceName = null;
         this.selectedServiceDuration = null;
@@ -245,6 +257,17 @@ public class ConversationContext implements Serializable {
         clearBookingData();
         clearProductData();
         clearCouponData();
+    }
+
+    /**
+     * 設定分類資訊
+     *
+     * @param categoryId   分類 ID
+     * @param categoryName 分類名稱
+     */
+    public void setCategory(String categoryId, String categoryName) {
+        this.selectedCategoryId = categoryId;
+        this.selectedCategoryName = categoryName;
     }
 
     /**

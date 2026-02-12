@@ -9,6 +9,8 @@ package com.booking.platform.enums.line;
  * <pre>
  * IDLE（閒置）
  *   ↓ 用戶說「預約」或點選「開始預約」
+ * SELECTING_CATEGORY（選擇分類，有多個分類時）
+ *   ↓ 選擇分類（或跳過，若分類 &lt; 2）
  * SELECTING_SERVICE（選擇服務）
  *   ↓ 選擇服務
  * SELECTING_STAFF（選擇員工）
@@ -51,6 +53,11 @@ public enum ConversationState {
     // ========================================
     // 預約流程
     // ========================================
+
+    /**
+     * 選擇服務分類中（有多個分類時）
+     */
+    SELECTING_CATEGORY,
 
     /**
      * 選擇服務中

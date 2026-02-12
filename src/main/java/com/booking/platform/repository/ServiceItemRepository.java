@@ -83,6 +83,19 @@ public interface ServiceItemRepository extends JpaRepository<ServiceItem, String
      */
     List<ServiceItem> findByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, ServiceStatus status);
 
+    /**
+     * 查詢有可預約服務的分類 ID 清單
+     */
+    @Query("""
+            SELECT DISTINCT s.categoryId FROM ServiceItem s
+            WHERE s.tenantId = :tenantId
+            AND s.categoryId IS NOT NULL
+            AND s.deletedAt IS NULL
+            AND s.status = 'ACTIVE'
+            AND s.isVisible = true
+            """)
+    List<String> findDistinctBookableCategoryIds(@Param("tenantId") String tenantId);
+
     // ========================================
     // 存在性檢查
     // ========================================

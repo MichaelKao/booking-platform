@@ -41,7 +41,7 @@ public class CreateXxxRequest {
 
 ---
 
-## DTO 列表 (60+ 個)
+## DTO 列表 (76+ 個)
 
 ### 認證相關
 
@@ -96,6 +96,19 @@ public class CreateXxxRequest {
 | CreateProductRequest | 建立商品 |
 | UpdateProductRequest | 更新商品 |
 | ProductResponse | 商品資訊 |
+
+### 商品訂單相關
+
+| DTO | 說明 |
+|-----|------|
+| CreateProductOrderRequest | 建立商品訂單 |
+| ProductOrderResponse | 商品訂單資訊 |
+
+### 庫存相關
+
+| DTO | 說明 |
+|-----|------|
+| InventoryLogResponse | 庫存異動記錄 |
 
 ### 票券相關
 
@@ -185,6 +198,8 @@ public class CreateXxxRequest {
 **預約相關**
 | 欄位 | 類型 | 說明 |
 |------|------|------|
+| selectedCategoryId | String | 選擇的服務分類 ID |
+| selectedCategoryName | String | 選擇的服務分類名稱 |
 | selectedServiceId | String | 選擇的服務 ID |
 | selectedServiceName | String | 選擇的服務名稱 |
 | selectedStaffId | String | 選擇的員工 ID |
