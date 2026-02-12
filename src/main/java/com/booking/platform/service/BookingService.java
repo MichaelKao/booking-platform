@@ -162,7 +162,7 @@ public class BookingService {
         // ========================================
 
         ServiceItem service = serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(
-                        request.getServiceId(), tenantId)
+                        request.getServiceItemId(), tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.SERVICE_NOT_FOUND, "找不到指定的服務項目"
                 ));

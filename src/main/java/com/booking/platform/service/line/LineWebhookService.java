@@ -530,7 +530,7 @@ public class LineWebhookService {
             CreateBookingRequest request = CreateBookingRequest.builder()
                     .bookingDate(context.getSelectedDate())
                     .startTime(context.getSelectedTime())
-                    .serviceId(context.getSelectedServiceId())
+                    .serviceItemId(context.getSelectedServiceId())
                     .staffId(context.getSelectedStaffId())
                     .customerId(customerId)
                     .customerNote(context.getCustomerNote())

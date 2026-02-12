@@ -34,7 +34,7 @@ public class CreateBookingRequest {
     private String staffId;
 
     @NotBlank(message = "服務項目 ID 不能為空")
-    private String serviceId;
+    private String serviceItemId;
 
     @Size(max = 500, message = "顧客備註長度不能超過 500 字")
     private String customerNote;
