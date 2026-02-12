@@ -44,6 +44,7 @@ public class TenantService {
     private final StaffRepository staffRepository;
     private final CustomerRepository customerRepository;
     private final TenantMapper tenantMapper;
+    private final FeatureService featureService;
 
     // ========================================
     // 查詢方法
@@ -188,7 +189,13 @@ public class TenantService {
         entity = tenantRepository.save(entity);
 
         // ========================================
-        // 4. 返回結果
+        // 4. 初始化免費功能
+        // ========================================
+
+        featureService.initializeTenantFreeFeatures(tenantId);
+
+        // ========================================
+        // 5. 返回結果
         // ========================================
 
         log.info("租戶建立成功，ID：{}，代碼：{}", entity.getId(), entity.getCode());

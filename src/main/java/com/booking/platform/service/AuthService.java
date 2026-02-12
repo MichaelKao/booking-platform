@@ -50,6 +50,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final FeatureService featureService;
 
     // ========================================
     // 設定值
@@ -461,13 +462,19 @@ public class AuthService {
         log.info("店家註冊成功，ID：{}，代碼：{}", tenant.getId(), tenant.getCode());
 
         // ========================================
-        // 5. 發送歡迎郵件
+        // 5. 初始化免費功能
+        // ========================================
+
+        featureService.initializeTenantFreeFeatures(tenantId);
+
+        // ========================================
+        // 6. 發送歡迎郵件
         // ========================================
 
         emailService.sendWelcomeEmail(tenant.getEmail(), tenant.getName(), tenant.getCode());
 
         // ========================================
-        // 6. 產生 Token 並返回
+        // 7. 產生 Token 並返回
         // ========================================
 
         String accessToken = jwtTokenProvider.generateAccessToken(
