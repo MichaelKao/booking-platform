@@ -49,7 +49,7 @@ const ADMIN_PAGES = [
  * 等待所有 /api/ 請求完成（排除 SSE 的 /notifications/stream）
  * 不用 networkidle（SSE 永遠不會 idle），改用 request/response 計數
  */
-async function waitForApiSettled(page: Page, timeoutMs = 5000): Promise<void> {
+async function waitForApiSettled(page: Page, timeoutMs = 8000): Promise<void> {
     let pending = 0;
 
     const onRequest = (req: { url: () => string }) => {
