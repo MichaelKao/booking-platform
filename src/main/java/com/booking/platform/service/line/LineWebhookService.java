@@ -36,8 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -678,12 +676,10 @@ public class LineWebhookService {
                 return;
             }
 
-            // 查詢預約（最近 10 筆）
-            Page<Booking> bookingsPage = bookingRepository.findByCustomerId(
-                    tenantId, customerId, PageRequest.of(0, 10)
+            // 查詢有效預約（僅 PENDING / CONFIRMED，依時間 ASC 排序）
+            List<Booking> bookings = bookingRepository.findActiveByCustomerId(
+                    tenantId, customerId
             );
-
-            List<Booking> bookings = bookingsPage.getContent();
 
             // 建構預約列表訊息（帶取消按鈕）
             JsonNode bookingList = flexMessageBuilder.buildBookingListWithCancel(bookings);

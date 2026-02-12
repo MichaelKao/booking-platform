@@ -14,6 +14,7 @@ import com.booking.platform.entity.customer.Customer;
 import com.booking.platform.entity.staff.Staff;
 import com.booking.platform.entity.staff.StaffSchedule;
 import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.enums.StaffStatus;
 import com.booking.platform.entity.staff.StaffLeave;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.mapper.BookingMapper;
@@ -40,7 +41,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -309,16 +313,17 @@ public class BookingService {
         }
 
         // ========================================
-        // 6. 檢查時段衝突
+        // 6. 檢查時段衝突 / 自動分配員工
         // ========================================
 
         if (staff != null) {
+            // 有指定員工：檢查衝突
             boolean hasConflict = bookingRepository.existsConflictingBooking(
                     tenantId,
                     staff.getId(),
                     request.getBookingDate(),
                     startTime,
-                    endTimeWithBuffer  // 使用含緩衝時間的結束時間
+                    endTimeWithBuffer
             );
 
             if (hasConflict) {
@@ -327,6 +332,18 @@ public class BookingService {
                         "該時段已被預約，請選擇其他時間"
                 );
             }
+        } else {
+            // 未指定員工：從可用員工中自動分配一位
+            staff = findAvailableStaffForSlot(
+                    tenantId, request.getBookingDate(), startTime, endTimeWithBuffer
+            );
+            if (staff == null) {
+                throw new BusinessException(
+                        ErrorCode.BOOKING_TIME_CONFLICT,
+                        "該時段所有服務人員皆已被預約，請選擇其他時間"
+                );
+            }
+            log.info("自動分配員工：{}（{}）", staff.getEffectiveDisplayName(), staff.getId());
         }
 
         // ========================================
@@ -640,6 +657,41 @@ public class BookingService {
             );
         }
 
+        // 確認時驗證員工可用性（CONFIRMED 才佔用時段，所以確認是真正的驗證關卡）
+        Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
+        int bufferMinutes = (tenant != null && tenant.getBookingBufferMinutes() != null)
+                ? tenant.getBookingBufferMinutes() : 0;
+        LocalTime endTimeWithBuffer = entity.getEndTime().plusMinutes(bufferMinutes);
+
+        if (entity.getStaffId() != null) {
+            // 已指定員工：檢查 CONFIRMED 衝突
+            boolean hasConflict = bookingRepository.existsConflictingBooking(
+                    tenantId, entity.getStaffId(), entity.getBookingDate(),
+                    entity.getStartTime(), endTimeWithBuffer
+            );
+            if (hasConflict) {
+                throw new BusinessException(
+                        ErrorCode.BOOKING_TIME_CONFLICT,
+                        "該時段員工已有其他已確認的預約，無法確認"
+                );
+            }
+        } else {
+            // 未指定員工：自動分配可用員工
+            Staff autoAssigned = findAvailableStaffForSlot(
+                    tenantId, entity.getBookingDate(), entity.getStartTime(), endTimeWithBuffer
+            );
+            if (autoAssigned != null) {
+                entity.setStaffId(autoAssigned.getId());
+                entity.setStaffName(autoAssigned.getEffectiveDisplayName());
+                log.info("確認預約時自動分配員工：{}（{}）", autoAssigned.getEffectiveDisplayName(), autoAssigned.getId());
+            } else {
+                throw new BusinessException(
+                        ErrorCode.BOOKING_TIME_CONFLICT,
+                        "該時段所有服務人員皆已被預約，無法確認"
+                );
+            }
+        }
+
         entity.confirm();
         entity = bookingRepository.save(entity);
 
@@ -804,5 +856,66 @@ public class BookingService {
             return authentication.getName();
         }
         return TenantContext.getTenantId();
+    }
+
+    /**
+     * 從可用員工中找出該時段沒有衝突的員工（隨機選一位）
+     *
+     * @param tenantId          租戶 ID
+     * @param date              預約日期
+     * @param startTime         開始時間
+     * @param endTimeWithBuffer 結束時間（含緩衝）
+     * @return 可用員工，若全部滿了則返回 null
+     */
+    private Staff findAvailableStaffForSlot(String tenantId, LocalDate date,
+                                            LocalTime startTime, LocalTime endTimeWithBuffer) {
+        // 取得所有活躍員工
+        List<Staff> allStaff = staffRepository
+                .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
+
+        int dayOfWeek = date.getDayOfWeek().getValue() % 7;
+        List<Staff> candidates = new ArrayList<>();
+
+        for (Staff s : allStaff) {
+            // 檢查排班
+            Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
+                    .findByStaffIdAndDayOfWeek(s.getId(), tenantId, dayOfWeek);
+
+            boolean isWorkingDay = scheduleOpt.isEmpty() ||
+                    Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay());
+            if (!isWorkingDay) continue;
+
+            // 檢查全天請假
+            if (staffLeaveRepository.isStaffOnLeave(s.getId(), date)) continue;
+
+            // 檢查半天假時段重疊
+            Optional<StaffLeave> leaveOpt = staffLeaveRepository.findLeaveDetail(s.getId(), date);
+            if (leaveOpt.isPresent() && !leaveOpt.get().getIsFullDay()) {
+                StaffLeave leave = leaveOpt.get();
+                if (leave.getStartTime() != null && leave.getEndTime() != null) {
+                    LocalTime leaveStart = LocalTime.parse(leave.getStartTime());
+                    LocalTime leaveEnd = LocalTime.parse(leave.getEndTime());
+                    if (startTime.isBefore(leaveEnd) && endTimeWithBuffer.isAfter(leaveStart)) {
+                        continue;
+                    }
+                }
+            }
+
+            // 檢查預約衝突
+            boolean hasConflict = bookingRepository.existsConflictingBooking(
+                    tenantId, s.getId(), date, startTime, endTimeWithBuffer
+            );
+            if (!hasConflict) {
+                candidates.add(s);
+            }
+        }
+
+        if (candidates.isEmpty()) {
+            return null;
+        }
+
+        // 隨機選一位
+        Collections.shuffle(candidates);
+        return candidates.get(0);
     }
 }

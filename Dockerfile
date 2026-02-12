@@ -40,7 +40,7 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 # 設定環境變數
-ENV JAVA_OPTS="-Xms256m -Xmx512m"
+ENV JAVA_OPTS="-Xms256m -Xmx512m -Duser.timezone=Asia/Taipei"
 ENV SPRING_PROFILES_ACTIVE=prod
 
 # 暴露埠號

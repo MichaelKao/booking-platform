@@ -10,7 +10,7 @@
 
 ---
 
-## Repository 列表 (23 個)
+## Repository 列表 (25 個)
 
 ### 租戶相關
 
@@ -36,6 +36,8 @@
 | ServiceCategoryRepository | ServiceCategory | 服務分類查詢 |
 | ServiceItemRepository | ServiceItem | 服務項目查詢 |
 | ProductRepository | Product | 商品查詢 |
+| ProductOrderRepository | ProductOrder | 商品訂單查詢 |
+| InventoryLogRepository | InventoryLog | 庫存異動查詢 |
 
 ### 行銷相關
 
@@ -177,7 +179,9 @@ long countByTenantIdAndStatusAndDate(
     @Param("date") LocalDate date);
 ```
 
-### EXISTS 檢查
+### EXISTS 檢查（衝突檢查）
+
+**重要**：只有 `CONFIRMED` 狀態的預約才算衝突（PENDING 不佔用時段）。
 
 ```java
 @Query("""
@@ -188,7 +192,7 @@ long countByTenantIdAndStatusAndDate(
       AND b.bookingDate = :date
       AND b.startTime < :endTime
       AND b.endTime > :startTime
-      AND b.status NOT IN ('CANCELLED', 'NO_SHOW')
+      AND b.status = 'CONFIRMED'
       AND b.deletedAt IS NULL
     """)
 boolean existsConflictingBooking(
@@ -197,4 +201,11 @@ boolean existsConflictingBooking(
     @Param("date") LocalDate date,
     @Param("startTime") LocalTime startTime,
     @Param("endTime") LocalTime endTime);
+```
+
+### 顧客有效預約查詢
+
+```java
+// LINE Bot「我的預約」：只顯示 CONFIRMED，ASC 排序
+List<Booking> findActiveByCustomerId(String tenantId, String customerId);
 ```

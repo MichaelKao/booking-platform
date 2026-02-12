@@ -548,13 +548,42 @@ ecpay:
 
 ---
 
-## 預約衝突檢查
+## 預約狀態與衝突檢查
 
-預約建立時自動檢查：
-1. 員工全天請假
-2. 員工半天假時段重疊
-3. 既有預約時段衝突
-4. 預約緩衝時間（`bookingBufferMinutes` 設定）
+### 預約狀態語意
+
+| 狀態 | 佔用時段 | 說明 |
+|------|---------|------|
+| `PENDING` | **否** | 顧客申請，同時段可有多筆 PENDING，等待店家確認 |
+| `CONFIRMED` | **是** | 店家確認，佔用員工時段，不可重疊 |
+| `COMPLETED` | 否 | 已完成 |
+| `CANCELLED` | 否 | 已取消 |
+| `NO_SHOW` | 否 | 爽約 |
+
+### 衝突檢查規則
+
+**只有 `CONFIRMED` 狀態的預約才算衝突**，PENDING 不佔用時段。
+
+**建立預約（create）**：
+1. 員工全天請假 → 拒絕
+2. 員工半天假時段重疊 → 拒絕
+3. 員工已有 CONFIRMED 預約衝突 → 拒絕
+4. 未指定員工 → 自動分配可用員工（隨機選一位無 CONFIRMED 衝突的）
+5. 所有員工都被 CONFIRMED 佔滿 → 拒絕
+6. 預約緩衝時間（`bookingBufferMinutes` 設定）
+
+**確認預約（confirm）— 真正的驗證關卡**：
+1. 已指定員工 → 檢查該員工是否有其他 CONFIRMED 衝突
+2. 未指定員工 → 自動分配可用員工
+3. 衝突或無可用員工 → 拒絕確認
+
+### 「我的預約」（LINE Bot）
+
+只顯示 `CONFIRMED` 狀態的預約，依日期時間 ASC 排序。
+
+### 時段生成（LINE Bot 選擇時段）
+
+不指定員工時，每個時段會檢查是否至少有一位員工無 CONFIRMED 衝突，全部滿了則不顯示該時段。
 
 ---
 
@@ -729,7 +758,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (960 tests)：**
+**測試套件 (976 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -765,6 +794,7 @@ npx playwright test --list
 | `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
 | `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
 | `27-line-category-selection.spec.ts` | LINE Bot 服務分類選擇功能測試 | 26 |
+| `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 16 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -994,6 +1024,7 @@ tests/
 ├── 21~25-*.spec.ts             ← 專項驗證測試
 ├── 26-api-contract-validator.spec.ts ← API 契約驗證
 ├── 27-line-category-selection.spec.ts ← LINE Bot 分類選擇功能
+├── 28-booking-slot-conflict.spec.ts ← 預約時段衝突與自動分配員工
 ├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
 ├── fixtures.ts                 ← 共用 Fixture（F12 監控）
 └── utils/test-helpers.ts       ← 共用輔助函式
@@ -1199,4 +1230,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 960 |
+| E2E 測試 | 976 |

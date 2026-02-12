@@ -24,7 +24,7 @@ public XxxResponse create(...) { }
 
 | Service | 說明 |
 |---------|------|
-| BookingService | 預約業務 (建立、確認、取消、完成、編輯) |
+| BookingService | 預約業務 (建立、確認、取消、完成、編輯、自動分配員工) |
 | CustomerService | 顧客管理 (建立、更新、點數、狀態) |
 | StaffService | 員工管理 (建立、更新、排班、請假) |
 | ServiceItemService | 服務項目管理 |
@@ -36,6 +36,8 @@ public XxxResponse create(...) { }
 | CouponService | 票券定義與發放 |
 | CampaignService | 行銷活動管理 |
 | ProductService | 商品管理 (庫存、狀態) |
+| ProductOrderService | 商品訂單管理 |
+| InventoryService | 庫存異動管理 |
 | MembershipLevelService | 會員等級管理 |
 | MarketingService | 行銷推播管理 (建立、發送、排程) |
 
@@ -66,7 +68,7 @@ public XxxResponse create(...) { }
 |---------|------|
 | TenantService | 租戶管理 (建立、更新、狀態變更) |
 | SettingsService | 店家設定管理 |
-| SetupStatusService | 店家設定完成狀態（新手引導） |
+| SetupStatusService | 店家設定完成狀態 (新手引導) |
 | AuthService | 認證與授權 (登入、註冊、密碼重設) |
 | I18nService | 多語系服務 (繁中、簡中、英文) |
 
@@ -155,6 +157,8 @@ service/
     ├── StaffService
     ├── ServiceItemService
     ├── ProductService
+    ├── ProductOrderService
+    ├── InventoryService
     ├── CouponService
     ├── CampaignService
     ├── MarketingService

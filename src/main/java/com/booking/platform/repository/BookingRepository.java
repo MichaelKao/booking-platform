@@ -95,12 +95,30 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             Pageable pageable
     );
 
+    /**
+     * 查詢顧客的有效預約（僅已確認）
+     * 用於 LINE Bot「我的預約」功能，依日期時間 ASC 排序（最近的排前面）
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.customerId = :customerId
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            ORDER BY b.bookingDate ASC, b.startTime ASC
+            """)
+    List<Booking> findActiveByCustomerId(
+            @Param("tenantId") String tenantId,
+            @Param("customerId") String customerId
+    );
+
     // ========================================
     // 時段衝突檢查
     // ========================================
 
     /**
-     * 檢查時段是否有衝突
+     * 檢查時段是否有衝突（僅檢查已確認的預約）
+     * PENDING 不佔用時段，只有 CONFIRMED 才算衝突
      */
     @Query("""
             SELECT COUNT(b) > 0 FROM Booking b
@@ -108,7 +126,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             AND b.staffId = :staffId
             AND b.bookingDate = :date
             AND b.deletedAt IS NULL
-            AND b.status NOT IN ('CANCELLED', 'NO_SHOW')
+            AND b.status = 'CONFIRMED'
             AND (
                 (b.startTime < :endTime AND b.endTime > :startTime)
             )
@@ -122,7 +140,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     );
 
     /**
-     * 檢查時段是否有衝突（排除指定預約）
+     * 檢查時段是否有衝突（排除指定預約，僅檢查已確認的預約）
      */
     @Query("""
             SELECT COUNT(b) > 0 FROM Booking b
@@ -131,7 +149,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             AND b.bookingDate = :date
             AND b.id != :excludeId
             AND b.deletedAt IS NULL
-            AND b.status NOT IN ('CANCELLED', 'NO_SHOW')
+            AND b.status = 'CONFIRMED'
             AND (
                 (b.startTime < :endTime AND b.endTime > :startTime)
             )

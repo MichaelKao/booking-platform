@@ -1649,12 +1649,29 @@ public class LineFlexMessageBuilder {
                 }
             }
 
-            // 檢查是否有衝突預約（如有指定員工）
+            // 檢查是否有衝突預約
             if (isAvailable && staffId != null && !staffId.isEmpty()) {
+                // 指定員工：檢查該員工是否有衝突
                 boolean hasConflict = bookingRepository.existsConflictingBooking(
                         tenantId, staffId, date, current, current.plusMinutes(serviceDuration)
                 );
                 if (hasConflict) {
+                    isAvailable = false;
+                }
+            } else if (isAvailable) {
+                // 不指定員工：檢查是否至少有一位員工可用
+                List<Staff> availableStaffForSlot = getAvailableStaffForDate(tenantId, date);
+                boolean anyStaffFree = false;
+                for (Staff s : availableStaffForSlot) {
+                    boolean conflict = bookingRepository.existsConflictingBooking(
+                            tenantId, s.getId(), date, current, current.plusMinutes(serviceDuration)
+                    );
+                    if (!conflict) {
+                        anyStaffFree = true;
+                        break;
+                    }
+                }
+                if (!anyStaffFree) {
                     isAvailable = false;
                 }
             }
@@ -1667,6 +1684,36 @@ public class LineFlexMessageBuilder {
         }
 
         return slots;
+    }
+
+    /**
+     * 取得指定日期的可用員工（活躍 + 有上班 + 沒請假）
+     */
+    private List<Staff> getAvailableStaffForDate(String tenantId, LocalDate date) {
+        List<Staff> allStaff = staffRepository
+                .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
+
+        int dayOfWeek = date.getDayOfWeek().getValue() % 7;
+        List<Staff> available = new ArrayList<>();
+
+        for (Staff staff : allStaff) {
+            Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
+                    .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dayOfWeek);
+
+            boolean isWorkingDay = scheduleOpt.isEmpty() ||
+                    Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay());
+
+            if (isWorkingDay) {
+                boolean onLeave = staffLeaveRepository
+                        .findByStaffIdAndLeaveDateAndDeletedAtIsNull(staff.getId(), date)
+                        .isPresent();
+                if (!onLeave) {
+                    available.add(staff);
+                }
+            }
+        }
+
+        return available;
     }
 
     /**
