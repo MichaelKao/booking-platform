@@ -486,3 +486,99 @@ test.describe('報表 UI 測試', () => {
     });
   });
 });
+
+test.describe('時段分布 & 進階報表 API 測試', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    tenantToken = await getTenantToken(request);
+  });
+
+  test('/api/reports/hourly API 回傳格式正確', async ({ request }) => {
+    const response = await request.get('/api/reports/hourly?range=month', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(Array.isArray(data.data)).toBe(true);
+
+    // 檢查 PeakHour 結構
+    if (data.data.length > 0) {
+      const item = data.data[0];
+      expect(item).toHaveProperty('hour');
+      expect(item).toHaveProperty('hourLabel');
+      expect(item).toHaveProperty('bookingCount');
+      expect(typeof item.hour).toBe('number');
+      expect(typeof item.hourLabel).toBe('string');
+      expect(typeof item.bookingCount).toBe('number');
+    }
+  });
+
+  test('/api/reports/hourly 支援不同 range 參數', async ({ request }) => {
+    for (const range of ['week', 'month', 'quarter']) {
+      const response = await request.get(`/api/reports/hourly?range=${range}`, {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      console.log(`hourly range=${range}: ${data.data?.length || 0} 筆時段資料`);
+    }
+  });
+
+  test('/api/reports/advanced API 回傳 hasAccess 欄位', async ({ request }) => {
+    const response = await request.get('/api/reports/advanced?range=month', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.data).toHaveProperty('hasAccess');
+    expect(typeof data.data.hasAccess).toBe('boolean');
+
+    if (data.data.hasAccess) {
+      expect(data.data).toHaveProperty('retentionRate');
+      expect(data.data).toHaveProperty('activeCustomers');
+      expect(data.data).toHaveProperty('serviceTrends');
+      expect(data.data).toHaveProperty('peakHours');
+      console.log('進階報表：已訂閱，有完整資料');
+    } else {
+      expect(data.data).toHaveProperty('message');
+      console.log('進階報表：未訂閱，顯示提示訊息');
+    }
+  });
+
+  test('報表頁面時段分布不再顯示「載入中」', async ({ page }) => {
+    await tenantLogin(page);
+    await page.goto('/tenant/reports');
+    await waitForLoading(page);
+    await page.waitForTimeout(WAIT_TIME.long);
+
+    const hourlySection = page.locator('#hourlyDistribution');
+    await expect(hourlySection).toBeVisible();
+
+    // 確認不再顯示「載入中」
+    const loadingText = hourlySection.locator('text=載入中');
+    const hasLoading = await loadingText.count();
+    expect(hasLoading).toBe(0);
+    console.log('時段分布區塊已正確載入（非「載入中」狀態）');
+  });
+
+  test('報表頁面顯示進階報表區塊或推廣卡片', async ({ page }) => {
+    await tenantLogin(page);
+    await page.goto('/tenant/reports');
+    await waitForLoading(page);
+    await page.waitForTimeout(WAIT_TIME.long);
+
+    const advSection = page.locator('#advancedReportSection');
+    const promoSection = page.locator('#advancedReportPromo');
+
+    // 其中一個應該可見
+    const advVisible = await advSection.isVisible();
+    const promoVisible = await promoSection.isVisible();
+
+    expect(advVisible || promoVisible).toBe(true);
+    console.log(`進階報表區塊: ${advVisible ? '已訂閱顯示' : '未訂閱推廣'}`);
+  });
+});

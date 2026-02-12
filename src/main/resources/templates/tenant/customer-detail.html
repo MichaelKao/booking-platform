@@ -130,12 +130,32 @@
                         </div>
 
                         <!-- 備註 -->
-                        <div class="card">
+                        <div class="card mb-4">
                             <div class="card-header">
                                 <h6 class="mb-0">備註</h6>
                             </div>
                             <div class="card-body">
                                 <p class="mb-0 text-muted" id="note">無備註</p>
+                            </div>
+                        </div>
+
+                        <!-- 標籤（需訂閱 ADVANCED_CUSTOMER） -->
+                        <div class="card" id="tagsCard" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-tags me-1"></i>顧客標籤</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="tagsContainer" class="mb-3">
+                                    <span class="text-muted">無標籤</span>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="newTagInput"
+                                           placeholder="輸入標籤名稱..." maxlength="20"
+                                           onkeydown="if(event.key==='Enter'){event.preventDefault();addNewTag();}">
+                                    <button class="btn btn-outline-primary" type="button" onclick="addNewTag()">
+                                        <i class="bi bi-plus"></i> 新增
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -344,6 +364,7 @@
                 loadCustomerDetail();
                 loadBookings();
                 loadPointTransactions();
+                checkAndLoadTags();
             }
         });
 
@@ -388,6 +409,11 @@
             document.getElementById('completedBookings').textContent = formatNumber(c.completedBookings || 0);
             document.getElementById('cancelledBookings').textContent = formatNumber(c.cancelledBookings || 0);
             document.getElementById('pointBalance').textContent = formatNumber(c.pointBalance || 0);
+
+            // 標籤
+            if (c.tags) {
+                renderTags(c.tags);
+            }
         }
 
         async function loadBookings(page = 0) {
@@ -552,6 +578,80 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ========================================
+        // 標籤管理（ADVANCED_CUSTOMER 功能）
+        // ========================================
+
+        async function checkAndLoadTags() {
+            try {
+                const r = await api.get('/api/feature-store');
+                if (!r.success || !r.data) return;
+
+                const feature = r.data.find(f => f.code === 'ADVANCED_CUSTOMER');
+                if (feature && feature.subscribed) {
+                    document.getElementById('tagsCard').style.display = '';
+                }
+            } catch (e) {
+                // 功能商店載入失敗不影響主頁面
+            }
+        }
+
+        function renderTags(tags) {
+            const container = document.getElementById('tagsContainer');
+            if (!container) return;
+
+            if (!tags || tags.length === 0) {
+                container.innerHTML = '<span class="text-muted">無標籤</span>';
+                return;
+            }
+
+            container.innerHTML = tags.map(tag =>
+                `<span class="badge bg-info me-1 mb-1 d-inline-flex align-items-center" style="font-size: 0.85rem;">
+                    ${escapeHtml(tag)}
+                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem;"
+                            onclick="removeTag('${escapeHtml(tag)}')" title="移除標籤"></button>
+                </span>`
+            ).join('');
+        }
+
+        async function addNewTag() {
+            const input = document.getElementById('newTagInput');
+            const tag = input.value.trim();
+            if (!tag) return;
+
+            try {
+                const r = await api.post(`/api/customers/${customerId}/tags/add?tag=${encodeURIComponent(tag)}`);
+                if (r.success) {
+                    input.value = '';
+                    // 重新載入顧客資料以更新標籤
+                    const detail = await api.get(`/api/customers/${customerId}`);
+                    if (detail.success && detail.data) {
+                        customerData = detail.data;
+                        renderTags(detail.data.tags);
+                    }
+                    showSuccess('標籤已新增');
+                }
+            } catch (e) {
+                showError(e.message || '新增標籤失敗');
+            }
+        }
+
+        async function removeTag(tag) {
+            try {
+                const r = await api.delete(`/api/customers/${customerId}/tags/${encodeURIComponent(tag)}`);
+                if (r.success) {
+                    const detail = await api.get(`/api/customers/${customerId}`);
+                    if (detail.success && detail.data) {
+                        customerData = detail.data;
+                        renderTags(detail.data.tags);
+                    }
+                    showSuccess('標籤已移除');
+                }
+            } catch (e) {
+                showError(e.message || '移除標籤失敗');
+            }
         }
         /*]]>*/
     </script>

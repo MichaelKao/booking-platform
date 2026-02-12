@@ -169,6 +169,32 @@ public class ReportController {
     }
 
     // ========================================
+    // 時段分布（基本報表）
+    // ========================================
+
+    /**
+     * 取得預約時段分布
+     */
+    @GetMapping("/hourly")
+    public ApiResponse<List<AdvancedReportResponse.PeakHour>> getHourlyDistribution(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "month") String range
+    ) {
+        if (startDate == null || endDate == null) {
+            LocalDate today = LocalDate.now();
+            endDate = today;
+            switch (range) {
+                case "week" -> startDate = today.minusDays(7);
+                case "quarter" -> startDate = today.minusMonths(3);
+                default -> startDate = today.minusMonths(1);
+            }
+        }
+        List<AdvancedReportResponse.PeakHour> result = reportService.getHourlyDistribution(startDate, endDate);
+        return ApiResponse.ok(result);
+    }
+
+    // ========================================
     // 進階報表（需訂閱 ADVANCED_REPORT）
     // ========================================
 

@@ -606,3 +606,76 @@ test.describe('顧客管理 UI 測試', () => {
     });
   });
 });
+
+test.describe('顧客標籤 API 測試', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    tenantToken = await getTenantToken(request);
+  });
+
+  test('GET /api/customers/tags 回傳標籤陣列', async ({ request }) => {
+    const response = await request.get('/api/customers/tags', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(Array.isArray(data.data)).toBe(true);
+    console.log(`現有標籤數: ${data.data?.length || 0}`);
+  });
+
+  test('標籤新增與移除流程', async ({ request }) => {
+    // 先取得一個顧客
+    const listResponse = await request.get('/api/customers?page=0&size=1', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    const listData = await listResponse.json();
+    if (!listData.data?.content?.length) {
+      console.log('無顧客資料，跳過標籤測試');
+      return;
+    }
+
+    const customerId = listData.data.content[0].id;
+    const testTag = 'e2e-test-tag';
+
+    // 新增標籤
+    const addResponse = await request.post(`/api/customers/${customerId}/tags/add?tag=${testTag}`, {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    // 可能因為未訂閱 ADVANCED_CUSTOMER 而失敗，兩種狀態都合理
+    const addData = await addResponse.json();
+    console.log(`新增標籤結果: success=${addData.success}, message=${addData.message || ''}`);
+
+    if (addData.success) {
+      // 驗證標籤已新增
+      const detailResponse = await request.get(`/api/customers/${customerId}`, {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      const detailData = await detailResponse.json();
+      if (detailData.data?.tags) {
+        expect(detailData.data.tags).toContain(testTag);
+      }
+
+      // 移除標籤
+      const removeResponse = await request.delete(`/api/customers/${customerId}/tags/${testTag}`, {
+        headers: { 'Authorization': `Bearer ${tenantToken}` }
+      });
+      const removeData = await removeResponse.json();
+      console.log(`移除標籤結果: success=${removeData.success}`);
+    }
+  });
+
+  test('GET /api/customers/by-tag/{tag} 查詢格式正確', async ({ request }) => {
+    const response = await request.get('/api/customers/by-tag/VIP', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    // 可能 200 或 403（未訂閱）
+    const data = await response.json();
+    console.log(`by-tag 查詢: status=${response.status()}, success=${data.success}`);
+
+    if (data.success && data.data) {
+      expect(Array.isArray(data.data.content || data.data)).toBe(true);
+    }
+  });
+});

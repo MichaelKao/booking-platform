@@ -183,11 +183,97 @@
                     <div class="col-12 mb-4">
                         <div class="card shadow-sm">
                             <div class="card-header py-3">
-                                <h6 class="m-0 fw-bold text-primary">預約時段分布（本月）</h6>
+                                <h6 class="m-0 fw-bold text-primary">預約時段分布</h6>
                             </div>
                             <div class="card-body">
-                                <div class="row" id="hourlyDistribution">
-                                    <div class="col text-center text-muted">載入中...</div>
+                                <div id="hourlyDistribution">
+                                    <div class="text-center text-muted">載入中...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 進階報表（訂閱後顯示） -->
+                <div id="advancedReportSection" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-info shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="text-xs text-info text-uppercase mb-1">顧客保留率</div>
+                                    <div class="h4 mb-0 fw-bold" id="retentionRate">-</div>
+                                    <small class="text-muted">活躍顧客 / 總顧客</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-primary shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="text-xs text-primary text-uppercase mb-1">活躍顧客數</div>
+                                    <div class="h4 mb-0 fw-bold" id="activeCustomers">-</div>
+                                    <small class="text-muted">期間內有預約的顧客</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-success shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="text-xs text-success text-uppercase mb-1">平均來客週期</div>
+                                    <div class="h4 mb-0 fw-bold" id="avgVisitInterval">-</div>
+                                    <small class="text-muted">天</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-left-warning shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="text-xs text-warning text-uppercase mb-1">平均顧客價值</div>
+                                    <div class="h4 mb-0 fw-bold" id="avgCustomerValue">-</div>
+                                    <small class="text-muted">完成預約 / 活躍顧客</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 fw-bold text-primary">服務趨勢分析</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>服務名稱</th>
+                                                    <th class="text-end">當期預約數</th>
+                                                    <th class="text-end">成長率</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="serviceTrendsTable">
+                                                <tr><td colspan="3" class="text-center text-muted py-4">載入中...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 進階報表推廣（未訂閱時顯示） -->
+                <div id="advancedReportPromo" style="display: none;">
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm border-primary">
+                                <div class="card-body text-center py-5">
+                                    <i class="bi bi-graph-up-arrow fs-1 text-primary mb-3 d-block"></i>
+                                    <h5 class="mb-2">解鎖進階報表分析</h5>
+                                    <p class="text-muted mb-3">訂閱進階報表功能，獲取顧客保留率、活躍顧客分析、服務趨勢等深度數據</p>
+                                    <a href="/tenant/feature-store" class="btn btn-primary">
+                                        <i class="bi bi-shop me-1"></i>前往功能商店
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -225,8 +311,10 @@
                 loadSummary(),
                 loadDailyTrend(),
                 loadTopServices(),
-                loadTopStaff()
+                loadTopStaff(),
+                loadHourlyDistribution()
             ]);
+            checkAndLoadAdvancedReport();
         }
 
         async function loadSummary() {
@@ -438,6 +526,110 @@
             const d = document.createElement('div');
             d.textContent = t;
             return d.innerHTML;
+        }
+
+        async function loadHourlyDistribution() {
+            try {
+                const r = await api.get('/api/reports/hourly', { range: dateRange });
+                if (r.success && r.data) {
+                    renderHourlyDistribution(r.data);
+                }
+            } catch (e) {
+                console.error('載入時段分布失敗:', e);
+                document.getElementById('hourlyDistribution').innerHTML =
+                    '<div class="text-center text-muted py-3">載入失敗</div>';
+            }
+        }
+
+        function renderHourlyDistribution(data) {
+            const container = document.getElementById('hourlyDistribution');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3">暫無資料</div>';
+                return;
+            }
+
+            const maxCount = Math.max(...data.map(d => d.bookingCount), 1);
+
+            container.innerHTML = `
+                <div class="d-flex align-items-end justify-content-center gap-1 flex-wrap" style="min-height: 200px;">
+                    ${data.map(d => {
+                        const heightPct = maxCount > 0 ? Math.max((d.bookingCount / maxCount) * 160, 4) : 4;
+                        const bgColor = d.isPeak ? '#e74a3b' : '#4e73df';
+                        const label = d.hourLabel.split(' - ')[0];
+                        return `<div class="d-flex flex-column align-items-center" style="min-width: 40px;">
+                            <small class="text-muted mb-1">${d.bookingCount}</small>
+                            <div style="width: 28px; height: ${heightPct}px; background: ${bgColor}; border-radius: 4px 4px 0 0;" title="${d.hourLabel}: ${d.bookingCount} 筆預約${d.isPeak ? ' (尖峰)' : ''}"></div>
+                            <small class="text-muted mt-1" style="font-size: 0.7rem;">${label}</small>
+                        </div>`;
+                    }).join('')}
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted me-3"><span style="display:inline-block;width:12px;height:12px;background:#4e73df;border-radius:2px;"></span> 一般時段</small>
+                    <small class="text-muted"><span style="display:inline-block;width:12px;height:12px;background:#e74a3b;border-radius:2px;"></span> 尖峰時段</small>
+                </div>
+            `;
+        }
+
+        async function checkAndLoadAdvancedReport() {
+            try {
+                const r = await api.get('/api/feature-store');
+                if (!r.success || !r.data) return;
+
+                const advFeature = r.data.find(f => f.code === 'ADVANCED_REPORT');
+                const isSubscribed = advFeature && advFeature.subscribed;
+
+                if (isSubscribed) {
+                    document.getElementById('advancedReportSection').style.display = '';
+                    document.getElementById('advancedReportPromo').style.display = 'none';
+                    loadAdvancedReportData();
+                } else {
+                    document.getElementById('advancedReportSection').style.display = 'none';
+                    document.getElementById('advancedReportPromo').style.display = '';
+                }
+            } catch (e) {
+                console.error('檢查進階報表訂閱失敗:', e);
+            }
+        }
+
+        async function loadAdvancedReportData() {
+            try {
+                const r = await api.get('/api/reports/advanced', { range: dateRange });
+                if (r.success && r.data && r.data.hasAccess) {
+                    renderAdvancedReport(r.data);
+                }
+            } catch (e) {
+                console.error('載入進階報表失敗:', e);
+            }
+        }
+
+        function renderAdvancedReport(data) {
+            document.getElementById('retentionRate').textContent = (data.retentionRate || 0).toFixed(1) + '%';
+            document.getElementById('activeCustomers').textContent = formatNumber(data.activeCustomers || 0);
+            document.getElementById('avgVisitInterval').textContent = (data.avgVisitInterval || 0).toFixed(0);
+            document.getElementById('avgCustomerValue').textContent = (data.avgCustomerValue || 0).toFixed(1);
+
+            const tbody = document.getElementById('serviceTrendsTable');
+            if (!data.serviceTrends || data.serviceTrends.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">暫無服務趨勢資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.serviceTrends.map(s => {
+                const growth = s.growthRate || 0;
+                let growthHtml;
+                if (growth > 0) {
+                    growthHtml = `<span class="text-success"><i class="bi bi-arrow-up"></i> ${growth.toFixed(1)}%</span>`;
+                } else if (growth < 0) {
+                    growthHtml = `<span class="text-danger"><i class="bi bi-arrow-down"></i> ${Math.abs(growth).toFixed(1)}%</span>`;
+                } else {
+                    growthHtml = '<span class="text-muted">-</span>';
+                }
+                return `<tr>
+                    <td>${escapeHtml(s.serviceName)}</td>
+                    <td class="text-end">${formatNumber(s.currentPeriodCount || 0)}</td>
+                    <td class="text-end">${growthHtml}</td>
+                </tr>`;
+            }).join('');
         }
 
         function exportReport(format) {

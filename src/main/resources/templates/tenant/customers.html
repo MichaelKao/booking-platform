@@ -47,6 +47,38 @@
                         </div>
                     </div>
 
+                    <!-- 進階篩選面板（需訂閱 ADVANCED_CUSTOMER） -->
+                    <div id="advancedFilterPanel" class="px-3 pb-3" style="display: none;">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">標籤篩選</label>
+                                <select class="form-select form-select-sm" id="filterTag" onchange="currentPageNum=0;loadData();">
+                                    <option value="">全部標籤</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">最低消費</label>
+                                <input type="number" class="form-control form-control-sm" id="filterMinSpent" placeholder="0" min="0">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">最高消費</label>
+                                <input type="number" class="form-control form-control-sm" id="filterMaxSpent" placeholder="不限" min="0">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">最低預約次數</label>
+                                <input type="number" class="form-control form-control-sm" id="filterMinVisits" placeholder="0" min="0">
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-sm btn-primary me-1" onclick="currentPageNum=0;loadData();">
+                                    <i class="bi bi-funnel me-1"></i>篩選
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="clearAdvancedFilters();">
+                                    <i class="bi bi-x me-1"></i>清除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="data-table-body">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
@@ -182,8 +214,11 @@
         const pageSize = 10;
         let searchTimeout = null;
 
+        let hasAdvancedCustomer = false;
+
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
+            checkAdvancedCustomer();
 
             // 字數計算
             document.getElementById('note').addEventListener('input', function() {
@@ -213,13 +248,28 @@
         async function loadData(page = 0) {
             currentPageNum = page;
             const keyword = document.getElementById('searchKeyword').value.trim();
-            const params = { page, size: pageSize, sort: 'createdAt,desc' };
-            if (keyword) params.keyword = keyword;
+            const filterTag = document.getElementById('filterTag')?.value || '';
 
             try {
-                const r = await api.get('/api/customers', params);
+                let r;
+                if (filterTag && hasAdvancedCustomer) {
+                    // 使用標籤篩選 API
+                    r = await api.get(`/api/customers/by-tag/${encodeURIComponent(filterTag)}`, { page, size: pageSize });
+                } else {
+                    const params = { page, size: pageSize, sort: 'createdAt,desc' };
+                    if (keyword) params.keyword = keyword;
+                    r = await api.get('/api/customers', params);
+                }
+
                 if (r.success && r.data) {
-                    renderData(r.data?.content || r.data || []);
+                    let items = r.data?.content || r.data || [];
+
+                    // 客戶端篩選：消費金額和預約次數
+                    if (hasAdvancedCustomer) {
+                        items = applyAdvancedFilters(items);
+                    }
+
+                    renderData(items);
                     renderTableInfo(r.data);
                     renderPagination(r.data, loadData);
                 }
@@ -228,6 +278,61 @@
                 document.getElementById('dataTable').innerHTML =
                     '<tr><td colspan="7" class="text-center py-5"><i class="bi bi-exclamation-triangle text-danger me-2"></i>載入失敗，請重新整理頁面</td></tr>';
             }
+        }
+
+        function applyAdvancedFilters(items) {
+            const minSpent = parseFloat(document.getElementById('filterMinSpent')?.value) || 0;
+            const maxSpent = parseFloat(document.getElementById('filterMaxSpent')?.value) || 0;
+            const minVisits = parseInt(document.getElementById('filterMinVisits')?.value) || 0;
+
+            return items.filter(c => {
+                if (minSpent > 0 && (c.totalSpent || 0) < minSpent) return false;
+                if (maxSpent > 0 && (c.totalSpent || 0) > maxSpent) return false;
+                if (minVisits > 0 && (c.visitCount || 0) < minVisits) return false;
+                return true;
+            });
+        }
+
+        async function checkAdvancedCustomer() {
+            try {
+                const r = await api.get('/api/feature-store');
+                if (!r.success || !r.data) return;
+
+                const feature = r.data.find(f => f.code === 'ADVANCED_CUSTOMER');
+                if (feature && feature.subscribed) {
+                    hasAdvancedCustomer = true;
+                    document.getElementById('advancedFilterPanel').style.display = '';
+                    loadTagOptions();
+                }
+            } catch (e) {
+                // 功能商店載入失敗不影響主頁面
+            }
+        }
+
+        async function loadTagOptions() {
+            try {
+                const r = await api.get('/api/customers/tags');
+                if (r.success && r.data) {
+                    const select = document.getElementById('filterTag');
+                    r.data.forEach(tag => {
+                        const opt = document.createElement('option');
+                        opt.value = tag;
+                        opt.textContent = tag;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                // 標籤載入失敗不影響主頁面
+            }
+        }
+
+        function clearAdvancedFilters() {
+            document.getElementById('filterTag').value = '';
+            document.getElementById('filterMinSpent').value = '';
+            document.getElementById('filterMaxSpent').value = '';
+            document.getElementById('filterMinVisits').value = '';
+            currentPageNum = 0;
+            loadData();
         }
 
         function renderData(items) {
@@ -249,16 +354,21 @@
                 return;
             }
 
-            tbody.innerHTML = items.map(c => `<tr>
+            tbody.innerHTML = items.map(c => {
+                const tagsHtml = (hasAdvancedCustomer && c.tags && c.tags.length > 0)
+                    ? '<div class="mt-1">' + c.tags.slice(0, 3).map(t => '<span class="badge bg-info me-1" style="font-size: 0.7rem;">' + escapeHtml(t) + '</span>').join('') + (c.tags.length > 3 ? '<span class="text-muted" style="font-size: 0.7rem;">+' + (c.tags.length - 3) + '</span>' : '') + '</div>'
+                    : '';
+                return `<tr>
                 <td>
                     <div class="fw-bold">${escapeHtml(c.name)}</div>
-                    ${c.gender ? `<small class="text-muted">${{MALE:'男',FEMALE:'女',OTHER:'其他'}[c.gender] || ''}</small>` : ''}
+                    ${c.gender ? '<small class="text-muted">' + ({MALE:'男',FEMALE:'女',OTHER:'其他'}[c.gender] || '') + '</small>' : ''}
+                    ${tagsHtml}
                 </td>
                 <td>
                     <div><i class="bi bi-telephone me-1 text-muted"></i>${escapeHtml(c.phone || '-')}</div>
-                    ${c.email ? `<div class="small text-muted"><i class="bi bi-envelope me-1"></i>${escapeHtml(c.email)}</div>` : ''}
+                    ${c.email ? '<div class="small text-muted"><i class="bi bi-envelope me-1"></i>' + escapeHtml(c.email) + '</div>' : ''}
                 </td>
-                <td>${c.membershipLevelName ? `<span class="badge bg-primary">${escapeHtml(c.membershipLevelName)}</span>` : '<span class="text-muted">-</span>'}</td>
+                <td>${c.membershipLevelName ? '<span class="badge bg-primary">' + escapeHtml(c.membershipLevelName) + '</span>' : '<span class="text-muted">-</span>'}</td>
                 <td class="text-center">${formatNumber(c.visitCount || 0)}</td>
                 <td class="text-end">${formatMoney(c.totalSpent || 0)}</td>
                 <td class="text-center">${getCustomerStatusBadge(c.status || 'ACTIVE')}</td>
@@ -275,7 +385,8 @@
                         </button>
                     </div>
                 </td>
-            </tr>`).join('');
+            </tr>`;
+            }).join('');
         }
 
         function renderTableInfo(pageData) {

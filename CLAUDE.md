@@ -45,29 +45,29 @@ com.booking.platform
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (30 個)
+├── controller/                # 控制器 (33 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
-│   ├── line/                 # LINE Webhook (1 個)
-│   ├── page/                 # 頁面路由 (2 個)
-│   └── tenant/               # 店家 API (22 個)
-├── service/                   # 服務層 (36 個)
+│   ├── line/                 # LINE Webhook + 診斷 (2 個)
+│   ├── page/                 # 頁面路由 (3 個)
+│   └── tenant/               # 店家 API (23 個)
+├── service/                   # 服務層 (38 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
 │   ├── notification/         # 通知服務 (Email, SSE, SMS)
 │   ├── payment/              # 金流服務 (ECPay)
 │   └── export/               # 匯出服務 (Excel, PDF)
 ├── scheduler/                 # 排程任務 (5 個)
-├── repository/                # 資料存取層 (23 個)
-├── entity/                    # 資料庫實體 (23 個)
+├── repository/                # 資料存取層 (25 個)
+├── entity/                    # 資料庫實體 (25 個)
 │   ├── system/               # 系統實體 (含 Payment, SmsLog)
 │   ├── staff/                # 員工實體
 │   ├── marketing/            # 行銷實體 (含 MarketingPush)
 │   └── tenant/               # 租戶實體
-├── dto/                       # 資料傳輸物件 (70+ 個)
+├── dto/                       # 資料傳輸物件 (76+ 個)
 │   ├── request/              # 請求 DTO
 │   └── response/             # 回應 DTO
-├── enums/                     # 列舉 (26 個)
+├── enums/                     # 列舉 (28 個)
 └── mapper/                    # 轉換器
 ```
 
@@ -150,7 +150,7 @@ POST /api/auth/logout             # 登出
 | 行銷活動 | `GET/POST /campaigns`, `GET/PUT/DELETE /campaigns/{id}` |
 | 活動操作 | `POST /campaigns/{id}/publish\|pause\|resume\|end` |
 | 會員等級 | `GET/POST /membership-levels`, `GET/PUT/DELETE /membership-levels/{id}` |
-| 報表 | `GET /reports/dashboard\|summary\|today\|weekly\|monthly\|daily\|top-services\|top-staff` |
+| 報表 | `GET /reports/dashboard\|summary\|today\|weekly\|monthly\|daily\|top-services\|top-staff\|hourly\|advanced` |
 | 設定 | `GET/PUT /settings`, `GET /settings/setup-status` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
 | Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image` |
@@ -259,9 +259,12 @@ scheduler:
 | /tenant/staff | 員工管理 |
 | /tenant/services | 服務管理 |
 | /tenant/products | 商品管理 |
+| /tenant/inventory | 庫存異動 |
+| /tenant/product-orders | 商品訂單 |
 | /tenant/coupons | 票券管理 |
 | /tenant/campaigns | 行銷活動 |
 | /tenant/marketing | 行銷推播 |
+| /tenant/membership-levels | 會員等級 |
 | /tenant/settings | 店家設定 |
 | /tenant/line-settings | LINE 設定 |
 | /tenant/feature-store | 功能商店 |
@@ -278,7 +281,7 @@ scheduler:
 | 服務 | `service_categories`, `service_items` |
 | 預約 | `bookings`, `booking_histories` |
 | 顧客 | `customers`, `membership_levels`, `point_transactions` |
-| 商品 | `products` |
+| 商品 | `products`, `product_orders`, `inventory_logs` |
 | 行銷 | `coupons`, `coupon_instances`, `campaigns`, `marketing_pushes` |
 | 系統 | `features`, `tenant_features`, `point_topups`, `payments`, `sms_logs` |
 | LINE | `tenant_line_configs`, `line_users` |
@@ -708,7 +711,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (886 tests)：**
+**測試套件 (894 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -853,7 +856,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | `BASIC_SERVICE` | 基本服務項目 | ✅ 已完成 | 免費功能 |
 | `BASIC_REPORT` | 基本營運報表 | ✅ 已完成 | 免費功能 |
 | `UNLIMITED_STAFF` | 無限員工數量 | ✅ 已完成 | 付費解除限制 |
-| `ADVANCED_REPORT` | 進階報表分析 | ✅ 已完成 | 顧客分析、趨勢預測 |
+| `ADVANCED_REPORT` | 進階報表分析 | ✅ 已完成 | 顧客分析、趨勢預測、前端 UI 已完成 |
 | `COUPON_SYSTEM` | 票券系統 | ✅ 已完成 | 優惠券發放與核銷 |
 | `MEMBERSHIP_SYSTEM` | 會員等級系統 | ✅ 已完成 | 等級設定與升降級 |
 | `POINT_SYSTEM` | 顧客集點獎勵 | ✅ 已完成 | 自動集點與兌換 |
@@ -862,7 +865,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | `AUTO_BIRTHDAY` | 自動生日祝福 | ✅ 已完成 | 每日 9:00 發送祝福 |
 | `AUTO_RECALL` | 顧客喚回通知 | ✅ 已完成 | 每日 14:00 發送喚回 |
 | `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
-| `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群 |
+| `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群、前端 UI 已完成 |
 | `AI_ASSISTANT` | AI 智慧客服 | ✅ 已完成 | Groq Llama 3.3（免費） |
 | `MULTI_ACCOUNT` | 多帳號管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
 | `MULTI_BRANCH` | 多分店管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
@@ -913,14 +916,14 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 30 |
-| Service | 37 |
-| Entity | 23 |
-| Repository | 23 |
-| DTO | 70+ |
-| Enum | 26 |
+| Controller | 33 |
+| Service | 38 |
+| Entity | 25 |
+| Repository | 25 |
+| DTO | 76+ |
+| Enum | 28 |
 | Scheduler | 5 |
-| HTML 頁面 | 37 |
+| HTML 頁面 | 51 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |

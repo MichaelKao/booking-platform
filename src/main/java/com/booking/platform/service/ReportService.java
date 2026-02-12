@@ -382,6 +382,26 @@ public class ReportService {
     }
 
     // ========================================
+    // 時段分布（基本報表）
+    // ========================================
+
+    /**
+     * 取得預約時段分布
+     *
+     * <p>不需要訂閱進階報表功能，屬於基本報表
+     */
+    public List<AdvancedReportResponse.PeakHour> getHourlyDistribution(LocalDate startDate, LocalDate endDate) {
+        String tenantId = TenantContext.getTenantId();
+
+        log.info("查詢時段分布，租戶：{}，期間：{} ~ {}", tenantId, startDate, endDate);
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        return analyzePeakHours(tenantId, startDateTime, endDateTime);
+    }
+
+    // ========================================
     // 進階報表（ADVANCED_REPORT 功能）
     // ========================================
 
