@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 | new_product_order | 新商品訂單通知 |
 | product_order_status_changed | 訂單狀態變更 |
 | coupon_claimed | 票券領取通知 |
+| coupon_redeemed | 票券核銷通知 |
 | new_customer | 新顧客通知 |
 
 ### 使用方式

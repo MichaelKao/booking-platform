@@ -7,9 +7,11 @@ import com.booking.platform.common.response.ApiResponse;
 import com.booking.platform.entity.booking.Booking;
 import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.BookingStatus;
+import com.booking.platform.mapper.BookingMapper;
 import com.booking.platform.repository.BookingRepository;
 import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.BookingService;
+import com.booking.platform.service.notification.SseNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -33,6 +35,8 @@ public class PublicBookingController {
     private final BookingRepository bookingRepository;
     private final TenantRepository tenantRepository;
     private final BookingService bookingService;
+    private final SseNotificationService sseNotificationService;
+    private final BookingMapper bookingMapper;
 
     /**
      * 取消預約頁面
@@ -97,6 +101,14 @@ public class PublicBookingController {
             bookingRepository.save(booking);
 
             log.info("顧客自助取消預約成功，預約 ID：{}", booking.getId());
+
+            // 推送 SSE 通知給店家
+            try {
+                sseNotificationService.notifyBookingCancelled(
+                        booking.getTenantId(), bookingMapper.toResponse(booking));
+            } catch (Exception e) {
+                log.warn("推送預約取消 SSE 通知失敗：{}", e.getMessage());
+            }
 
             return ApiResponse.ok("預約已成功取消", null);
 

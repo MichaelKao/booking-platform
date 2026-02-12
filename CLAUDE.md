@@ -4,9 +4,9 @@
 
 | 環境 | URL | 短網址 |
 |------|-----|--------|
-| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login | https://tinyurl.com/26fxodho |
-| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login | https://tinyurl.com/2b9fhnm2 |
-| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health | https://tinyurl.com/2cdb5t4p |
+| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login | https://is.gd/bkp_tenant |
+| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login | https://is.gd/bkp_admin |
+| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health | https://is.gd/bkp_health |
 
 ## 快速參考
 
@@ -184,6 +184,7 @@ GET /api/notifications/stream   # SSE 訂閱（店家後台即時通知）
 | `new_product_order` | 新商品訂單 | 顯示通知、播放音效、刷新訂單列表 |
 | `product_order_status_changed` | 訂單狀態變更 | 確認/完成/取消時觸發，同時推送 LINE 通知 |
 | `coupon_claimed` | 票券領取 | 顯示通知、播放音效、刷新票券列表 |
+| `coupon_redeemed` | 票券核銷 | 顯示通知、刷新票券列表 |
 | `new_customer` | 新顧客建立 | 顯示通知、播放音效、刷新顧客列表 |
 
 ### 公開頁面

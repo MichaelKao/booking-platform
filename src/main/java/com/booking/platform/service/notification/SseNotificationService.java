@@ -180,6 +180,13 @@ public class SseNotificationService {
         sendEvent(tenantId, "coupon_claimed", data);
     }
 
+    /**
+     * 推送票券核銷通知
+     */
+    public void notifyCouponRedeemed(String tenantId, Map<String, Object> data) {
+        sendEvent(tenantId, "coupon_redeemed", data);
+    }
+
     // ========================================
     // 顧客通知
     // ========================================

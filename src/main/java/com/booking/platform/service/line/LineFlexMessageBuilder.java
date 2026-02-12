@@ -2928,6 +2928,9 @@ public class LineFlexMessageBuilder {
             bubbles.add(bubble);
         }
 
+        // 末端導航卡片 — 返回主選單
+        bubbles.add(buildCarouselNavigationBubble());
+
         carousel.set("contents", bubbles);
         return carousel;
     }

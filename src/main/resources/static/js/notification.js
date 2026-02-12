@@ -117,6 +117,9 @@ function connectSSE() {
         // 票券領取事件
         eventSource.addEventListener('coupon_claimed', handleCouponClaimed);
 
+        // 票券核銷事件
+        eventSource.addEventListener('coupon_redeemed', handleCouponRedeemed);
+
         // 新顧客事件
         eventSource.addEventListener('new_customer', handleNewCustomer);
 
@@ -346,6 +349,27 @@ function handleCouponClaimed(event) {
 
     } catch (e) {
         console.error('處理票券領取事件失敗:', e);
+    }
+}
+
+/**
+ * 處理票券核銷事件
+ */
+function handleCouponRedeemed(event) {
+    try {
+        const data = JSON.parse(event.data);
+        console.log('票券已核銷:', data);
+
+        showNotificationToast(
+            '票券已核銷',
+            `已核銷「${data.couponName || '票券'}」（${data.customerName || '顧客'}）`,
+            'info'
+        );
+
+        refreshPageData('coupon_redeemed', data);
+
+    } catch (e) {
+        console.error('處理票券核銷事件失敗:', e);
     }
 }
 

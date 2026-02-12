@@ -487,6 +487,18 @@ public class CouponService {
         // 發送 LINE 核銷通知給顧客
         sendRedeemNotification(tenantId, instance, coupon);
 
+        // 推送 SSE 通知給店家
+        try {
+            String couponName = coupon != null ? coupon.getName() : "票券";
+            sseNotificationService.notifyCouponRedeemed(tenantId, Map.of(
+                    "couponName", couponName,
+                    "customerName", customerName != null ? customerName : "顧客",
+                    "code", instance.getCode()
+            ));
+        } catch (Exception e) {
+            log.warn("推送票券核銷 SSE 通知失敗：{}", e.getMessage());
+        }
+
         return couponMapper.toInstanceResponse(instance, coupon, customerName);
     }
 
