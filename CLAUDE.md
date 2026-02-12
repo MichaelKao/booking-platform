@@ -711,7 +711,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (916 tests)：**
+**測試套件 (938 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -745,6 +745,7 @@ npx playwright test --list
 | `23-deep-interaction-test.spec.ts` | 深度互動測試 | 33 |
 | `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
 | `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
+| `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -773,12 +774,14 @@ npx playwright test --list
 - 超管儀表板金額計算
 - SEO 資源驗證（robots.txt、sitemap.xml、OG 圖片、Meta Tags）
 - **頁面健康驗證**（載入完成檢測、卡住的「載入中」、孤立 spinner、載入遮罩）
+- **API 契約驗證**（前端欄位名 vs 後端 DTO 欄位名匹配，防止 400 錯誤）
 
 **靜態分析腳本（scripts/audit-frontend-apis.js）：**
 
 - 不需啟動伺服器，直接掃描 HTML 原始碼
 - `STALE_LOADING`：檢查 HTML 有「載入中」文字的元素是否有對應 JS DOM 操作
 - `ORPHAN_SPINNER`：檢查 spinner 容器是否有 JS 代碼去移除/替換
+- `FIELD_MISMATCH`：比對前端 api.post/put 送出的欄位名與後端 Java DTO 欄位名，找出不匹配
 - 執行方式：`node scripts/audit-frontend-apis.js`
 
 **F12 Console 自動監控（fixtures.ts）：**
@@ -800,6 +803,245 @@ npx playwright test --list
 - LINE 設定測試（`13-tenant-settings.spec.ts`）**不會覆蓋**真實的 LINE credentials
 - 測試只會更新訊息設定（welcomeMessage、defaultReply），不動 channelId/channelSecret/channelAccessToken
 - 啟用/停用測試會**確保最終保持啟用狀態**，避免影響生產環境
+
+---
+
+## 測試規範與最佳實踐（可跨專案複用）
+
+> 本節整理適用於任何 Web 全端專案的測試策略與規範。
+
+### 測試金字塔
+
+```
+        /  E2E  \          ← 少量，驗證關鍵使用者流程
+       / 契約測試 \         ← 前後端介面對齊
+      / 整合測試    \       ← API 層級，Service + DB
+     / 單元測試       \     ← 大量，純邏輯函式
+    ──────────────────
+     靜態分析 (最底層)      ← 零成本，開發時即時回饋
+```
+
+### 第 0 層：靜態分析（開發時）
+
+**原則**：能在編譯/掃描階段抓到的 bug，絕不留到執行時。
+
+| 檢查類型 | 工具/方法 | 抓什麼 |
+|---------|----------|--------|
+| 型別檢查 | TypeScript / Java Compiler | 型別錯誤、未定義變數 |
+| Lint | ESLint / Checkstyle | 程式碼風格、常見反模式 |
+| 前後端欄位匹配 | `FIELD_MISMATCH` 靜態掃描 | 前端送的欄位名 vs 後端 DTO 欄位名不一致 |
+| 孤立載入狀態 | `STALE_LOADING` / `ORPHAN_SPINNER` | HTML 有載入中 UI 但 JS 沒替換 |
+| 安全掃描 | OWASP Dependency Check | 已知漏洞套件 |
+
+**FIELD_MISMATCH 靜態分析實作模式**（適用於任何前後端分離專案）：
+
+```
+步驟：
+1. 掃描前端原始碼，提取所有 API 呼叫（URL + HTTP Method + 送出的欄位名）
+2. 建立「API URL → 後端 DTO 類別名」對應表（手動維護，~20-40 筆）
+3. 解析後端 DTO 原始碼，提取欄位名和必填標記
+4. 比對：
+   - 前端送了但 DTO 沒有的欄位 → 資料被靜默丟棄（隱性 bug）
+   - DTO 必填但前端沒送的欄位 → 必定 400 錯誤
+5. 輸出報告，CI 中 exit code 1 阻擋合併
+```
+
+**關鍵技術細節**：
+- 解析 ES6 shorthand：`{ name, phone }` 和 `{ name: val, phone: val }` 都要能提取 key
+- 處理 JS 行內註解：`field: value, // 註解` 不能影響下一個欄位的解析
+- 支援巢狀物件和陣列：追蹤 `{}[]()` 深度，只在深度 0 切割逗號
+- 處理模板字串 URL：`` `/api/xxx/${id}` `` 清理為 `/api/xxx/`
+- 子資源排除：`PUT /api/staff/{id}/schedule` 不匹配 `PUT /api/staff/`
+
+### 第 1 層：API 契約測試
+
+**原則**：前後端之間的「接口」是最容易出錯的地方，必須有專門的防護。
+
+**契約測試設計模式**：
+
+```typescript
+// 對每個 POST/PUT API，用正確格式的 payload 打一次
+// 只驗證「欄位名正確，不會 400」，不驗證業務邏輯
+test('POST /api/bookings — 欄位名稱正確', async ({ request }) => {
+    const res = await request.post('/api/bookings', {
+        headers: { Authorization: `Bearer ${token}` },
+        data: {
+            customerId: existingId,
+            serviceItemId: existingId,
+            bookingDate: '2099-12-31',   // 用未來日期避免業務驗證
+            startTime: '10:00',
+            customerNote: '契約測試'
+        }
+    });
+    // 400 = 欄位名或格式錯誤（測試失敗）
+    // 200/201 = 成功
+    // 409/422/403/404 = 業務錯誤（代表 DTO 解析成功，測試通過）
+    expect(res.status()).not.toBe(400);
+});
+```
+
+**測試資料策略**：
+
+| 策略 | 說明 | 範例 |
+|------|------|------|
+| 用真實 ID | `beforeAll` 用 GET API 取得現有資料的 ID | `GET /api/customers?size=1` |
+| 用未來日期 | 避免「日期已過」的業務驗證 | `bookingDate: '2099-12-31'` |
+| 用錯誤密碼 | 驗證欄位名但不真的改密碼 | `currentPassword: 'wrong'` |
+| 允許衝突 | 409（名稱重複）代表 DTO 解析成功 | 新增同名資料 |
+
+### 第 2 層：E2E UI 測試
+
+**原則**：模擬真實使用者操作，驗證完整的使用者流程。
+
+**測試分類與優先級**：
+
+| 優先級 | 類別 | 說明 | 範例 |
+|--------|------|------|------|
+| P0 | 核心流程 | 使用者不能完成 = 業務中斷 | 登入、建立預約、結帳 |
+| P1 | CRUD 操作 | 每個資源的增刪改查 | 顧客新增/編輯/刪除 |
+| P2 | 頁面載入 | 每個頁面能正常打開 | 所有後台頁面 |
+| P3 | 邊界情況 | 錯誤處理、權限 | 未登入訪問、無效輸入 |
+| P4 | 視覺回歸 | UI 元素位置和顯示 | 側邊欄、RWD |
+
+**Playwright 最佳實踐**：
+
+```typescript
+// 1. 用 domcontentloaded 而非 networkidle（SSE/WebSocket 專案必備）
+await page.waitForLoadState('domcontentloaded');
+
+// 2. 用 request context 做 API 測試（不走 UI，快 10 倍）
+test('API 測試', async ({ request }) => {
+    const res = await request.post('/api/xxx', { data: {...} });
+});
+
+// 3. 用 fixture 自動注入橫切關注點（F12 Console 監控）
+export const test = base.extend({
+    page: async ({ page }, use) => {
+        const errors = [];
+        page.on('pageerror', e => errors.push(e.message));
+        page.on('response', r => { if (r.status() >= 500) errors.push(r.url()); });
+        await use(page);
+        if (errors.length > 0) throw new Error(`F12 錯誤: ${errors.join(', ')}`);
+    },
+});
+
+// 4. 避免硬等待，用明確條件等待
+await page.waitForSelector('#data-table tbody tr'); // 好
+await page.waitForTimeout(3000);                     // 差（偶爾才需要）
+
+// 5. 測試命名：動詞 + 目標 + 預期
+test('建立預約 — 選擇服務後顯示員工列表', ...);
+test('刪除顧客 — 確認對話框顯示後執行刪除', ...);
+```
+
+**F12 Console 自動監控模式**（推薦所有 UI 測試都啟用）：
+
+```
+監控三類錯誤：
+├── pageerror — JS 執行錯誤（永遠是 bug）
+├── HTTP 500+ — 伺服器錯誤（永遠是 bug）
+└── console.error — 過濾雜訊後的錯誤
+
+過濾清單（這些不算 bug）：
+├── 瀏覽器內建：favicon 404、net::ERR_、ResizeObserver、AbortError
+├── SSE/WebSocket：stream 斷線、chunked encoding
+└── 應用程式預期：API 錯誤處理器 log、登入失敗、Token 過期
+```
+
+### 第 3 層：頁面健康驗證
+
+**原則**：頁面「能打開」不夠，還要「載入完成」。
+
+**檢查項目**：
+
+| 症狀 | 檢測方法 | 原因 |
+|------|---------|------|
+| 永遠顯示「載入中」 | 檢查是否有 `載入中` 文字在 5 秒後仍存在 | API 呼叫失敗但沒有錯誤處理 |
+| Spinner 不消失 | 檢查 `.spinner-border` 是否 5 秒後仍可見 | 非同步操作沒有 finally 區塊 |
+| 載入遮罩蓋住頁面 | 檢查 `.loading-overlay` opacity | 遮罩的 hide 邏輯有 bug |
+| 空白表格 | 檢查 tbody 是否有 tr 或「無資料」提示 | API 回應格式錯但沒報錯 |
+
+### 測試檔案命名規範
+
+```
+tests/
+├── 00-setup.spec.ts            ← 環境前置檢查（health check）
+├── 01-auth.spec.ts             ← 認證（最基本，其他測試依賴它）
+├── 02~06-*.spec.ts             ← 基本功能測試
+├── 07~15-*.spec.ts             ← 各模組 CRUD 測試
+├── 16~19-*.spec.ts             ← 進階功能測試
+├── 20-f12-console-check.spec.ts ← 全頁面 Console 錯誤檢測
+├── 21~25-*.spec.ts             ← 專項驗證測試
+├── 26-api-contract-validator.spec.ts ← API 契約驗證
+├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
+├── fixtures.ts                 ← 共用 Fixture（F12 監控）
+└── utils/test-helpers.ts       ← 共用輔助函式
+```
+
+**編號邏輯**：
+- `00-09`：基礎設施和核心功能
+- `10-19`：各模組深度測試
+- `20-29`：品質驗證和防護網
+- `99`：全面掃描（放最後跑）
+
+### 防護網測試清單（適用於所有 Web 專案）
+
+每個 Web 專案至少應有以下「防護網」測試：
+
+| 防護網 | 抓什麼 | 實作方式 |
+|--------|--------|---------|
+| **頁面載入** | 每個路由都能 200 | 遍歷所有路由，`expect(status).toBe(200)` |
+| **F12 無錯誤** | JS Error、HTTP 500 | Fixture 自動監控 |
+| **API 契約** | 前後端欄位名不匹配 | 靜態分析 + E2E 契約測試 |
+| **表單送出** | 必填欄位驗證、送出成功 | 填入有效資料，點擊送出，檢查結果 |
+| **靜態資源** | CSS/JS 載入失敗 | `page.on('response')` 監控 404 |
+| **權限保護** | 未登入不能訪問後台 | 直接訪問受保護頁面，檢查跳轉到登入 |
+| **RWD 不崩版** | 小螢幕不出現橫向滾動 | `viewport` 設定 375px，檢查 `scrollWidth <= clientWidth` |
+| **匯出功能** | Excel/PDF 下載不是 500 | 打 API 檢查 Content-Type 和 status |
+
+### 測試中的生產環境安全守則
+
+```
+必須遵守：
+├── 不覆蓋真實的第三方 credentials（API Key、Token、Secret）
+├── 測試寫入的資料用明確前綴標記（如「契約測試」「E2E測試」）
+├── 修改狀態的測試要確保最終狀態恢復（如停用後重新啟用）
+├── 不觸發真實的外部通知（LINE 推播、SMS、Email）
+└── 不刪除非測試建立的資料
+
+建議做法：
+├── 用獨立測試帳號，不用真實使用者帳號
+├── 用環境變數區分測試環境和生產環境
+├── 有副作用的操作（刪除、發送通知）用 mock 或跳過
+└── beforeAll/afterAll 做清理，避免測試資料累積
+```
+
+### CI/CD 整合建議
+
+```yaml
+# GitHub Actions / GitLab CI 建議流程
+stages:
+  - lint          # ESLint + 靜態分析
+  - build         # 編譯
+  - unit-test     # 單元測試
+  - contract-test # API 契約驗證
+  - e2e-test      # E2E 測試（需要運行中的服務）
+
+# 靜態分析（最快回饋）
+lint:
+  script:
+    - node scripts/audit-frontend-apis.js  # FIELD_MISMATCH + STALE_LOADING
+
+# API 契約測試（中等速度）
+contract-test:
+  script:
+    - npx playwright test tests/26-api-contract-validator.spec.ts
+
+# 完整 E2E（最慢，但最全面）
+e2e-test:
+  script:
+    - npx playwright test
+```
 
 ---
 
@@ -936,4 +1178,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 908 |
+| E2E 測試 | 930 |
