@@ -58,6 +58,9 @@ public class DataInitializer implements CommandLineRunner {
         // 初始化功能定義
         initFeatures();
 
+        // 為所有既有租戶補訂閱免費功能
+        initTenantFreeFeatures();
+
         // 初始化測試服務資料
         initTestServices();
 
@@ -89,6 +92,25 @@ public class DataInitializer implements CommandLineRunner {
             log.info("功能定義初始化完成");
         } catch (Exception e) {
             log.error("初始化功能定義失敗：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 為所有既有租戶補訂閱免費功能（冪等，已有則跳過）
+     */
+    private void initTenantFreeFeatures() {
+        try {
+            List<Tenant> tenants = tenantRepository.findAll().stream()
+                    .filter(t -> t.getDeletedAt() == null)
+                    .filter(t -> TenantStatus.ACTIVE.equals(t.getStatus()))
+                    .toList();
+
+            for (Tenant tenant : tenants) {
+                featureService.initializeTenantFreeFeatures(tenant.getId());
+            }
+            log.info("租戶免費功能檢查完成，共 {} 個租戶", tenants.size());
+        } catch (Exception e) {
+            log.error("初始化租戶免費功能失敗：{}", e.getMessage());
         }
     }
 

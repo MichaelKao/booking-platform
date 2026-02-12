@@ -25,6 +25,18 @@
 | SMS | 三竹簡訊 |
 | 部署 | Railway (Docker) |
 
+## 修改流程
+
+1. 修改程式碼
+2. `mvn compile -q` 確認編譯通過
+3. 更新相關 CLAUDE.md 文件（如有結構/功能變更）
+4. `git add` + `git commit` + `git push`（不需詢問，直接執行）
+5. Railway 自動部署，等 60 秒後 health check 驗證
+
+**注意**：不要每一步都問確認，修完直接 commit + push + deploy 驗證。
+
+---
+
 ## 三個角色
 
 | 角色 | 說明 |
