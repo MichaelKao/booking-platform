@@ -50,8 +50,8 @@
                                         <li>前往 <a href="https://developers.line.biz/" target="_blank" class="fw-bold">LINE Developers Console <i class="bi bi-box-arrow-up-right"></i></a>，點擊「Create a LINE Official Account」建立官方帳號</li>
                                         <li>在官方帳號管理後台 → 設定 → Messaging API → 啟用 Messaging API</li>
                                         <li>回到 LINE Developers Console，進入新建的 Channel，複製 Channel ID、Channel Secret 和 Access Token 填入下方</li>
-                                        <li>將下方的 Webhook URL 設定到 LINE Developers Console</li>
-                                        <li>儲存設定並測試連線</li>
+                                        <li>儲存設定（系統會<strong>自動設定 Webhook URL</strong>到 LINE）</li>
+                                        <li>點「連線測試」確認成功</li>
                                     </ol>
                                 </div>
 
@@ -93,15 +93,14 @@
                                             </div>
                                         </div>
 
-                                        <h6 class="fw-bold text-primary mb-3 mt-3"><i class="bi bi-4-circle me-2"></i>步驟四：設定 Webhook</h6>
-                                        <p class="small mb-2">1. 在 Messaging API 頁面找到「Webhook settings」</p>
-                                        <p class="small mb-2">2. 將下方的 Webhook URL 貼到「Webhook URL」欄位</p>
-                                        <p class="small mb-2">3. 點擊「Verify」驗證連線</p>
-                                        <p class="small mb-2">4. 將「Use webhook」開關打開</p>
+                                        <h6 class="fw-bold text-primary mb-3 mt-3"><i class="bi bi-4-circle me-2"></i>步驟四：儲存並啟用</h6>
+                                        <p class="small mb-2">1. 在下方填入 Channel ID、Channel Secret、Channel Access Token</p>
+                                        <p class="small mb-2">2. 點擊「儲存設定」→ 系統會<strong>自動設定 Webhook URL</strong> 到 LINE Developers Console</p>
+                                        <p class="small mb-2">3. 點擊「連線測試」確認成功</p>
+                                        <p class="small mb-2">4. 確認 LINE Developers Console 中「Use webhook」已自動開啟</p>
                                         <div class="alert alert-warning small mb-0 mt-2">
                                             <i class="bi bi-exclamation-triangle me-1"></i>
-                                            <strong>重要！</strong>請關閉 LINE Official Account Manager 的自動回應訊息，否則會與 Bot 衝突。
-                                            <br>位置：LINE Official Account Manager → 設定 → 回應設定 → 自動回應訊息 → 關閉
+                                            <strong>唯一需要手動做的事！</strong>請到上方紅色區塊的說明，關閉 LINE Official Account Manager 的自動回應訊息。
                                         </div>
                                     </div>
                                 </div>

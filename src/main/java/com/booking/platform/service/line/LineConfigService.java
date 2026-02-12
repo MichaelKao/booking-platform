@@ -273,6 +273,14 @@ public class LineConfigService {
 
         log.info("LINE 設定儲存成功，租戶：{}，狀態：{}", tenantId, config.getStatus());
 
+        // ========================================
+        // 8. 自動設定 LINE Webhook URL（透過 LINE API）
+        // ========================================
+
+        if (config.getChannelAccessTokenEncrypted() != null && config.getWebhookUrl() != null) {
+            autoSetWebhookOnLine(config);
+        }
+
         return buildResponse(config, tenantId);
     }
 
@@ -513,6 +521,72 @@ public class LineConfigService {
         } else {
             // 設定不完整
             config.setStatus(LineConfigStatus.PENDING);
+        }
+    }
+
+    /**
+     * 透過 LINE API 自動設定 Webhook URL
+     * PUT https://api.line.me/v2/bot/channel/webhook/endpoint
+     */
+    private void autoSetWebhookOnLine(TenantLineConfig config) {
+        try {
+            String accessToken = encryptionService.decrypt(config.getChannelAccessTokenEncrypted());
+            String webhookUrl = config.getWebhookUrl();
+
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+
+            // 設定 Webhook URL
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.line.me/v2/bot/channel/webhook/endpoint"))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Content-Type", "application/json")
+                    .PUT(java.net.http.HttpRequest.BodyPublishers.ofString(
+                            "{\"endpoint\":\"" + webhookUrl + "\"}"))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request,
+                    java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                log.info("自動設定 LINE Webhook URL 成功，租戶：{}，URL：{}", config.getTenantId(), webhookUrl);
+
+                // 設定成功後自動測試
+                autoTestWebhookOnLine(accessToken, webhookUrl, config.getTenantId());
+            } else {
+                log.warn("自動設定 LINE Webhook URL 失敗，租戶：{}，狀態碼：{}，回應：{}",
+                        config.getTenantId(), response.statusCode(), response.body());
+            }
+        } catch (Exception e) {
+            log.warn("自動設定 LINE Webhook URL 異常，租戶：{}，錯誤：{}", config.getTenantId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 透過 LINE API 測試 Webhook
+     * POST https://api.line.me/v2/bot/channel/webhook/test
+     */
+    private void autoTestWebhookOnLine(String accessToken, String webhookUrl, String tenantId) {
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.line.me/v2/bot/channel/webhook/test"))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(
+                            "{\"endpoint\":\"" + webhookUrl + "\"}"))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request,
+                    java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                log.info("自動測試 LINE Webhook 成功，租戶：{}", tenantId);
+            } else {
+                log.warn("自動測試 LINE Webhook 失敗，租戶：{}，狀態碼：{}", tenantId, response.statusCode());
+            }
+        } catch (Exception e) {
+            log.warn("自動測試 LINE Webhook 異常，租戶：{}，錯誤：{}", tenantId, e.getMessage());
         }
     }
 
