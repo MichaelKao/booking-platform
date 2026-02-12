@@ -711,7 +711,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (894 tests)：**
+**測試套件 (916 tests)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -744,6 +744,7 @@ npx playwright test --list
 | `22-full-coverage-ui.spec.ts` | 全覆蓋 UI 測試 | 94 |
 | `23-deep-interaction-test.spec.ts` | 深度互動測試 | 33 |
 | `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
+| `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -771,6 +772,14 @@ npx playwright test --list
 - 報表摘要統計（回頭客、服務營收）
 - 超管儀表板金額計算
 - SEO 資源驗證（robots.txt、sitemap.xml、OG 圖片、Meta Tags）
+- **頁面健康驗證**（載入完成檢測、卡住的「載入中」、孤立 spinner、載入遮罩）
+
+**靜態分析腳本（scripts/audit-frontend-apis.js）：**
+
+- 不需啟動伺服器，直接掃描 HTML 原始碼
+- `STALE_LOADING`：檢查 HTML 有「載入中」文字的元素是否有對應 JS DOM 操作
+- `ORPHAN_SPINNER`：檢查 spinner 容器是否有 JS 代碼去移除/替換
+- 執行方式：`node scripts/audit-frontend-apis.js`
 
 **F12 Console 自動監控（fixtures.ts）：**
 
@@ -927,4 +936,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 886 |
+| E2E 測試 | 908 |
