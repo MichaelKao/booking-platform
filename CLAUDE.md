@@ -4,9 +4,9 @@
 
 | 環境 | URL | 短網址 |
 |------|-----|--------|
-| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login | https://is.gd/bkp_tenant |
-| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login | https://is.gd/bkp_admin |
-| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health | https://is.gd/bkp_health |
+| 店家後台 | https://booking-platform-production-1e08.up.railway.app/tenant/login | https://tinyurl.com/26fxodho |
+| 超管後台 | https://booking-platform-production-1e08.up.railway.app/admin/login | https://tinyurl.com/2b9fhnm2 |
+| 健康檢查 | https://booking-platform-production-1e08.up.railway.app/health | https://tinyurl.com/2cdb5t4p |
 
 ## 快速參考
 
