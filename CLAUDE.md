@@ -742,28 +742,41 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 
 > **注意**：LINE 已更改建立流程，現在無法直接在 Developers Console 建立 Messaging API Channel，必須先從 Official Account Manager 建立官方帳號。
 
+| 步驟 | 操作 | 自動化程度 |
+|------|------|-----------|
+| 1 | 建立 LINE 官方帳號 + 啟用 Messaging API | 手動（LINE 平台限制） |
+| 2 | 複製 Channel ID / Secret / Token 填入後台 | 手動 |
+| 3 | 儲存設定 → Webhook URL 自動設定到 LINE | **自動**（透過 LINE API） |
+| 4 | 連線測試 | 一鍵 |
+| 5 | 關閉自動回應 → 頁面顯示直達連結 | **一鍵直達**（`manager.line.biz/account/@{basicId}/setting/response`） |
+
+**詳細步驟：**
+
 1. 前往 [LINE Developers Console](https://developers.line.biz/)
-2. 點擊畫面上的綠色按鈕「**Create a LINE Official Account**」，會跳轉到 LINE Official Account Manager
-3. 在 Official Account Manager 建立一個 LINE 官方帳號（填寫帳號名稱、類別等基本資料）
-4. 官方帳號建好後，進入該帳號管理後台 → **設定** → **Messaging API** → 點擊「**啟用 Messaging API**」
-5. 啟用時選擇一個 Provider（選擇既有的或建立新的），完成後系統會自動在 LINE Developers Console 建立對應的 Messaging API Channel
-6. 回到 [LINE Developers Console](https://developers.line.biz/)，進入新建的 Messaging API Channel
-7. 複製 **Channel ID**、**Channel Secret**、**Channel Access Token**（Token 需點「Issue」產生）
-8. 在店家後台 LINE 設定頁面填入並儲存
-9. 設定 **Webhook URL** 到 LINE Developers Console：`https://你的網域/api/line/webhook/{tenantCode}`
-10. **重要**：關閉 LINE Official Account Manager 的自動回應功能（見下方）
-11. 在 LINE Developers Console 點擊 **Verify** 確認連線成功
+2. 點擊「**Create a LINE Official Account**」，跳轉到 LINE Official Account Manager
+3. 建立 LINE 官方帳號（填寫帳號名稱、類別等基本資料）
+4. 進入帳號管理後台 → **設定** → **Messaging API** → 點擊「**啟用 Messaging API**」
+5. 選擇 Provider，完成後系統自動在 Developers Console 建立 Channel
+6. 回到 Developers Console，進入 Channel，複製 **Channel ID**、**Channel Secret**、**Channel Access Token**
+7. 在店家後台 LINE 設定頁面填入並儲存（系統**自動設定 Webhook URL** 到 LINE）
+8. 點「連線測試」確認成功
+9. 點頁面上的「**一鍵前往關閉自動回應**」按鈕，將回應方式改為「手動聊天」
+
+### 自動化機制
+
+- **Webhook URL 自動設定**：儲存 LINE 設定時，後端透過 `PUT /v2/bot/channel/webhook/endpoint` 自動將 Webhook URL 設定到 LINE 平台，並自動執行 webhook test
+- **關閉自動回應直達連結**：連線測試成功後取得 `basicId`，頁面自動生成 `https://manager.line.biz/account/@{basicId}/setting/response` 直達連結，店家一鍵跳轉
+- **無法自動化的部分**：關閉自動回應（LINE 無公開 API 可操作此設定，必須手動）
 
 ### 關閉 LINE Official Account 自動回應（必要步驟）
 
 > ⚠️ **這是最常見的問題原因！** 如果不關閉自動回應，LINE 會攔截所有訊息，Webhook 完全收不到。
 
-1. 前往 [LINE Official Account Manager](https://manager.line.biz/)
-2. 進入您的官方帳號 → **設定** → **回應設定**
-3. 在「**回應方式**」區塊：
-   - 將「回應時間」改為只有 **「手動聊天」**
-   - 將「非回應時間」也改為 **「手動聊天」**
-   - **不要**勾選「自動回應訊息」
+連線測試成功後，頁面會顯示「**一鍵前往關閉自動回應**」按鈕直達設定頁面。手動操作：
+
+1. 在「**回應方式**」區塊：將「回應時間」改為只有 **「手動聊天」**
+2. 將「非回應時間」也改為 **「手動聊天」**
+3. **不要**勾選「自動回應訊息」
 4. 確保「**Webhook**」顯示為啟用狀態
 
 ### 技術說明
