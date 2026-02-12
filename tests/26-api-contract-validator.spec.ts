@@ -32,9 +32,18 @@ async function getAdminToken(request: APIRequestContext): Promise<string> {
     return body.data.accessToken;
 }
 
-// 輔助：驗證回應不是 400
-function assertNotBadRequest(status: number, url: string) {
-    expect(status, `${url} 回傳 400 — 欄位名稱或格式可能錯誤`).not.toBe(400);
+// 輔助：驗證回應不是「欄位驗證錯誤」的 400
+// 區分：SYS_002/SYS_003 = 欄位名或格式錯誤（測試失敗），其他 400 = 業務邏輯（允許）
+async function assertNotFieldError(res: any, url: string) {
+    const status = res.status();
+    if (status !== 400) return; // 非 400 一律通過
+
+    const body = await res.json().catch(() => ({}));
+    const code = body.code || '';
+    // SYS_002 = 請求體格式錯誤（Jackson 解析失敗）
+    // SYS_003 = 參數驗證失敗（@Valid 欄位驗證）
+    const isFieldError = code === 'SYS_002' || code === 'SYS_003';
+    expect(isFieldError, `${url} 回傳 400 (${code}: ${body.message}) — 欄位名稱或格式可能錯誤`).toBe(false);
 }
 
 test.describe('API 契約驗證 - 店家 API', () => {
@@ -148,7 +157,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 customerNote: '契約測試'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/bookings');
+        await assertNotFieldError(res, 'POST /api/bookings');
     });
 
     test('PUT /api/bookings/{id} — 欄位名稱正確', async ({ request }) => {
@@ -164,7 +173,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 storeNoteToCustomer: '契約測試備註'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/bookings/{id}');
+        await assertNotFieldError(res, 'PUT /api/bookings/{id}');
     });
 
     // ===== 顧客 =====
@@ -181,7 +190,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 note: '契約測試'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/customers');
+        await assertNotFieldError(res, 'POST /api/customers');
     });
 
     test('PUT /api/customers/{id} — 欄位名稱正確', async ({ request }) => {
@@ -197,7 +206,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 note: '契約測試更新'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/customers/{id}');
+        await assertNotFieldError(res, 'PUT /api/customers/{id}');
     });
 
     // ===== 員工 =====
@@ -215,7 +224,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 sortOrder: 99
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/staff');
+        await assertNotFieldError(res, 'POST /api/staff');
     });
 
     test('PUT /api/staff/{id} — 欄位名稱正確', async ({ request }) => {
@@ -231,7 +240,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 sortOrder: 99
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/staff/{id}');
+        await assertNotFieldError(res, 'PUT /api/staff/{id}');
     });
 
     // ===== 服務 =====
@@ -247,7 +256,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試服務描述'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/services');
+        await assertNotFieldError(res, 'POST /api/services');
     });
 
     test('PUT /api/services/{id} — 欄位名稱正確', async ({ request }) => {
@@ -262,7 +271,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試服務描述更新'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/services/{id}');
+        await assertNotFieldError(res, 'PUT /api/services/{id}');
     });
 
     // ===== 服務分類 =====
@@ -275,7 +284,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試分類描述'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/service-categories');
+        await assertNotFieldError(res, 'POST /api/service-categories');
     });
 
     test('PUT /api/service-categories/{id} — 欄位名稱正確', async ({ request }) => {
@@ -288,7 +297,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 isActive: true
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/service-categories/{id}');
+        await assertNotFieldError(res, 'PUT /api/service-categories/{id}');
     });
 
     // ===== 商品 =====
@@ -306,7 +315,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試商品描述'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/products');
+        await assertNotFieldError(res, 'POST /api/products');
     });
 
     test('PUT /api/products/{id} — 欄位名稱正確', async ({ request }) => {
@@ -322,7 +331,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試商品描述更新'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/products/{id}');
+        await assertNotFieldError(res, 'PUT /api/products/{id}');
     });
 
     // ===== 票券 =====
@@ -340,7 +349,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 validDays: 30
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/coupons');
+        await assertNotFieldError(res, 'POST /api/coupons');
     });
 
     test('PUT /api/coupons/{id} — 欄位名稱正確', async ({ request }) => {
@@ -357,7 +366,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 validDays: 60
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/coupons/{id}');
+        await assertNotFieldError(res, 'PUT /api/coupons/{id}');
     });
 
     // ===== 行銷活動 =====
@@ -374,7 +383,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 note: '契約測試'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/campaigns');
+        await assertNotFieldError(res, 'POST /api/campaigns');
     });
 
     test('PUT /api/campaigns/{id} — 欄位名稱正確', async ({ request }) => {
@@ -387,7 +396,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 description: '契約測試活動描述更新'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/campaigns/{id}');
+        await assertNotFieldError(res, 'PUT /api/campaigns/{id}');
     });
 
     // ===== 行銷推播 =====
@@ -402,7 +411,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 note: '契約測試'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/marketing/pushes');
+        await assertNotFieldError(res, 'POST /api/marketing/pushes');
     });
 
     // ===== 會員等級 =====
@@ -421,24 +430,25 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 isDefault: false
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/membership-levels');
+        await assertNotFieldError(res, 'POST /api/membership-levels');
     });
 
     test('PUT /api/membership-levels/{id} — 欄位名稱正確', async ({ request }) => {
         const id = testIds.membershipLevelId || 'nonexistent';
+        // 注意：Controller PUT 也使用 CreateMembershipLevelRequest（非 Update DTO）
         const res = await request.put(`/api/membership-levels/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
             data: {
                 name: '契約測試等級更新',
                 upgradeThreshold: 10000,
-                discountPercent: 10,
-                pointMultiplier: 2.0,
+                discountRate: 0.1,
+                pointRate: 0.1,
                 description: '契約測試等級描述更新',
                 sortOrder: 99,
                 isDefault: false
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/membership-levels/{id}');
+        await assertNotFieldError(res, 'PUT /api/membership-levels/{id}');
     });
 
     // ===== 設定 =====
@@ -461,7 +471,7 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 notifyBookingCancel: true
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/settings');
+        await assertNotFieldError(res, 'PUT /api/settings');
     });
 
     // ===== 更改密碼 =====
@@ -476,59 +486,64 @@ test.describe('API 契約驗證 - 店家 API', () => {
                 confirmPassword: 'newPass123!'
             }
         });
-        // 可能 403（密碼錯誤）但不應該 400（欄位名錯誤）
-        assertNotBadRequest(res.status(), 'POST /api/auth/change-password');
+        // 可能 400（密碼錯誤 AUTH_LOGIN_FAILED）但不應該是 SYS_002/SYS_003（欄位名錯誤）
+        await assertNotFieldError(res, 'POST /api/auth/change-password');
     });
 });
 
 test.describe('API 契約驗證 - 超管 API', () => {
     let adminToken: string;
-    let testTenantId: string | undefined;
+    let createdTenantId: string | undefined;
 
     test.beforeAll(async ({ request }) => {
         adminToken = await getAdminToken(request);
         expect(adminToken).toBeTruthy();
-
-        // 取得一個租戶 ID
-        const res = await request.get('/api/admin/tenants?size=1', {
-            headers: { Authorization: `Bearer ${adminToken}` }
-        });
-        if (res.ok()) {
-            const data = await res.json();
-            const tenants = data.data?.content || [];
-            if (tenants.length > 0) testTenantId = tenants[0].id;
-        }
     });
 
     test('POST /api/admin/tenants — 欄位名稱正確', async ({ request }) => {
+        const ts = Date.now();
         const res = await request.post('/api/admin/tenants', {
             headers: { Authorization: `Bearer ${adminToken}` },
             data: {
-                code: `ct${Date.now()}`,
+                code: `ct${ts}`,
                 name: '契約測試店家',
                 phone: '0200000000',
-                email: `contract-${Date.now()}@example.com`,
+                email: `ct${ts}@example.com`,
                 address: '測試地址',
-                description: '契約測試',
-                adminUsername: `ct_admin_${Date.now()}`,
-                adminPassword: 'TestPass123!'
+                description: '契約測試'
             }
         });
-        assertNotBadRequest(res.status(), 'POST /api/admin/tenants');
+        await assertNotFieldError(res, 'POST /api/admin/tenants');
+
+        // 記錄建立的 ID，供 PUT 測試和清理使用
+        if (res.status() === 201) {
+            const data = await res.json();
+            createdTenantId = data.data?.id;
+        }
     });
 
     test('PUT /api/admin/tenants/{id} — 欄位名稱正確', async ({ request }) => {
-        const id = testTenantId || 'nonexistent';
+        // 用剛建立的測試租戶，避免修改正式租戶資料
+        const id = createdTenantId || 'nonexistent';
         const res = await request.put(`/api/admin/tenants/${id}`, {
             headers: { Authorization: `Bearer ${adminToken}` },
             data: {
                 name: '契約測試店家更新',
                 phone: '0200000001',
-                email: 'admin-update-test@example.com',
+                email: `ct-update-${Date.now()}@example.com`,
                 address: '測試地址更新',
                 description: '契約測試更新'
             }
         });
-        assertNotBadRequest(res.status(), 'PUT /api/admin/tenants/{id}');
+        await assertNotFieldError(res, 'PUT /api/admin/tenants/{id}');
+    });
+
+    test.afterAll(async ({ request }) => {
+        // 清理測試租戶
+        if (createdTenantId) {
+            await request.delete(`/api/admin/tenants/${createdTenantId}`, {
+                headers: { Authorization: `Bearer ${adminToken}` }
+            });
+        }
     });
 });
