@@ -21,6 +21,20 @@
                                 <h6 class="m-0"><i class="bi bi-chat-dots me-2"></i>LINE Official Account 設定</h6>
                             </div>
                             <div class="card-body">
+                                <!-- 關閉自動回應警告（最重要） -->
+                                <div class="alert alert-danger mb-4">
+                                    <h6 class="alert-heading mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>設定完成後必做！否則 Bot 不會回應</h6>
+                                    <p class="mb-2">請到 <a href="https://manager.line.biz/" target="_blank" class="alert-link fw-bold">LINE Official Account Manager <i class="bi bi-box-arrow-up-right"></i></a> 關閉自動回應：</p>
+                                    <ol class="mb-0 small">
+                                        <li>進入您的官方帳號 → <strong>設定</strong> → <strong>回應設定</strong></li>
+                                        <li>「回應方式」改為只有「<strong>手動聊天</strong>」</li>
+                                        <li><strong>不要</strong>勾選「自動回應訊息」</li>
+                                        <li>確認「Webhook」顯示為<strong>啟用</strong></li>
+                                    </ol>
+                                    <hr class="my-2">
+                                    <p class="mb-0 small text-danger"><i class="bi bi-info-circle me-1"></i>如果不關閉，LINE 會攔截所有訊息，您的 Bot 完全不會收到也不會回應。</p>
+                                </div>
+
                                 <!-- 設定步驟說明（可展開詳細教學） -->
                                 <div class="alert alert-info mb-4">
                                     <div class="d-flex justify-content-between align-items-center">
