@@ -11,7 +11,7 @@
 @Slf4j
 ```
 
-## 目錄結構 (30 個 Controller)
+## 目錄結構 (33 個 Controller)
 
 | 目錄 | Controller | 用途 |
 |------|------------|------|
@@ -21,8 +21,10 @@
 | admin/ | AdminDashboardController | 儀表板 |
 | auth/ | AuthController | 認證 (登入/註冊/密碼) |
 | line/ | LineWebhookController | LINE Webhook |
+| line/ | LineDiagnosticController | LINE 診斷 |
 | page/ | AdminPageController | 超管頁面路由 |
 | page/ | TenantPageController | 店家頁面路由 |
+| page/ | PublicPageController | 公開/SEO 頁面路由 |
 | tenant/ | LineConfigController | LINE 設定 |
 | / | BookingController | 預約管理 |
 | / | CustomerController | 顧客管理 |
@@ -30,6 +32,8 @@
 | / | ServiceItemController | 服務項目 |
 | / | ServiceCategoryController | 服務分類 |
 | / | ProductController | 商品管理 |
+| / | ProductOrderController | 商品訂單 |
+| / | InventoryController | 庫存異動 |
 | / | CouponController | 票券管理 |
 | / | CampaignController | 行銷活動 |
 | / | MarketingController | 行銷推播 |

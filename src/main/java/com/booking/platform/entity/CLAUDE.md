@@ -49,7 +49,7 @@ public class Xxx extends BaseEntity {
 
 ---
 
-## Entity 列表 (23 個)
+## Entity 列表 (25 個)
 
 ### 租戶相關
 
@@ -101,6 +101,8 @@ public class Xxx extends BaseEntity {
 | Entity | 表名 | 說明 |
 |--------|------|------|
 | Product | products | 商品資訊 |
+| ProductOrder | product_orders | 商品訂單 |
+| InventoryLog | inventory_logs | 庫存異動記錄 |
 
 ### 行銷相關
 
@@ -157,7 +159,9 @@ entity/
 │   ├── ServiceCategory
 │   └── ServiceItem
 ├── product/             # 商品實體
-│   └── Product
+│   ├── Product
+│   ├── ProductOrder
+│   └── InventoryLog
 ├── marketing/           # 行銷實體
 │   ├── Coupon
 │   ├── CouponInstance

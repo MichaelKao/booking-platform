@@ -13,7 +13,7 @@
 
 ---
 
-## 頁面結構 (37 個 HTML 檔案)
+## 頁面結構 (51 個 HTML 檔案)
 
 ### 超級管理後台 (`admin/`)
 
@@ -45,6 +45,8 @@
 | staff.html | 員工管理 | /tenant/staff |
 | services.html | 服務管理 | /tenant/services |
 | products.html | 商品管理 | /tenant/products |
+| product-orders.html | 商品訂單 | /tenant/product-orders |
+| inventory.html | 庫存異動 | /tenant/inventory |
 | coupons.html | 票券管理 | /tenant/coupons |
 | campaigns.html | 行銷活動 | /tenant/campaigns |
 | marketing.html | 行銷推播 | /tenant/marketing |
@@ -52,6 +54,7 @@
 | line-settings.html | LINE 設定 | /tenant/line-settings |
 | feature-store.html | 功能商店 | /tenant/feature-store |
 | points.html | 點數管理 | /tenant/points |
+| membership-levels.html | 會員等級 | /tenant/membership-levels |
 
 ### 共用片段 (`fragments/`)
 
@@ -101,7 +104,24 @@ JavaScript 會在頁面載入時檢查訂閱狀態，自動隱藏未訂閱功能
 
 | 檔案 | 功能 | 路由 |
 |------|------|------|
+| index.html | 首頁 (SEO) | / |
+| features.html | 功能介紹 | /features |
+| pricing.html | 價格方案 | /pricing |
+| faq.html | 常見問題 | /faq |
+| privacy.html | 隱私政策 | /privacy |
+| terms.html | 服務條款 | /terms |
 | cancel-booking.html | 顧客自助取消預約 | /booking/cancel/{token} |
+
+### 行業頁面 (`public/industry/`)
+
+| 檔案 | 功能 | 路由 |
+|------|------|------|
+| beauty.html | 美容業解決方案 | /industry/beauty |
+| clinic.html | 診所/醫美解決方案 | /industry/clinic |
+| fitness.html | 健身房解決方案 | /industry/fitness |
+| hair-salon.html | 髮廊解決方案 | /industry/hair-salon |
+| restaurant.html | 餐廳解決方案 | /industry/restaurant |
+| spa.html | SPA 解決方案 | /industry/spa |
 
 ---
 

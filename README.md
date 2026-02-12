@@ -26,14 +26,23 @@
 
 ### 核心功能
 
-- **預約管理**: 預約建立、確認、取消、完成流程
-- **員工管理**: 班表設定、服務項目指派
-- **顧客管理**: 會員等級、點數系統、黑名單
+- **預約管理**: 預約建立、確認、取消、完成、行事曆檢視
+- **員工管理**: 班表設定、請假管理、服務項目指派
+- **顧客管理**: 會員等級、點數系統、封鎖/解封
 - **服務管理**: 分類、項目、時長、定價
-- **商品管理**: 庫存追蹤、上下架
-- **行銷功能**: 票券、行銷活動
-- **報表分析**: 營收統計、預約趨勢
-- **LINE Bot 整合**: 對話式預約、通知推播
+- **商品管理**: 庫存追蹤、上下架、商品訂單、庫存異動
+- **行銷功能**: 票券系統、行銷活動、行銷推播
+- **報表分析**: 營收統計、預約趨勢、Excel/PDF 匯出
+- **LINE Bot 整合**: 對話式預約、通知推播、Rich Menu
+- **金流整合**: ECPay 綠界（信用卡、ATM、超商）
+- **AI 智慧客服**: Groq Llama 3.3 自動回答
+- **即時通知**: SSE 即時推播（新預約、新訂單等）
+- **SMS 通知**: 三竹簡訊（預約提醒、行銷推播）
+- **郵件通知**: Resend API（密碼重設、歡迎郵件）
+- **功能商店**: 付費功能訂閱制
+- **SEO 頁面**: 首頁、功能介紹、價格方案、行業頁面
+- **多語系**: 繁體中文、簡體中文、英文
+- **RWD**: 手機、平板、電腦自適應
 
 ---
 
@@ -46,8 +55,16 @@
 | 快取 | Redis |
 | 認證 | Spring Security + JWT |
 | 前端 | Thymeleaf, Bootstrap 5, JavaScript |
+| 行事曆 | FullCalendar |
+| 圖表 | Chart.js |
+| 報表匯出 | Apache POI (Excel) + OpenPDF (PDF) |
 | LINE 整合 | LINE Messaging API |
+| 金流 | ECPay 綠界 |
+| 郵件 | Resend (HTTP API) |
+| SMS | 三竹簡訊 |
+| AI | Groq + Llama 3.3 |
 | 部署 | Railway (Docker) |
+| E2E 測試 | Playwright |
 
 ---
 
@@ -55,15 +72,18 @@
 
 | 項目 | 數量 |
 |------|------|
-| Java 類別 | 208 |
-| Controller | 23 |
-| Service | 25 |
-| Entity | 18 |
-| Repository | 18 |
-| DTO | 60+ |
-| Enum | 19 |
-| HTML 頁面 | 33 |
-| 資料表 | 22 |
+| Java 類別 | 265 |
+| Controller | 33 |
+| Service | 38 |
+| Entity | 25 |
+| Repository | 25 |
+| DTO | 76+ |
+| Enum | 28 |
+| Scheduler | 5 |
+| HTML 頁面 | 51 |
+| CSS 檔案 | 3 |
+| JS 檔案 | 4 |
+| E2E 測試 | 886 |
 
 ---
 
@@ -73,15 +93,16 @@
 booking-platform/
 ├── src/main/java/com/booking/platform/
 │   ├── common/           # 共用元件 (設定、例外、安全)
-│   ├── controller/       # API 控制器 (23 個)
-│   ├── service/          # 業務邏輯 (25 個)
-│   ├── repository/       # 資料存取 (18 個)
-│   ├── entity/           # 資料庫實體 (18 個)
-│   ├── dto/              # 資料傳輸物件 (60+)
-│   ├── enums/            # 列舉型別 (19 個)
+│   ├── controller/       # API 控制器 (33 個)
+│   ├── service/          # 業務邏輯 (38 個)
+│   ├── repository/       # 資料存取 (25 個)
+│   ├── entity/           # 資料庫實體 (25 個)
+│   ├── dto/              # 資料傳輸物件 (76+)
+│   ├── enums/            # 列舉型別 (28 個)
+│   ├── scheduler/        # 排程任務 (5 個)
 │   └── mapper/           # 物件轉換
 ├── src/main/resources/
-│   ├── templates/        # Thymeleaf 模板 (33 頁面)
+│   ├── templates/        # Thymeleaf 模板 (51 頁面)
 │   ├── static/           # CSS/JS 靜態資源
 │   └── application*.yml  # 設定檔
 ├── Dockerfile            # Docker 建構檔
@@ -180,9 +201,17 @@ booking-platform/
 | `REDIS_URL` | Redis 連線 URL | ❌ |
 | `LINE_CHANNEL_TOKEN` | LINE Channel Access Token | ❌ |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | ❌ |
-| `MAIL_USERNAME` | 郵件發送帳號 | ❌ |
-| `MAIL_PASSWORD` | 郵件發送密碼 | ❌ |
+| `RESEND_API_KEY` | Resend 郵件 API Key | ❌ |
+| `MAIL_FROM` | 郵件寄件人地址 | ❌ |
 | `ENCRYPTION_SECRET_KEY` | 加密密鑰 (Base64) | ❌ |
+| `ECPAY_MERCHANT_ID` | ECPay 商店代號 | ❌ |
+| `ECPAY_HASH_KEY` | ECPay HashKey | ❌ |
+| `ECPAY_HASH_IV` | ECPay HashIV | ❌ |
+| `SMS_ENABLED` | 啟用 SMS | ❌ |
+| `SMS_USERNAME` | SMS 帳號 | ❌ |
+| `SMS_PASSWORD` | SMS 密碼 | ❌ |
+| `GROQ_ENABLED` | 啟用 AI 客服 | ❌ |
+| `GROQ_API_KEY` | Groq API Key | ❌ |
 
 ---
 
@@ -207,10 +236,19 @@ booking-platform/
 | 員工 | `/api/staff` | 員工管理 |
 | 服務 | `/api/services` | 服務項目 |
 | 商品 | `/api/products` | 商品管理 |
+| 商品訂單 | `/api/product-orders` | 商品訂單管理 |
+| 庫存 | `/api/inventory` | 庫存異動 |
 | 票券 | `/api/coupons` | 票券管理 |
 | 活動 | `/api/campaigns` | 行銷活動 |
+| 推播 | `/api/marketing` | 行銷推播 |
+| 會員等級 | `/api/membership-levels` | 會員等級 |
 | 報表 | `/api/reports` | 報表統計 |
+| 匯出 | `/api/export` | Excel/PDF 匯出 |
 | 設定 | `/api/settings` | 店家設定 |
+| 點數 | `/api/points` | 點數管理 |
+| 功能商店 | `/api/feature-store` | 功能訂閱 |
+| 金流 | `/api/payments` | ECPay 支付 |
+| 通知 | `/api/notifications` | SSE 即時通知 |
 
 ### 超管 API
 
@@ -236,7 +274,7 @@ POST https://{domain}/api/line/webhook/{tenantCode}
 ### 對話流程
 
 ```
-IDLE → SELECTING_SERVICE → SELECTING_STAFF → SELECTING_DATE → SELECTING_TIME → CONFIRMING_BOOKING → IDLE
+IDLE → SELECTING_SERVICE → SELECTING_DATE → SELECTING_STAFF → SELECTING_TIME → INPUTTING_NOTE → CONFIRMING_BOOKING → IDLE
 ```
 
 ### 設定步驟

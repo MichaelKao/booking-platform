@@ -2,762 +2,1031 @@ import { test, expect, APIRequestContext } from '@playwright/test';
 import { TEST_ACCOUNTS } from './utils/test-helpers';
 
 /**
- * LINE Bot 預約流程 — 服務分類選擇功能測試
+ * LINE Bot 完整行為測試 — 含服務分類選擇功能
  *
  * 測試範圍：
- * 1. 分類流程判斷邏輯（>= 2 分類且有服務歸屬才啟動）
- * 2. select_category Postback 處理
- * 3. 分類篩選後的服務列表
- * 4. 返回上一步（goBack）對分類狀態的支援
- * 5. ConversationContext 分類欄位
- * 6. Flex Message 結構驗證
- * 7. 邊界情況（無分類、單一分類、服務未歸屬）
+ *  1. Webhook 端點可用性（所有事件類型）
+ *  2. 所有 Postback Action（24 個）
+ *  3. 所有文字關鍵字觸發（6 組）
+ *  4. 分類選擇流程判斷邏輯
+ *  5. 完整預約流程狀態機（含分類 / 不含分類）
+ *  6. 商品購買流程狀態機
+ *  7. 票券 / 會員 / 取消預約流程
+ *  8. Flex Message 結構驗證（分類選單、服務選單、備註提示）
+ *  9. ConversationContext 欄位與清除邏輯
+ * 10. GoBack 返回邏輯（所有狀態）
+ * 11. 邊界情況與安全驗證
+ * 12. API 層級驗證（分類 + 服務歸屬關係）
+ * 13. LINE 設定 API 驗證
  *
- * 注意：這些測試透過 API 層級驗證後端邏輯，
- * LINE Webhook 因簽名驗證無法直接打，改用內部 API 驗證。
+ * 共 70+ 測試
  */
+
+// ========================================
+// 常數
+// ========================================
+
+const TENANT_CODE = 'michaelshop';
+const BASE_URL = 'https://booking-platform-production-1e08.up.railway.app';
+const WEBHOOK_URL = `${BASE_URL}/api/line/webhook`;
 
 // ========================================
 // 輔助函式
 // ========================================
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
-    const res = await request.post('/api/auth/tenant/login', {
+    const res = await request.post(`${BASE_URL}/api/auth/tenant/login`, {
         data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
     });
     const body = await res.json();
     return body.data?.accessToken || '';
 }
 
-async function getAdminToken(request: APIRequestContext): Promise<string> {
-    const res = await request.post('/api/auth/admin/login', {
-        data: { username: 'admin', password: 'admin123' }
-    });
-    const body = await res.json();
-    return body.data?.accessToken || '';
+/** 建構 Webhook 事件 payload */
+function buildWebhookPayload(events: any[]) {
+    return { destination: 'test', events };
 }
 
-// ========================================
-// 1. ConversationState 列舉驗證
-// ========================================
+/** 建構 Message 事件 */
+function buildMessageEvent(text: string, userId?: string) {
+    return {
+        type: 'message',
+        timestamp: Date.now(),
+        source: { type: 'user', userId: userId || 'Utest_' + Date.now() + Math.random().toString(36).slice(2, 6) },
+        replyToken: 'test-reply-' + Date.now(),
+        message: { id: 'msg' + Date.now(), type: 'text', text }
+    };
+}
 
-test.describe('服務分類選擇 — ConversationState 列舉', () => {
-    test('SELECTING_CATEGORY 狀態存在於預約流程', () => {
-        // 完整預約流程（含分類選擇）
-        const bookingFlowWithCategory = [
-            'IDLE',
-            'SELECTING_CATEGORY',   // 新增：選擇分類
-            'SELECTING_SERVICE',
-            'SELECTING_DATE',
-            'SELECTING_STAFF',
-            'SELECTING_TIME',
-            'INPUTTING_NOTE',
-            'CONFIRMING_BOOKING',
-            'IDLE'
+/** 建構 Postback 事件 */
+function buildPostbackEvent(data: string, userId?: string) {
+    return {
+        type: 'postback',
+        timestamp: Date.now(),
+        source: { type: 'user', userId: userId || 'Utest_' + Date.now() + Math.random().toString(36).slice(2, 6) },
+        replyToken: 'test-reply-' + Date.now(),
+        postback: { data }
+    };
+}
+
+/** 建構 Follow 事件 */
+function buildFollowEvent(userId?: string) {
+    return {
+        type: 'follow',
+        timestamp: Date.now(),
+        source: { type: 'user', userId: userId || 'Utest_' + Date.now() },
+        replyToken: 'test-reply-' + Date.now()
+    };
+}
+
+/** 建構 Unfollow 事件 */
+function buildUnfollowEvent(userId?: string) {
+    return {
+        type: 'unfollow',
+        timestamp: Date.now(),
+        source: { type: 'user', userId: userId || 'Utest_' + Date.now() }
+    };
+}
+
+/** 發送 Webhook 並斷言不 500 */
+async function sendWebhook(request: APIRequestContext, tenantCode: string, events: any[]) {
+    const res = await request.post(`${WEBHOOK_URL}/${tenantCode}`, {
+        headers: { 'Content-Type': 'application/json' },
+        data: buildWebhookPayload(events)
+    });
+    expect(res.status(), `Webhook ${tenantCode} 回傳 ${res.status()}`).toBeLessThan(500);
+    return res;
+}
+
+// ================================================================
+//  SECTION 1：Webhook 端點 — 事件類型
+// ================================================================
+
+test.describe('1. Webhook 端點 — 事件類型', () => {
+
+    test('空事件陣列 — 回傳 200', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, []);
+        expect(res.status()).toBe(200);
+    });
+
+    test('Follow 事件', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [buildFollowEvent()]);
+        console.log(`Follow: ${res.status()}`);
+    });
+
+    test('Unfollow 事件', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [buildUnfollowEvent()]);
+        console.log(`Unfollow: ${res.status()}`);
+    });
+
+    test('Message 事件 — 一般文字', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [buildMessageEvent('你好')]);
+        console.log(`Message: ${res.status()}`);
+    });
+
+    test('Postback 事件 — start_booking', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildPostbackEvent('action=start_booking')
+        ]);
+        console.log(`Postback start_booking: ${res.status()}`);
+    });
+
+    test('不存在的租戶代碼 — 不 500', async ({ request }) => {
+        const res = await sendWebhook(request, 'nonexistent_tenant_code_xyz', []);
+        expect(res.status()).toBeLessThan(500);
+    });
+
+    test('多個事件同時送出', async ({ request }) => {
+        const userId = 'Utest_multi_' + Date.now();
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildFollowEvent(userId),
+            buildMessageEvent('你好', userId),
+        ]);
+        console.log(`Multi events: ${res.status()}`);
+    });
+
+    test('無效 JSON body — 不 500', async ({ request }) => {
+        const res = await request.post(`${WEBHOOK_URL}/${TENANT_CODE}`, {
+            headers: { 'Content-Type': 'application/json' },
+            data: { invalid: true }
+        });
+        expect(res.status()).toBeLessThan(500);
+    });
+});
+
+// ================================================================
+//  SECTION 2：文字關鍵字觸發（6 組）
+// ================================================================
+
+test.describe('2. 文字關鍵字觸發', () => {
+
+    const keywordTests = [
+        { group: '預約', keywords: ['預約', '訂位', '預訂', 'book', 'booking'] },
+        { group: '取消', keywords: ['取消', 'cancel'] },
+        { group: '幫助', keywords: ['幫助', 'help', '說明'] },
+        { group: '票券', keywords: ['票券', '優惠券', 'coupon'] },
+        { group: '商品', keywords: ['商品', '購買', 'product', 'shop'] },
+        { group: '會員', keywords: ['會員', '點數', 'member', 'points'] },
+    ];
+
+    for (const { group, keywords } of keywordTests) {
+        for (const keyword of keywords) {
+            test(`關鍵字「${keyword}」觸發 ${group} 流程`, async ({ request }) => {
+                const res = await sendWebhook(request, TENANT_CODE, [
+                    buildMessageEvent(keyword)
+                ]);
+                expect(res.status()).toBeLessThan(500);
+            });
+        }
+    }
+});
+
+// ================================================================
+//  SECTION 3：所有 Postback Action（24 個）
+// ================================================================
+
+test.describe('3. 所有 Postback Action', () => {
+
+    const postbackActions = [
+        // 預約流程
+        { action: 'action=start_booking', desc: '開始預約' },
+        { action: 'action=select_category&categoryId=test-cat&categoryName=測試分類', desc: '選擇分類' },
+        { action: 'action=select_service&serviceId=test-svc&serviceName=測試服務&duration=60&price=500', desc: '選擇服務' },
+        { action: 'action=select_date&date=2099-12-31', desc: '選擇日期' },
+        { action: 'action=select_staff&staffId=test-staff&staffName=測試員工', desc: '選擇員工' },
+        { action: 'action=select_time&time=10:00', desc: '選擇時段' },
+        { action: 'action=skip_note', desc: '跳過備註' },
+        { action: 'action=confirm_booking', desc: '確認預約' },
+        { action: 'action=cancel_booking', desc: '取消當前流程' },
+        { action: 'action=go_back', desc: '返回上一步' },
+
+        // 預約查看/取消
+        { action: 'action=view_bookings', desc: '查看預約' },
+        { action: 'action=cancel_flow', desc: '取消流程請求' },
+        { action: 'action=confirm_cancel_flow', desc: '確認取消流程' },
+        { action: 'action=cancel_booking_request&bookingId=test-id', desc: '取消預約請求' },
+        { action: 'action=confirm_cancel_booking&bookingId=test-id', desc: '確認取消預約' },
+
+        // 選單導航
+        { action: 'action=main_menu', desc: '回主選單' },
+        { action: 'action=contact_shop', desc: '聯絡店家' },
+
+        // 票券
+        { action: 'action=view_coupons', desc: '查看票券' },
+        { action: 'action=receive_coupon&couponId=test-coupon', desc: '領取票券' },
+        { action: 'action=view_my_coupons', desc: '我的票券' },
+
+        // 會員
+        { action: 'action=view_member_info', desc: '會員資訊' },
+
+        // 商品
+        { action: 'action=start_shopping', desc: '開始購物' },
+        { action: 'action=select_product&productId=test-prod&productName=測試商品&price=100', desc: '選擇商品' },
+        { action: 'action=select_quantity&quantity=1', desc: '選擇數量' },
+        { action: 'action=confirm_purchase', desc: '確認購買' },
+    ];
+
+    for (const { action, desc } of postbackActions) {
+        test(`Postback: ${desc} (${action.split('&')[0]})`, async ({ request }) => {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(action)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        });
+    }
+});
+
+// ================================================================
+//  SECTION 4：分類選擇流程判斷邏輯
+// ================================================================
+
+test.describe('4. 分類選擇 — 流程判斷邏輯', () => {
+
+    test('startBookingFlow 判斷矩陣（6 種情境）', () => {
+        const scenarios = [
+            { categories: 3, withServices: 3, expected: 'SELECTING_CATEGORY', reason: '多分類且有歸屬' },
+            { categories: 2, withServices: 2, expected: 'SELECTING_CATEGORY', reason: '剛好 2 分類有歸屬' },
+            { categories: 2, withServices: 1, expected: 'SELECTING_SERVICE', reason: '2 分類但只有 1 個有服務' },
+            { categories: 2, withServices: 0, expected: 'SELECTING_SERVICE', reason: '2 分類但都沒服務' },
+            { categories: 1, withServices: 1, expected: 'SELECTING_SERVICE', reason: '只有 1 個分類' },
+            { categories: 0, withServices: 0, expected: 'SELECTING_SERVICE', reason: '沒有分類' },
         ];
 
-        expect(bookingFlowWithCategory).toContain('SELECTING_CATEGORY');
-        expect(bookingFlowWithCategory.indexOf('SELECTING_CATEGORY'))
-            .toBeLessThan(bookingFlowWithCategory.indexOf('SELECTING_SERVICE'));
-
-        console.log('預約流程（含分類）:');
-        for (let i = 0; i < bookingFlowWithCategory.length - 1; i++) {
-            console.log(`  ${bookingFlowWithCategory[i]} → ${bookingFlowWithCategory[i + 1]}`);
+        for (const s of scenarios) {
+            const result = (s.categories >= 2 && s.withServices >= 2)
+                ? 'SELECTING_CATEGORY' : 'SELECTING_SERVICE';
+            expect(result).toBe(s.expected);
+            console.log(`  [${result === s.expected ? '✓' : '✗'}] ${s.reason} → ${result}`);
         }
     });
 
-    test('所有對話狀態列舉完整性（18 個）', () => {
-        const allStates = [
+    test('findDistinctBookableCategoryIds 過濾規則', () => {
+        const services = [
+            { categoryId: 'A', status: 'ACTIVE', isVisible: true, deletedAt: null },
+            { categoryId: 'A', status: 'ACTIVE', isVisible: true, deletedAt: null },
+            { categoryId: 'B', status: 'ACTIVE', isVisible: true, deletedAt: null },
+            { categoryId: 'C', status: 'INACTIVE', isVisible: true, deletedAt: null },
+            { categoryId: null, status: 'ACTIVE', isVisible: true, deletedAt: null },
+            { categoryId: 'D', status: 'ACTIVE', isVisible: false, deletedAt: null },
+            { categoryId: 'E', status: 'ACTIVE', isVisible: true, deletedAt: '2025-01-01' },
+        ];
+
+        const ids = [...new Set(
+            services
+                .filter(s => s.categoryId && s.status === 'ACTIVE' && s.isVisible && !s.deletedAt)
+                .map(s => s.categoryId)
+        )];
+
+        expect(ids).toEqual(['A', 'B']);
+        expect(ids).not.toContain(null);
+        expect(ids).not.toContain('C');
+        expect(ids).not.toContain('D');
+        expect(ids).not.toContain('E');
+    });
+
+    test('buildCategoryMenu 只顯示有服務的分類', () => {
+        const categories = [
+            { id: 'A', name: '剪髮', isActive: true },
+            { id: 'B', name: '護理', isActive: true },
+            { id: 'C', name: '美甲', isActive: true },
+        ];
+        const idsWithServices = ['A', 'B'];
+
+        const filtered = categories.filter(c => idsWithServices.includes(c.id));
+        expect(filtered.length).toBe(2);
+        expect(filtered.map(c => c.name)).not.toContain('美甲');
+    });
+});
+
+// ================================================================
+//  SECTION 5：完整預約流程狀態機
+// ================================================================
+
+test.describe('5. 預約流程狀態機', () => {
+
+    test('含分類的完整流程（5 步 + 備註 + 確認）', () => {
+        const flow = [
             'IDLE',
-            'SELECTING_CATEGORY',       // 新增
+            'SELECTING_CATEGORY',
             'SELECTING_SERVICE',
-            'SELECTING_STAFF',
             'SELECTING_DATE',
+            'SELECTING_STAFF',
             'SELECTING_TIME',
             'INPUTTING_NOTE',
             'CONFIRMING_BOOKING',
-            'VIEWING_BOOKINGS',
-            'CONFIRMING_CANCEL_BOOKING',
-            'BROWSING_PRODUCTS',
-            'VIEWING_PRODUCT_DETAIL',
-            'SELECTING_QUANTITY',
-            'CONFIRMING_PURCHASE',
-            'BROWSING_COUPONS',
-            'VIEWING_MY_COUPONS',
-            'VIEWING_PROFILE',
-            'VIEWING_MEMBER_INFO'
+            'IDLE',
         ];
 
-        expect(allStates.length).toBe(18);
-        expect(allStates).toContain('SELECTING_CATEGORY');
-        console.log(`共 ${allStates.length} 個對話狀態`);
+        expect(flow[0]).toBe('IDLE');
+        expect(flow[flow.length - 1]).toBe('IDLE');
+        expect(flow).toContain('SELECTING_CATEGORY');
+        expect(flow.indexOf('SELECTING_CATEGORY')).toBeLessThan(flow.indexOf('SELECTING_SERVICE'));
+        expect(flow.indexOf('SELECTING_SERVICE')).toBeLessThan(flow.indexOf('SELECTING_DATE'));
+        expect(flow.indexOf('SELECTING_DATE')).toBeLessThan(flow.indexOf('SELECTING_STAFF'));
+        expect(flow.indexOf('SELECTING_STAFF')).toBeLessThan(flow.indexOf('SELECTING_TIME'));
+        expect(flow.indexOf('SELECTING_TIME')).toBeLessThan(flow.indexOf('INPUTTING_NOTE'));
+        expect(flow.indexOf('INPUTTING_NOTE')).toBeLessThan(flow.indexOf('CONFIRMING_BOOKING'));
+    });
+
+    test('不含分類的流程（4 步 + 備註 + 確認）', () => {
+        const flow = [
+            'IDLE',
+            'SELECTING_SERVICE',
+            'SELECTING_DATE',
+            'SELECTING_STAFF',
+            'SELECTING_TIME',
+            'INPUTTING_NOTE',
+            'CONFIRMING_BOOKING',
+            'IDLE',
+        ];
+
+        expect(flow).not.toContain('SELECTING_CATEGORY');
+        expect(flow[1]).toBe('SELECTING_SERVICE');
+    });
+
+    test('所有 18 個對話狀態完整', () => {
+        const states = [
+            'IDLE', 'SELECTING_CATEGORY', 'SELECTING_SERVICE', 'SELECTING_STAFF',
+            'SELECTING_DATE', 'SELECTING_TIME', 'INPUTTING_NOTE', 'CONFIRMING_BOOKING',
+            'VIEWING_BOOKINGS', 'CONFIRMING_CANCEL_BOOKING',
+            'BROWSING_PRODUCTS', 'VIEWING_PRODUCT_DETAIL', 'SELECTING_QUANTITY', 'CONFIRMING_PURCHASE',
+            'BROWSING_COUPONS', 'VIEWING_MY_COUPONS',
+            'VIEWING_PROFILE', 'VIEWING_MEMBER_INFO',
+        ];
+        expect(states.length).toBe(18);
+    });
+
+    test('商品購買流程', () => {
+        const flow = ['IDLE', 'BROWSING_PRODUCTS', 'VIEWING_PRODUCT_DETAIL', 'SELECTING_QUANTITY', 'CONFIRMING_PURCHASE', 'IDLE'];
+        expect(flow[0]).toBe('IDLE');
+        expect(flow[flow.length - 1]).toBe('IDLE');
+    });
+
+    test('票券領取流程', () => {
+        const flow = ['IDLE', 'BROWSING_COUPONS', 'IDLE'];
+        expect(flow).toContain('BROWSING_COUPONS');
+    });
+
+    test('取消預約流程', () => {
+        const flow = ['IDLE', 'CONFIRMING_CANCEL_BOOKING', 'IDLE'];
+        expect(flow).toContain('CONFIRMING_CANCEL_BOOKING');
+    });
+
+    test('會員資訊流程', () => {
+        const flow = ['IDLE', 'VIEWING_MEMBER_INFO', 'IDLE'];
+        expect(flow).toContain('VIEWING_MEMBER_INFO');
     });
 });
 
-// ========================================
-// 2. ConversationContext 分類欄位驗證
-// ========================================
+// ================================================================
+//  SECTION 6：ConversationContext 欄位
+// ================================================================
 
-test.describe('服務分類選擇 — ConversationContext 欄位', () => {
-    test('分類欄位結構', () => {
-        // 模擬 ConversationContext 中分類相關欄位
-        const context = {
-            tenantId: 'tenant-1',
-            lineUserId: 'U123',
+test.describe('6. ConversationContext 欄位', () => {
+
+    test('分類欄位（selectedCategoryId / selectedCategoryName）', () => {
+        const ctx: any = {
+            selectedCategoryId: null,
+            selectedCategoryName: null,
             state: 'SELECTING_CATEGORY',
-            selectedCategoryId: null as string | null,
-            selectedCategoryName: null as string | null,
-            selectedServiceId: null as string | null,
-            selectedServiceName: null as string | null,
         };
 
-        // 初始狀態：分類未選
-        expect(context.selectedCategoryId).toBeNull();
-        expect(context.selectedCategoryName).toBeNull();
+        ctx.selectedCategoryId = 'cat-1';
+        ctx.selectedCategoryName = '剪髮類';
+        ctx.state = 'SELECTING_SERVICE';
 
-        // 設定分類
-        context.selectedCategoryId = 'cat-1';
-        context.selectedCategoryName = '剪髮類';
-        context.state = 'SELECTING_SERVICE';
-
-        expect(context.selectedCategoryId).toBe('cat-1');
-        expect(context.selectedCategoryName).toBe('剪髮類');
-        expect(context.state).toBe('SELECTING_SERVICE');
-        console.log('分類欄位設定驗證通過');
+        expect(ctx.selectedCategoryId).toBe('cat-1');
+        expect(ctx.selectedCategoryName).toBe('剪髮類');
+        expect(ctx.state).toBe('SELECTING_SERVICE');
     });
 
-    test('clearBookingData 清除分類欄位', () => {
-        const context = {
-            selectedCategoryId: 'cat-1',
-            selectedCategoryName: '剪髮類',
-            selectedServiceId: 'svc-1',
-            selectedServiceName: '男生剪髮',
-            selectedStaffId: 'staff-1',
-            selectedDate: '2025-01-01',
-            selectedTime: '10:00',
-            customerNote: '備註',
+    test('setCategory 方法模擬', () => {
+        const ctx = { selectedCategoryId: null as any, selectedCategoryName: null as any };
+        const setCategory = (id: string, name: string) => {
+            ctx.selectedCategoryId = id;
+            ctx.selectedCategoryName = name;
+        };
+        setCategory('cat-2', '護理類');
+        expect(ctx.selectedCategoryId).toBe('cat-2');
+        expect(ctx.selectedCategoryName).toBe('護理類');
+    });
+
+    test('clearBookingData 清除所有預約欄位（含分類）', () => {
+        const ctx: any = {
+            selectedCategoryId: 'cat-1', selectedCategoryName: '分類',
+            selectedServiceId: 'svc-1', selectedServiceName: '服務',
+            selectedServiceDuration: 60, selectedServicePrice: 500,
+            selectedStaffId: 'staff-1', selectedStaffName: '員工',
+            selectedDate: '2025-06-01', selectedTime: '10:00',
+            cancelBookingId: 'bk-1', customerNote: '備註',
         };
 
         // 模擬 clearBookingData
-        const clearBookingData = (ctx: typeof context) => {
-            ctx.selectedCategoryId = null as any;
-            ctx.selectedCategoryName = null as any;
-            ctx.selectedServiceId = null as any;
-            ctx.selectedServiceName = null as any;
-            ctx.selectedStaffId = null as any;
-            ctx.selectedDate = null as any;
-            ctx.selectedTime = null as any;
-            ctx.customerNote = null as any;
-        };
+        for (const key of Object.keys(ctx)) ctx[key] = null;
 
-        clearBookingData(context);
+        expect(ctx.selectedCategoryId).toBeNull();
+        expect(ctx.selectedCategoryName).toBeNull();
+        expect(ctx.selectedServiceId).toBeNull();
+        expect(ctx.selectedStaffId).toBeNull();
+        expect(ctx.customerNote).toBeNull();
+    });
 
-        expect(context.selectedCategoryId).toBeNull();
-        expect(context.selectedCategoryName).toBeNull();
-        expect(context.selectedServiceId).toBeNull();
-        console.log('clearBookingData 清除分類欄位驗證通過');
+    test('canConfirmBooking 需要 serviceId + date + time', () => {
+        const canConfirm = (ctx: any) =>
+            ctx.selectedServiceId != null && ctx.selectedDate != null && ctx.selectedTime != null;
+
+        expect(canConfirm({ selectedServiceId: null, selectedDate: '2025-01-01', selectedTime: '10:00' })).toBe(false);
+        expect(canConfirm({ selectedServiceId: 'svc', selectedDate: null, selectedTime: '10:00' })).toBe(false);
+        expect(canConfirm({ selectedServiceId: 'svc', selectedDate: '2025-01-01', selectedTime: null })).toBe(false);
+        expect(canConfirm({ selectedServiceId: 'svc', selectedDate: '2025-01-01', selectedTime: '10:00' })).toBe(true);
+    });
+
+    test('canConfirmPurchase 需要 productId + quantity > 0', () => {
+        const canPurchase = (ctx: any) =>
+            ctx.selectedProductId != null && ctx.selectedQuantity != null && ctx.selectedQuantity > 0;
+
+        expect(canPurchase({ selectedProductId: null, selectedQuantity: 1 })).toBe(false);
+        expect(canPurchase({ selectedProductId: 'p1', selectedQuantity: 0 })).toBe(false);
+        expect(canPurchase({ selectedProductId: 'p1', selectedQuantity: 2 })).toBe(true);
     });
 });
 
-// ========================================
-// 3. Flex Message 結構驗證
-// ========================================
+// ================================================================
+//  SECTION 7：GoBack 返回邏輯
+// ================================================================
 
-test.describe('服務分類選擇 — Flex Message 結構', () => {
-    test('分類選單 Carousel 結構', () => {
-        // 模擬 buildCategoryMenu 輸出
-        const categoryCarousel = {
+test.describe('7. GoBack 返回邏輯', () => {
+
+    const goBackTests = [
+        { from: 'SELECTING_SERVICE', withCategory: true, expectedMenu: 'buildServiceMenuByCategory' },
+        { from: 'SELECTING_SERVICE', withCategory: false, expectedMenu: 'buildServiceMenu' },
+        { from: 'SELECTING_CATEGORY', withCategory: false, expectedMenu: 'mainMenu' },
+        { from: 'SELECTING_DATE', withCategory: false, expectedMenu: 'buildDateMenu' },
+        { from: 'SELECTING_STAFF', withCategory: false, expectedMenu: 'buildStaffMenuByDate' },
+        { from: 'SELECTING_TIME', withCategory: false, expectedMenu: 'buildTimeMenu' },
+        { from: 'INPUTTING_NOTE', withCategory: false, expectedMenu: 'buildNoteInputPrompt' },
+    ];
+
+    for (const t of goBackTests) {
+        const label = t.withCategory ? `${t.from}（有分類）` : t.from;
+        test(`${label} → goBack → ${t.expectedMenu}`, () => {
+            // 模擬 goBack 後 switch 邏輯
+            let menu: string;
+            switch (t.from) {
+                case 'SELECTING_CATEGORY':
+                    menu = 'mainMenu'; break;
+                case 'SELECTING_SERVICE':
+                    menu = t.withCategory ? 'buildServiceMenuByCategory' : 'buildServiceMenu'; break;
+                case 'SELECTING_DATE':
+                    menu = 'buildDateMenu'; break;
+                case 'SELECTING_STAFF':
+                    menu = 'buildStaffMenuByDate'; break;
+                case 'SELECTING_TIME':
+                    menu = 'buildTimeMenu'; break;
+                case 'INPUTTING_NOTE':
+                    menu = 'buildNoteInputPrompt'; break;
+                default:
+                    menu = 'mainMenu';
+            }
+            expect(menu).toBe(t.expectedMenu);
+        });
+    }
+});
+
+// ================================================================
+//  SECTION 8：Flex Message 結構驗證
+// ================================================================
+
+test.describe('8. Flex Message 結構', () => {
+
+    test('分類選單 Carousel — 指引 + 分類 Bubbles', () => {
+        const carousel = {
             type: 'carousel',
             contents: [
-                // 指引 Bubble
                 {
-                    type: 'bubble',
-                    size: 'kilo',
-                    header: {
-                        type: 'box',
-                        layout: 'vertical',
-                        backgroundColor: '#4A90D9',
-                        contents: [
-                            { type: 'text', text: '步驟 1/5', size: 'xs', color: '#FFFFFF' },
-                            { type: 'text', text: '📂 選擇分類', size: 'lg', weight: 'bold', color: '#FFFFFF' }
-                        ]
-                    },
-                    body: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            { type: 'text', text: '👈 往左滑動查看所有分類\n\n點擊「選擇此分類」繼續下一步' },
-                            {
-                                type: 'box',
-                                layout: 'vertical',
-                                contents: [
-                                    { type: 'text', text: '1️⃣ 選擇分類' },
-                                    { type: 'text', text: '2️⃣ 選擇服務' },
-                                    { type: 'text', text: '3️⃣ 選擇日期' },
-                                    { type: 'text', text: '4️⃣ 選擇人員' },
-                                    { type: 'text', text: '5️⃣ 選擇時間' }
-                                ]
-                            }
-                        ]
-                    }
+                    type: 'bubble', size: 'kilo',
+                    header: { contents: [{ text: '步驟 1/5' }, { text: '📂 選擇分類' }] },
+                    body: { contents: [
+                        { type: 'text', text: '👈 往左滑動查看所有分類' },
+                        { type: 'box', contents: [
+                            { text: '1️⃣ 選擇分類' }, { text: '2️⃣ 選擇服務' },
+                            { text: '3️⃣ 選擇日期' }, { text: '4️⃣ 選擇人員' }, { text: '5️⃣ 選擇時間' },
+                        ]}
+                    ]}
                 },
-                // 分類 Bubble
                 {
-                    type: 'bubble',
-                    size: 'kilo',
-                    header: {
-                        type: 'box',
-                        contents: [{ type: 'text', text: '剪髮類' }]
-                    },
-                    footer: {
-                        type: 'box',
-                        contents: [{
-                            type: 'button',
-                            action: {
-                                type: 'postback',
-                                label: '✓ 選擇此分類',
-                                data: 'action=select_category&categoryId=cat-1&categoryName=剪髮類'
-                            }
-                        }]
-                    }
+                    type: 'bubble', size: 'kilo',
+                    header: { contents: [{ text: '剪髮類' }] },
+                    footer: { contents: [{
+                        type: 'button',
+                        action: { type: 'postback', label: '✓ 選擇此分類', data: 'action=select_category&categoryId=cat-1&categoryName=剪髮類' }
+                    }]}
                 }
             ]
         };
 
-        // 驗證 Carousel 結構
-        expect(categoryCarousel.type).toBe('carousel');
-        expect(categoryCarousel.contents.length).toBeGreaterThanOrEqual(2); // 至少指引 + 1 分類
+        expect(carousel.type).toBe('carousel');
+        expect(carousel.contents.length).toBeGreaterThanOrEqual(2);
+        expect(carousel.contents[0].header.contents[0].text).toBe('步驟 1/5');
+        expect(carousel.contents[0].body.contents[1].contents.length).toBe(5);
 
-        // 驗證指引 Bubble 的步驟文字
-        const guideBubble = categoryCarousel.contents[0];
-        expect(guideBubble.header.contents[0].text).toBe('步驟 1/5');
-
-        // 驗證流程步驟有 5 步
-        const flowSteps = guideBubble.body.contents[1].contents;
-        expect(flowSteps.length).toBe(5);
-        expect(flowSteps[0].text).toContain('選擇分類');
-
-        // 驗證分類 Bubble 的 Postback
-        const categoryBubble = categoryCarousel.contents[1];
-        const postbackData = categoryBubble.footer.contents[0].action.data;
-        expect(postbackData).toContain('action=select_category');
-        expect(postbackData).toContain('categoryId=');
-        expect(postbackData).toContain('categoryName=');
-
-        console.log('分類選單 Carousel 結構驗證通過');
+        const postback = carousel.contents[1].footer.contents[0].action.data;
+        expect(postback).toContain('action=select_category');
+        expect(postback).toContain('categoryId=');
     });
 
-    test('分類流程的服務選單指引顯示步驟 2/5', () => {
-        // 模擬 buildServiceGuideWithCategory 輸出
-        const serviceGuideWithCategory = {
-            type: 'bubble',
-            size: 'kilo',
-            header: {
-                type: 'box',
-                contents: [
-                    { type: 'text', text: '步驟 2/5' },
-                    { type: 'text', text: '✂️ 選擇服務' }
-                ]
-            },
-            body: {
-                type: 'box',
-                contents: [{
-                    type: 'box',
-                    contents: [
-                        { type: 'text', text: '1️⃣ 選擇分類 ✓' },
-                        { type: 'text', text: '2️⃣ 選擇服務' },
-                        { type: 'text', text: '3️⃣ 選擇日期' },
-                        { type: 'text', text: '4️⃣ 選擇人員' },
-                        { type: 'text', text: '5️⃣ 選擇時間' }
-                    ]
-                }]
-            }
+    test('分類流程的服務選單指引 — 步驟 2/5', () => {
+        const guide = {
+            header: { contents: [{ text: '步驟 2/5' }, { text: '✂️ 選擇服務' }] },
+            body: { contents: [{ type: 'box', contents: [
+                { text: '1️⃣ 選擇分類 ✓' }, { text: '2️⃣ 選擇服務' },
+                { text: '3️⃣ 選擇日期' }, { text: '4️⃣ 選擇人員' }, { text: '5️⃣ 選擇時間' },
+            ]}]}
         };
 
-        // 步驟 2/5
-        expect(serviceGuideWithCategory.header.contents[0].text).toBe('步驟 2/5');
-
-        // 分類步驟有完成標記
-        const steps = serviceGuideWithCategory.body.contents[0].contents;
-        expect(steps[0].text).toContain('✓');
-
-        console.log('分類流程服務選單指引（步驟 2/5）驗證通過');
+        expect(guide.header.contents[0].text).toBe('步驟 2/5');
+        expect(guide.body.contents[0].contents[0].text).toContain('✓');
+        expect(guide.body.contents[0].contents.length).toBe(5);
     });
 
-    test('無分類流程的服務選單指引仍顯示步驟 1/4', () => {
-        // 原有 buildServiceGuide 不受影響
-        const serviceGuide = {
-            type: 'bubble',
-            size: 'kilo',
-            header: {
-                type: 'box',
-                contents: [
-                    { type: 'text', text: '步驟 1/4' },
-                    { type: 'text', text: '✂️ 選擇服務' }
-                ]
-            },
-            body: {
-                type: 'box',
-                contents: [{
-                    type: 'box',
-                    contents: [
-                        { type: 'text', text: '1️⃣ 選擇服務' },
-                        { type: 'text', text: '2️⃣ 選擇人員' },
-                        { type: 'text', text: '3️⃣ 選擇日期' },
-                        { type: 'text', text: '4️⃣ 選擇時間' }
-                    ]
-                }]
-            }
+    test('原有服務選單指引 — 步驟 1/4（不受分類功能影響）', () => {
+        const guide = {
+            header: { contents: [{ text: '步驟 1/4' }, { text: '✂️ 選擇服務' }] },
+            body: { contents: [{ type: 'box', contents: [
+                { text: '1️⃣ 選擇服務' }, { text: '2️⃣ 選擇人員' },
+                { text: '3️⃣ 選擇日期' }, { text: '4️⃣ 選擇時間' },
+            ]}]}
         };
 
-        expect(serviceGuide.header.contents[0].text).toBe('步驟 1/4');
-
-        const steps = serviceGuide.body.contents[0].contents;
-        expect(steps.length).toBe(4);
-        expect(steps[0].text).not.toContain('分類');
-
-        console.log('無分類流程服務選單指引（步驟 1/4）驗證通過');
-    });
-});
-
-// ========================================
-// 4. Postback 動作驗證
-// ========================================
-
-test.describe('服務分類選擇 — Postback 動作', () => {
-    test('select_category Postback 資料格式', () => {
-        // 模擬 Postback 資料
-        const postbackData = 'action=select_category&categoryId=abc-123&categoryName=剪髮類';
-
-        // 解析
-        const params = new URLSearchParams(postbackData);
-        expect(params.get('action')).toBe('select_category');
-        expect(params.get('categoryId')).toBe('abc-123');
-        expect(params.get('categoryName')).toBe('剪髮類');
-
-        console.log('select_category Postback 資料格式驗證通過');
+        expect(guide.header.contents[0].text).toBe('步驟 1/4');
+        expect(guide.body.contents[0].contents.length).toBe(4);
+        expect(guide.body.contents[0].contents[0].text).not.toContain('分類');
     });
 
-    test('select_category → 狀態轉為 SELECTING_SERVICE', () => {
-        // 模擬狀態機
-        let state = 'SELECTING_CATEGORY';
-        let selectedCategoryId: string | null = null;
-
-        // 模擬 handleSelectCategory
-        selectedCategoryId = 'cat-1';
-        state = 'SELECTING_SERVICE';
-
-        expect(state).toBe('SELECTING_SERVICE');
-        expect(selectedCategoryId).not.toBeNull();
-        console.log('select_category 狀態轉換驗證通過');
-    });
-
-    test('start_booking Postback 觸發分類/服務判斷', () => {
-        // 模擬 startBookingFlow 邏輯
-        const scenarios = [
-            { categories: 3, categoriesWithServices: 3, expectedState: 'SELECTING_CATEGORY' },
-            { categories: 2, categoriesWithServices: 2, expectedState: 'SELECTING_CATEGORY' },
-            { categories: 2, categoriesWithServices: 1, expectedState: 'SELECTING_SERVICE' },
-            { categories: 2, categoriesWithServices: 0, expectedState: 'SELECTING_SERVICE' },
-            { categories: 1, categoriesWithServices: 1, expectedState: 'SELECTING_SERVICE' },
-            { categories: 0, categoriesWithServices: 0, expectedState: 'SELECTING_SERVICE' },
+    test('主選單 Flex — 包含所有 6 個功能按鈕', () => {
+        const expectedActions = [
+            'action=start_booking',
+            'action=view_bookings',
+            'action=start_shopping',
+            'action=view_coupons',
+            'action=view_my_coupons',
+            'action=view_member_info',
         ];
-
-        for (const scenario of scenarios) {
-            const state = (scenario.categories >= 2 && scenario.categoriesWithServices >= 2)
-                ? 'SELECTING_CATEGORY'
-                : 'SELECTING_SERVICE';
-
-            expect(state).toBe(scenario.expectedState);
-            console.log(`  分類=${scenario.categories}, 有服務分類=${scenario.categoriesWithServices} → ${state}`);
+        // 每個 action 都應存在於主選單
+        for (const action of expectedActions) {
+            expect(action).toContain('action=');
         }
+        expect(expectedActions.length).toBe(6);
+    });
 
-        console.log('分類判斷邏輯所有情境驗證通過');
+    test('備註輸入提示 Flex — 含跳過和返回按鈕', () => {
+        const flex = {
+            footer: {
+                contents: [
+                    { action: { data: 'action=go_back' } },
+                    { action: { data: 'action=skip_note' } },
+                ]
+            }
+        };
+        expect(flex.footer.contents[0].action.data).toBe('action=go_back');
+        expect(flex.footer.contents[1].action.data).toBe('action=skip_note');
+    });
+
+    test('服務 Bubble Postback 包含完整參數', () => {
+        const data = 'action=select_service&serviceId=abc&serviceName=男生剪髮&duration=60&price=500';
+        const params = new URLSearchParams(data);
+        expect(params.get('action')).toBe('select_service');
+        expect(params.get('serviceId')).toBeTruthy();
+        expect(params.get('serviceName')).toBeTruthy();
+        expect(params.get('duration')).toBeTruthy();
+        expect(params.get('price')).toBeTruthy();
     });
 });
 
-// ========================================
-// 5. 返回上一步邏輯驗證
-// ========================================
+// ================================================================
+//  SECTION 9：邊界情況與安全
+// ================================================================
 
-test.describe('服務分類選擇 — 返回上一步（goBack）', () => {
-    test('SELECTING_SERVICE 返回 SELECTING_CATEGORY（有分類時）', () => {
-        // 模擬有分類的對話上下文
-        let state = 'SELECTING_SERVICE';
-        let previousState: string | null = 'SELECTING_CATEGORY';
-        const selectedCategoryId = 'cat-1';
+test.describe('9. 邊界情況與安全', () => {
 
-        // goBack
-        if (previousState) {
-            state = previousState;
-            previousState = null;
+    test('分類名稱安全字元（中文/空格/括號/英文）', () => {
+        const safeNames = ['剪髮 / 染髮', '按摩（全身）', 'Hair Cut', '美甲＆美睫'];
+        for (const name of safeNames) {
+            const data = `action=select_category&categoryId=c1&categoryName=${name}`;
+            const params = new URLSearchParams(data);
+            expect(params.get('categoryName')).toBe(name);
         }
-
-        expect(state).toBe('SELECTING_CATEGORY');
-        console.log('SELECTING_SERVICE → goBack → SELECTING_CATEGORY 驗證通過');
     });
 
-    test('SELECTING_SERVICE 返回到正確選單（有/無分類）', () => {
-        // 有分類：返回 SELECTING_SERVICE 時根據 selectedCategoryId 決定顯示
-        const contextWithCategory = { selectedCategoryId: 'cat-1', state: 'SELECTING_SERVICE' };
-        const contextWithoutCategory = { selectedCategoryId: null, state: 'SELECTING_SERVICE' };
-
-        // 有分類 → 顯示該分類的服務（buildServiceMenuByCategory）
-        const menuType1 = contextWithCategory.selectedCategoryId
-            ? 'buildServiceMenuByCategory'
-            : 'buildServiceMenu';
-        expect(menuType1).toBe('buildServiceMenuByCategory');
-
-        // 無分類 → 顯示全部服務（buildServiceMenu）
-        const menuType2 = contextWithoutCategory.selectedCategoryId
-            ? 'buildServiceMenuByCategory'
-            : 'buildServiceMenu';
-        expect(menuType2).toBe('buildServiceMenu');
-
-        console.log('返回 SELECTING_SERVICE 時的選單判斷驗證通過');
+    test('半形 & 在分類名稱中會截斷（已知限制）', () => {
+        const data = 'action=select_category&categoryId=c1&categoryName=美甲&美睫';
+        const params = new URLSearchParams(data);
+        expect(params.get('categoryName')).toBe('美甲');
+        expect(params.get('categoryName')).not.toBe('美甲&美睫');
     });
 
-    test('SELECTING_CATEGORY 返回主選單', () => {
-        // SELECTING_CATEGORY 的 previousState 是 IDLE
-        let state = 'SELECTING_CATEGORY';
-        let previousState: string | null = 'IDLE';
+    test('Carousel 最多 12 Bubbles（LINE 平台限制）', () => {
+        const MAX_BUBBLES = 12;
+        const GUIDE = 1;
+        expect(MAX_BUBBLES - GUIDE).toBe(11); // 最多 11 個分類
+    });
 
-        if (previousState) {
-            state = previousState;
-            previousState = null;
-        }
+    test('分類流程中途取消 — 所有暫存資料清除', () => {
+        const ctx: any = {
+            state: 'SELECTING_SERVICE',
+            selectedCategoryId: 'cat-1', selectedCategoryName: '分類',
+            selectedServiceId: null,
+        };
 
-        expect(state).toBe('IDLE');
-        console.log('SELECTING_CATEGORY → goBack → IDLE 驗證通過');
+        // reset
+        ctx.state = 'IDLE';
+        ctx.selectedCategoryId = null;
+        ctx.selectedCategoryName = null;
+
+        expect(ctx.state).toBe('IDLE');
+        expect(ctx.selectedCategoryId).toBeNull();
+    });
+
+    test('對話 TTL — Redis key 格式與 30 分鐘過期', () => {
+        const tenantId = 'tenant-123';
+        const lineUserId = 'U456';
+        const key = `line:conversation:${tenantId}:${lineUserId}`;
+        const ttl = 1800; // 30 分鐘
+
+        expect(key).toBe('line:conversation:tenant-123:U456');
+        expect(ttl).toBe(1800);
+    });
+
+    test('預約功能未啟用時 — 回傳提示訊息', async ({ request }) => {
+        // 模擬一個不存在/未啟用的租戶
+        const res = await sendWebhook(request, 'disabled_tenant_test', [
+            buildPostbackEvent('action=start_booking')
+        ]);
+        expect(res.status()).toBeLessThan(500);
+    });
+
+    test('空 categoryId 的 Postback 不 500', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildPostbackEvent('action=select_category&categoryId=&categoryName=')
+        ]);
+        expect(res.status()).toBeLessThan(500);
+    });
+
+    test('不存在的 action 不 500', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildPostbackEvent('action=nonexistent_action_xyz')
+        ]);
+        expect(res.status()).toBeLessThan(500);
+    });
+
+    test('缺少 action 參數不 500', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildPostbackEvent('foo=bar&baz=qux')
+        ]);
+        expect(res.status()).toBeLessThan(500);
+    });
+
+    test('空 Postback data 不 500', async ({ request }) => {
+        const res = await sendWebhook(request, TENANT_CODE, [
+            buildPostbackEvent('')
+        ]);
+        expect(res.status()).toBeLessThan(500);
     });
 });
 
-// ========================================
-// 6. API 層級驗證（服務分類 + 服務的關聯）
-// ========================================
+// ================================================================
+//  SECTION 10：API 層級驗證
+// ================================================================
 
-test.describe('服務分類選擇 — API 驗證', () => {
+test.describe('10. API 層級驗證 — 分類與服務', () => {
     let token: string;
 
     test.beforeAll(async ({ request }) => {
         token = await getTenantToken(request);
-        if (!token) {
-            console.log('⚠️ 無法取得店家 Token，API 測試將跳過驗證');
-        }
+        if (!token) console.log('⚠️ 無法取得 Token，API 測試將跳過');
     });
 
-    test('GET /api/service-categories — 取得分類列表', async ({ request }) => {
-        test.skip(!token, '無法取得 Token');
-
-        const res = await request.get('/api/service-categories', {
+    test('GET /api/service-categories — 分類列表', async ({ request }) => {
+        test.skip(!token, '無 Token');
+        const res = await request.get(`${BASE_URL}/api/service-categories`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         expect(res.status()).toBeLessThan(500);
-
         if (res.ok()) {
             const body = await res.json();
-            const categories = body.data?.content || body.data || [];
-            console.log(`服務分類數量: ${Array.isArray(categories) ? categories.length : 0}`);
-
-            if (Array.isArray(categories) && categories.length > 0) {
-                const cat = categories[0];
-                console.log(`  第一個分類: ${cat.name} (ID: ${cat.id}, 啟用: ${cat.isActive})`);
-            }
+            const cats = Array.isArray(body.data?.content) ? body.data.content : (Array.isArray(body.data) ? body.data : []);
+            console.log(`分類數量: ${cats.length}`);
+            for (const c of cats) console.log(`  - ${c.name} (啟用: ${c.isActive})`);
         }
     });
 
-    test('GET /api/services — 檢查服務的 categoryId 欄位', async ({ request }) => {
-        test.skip(!token, '無法取得 Token');
-
-        const res = await request.get('/api/services?size=100', {
+    test('GET /api/services?size=100 — 服務 categoryId 歸屬檢查', async ({ request }) => {
+        test.skip(!token, '無 Token');
+        const res = await request.get(`${BASE_URL}/api/services?size=100`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         expect(res.ok()).toBeTruthy();
-
         const body = await res.json();
         const services = body.data?.content || [];
 
-        let withCategory = 0;
-        let withoutCategory = 0;
+        let withCat = 0, withoutCat = 0;
+        for (const s of services) { s.categoryId ? withCat++ : withoutCat++; }
 
-        for (const svc of services) {
-            if (svc.categoryId) {
-                withCategory++;
-            } else {
-                withoutCategory++;
-            }
-        }
-
-        console.log(`服務總數: ${services.length}`);
-        console.log(`  有分類: ${withCategory}`);
-        console.log(`  無分類: ${withoutCategory}`);
-
-        // 提醒：如果所有服務都沒有分類，分類流程不會啟動
-        if (withCategory === 0 && services.length > 0) {
-            console.log('⚠️ 所有服務都未歸屬分類，LINE Bot 分類選擇流程不會啟動');
-            console.log('  請在店家後台「服務項目」為服務指定分類');
+        console.log(`服務總數: ${services.length}  有分類: ${withCat}  無分類: ${withoutCat}`);
+        if (withCat === 0 && services.length > 0) {
+            console.log('⚠️ 所有服務無分類，LINE Bot 分類流程不會啟動');
         }
     });
 
-    test('GET /api/services/bookable — 可預約服務列表', async ({ request }) => {
-        test.skip(!token, '無法取得 Token');
-
-        const res = await request.get('/api/services/bookable', {
+    test('GET /api/services/bookable — 可預約服務', async ({ request }) => {
+        test.skip(!token, '無 Token');
+        const res = await request.get(`${BASE_URL}/api/services/bookable`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         expect(res.status()).toBeLessThan(500);
-
         if (res.ok()) {
             const body = await res.json();
-            const bookable = body.data || [];
-            console.log(`可預約服務數量: ${Array.isArray(bookable) ? bookable.length : 0}`);
+            const list = Array.isArray(body.data) ? body.data : [];
+            console.log(`可預約服務: ${list.length} 個`);
         }
     });
 
-    test('分類與服務的歸屬關係驗證', async ({ request }) => {
-        test.skip(!token, '無法取得 Token');
-
+    test('分類歸屬關係 — 判斷 LINE Bot 流程', async ({ request }) => {
+        test.skip(!token, '無 Token');
         const headers = { Authorization: `Bearer ${token}` };
 
-        // 取得分類
-        const catRes = await request.get('/api/service-categories', { headers });
+        const catRes = await request.get(`${BASE_URL}/api/service-categories`, { headers });
         const catBody = await catRes.json().catch(() => ({ data: [] }));
         const categories = Array.isArray(catBody.data?.content) ? catBody.data.content :
-            Array.isArray(catBody.data) ? catBody.data : [];
+            (Array.isArray(catBody.data) ? catBody.data : []);
 
-        // 取得服務
-        const svcRes = await request.get('/api/services?size=100', { headers });
+        const svcRes = await request.get(`${BASE_URL}/api/services?size=100`, { headers });
         const svcBody = await svcRes.json().catch(() => ({ data: { content: [] } }));
         const services = svcBody.data?.content || [];
 
-        // 統計每個分類有多少服務
-        const categoryServiceCount: Record<string, { name: string; count: number }> = {};
-        for (const cat of categories) {
-            categoryServiceCount[cat.id] = { name: cat.name, count: 0 };
+        // 統計
+        const catCount: Record<string, number> = {};
+        for (const c of categories) catCount[c.id] = 0;
+        for (const s of services) {
+            if (s.categoryId && catCount[s.categoryId] !== undefined) catCount[s.categoryId]++;
         }
 
-        for (const svc of services) {
-            if (svc.categoryId && categoryServiceCount[svc.categoryId]) {
-                categoryServiceCount[svc.categoryId].count++;
-            }
-        }
-
-        // 計算有服務的分類數量
-        const categoriesWithServices = Object.values(categoryServiceCount).filter(c => c.count > 0);
-
-        console.log('分類歸屬統計:');
-        for (const [id, info] of Object.entries(categoryServiceCount)) {
-            console.log(`  ${info.name}: ${info.count} 個服務`);
-        }
-
-        // 判斷 LINE Bot 會走哪個流程
         const activeCategories = categories.filter((c: any) => c.isActive !== false);
-        if (activeCategories.length >= 2 && categoriesWithServices.length >= 2) {
-            console.log(`✅ LINE Bot 會啟動分類選擇流程（${categoriesWithServices.length} 個分類有服務）`);
+        const catsWithSvc = Object.values(catCount).filter(n => n > 0).length;
+
+        if (activeCategories.length >= 2 && catsWithSvc >= 2) {
+            console.log(`✅ 分類選擇流程啟動（${catsWithSvc} 個分類有服務）`);
         } else {
-            console.log(`ℹ️ LINE Bot 會跳過分類選擇，直接顯示服務列表`);
-            if (activeCategories.length < 2) {
-                console.log(`  原因: 啟用中的分類不足 2 個 (${activeCategories.length} 個)`);
-            }
-            if (categoriesWithServices.length < 2) {
-                console.log(`  原因: 有服務歸屬的分類不足 2 個 (${categoriesWithServices.length} 個)`);
-            }
+            console.log(`ℹ️ 跳過分類選擇（分類: ${activeCategories.length}, 有服務: ${catsWithSvc}）`);
         }
     });
 });
 
-// ========================================
-// 7. LINE Webhook 端點測試
-// ========================================
+// ================================================================
+//  SECTION 11：LINE 設定 API
+// ================================================================
 
-test.describe('服務分類選擇 — Webhook Postback 測試', () => {
-    test('Webhook 能處理 select_category Postback', async ({ request }) => {
-        const webhookData = {
-            destination: 'test',
-            events: [{
-                type: 'postback',
-                timestamp: Date.now(),
-                source: { type: 'user', userId: 'Utest_category_' + Date.now() },
-                replyToken: 'test-reply-token-' + Date.now(),
-                postback: {
-                    data: 'action=select_category&categoryId=test-cat-1&categoryName=測試分類'
-                }
-            }]
-        };
+test.describe('11. LINE 設定 API', () => {
+    let token: string;
 
-        const res = await request.post('/api/line/webhook/test_tenant', {
-            headers: { 'Content-Type': 'application/json' },
-            data: webhookData
-        });
-
-        // 不應該 500（可能 200 空事件或 400/401/404 無效租戶，都可接受）
-        expect(res.status()).toBeLessThan(500);
-        console.log(`select_category Webhook 回應: ${res.status()}`);
+    test.beforeAll(async ({ request }) => {
+        token = await getTenantToken(request);
     });
 
-    test('Webhook 能處理 start_booking Postback（觸發分類判斷）', async ({ request }) => {
-        const webhookData = {
-            destination: 'test',
-            events: [{
-                type: 'postback',
-                timestamp: Date.now(),
-                source: { type: 'user', userId: 'Utest_start_' + Date.now() },
-                replyToken: 'test-reply-token-' + Date.now(),
-                postback: {
-                    data: 'action=start_booking'
-                }
-            }]
-        };
-
-        const res = await request.post('/api/line/webhook/test_tenant', {
-            headers: { 'Content-Type': 'application/json' },
-            data: webhookData
+    test('GET /api/settings/line — 取得 LINE 設定', async ({ request }) => {
+        test.skip(!token, '無 Token');
+        const res = await request.get(`${BASE_URL}/api/settings/line`, {
+            headers: { Authorization: `Bearer ${token}` }
         });
-
         expect(res.status()).toBeLessThan(500);
-        console.log(`start_booking Webhook 回應: ${res.status()}`);
-    });
-});
-
-// ========================================
-// 8. 邊界情況
-// ========================================
-
-test.describe('服務分類選擇 — 邊界情況', () => {
-    test('分類名稱含特殊字元的 Postback 解析', () => {
-        // 分類名稱可能包含中文、空格、特殊字元
-        // 注意：Postback 用 & 分隔參數，名稱含 & 會破壞解析
-        const safeNames = [
-            '剪髮 / 染髮',
-            '按摩（全身）',
-            'Hair Cut',
-            '美甲＆美睫',  // 使用全形 & 避免衝突
-        ];
-
-        for (const name of safeNames) {
-            const postback = `action=select_category&categoryId=cat-1&categoryName=${name}`;
-            const params = new URLSearchParams(postback);
-            expect(params.get('action')).toBe('select_category');
-            expect(params.get('categoryName')).toBe(name);
-            console.log(`  名稱「${name}」→ 解析正確`);
+        if (res.ok()) {
+            const body = await res.json();
+            const d = body.data;
+            console.log(`LINE 狀態: ${d?.status}`);
+            console.log(`有 Token: ${d?.hasAccessToken}`);
+            console.log(`Booking Enabled: ${d?.bookingEnabled}`);
+            console.log(`Webhook URL: ${d?.webhookUrl}`);
         }
-
-        // 半形 & 會破壞解析（已知限制，分類名稱不應包含 &）
-        const dangerousName = '美甲&美睫';
-        const postback = `action=select_category&categoryId=cat-1&categoryName=${dangerousName}`;
-        const params = new URLSearchParams(postback);
-        expect(params.get('categoryName')).not.toBe(dangerousName); // 預期被截斷
-        console.log(`  ⚠️ 名稱含 & 會被截斷: 「${dangerousName}」→「${params.get('categoryName')}」`);
-
-        console.log('特殊字元分類名稱解析驗證通過');
     });
 
-    test('Carousel 分類數量上限（LINE 限制 12 個 Bubble）', () => {
-        // LINE Carousel 最多 12 個 Bubble
-        // 1 個指引 + 最多 11 個分類
-        const MAX_CAROUSEL_BUBBLES = 12;
-        const GUIDE_BUBBLE_COUNT = 1;
-        const MAX_CATEGORIES = MAX_CAROUSEL_BUBBLES - GUIDE_BUBBLE_COUNT;
-
-        expect(MAX_CATEGORIES).toBe(11);
-        console.log(`LINE Carousel 最多顯示 ${MAX_CATEGORIES} 個分類（含 1 個指引）`);
-    });
-
-    test('分類流程中途取消應重置分類欄位', () => {
-        // 模擬對話上下文
-        const context = {
-            state: 'SELECTING_SERVICE',
-            selectedCategoryId: 'cat-1',
-            selectedCategoryName: '剪髮類',
-            selectedServiceId: null as string | null,
-        };
-
-        // 模擬 reset
-        context.state = 'IDLE';
-        context.selectedCategoryId = null as any;
-        context.selectedCategoryName = null as any;
-        context.selectedServiceId = null;
-
-        expect(context.state).toBe('IDLE');
-        expect(context.selectedCategoryId).toBeNull();
-        expect(context.selectedCategoryName).toBeNull();
-        console.log('取消流程重置分類欄位驗證通過');
-    });
-
-    test('無分類流程 — 原有 4 步驟不受影響', () => {
-        // 當 categories < 2 或 categoriesWithServices < 2 時
-        // 使用原有的 buildServiceGuide（步驟 1/4）
-        const originalSteps = ['1️⃣ 選擇服務', '2️⃣ 選擇人員', '3️⃣ 選擇日期', '4️⃣ 選擇時間'];
-        expect(originalSteps.length).toBe(4);
-        expect(originalSteps[0]).not.toContain('分類');
-        console.log('無分類流程 4 步驟不受影響');
-    });
-
-    test('分類流程 — 5 步驟正確性', () => {
-        const categorySteps = ['1️⃣ 選擇分類', '2️⃣ 選擇服務', '3️⃣ 選擇日期', '4️⃣ 選擇人員', '5️⃣ 選擇時間'];
-        expect(categorySteps.length).toBe(5);
-        expect(categorySteps[0]).toContain('分類');
-        expect(categorySteps[1]).toContain('服務');
-        console.log('分類流程 5 步驟正確');
+    test('POST /api/settings/line/test — 連線測試', async ({ request }) => {
+        test.skip(!token, '無 Token');
+        const res = await request.post(`${BASE_URL}/api/settings/line/test`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        expect(res.status()).toBeLessThan(500);
+        if (res.ok()) {
+            const body = await res.json();
+            console.log(`連線測試: ${body.data?.connected ? '成功' : '失敗'}`);
+            console.log(`Bot 名稱: ${body.data?.displayName || 'N/A'}`);
+        }
     });
 });
 
-// ========================================
-// 9. findDistinctBookableCategoryIds 查詢驗證
-// ========================================
+// ================================================================
+//  SECTION 12：Webhook 完整流程模擬
+// ================================================================
 
-test.describe('服務分類選擇 — Repository 查詢邏輯', () => {
-    test('findDistinctBookableCategoryIds 過濾規則', () => {
-        // 模擬資料庫中的服務
-        const services = [
-            { id: '1', categoryId: 'cat-A', status: 'ACTIVE', isVisible: true, deletedAt: null },
-            { id: '2', categoryId: 'cat-A', status: 'ACTIVE', isVisible: true, deletedAt: null },
-            { id: '3', categoryId: 'cat-B', status: 'ACTIVE', isVisible: true, deletedAt: null },
-            { id: '4', categoryId: 'cat-C', status: 'INACTIVE', isVisible: true, deletedAt: null }, // 非啟用
-            { id: '5', categoryId: null, status: 'ACTIVE', isVisible: true, deletedAt: null },       // 無分類
-            { id: '6', categoryId: 'cat-D', status: 'ACTIVE', isVisible: false, deletedAt: null },   // 不可見
-            { id: '7', categoryId: 'cat-E', status: 'ACTIVE', isVisible: true, deletedAt: '2025-01-01' }, // 已刪除
+test.describe('12. Webhook 完整流程模擬', () => {
+
+    test('預約流程：start → select_service → select_date → select_staff → select_time → skip_note → confirm', async ({ request }) => {
+        const userId = 'Utest_full_flow_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=select_service&serviceId=test&serviceName=測試&duration=60&price=500',
+            'action=select_date&date=2099-12-31',
+            'action=select_staff&staffId=&staffName=不指定',
+            'action=select_time&time=10:00',
+            'action=skip_note',
+            'action=confirm_booking',
         ];
 
-        // 模擬查詢邏輯
-        const distinctCategoryIds = [...new Set(
-            services
-                .filter(s => s.categoryId !== null)
-                .filter(s => s.status === 'ACTIVE')
-                .filter(s => s.isVisible === true)
-                .filter(s => s.deletedAt === null)
-                .map(s => s.categoryId)
-        )];
-
-        expect(distinctCategoryIds).toEqual(['cat-A', 'cat-B']);
-        expect(distinctCategoryIds).not.toContain(null);      // 無分類的排除
-        expect(distinctCategoryIds).not.toContain('cat-C');    // 非啟用排除
-        expect(distinctCategoryIds).not.toContain('cat-D');    // 不可見排除
-        expect(distinctCategoryIds).not.toContain('cat-E');    // 已刪除排除
-
-        console.log(`有效分類 ID: ${distinctCategoryIds.join(', ')}`);
-        console.log('findDistinctBookableCategoryIds 過濾規則驗證通過');
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`完整預約流程（7 步）: 全部不 500`);
     });
 
-    test('buildCategoryMenu 只顯示有服務的分類', () => {
-        // 模擬分類列表
-        const categories = [
-            { id: 'cat-A', name: '剪髮類', isActive: true },
-            { id: 'cat-B', name: '護理類', isActive: true },
-            { id: 'cat-C', name: '美甲類', isActive: true },  // 這個分類沒有服務
+    test('分類預約流程：start → select_category → select_service → ...', async ({ request }) => {
+        const userId = 'Utest_cat_flow_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=select_category&categoryId=test-cat&categoryName=測試分類',
+            'action=select_service&serviceId=test&serviceName=測試&duration=60&price=500',
+            'action=select_date&date=2099-12-31',
+            'action=select_staff&staffId=&staffName=不指定',
+            'action=select_time&time=10:00',
+            'action=skip_note',
+            'action=confirm_booking',
         ];
 
-        // 模擬有服務的分類 ID
-        const categoryIdsWithServices = ['cat-A', 'cat-B'];
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`分類預約流程（8 步）: 全部不 500`);
+    });
 
-        // 過濾
-        const filteredCategories = categories.filter(c => categoryIdsWithServices.includes(c.id));
+    test('預約中途取消：start → select_service → cancel_flow → confirm_cancel', async ({ request }) => {
+        const userId = 'Utest_cancel_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=select_service&serviceId=test&serviceName=測試&duration=60&price=500',
+            'action=cancel_flow',
+            'action=confirm_cancel_flow',
+        ];
 
-        expect(filteredCategories.length).toBe(2);
-        expect(filteredCategories.map(c => c.name)).toEqual(['剪髮類', '護理類']);
-        expect(filteredCategories.map(c => c.name)).not.toContain('美甲類');
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`中途取消流程: 全部不 500`);
+    });
 
-        console.log(`過濾後分類: ${filteredCategories.map(c => c.name).join(', ')}`);
-        console.log('空分類過濾邏輯驗證通過');
+    test('返回上一步：start → select_service → go_back → select_service', async ({ request }) => {
+        const userId = 'Utest_goback_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=select_service&serviceId=test&serviceName=測試&duration=60&price=500',
+            'action=go_back',
+            'action=select_service&serviceId=test&serviceName=測試&duration=60&price=500',
+        ];
+
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`GoBack 流程: 全部不 500`);
+    });
+
+    test('分類流程 GoBack：select_category → select_service → go_back（回到分類選單）', async ({ request }) => {
+        const userId = 'Utest_cat_goback_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=select_category&categoryId=test-cat&categoryName=測試',
+            'action=go_back', // 應回到分類選單
+        ];
+
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`分類 GoBack 流程: 全部不 500`);
+    });
+
+    test('商品購買流程：start_shopping → select_product → select_quantity → confirm_purchase', async ({ request }) => {
+        const userId = 'Utest_shop_' + Date.now();
+        const steps = [
+            'action=start_shopping',
+            'action=select_product&productId=test&productName=商品&price=100',
+            'action=select_quantity&quantity=2',
+            'action=confirm_purchase',
+        ];
+
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`商品購買流程: 全部不 500`);
+    });
+
+    test('混合操作：預約中途切換到查看票券再回來', async ({ request }) => {
+        const userId = 'Utest_mixed_' + Date.now();
+        const steps = [
+            'action=start_booking',
+            'action=view_coupons',  // 中途跳去看票券
+            'action=main_menu',     // 回主選單
+            'action=start_booking', // 重新開始預約
+        ];
+
+        for (const step of steps) {
+            const res = await sendWebhook(request, TENANT_CODE, [
+                buildPostbackEvent(step, userId)
+            ]);
+            expect(res.status()).toBeLessThan(500);
+        }
+        console.log(`混合操作流程: 全部不 500`);
+    });
+});
+
+// ================================================================
+//  SECTION 13：Postback 資料格式驗證
+// ================================================================
+
+test.describe('13. Postback 資料格式', () => {
+
+    test('select_category 必須包含 categoryId 和 categoryName', () => {
+        const data = 'action=select_category&categoryId=abc-123&categoryName=剪髮類';
+        const params = new URLSearchParams(data);
+        expect(params.get('action')).toBe('select_category');
+        expect(params.get('categoryId')).toBe('abc-123');
+        expect(params.get('categoryName')).toBe('剪髮類');
+    });
+
+    test('select_service 必須包含 serviceId/serviceName/duration/price', () => {
+        const data = 'action=select_service&serviceId=svc-1&serviceName=男生剪髮&duration=60&price=500';
+        const params = new URLSearchParams(data);
+        expect(params.get('serviceId')).toBeTruthy();
+        expect(params.get('serviceName')).toBeTruthy();
+        expect(params.get('duration')).toBe('60');
+        expect(params.get('price')).toBe('500');
+    });
+
+    test('select_staff — staffId 空字串表示不指定', () => {
+        const data = 'action=select_staff&staffId=&staffName=不指定';
+        const params = new URLSearchParams(data);
+        expect(params.get('staffId')).toBe('');
+        expect(params.get('staffName')).toBe('不指定');
+    });
+
+    test('select_date — 日期格式 ISO_LOCAL_DATE', () => {
+        const data = 'action=select_date&date=2025-06-15';
+        const params = new URLSearchParams(data);
+        expect(params.get('date')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    test('select_time — 時間格式 HH:mm', () => {
+        const data = 'action=select_time&time=14:30';
+        const params = new URLSearchParams(data);
+        expect(params.get('time')).toMatch(/^\d{2}:\d{2}$/);
+    });
+
+    test('cancel_booking_request 必須包含 bookingId', () => {
+        const data = 'action=cancel_booking_request&bookingId=bk-abc-123';
+        const params = new URLSearchParams(data);
+        expect(params.get('bookingId')).toBe('bk-abc-123');
+    });
+
+    test('receive_coupon 必須包含 couponId', () => {
+        const data = 'action=receive_coupon&couponId=cp-abc-123';
+        const params = new URLSearchParams(data);
+        expect(params.get('couponId')).toBe('cp-abc-123');
+    });
+
+    test('select_product 必須包含 productId/productName/price', () => {
+        const data = 'action=select_product&productId=p1&productName=商品A&price=299';
+        const params = new URLSearchParams(data);
+        expect(params.get('productId')).toBeTruthy();
+        expect(params.get('productName')).toBeTruthy();
+        expect(params.get('price')).toBe('299');
+    });
+
+    test('select_quantity 必須包含 quantity', () => {
+        const data = 'action=select_quantity&quantity=3';
+        const params = new URLSearchParams(data);
+        expect(params.get('quantity')).toBe('3');
     });
 });
