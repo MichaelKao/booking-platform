@@ -349,13 +349,11 @@ scheduler:
 
 ### 預約流程
 
-**有分類時（>= 2 個啟用分類且有服務歸屬）：**
+**統一流程（分類與服務合併為一步）：**
 ```
 IDLE（閒置）
   ↓ 點選「開始預約」
-SELECTING_CATEGORY（選擇分類）- Carousel 顯示有服務的分類
-  ↓ 選擇分類
-SELECTING_SERVICE（選擇服務）- 只顯示該分類下的服務
+SELECTING_SERVICE（選擇服務）- 有分類時按分類分組顯示，每個服務標示所屬分類；無分類時顯示全部服務
   ↓ 選擇服務
 SELECTING_DATE（選擇日期）- 支援 Carousel 顯示完整可預約天數
   ↓ 選擇日期
@@ -370,19 +368,10 @@ CONFIRMING_BOOKING（確認預約）
 IDLE（完成，回到閒置）
 ```
 
-**無分類時（< 2 個分類或服務未歸屬分類）：**
-```
-IDLE（閒置）
-  ↓ 點選「開始預約」
-SELECTING_SERVICE（選擇服務）- 顯示全部服務
-  ↓ 選擇服務
-SELECTING_DATE → SELECTING_STAFF → SELECTING_TIME → INPUTTING_NOTE → CONFIRMING_BOOKING → IDLE
-```
-
-**分類流程啟動條件：**
-- 至少 2 個啟用中的服務分類 **且**
-- 至少 2 個分類底下有可預約的服務（ACTIVE + isVisible）
-- 不符合條件時自動退回原有 4 步驟流程
+**分類合併顯示條件：**
+- 至少 2 個啟用中的服務分類 **且** 至少 2 個分類底下有可預約的服務（ACTIVE + isVisible）
+- 符合條件時：服務按分類分組，每個服務 Bubble 上方標示「📂 分類名」
+- 不符合條件時：直接顯示全部服務（無分類標籤）
 
 **流程說明：**
 - 先選日期再選員工，確保顧客只能看到當天有上班且未請假的員工
@@ -393,6 +382,10 @@ SELECTING_DATE → SELECTING_STAFF → SELECTING_TIME → INPUTTING_NOTE → CON
 - 用戶可以在聊天輸入框直接打字輸入備註內容
 - 也可以點選「跳過」按鈕略過備註步驟
 - 備註會顯示在預約確認頁面和店家後台
+
+**取消與返回按鈕：**
+- 「↩ 返回上一步」（go_back）：回到前一個步驟
+- 「✕ 取消預約」（cancel_flow）：顯示確認對話框，「繼續預約」留在當前步驟（resume_booking），「確定取消」重置回主選單
 
 ### 其他流程
 - 取消預約：`IDLE → CONFIRMING_CANCEL_BOOKING → IDLE`
