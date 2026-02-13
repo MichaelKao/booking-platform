@@ -421,7 +421,7 @@ public class LineFlexMessageBuilder {
 
         ArrayNode flowContents = objectMapper.createArrayNode();
 
-        String[] steps = {"1️⃣ 選擇服務", "2️⃣ 選擇人員", "3️⃣ 選擇日期", "4️⃣ 選擇時間"};
+        String[] steps = {"1️⃣ 選擇服務", "2️⃣ 選擇日期", "3️⃣ 選擇人員", "4️⃣ 選擇時間"};
         for (String step : steps) {
             ObjectNode stepItem = objectMapper.createObjectNode();
             stepItem.put("type", "text");
@@ -927,6 +927,214 @@ public class LineFlexMessageBuilder {
 
         // Footer
         bubble.set("footer", createCancelFooter());
+
+        return bubble;
+    }
+
+    // ========================================
+    // 2.6 分類＋服務合併選單
+    // ========================================
+
+    /**
+     * 建構分類與服務合併選單（一步完成選擇）
+     * 服務按分類分組顯示，每個服務 Bubble 上方標示所屬分類
+     *
+     * @param tenantId 租戶 ID
+     * @return Flex Message 內容
+     */
+    public JsonNode buildCategoryServiceMenu(String tenantId) {
+        List<ServiceCategory> categories = serviceCategoryRepository.findByTenantId(tenantId, true);
+        List<String> categoryIdsWithServices = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
+        List<ServiceCategory> filteredCategories = categories.stream()
+                .filter(c -> categoryIdsWithServices.contains(c.getId()))
+                .toList();
+
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // 指引 Bubble
+        bubbles.add(buildServiceGuide());
+
+        // 按分類分組顯示服務
+        for (ServiceCategory category : filteredCategories) {
+            List<ServiceItem> services = serviceItemRepository
+                    .findBookableServicesByCategory(tenantId, category.getId());
+            for (ServiceItem service : services) {
+                bubbles.add(buildServiceBubbleWithCategory(service, category.getName()));
+            }
+        }
+
+        // 無分類的服務
+        List<ServiceItem> allServices = serviceItemRepository
+                .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, ServiceStatus.ACTIVE);
+        for (ServiceItem service : allServices) {
+            if (service.getCategoryId() == null || service.getCategoryId().isEmpty()) {
+                bubbles.add(buildServiceBubble(service));
+            }
+        }
+
+        if (bubbles.size() <= 1) {
+            return buildNoServiceMessage();
+        }
+
+        carousel.set("contents", bubbles);
+        return carousel;
+    }
+
+    /**
+     * 建構帶分類標籤的服務 Bubble
+     */
+    private ObjectNode buildServiceBubbleWithCategory(ServiceItem service, String categoryName) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        bubble.put("size", "kilo");
+
+        // Header - 分類標籤 + 服務名稱
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "12px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        // 分類標籤
+        ObjectNode categoryTag = objectMapper.createObjectNode();
+        categoryTag.put("type", "text");
+        categoryTag.put("text", "📂 " + categoryName);
+        categoryTag.put("size", "xs");
+        categoryTag.put("color", "#FFFFFFCC");
+        categoryTag.put("align", "center");
+        headerContents.add(categoryTag);
+
+        // 服務名稱
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", service.getName());
+        headerText.put("size", "md");
+        headerText.put("weight", "bold");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("align", "center");
+        headerText.put("wrap", true);
+        headerText.put("margin", "xs");
+        headerContents.add(headerText);
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+
+        // Body - 與一般 ServiceBubble 相同
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "15px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 服務說明
+        if (service.getDescription() != null && !service.getDescription().isEmpty()) {
+            ObjectNode descText = objectMapper.createObjectNode();
+            descText.put("type", "text");
+            descText.put("text", service.getDescription());
+            descText.put("size", "sm");
+            descText.put("color", SECONDARY_COLOR);
+            descText.put("wrap", true);
+            bodyContents.add(descText);
+
+            ObjectNode separator = objectMapper.createObjectNode();
+            separator.put("type", "separator");
+            separator.put("margin", "md");
+            bodyContents.add(separator);
+        }
+
+        // 時長與價格
+        ObjectNode infoBox = objectMapper.createObjectNode();
+        infoBox.put("type", "box");
+        infoBox.put("layout", "vertical");
+        infoBox.put("spacing", "sm");
+        infoBox.put("margin", "md");
+
+        ArrayNode infoContents = objectMapper.createArrayNode();
+
+        // 時長
+        ObjectNode durationRow = objectMapper.createObjectNode();
+        durationRow.put("type", "box");
+        durationRow.put("layout", "horizontal");
+
+        ArrayNode durationContents = objectMapper.createArrayNode();
+
+        ObjectNode durationIcon = objectMapper.createObjectNode();
+        durationIcon.put("type", "text");
+        durationIcon.put("text", "⏱️");
+        durationIcon.put("size", "sm");
+        durationIcon.put("flex", 0);
+        durationContents.add(durationIcon);
+
+        ObjectNode durationText = objectMapper.createObjectNode();
+        durationText.put("type", "text");
+        durationText.put("text", String.format("服務時長 %d 分鐘", service.getDuration()));
+        durationText.put("size", "sm");
+        durationText.put("color", SECONDARY_COLOR);
+        durationText.put("margin", "sm");
+        durationContents.add(durationText);
+
+        durationRow.set("contents", durationContents);
+        infoContents.add(durationRow);
+
+        // 價格
+        ObjectNode priceRow = objectMapper.createObjectNode();
+        priceRow.put("type", "box");
+        priceRow.put("layout", "horizontal");
+        priceRow.put("margin", "sm");
+
+        ArrayNode priceContents = objectMapper.createArrayNode();
+
+        ObjectNode priceIcon = objectMapper.createObjectNode();
+        priceIcon.put("type", "text");
+        priceIcon.put("text", "💰");
+        priceIcon.put("size", "sm");
+        priceIcon.put("flex", 0);
+        priceContents.add(priceIcon);
+
+        ObjectNode priceText = objectMapper.createObjectNode();
+        priceText.put("type", "text");
+        priceText.put("text", String.format("NT$ %,d", service.getPrice().intValue()));
+        priceText.put("size", "lg");
+        priceText.put("weight", "bold");
+        priceText.put("color", PRIMARY_COLOR);
+        priceText.put("margin", "sm");
+        priceContents.add(priceText);
+
+        priceRow.set("contents", priceContents);
+        infoContents.add(priceRow);
+
+        infoBox.set("contents", infoContents);
+        bodyContents.add(infoBox);
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // Footer
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("paddingAll", "15px");
+
+        String postbackData = String.format(
+                "action=select_service&serviceId=%s&serviceName=%s&duration=%d&price=%d",
+                service.getId(),
+                service.getName(),
+                service.getDuration(),
+                service.getPrice().intValue()
+        );
+
+        footer.set("contents", objectMapper.createArrayNode().add(
+                createButton("✓ 選擇此服務", postbackData, PRIMARY_COLOR)
+        ));
+
+        bubble.set("footer", footer);
 
         return bubble;
     }
@@ -5027,7 +5235,7 @@ public class LineFlexMessageBuilder {
         footer.put("paddingAll", "15px");
 
         ArrayNode footerContents = objectMapper.createArrayNode();
-        footerContents.add(createButton("繼續預約", "action=go_back", PRIMARY_COLOR));
+        footerContents.add(createButton("繼續預約", "action=resume_booking", PRIMARY_COLOR));
         footerContents.add(createButton("確定取消", "action=confirm_cancel_flow", SECONDARY_COLOR));
 
         footer.set("contents", footerContents);

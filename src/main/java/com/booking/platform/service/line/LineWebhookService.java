@@ -321,6 +321,7 @@ public class LineWebhookService {
             case "confirm_booking" -> handleConfirmBooking(tenantId, userId, replyToken);
             case "cancel_booking" -> cancelCurrentFlow(tenantId, userId, replyToken);
             case "go_back" -> handleGoBack(tenantId, userId, replyToken);
+            case "resume_booking" -> handleResumeBooking(tenantId, userId, replyToken);
             case "view_bookings" -> handleViewBookings(tenantId, userId, replyToken);
             case "main_menu" -> replyMainMenu(tenantId, userId, replyToken);
             // 取消當前流程
@@ -388,7 +389,7 @@ public class LineWebhookService {
 
     /**
      * 開始預約流程
-     * 有多個分類時先選分類，否則直接選服務
+     * 有多個分類時顯示分類＋服務合併選單，否則直接選服務
      */
     private void startBookingFlow(String tenantId, String userId, String replyToken) {
         // 檢查是否啟用預約功能
@@ -404,14 +405,15 @@ public class LineWebhookService {
         // 檢查有多少分類實際包含可預約的服務
         List<String> categoriesWithServices = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
 
+        // 統一使用 SELECTING_SERVICE 狀態，分類與服務合併為一步
+        conversationService.startBooking(tenantId, userId);
+
         if (categories.size() >= 2 && categoriesWithServices.size() >= 2) {
-            // 多個分類且有服務歸屬，先選分類
-            conversationService.startBooking(tenantId, userId, ConversationState.SELECTING_CATEGORY);
-            JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
-            messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
+            // 多個分類 — 顯示分類＋服務合併選單，服務按分類分組
+            JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
+            messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
         } else {
-            // 沒有分類、只有一個分類、或服務未歸屬分類，直接選服務
-            conversationService.startBooking(tenantId, userId);
+            // 沒有分類 — 直接顯示全部服務
             JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
             messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
         }
@@ -601,16 +603,32 @@ public class LineWebhookService {
      */
     private void handleGoBack(String tenantId, String userId, String replyToken) {
         ConversationContext context = conversationService.goBack(tenantId, userId);
+        displayCurrentState(tenantId, userId, replyToken, context);
+    }
 
+    /**
+     * 處理繼續預約（從取消確認對話框返回當前步驟）
+     */
+    private void handleResumeBooking(String tenantId, String userId, String replyToken) {
+        ConversationContext context = conversationService.getContext(tenantId, userId);
+        displayCurrentState(tenantId, userId, replyToken, context);
+    }
+
+    /**
+     * 根據當前狀態顯示對應的 UI
+     */
+    private void displayCurrentState(String tenantId, String userId, String replyToken, ConversationContext context) {
         switch (context.getState()) {
             case SELECTING_CATEGORY -> {
                 JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
                 messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
             }
             case SELECTING_SERVICE -> {
-                // 如果有選過分類，顯示該分類的服務；否則顯示全部服務
-                if (context.getSelectedCategoryId() != null) {
-                    JsonNode serviceMenu = flexMessageBuilder.buildServiceMenuByCategory(tenantId, context.getSelectedCategoryId());
+                // 檢查是否有多個分類，有則顯示分類＋服務合併選單
+                List<ServiceCategory> cats = serviceCategoryRepository.findByTenantId(tenantId, true);
+                List<String> catIds = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
+                if (cats.size() >= 2 && catIds.size() >= 2) {
+                    JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
                     messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
                 } else {
                     JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
@@ -618,7 +636,7 @@ public class LineWebhookService {
                 }
             }
             case SELECTING_STAFF -> {
-                // 新流程：返回選員工時需要根據已選日期篩選
+                // 返回選員工時需要根據已選日期篩選
                 JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
                         tenantId, context.getSelectedServiceId(), context.getSelectedDate());
                 messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
@@ -637,6 +655,10 @@ public class LineWebhookService {
             case INPUTTING_NOTE -> {
                 JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
                 messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
+            }
+            case CONFIRMING_BOOKING -> {
+                JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+                messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
             }
             default -> replyMainMenu(tenantId, userId, replyToken);
         }
