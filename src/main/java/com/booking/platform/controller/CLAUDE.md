@@ -217,6 +217,8 @@ POST /line/rich-menu/create    # 建立 Rich Menu（使用主題配色，7格 3+
 POST /line/rich-menu/upload-image  # 上傳自訂 Rich Menu 圖片（疊加文字）
 POST /line/rich-menu/create-custom # 建立自訂配置 Rich Menu（自訂圖片+佈局+動作，不疊加文字）
 DELETE /line/rich-menu         # 刪除 Rich Menu
+GET  /line/flex-menu           # 取得 Flex Menu 主選單配置
+PUT  /line/flex-menu           # 更新 Flex Menu 主選單配置
 ```
 
 ### 即時通知 (`/api/notifications`)

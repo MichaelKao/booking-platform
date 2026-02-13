@@ -238,9 +238,12 @@ public class TenantLineConfig {
 
     // Rich Menu
     private String richMenuId;          // LINE Rich Menu ID
-    private String richMenuTheme;       // GREEN/BLUE/PURPLE/ORANGE/DARK/CUSTOM
+    private String richMenuTheme;       // GREEN/BLUE/PURPLE/ORANGE/DARK/CUSTOM/CUSTOM_BG
     private String richMenuMode;        // DEFAULT/CUSTOM（預設系統生成 or 自訂圖片+區域）
     private String richMenuCustomConfig; // 自訂 Rich Menu 配置（JSON TEXT）
+
+    // Flex Menu
+    private String flexMenuConfig;       // Flex Message 主選單配置（JSON TEXT）
 }
 
 // LineUser - LINE 用戶與顧客關聯

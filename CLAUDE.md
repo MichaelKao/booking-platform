@@ -166,6 +166,7 @@ POST /api/auth/logout             # 登出
 | 設定 | `GET/PUT /settings`, `GET /settings/setup-status` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
 | Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image\|create-custom` |
+| Flex Menu | `GET/PUT /settings/line/flex-menu` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
 | 行銷推播 | `GET/POST /marketing/pushes`, `POST /marketing/pushes/{id}/send`, `DELETE /marketing/pushes/{id}` |
@@ -341,7 +342,7 @@ scheduler:
 | `2x2` | 2 行 × 2 列 | 4 |
 | `1+2` | 上排 1（滿版）+ 下排 2 | 3 |
 
-**主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）
+**主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）、CUSTOM_BG（自訂背景+系統疊加）
 
 **自訂圖片**：支援任意尺寸 PNG/JPG，系統自動縮放至 2500x843（cover 策略，置中裁切）
 
@@ -351,6 +352,7 @@ scheduler:
 - 預設模式：7 格 (3+4) + 主題配色切換效果
 - 自訂模式：佈局選擇器 + 上傳圖片 + 區域數字標記
 - 模式切換 Tab（色塊按鈕，非淡色文字）
+- Flex Menu 主選單預覽：模擬 Flex Message Bubble 外觀，即時反映按鈕顏色/圖示/標題變更
 
 ### 主選單（Flex Message）
 用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
@@ -359,6 +361,31 @@ scheduler:
 - 瀏覽商品
 - 領取票券 / 我的票券（並排按鈕）
 - 會員資訊
+
+### 主選單自訂（Flex Menu Config）
+
+店家可在「LINE 設定 → 主選單樣式」自訂 Flex Message 主選單外觀：
+
+| 設定項目 | 說明 | 預設值 |
+|---------|------|--------|
+| `headerColor` | Header 背景色 | `#1DB446` |
+| `headerTitle` | Header 標題（支援 `{shopName}` 變數） | `✨ {shopName}` |
+| `headerSubtitle` | 歡迎語 | `歡迎光臨！請問需要什麼服務呢？` |
+| `showTip` | 是否顯示使用提示 | `true` |
+| `buttons[].color` | 按鈕背景色 | 各按鈕預設色 |
+| `buttons[].icon` | 按鈕圖示 emoji | 📅📋🛍️🎁🎫👤📞 |
+| `buttons[].title` | 按鈕標題 | 各按鈕預設標題 |
+| `buttons[].subtitle` | 按鈕副標題 | 各按鈕預設副標題 |
+
+**儲存位置**：`TenantLineConfig.flexMenuConfig`（JSON TEXT 欄位）
+
+**API**：
+```
+GET  /api/settings/line/flex-menu    # 取得配置
+PUT  /api/settings/line/flex-menu    # 更新配置
+```
+
+**注意**：LINE 聊天室背景是 LINE 平台功能，無法透過 API 控制。
 
 ### 返回主選單功能
 所有 Flex Message 皆包含「返回主選單」按鈕，方便用戶快速回到主選單：
