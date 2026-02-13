@@ -421,30 +421,30 @@ public class FeatureService {
     public void initializeFeatures() {
         log.info("開始初始化功能定義...");
 
-        int sortOrder = 1;
+        // 先取得已存在的功能代碼
+        java.util.Set<FeatureCode> existingCodes = new java.util.HashSet<>();
+        featureRepository.findAll().forEach(f -> existingCodes.add(f.getCode()));
+
+        int sortOrder = existingCodes.size() + 1;
+        int created = 0;
         for (FeatureCode code : FeatureCode.values()) {
-            try {
-                if (!featureRepository.existsByCode(code)) {
-                    Feature feature = Feature.builder()
-                            .code(code)
-                            .name(code.getName())
-                            .description(code.getDescription())
-                            .isFree(code.isFree())
-                            .monthlyPoints(code.getMonthlyPoints())
-                            .sortOrder(sortOrder++)
-                            .isActive(true)
-                            .build();
-                    featureRepository.save(feature);
-                    log.info("建立功能定義：{}", code);
-                } else {
-                    sortOrder++;
-                }
-            } catch (Exception e) {
-                log.error("初始化功能 {} 失敗：{}", code, e.getMessage(), e);
+            if (!existingCodes.contains(code)) {
+                Feature feature = Feature.builder()
+                        .code(code)
+                        .name(code.getName())
+                        .description(code.getDescription())
+                        .isFree(code.isFree())
+                        .monthlyPoints(code.getMonthlyPoints())
+                        .sortOrder(sortOrder++)
+                        .isActive(true)
+                        .build();
+                featureRepository.save(feature);
+                created++;
+                log.info("建立功能定義：{}", code);
             }
         }
 
-        log.info("功能定義初始化完成");
+        log.info("功能定義初始化完成，新增 {} 個", created);
     }
 
     // ========================================
