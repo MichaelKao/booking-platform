@@ -493,24 +493,16 @@ public class LineRichMenuService {
             // 取得佈局區域
             int[][] layoutAreas = getLayoutAreas(DEFAULT_LAYOUT);
 
-            // 在每個格子上繪製半透明遮罩（提高文字可讀性）
-            Color overlayColor = new Color(0, 0, 0, 120);
-            g2d.setColor(overlayColor);
-            for (int[] area : layoutAreas) {
-                g2d.fillRect(area[0], area[1], area[2], area[3]);
-            }
-
-            // 繪製格線（淡色）
+            // 繪製淡色格線（區分各格，不遮蓋背景圖）
             g2d.setColor(new Color(255, 255, 255, 50));
             g2d.setStroke(new BasicStroke(2));
             drawGridLines(g2d, layoutAreas);
 
-            // 繪製選單項目
+            // 在每個格子中央繪製小型膠囊背景 + 圖示 + 文字（背景圖大面積可見）
             Font textFont = loadChineseFont(Font.BOLD, 72);
-            Color bgColor = new Color(0x26, 0x32, 0x38);  // DARK 作為背景參考色
 
             for (int i = 0; i < layoutAreas.length && i < MENU_ITEMS.length; i++) {
-                drawMenuCell(g2d, layoutAreas[i], i, textFont, bgColor);
+                drawMenuCellCapsule(g2d, layoutAreas[i], i, textFont);
             }
 
             g2d.dispose();
@@ -1315,6 +1307,50 @@ public class LineRichMenuService {
         String text = MENU_ITEMS[index][0];
         int textWidth = fm.stringWidth(text);
         g2d.drawString(text, centerX - textWidth / 2, centerY + circleSize / 2 + fm.getAscent());
+    }
+
+    /**
+     * 繪製單一選單格子（含文字陰影，用於自訂背景圖片模式）
+     */
+    private void drawMenuCellWithShadow(Graphics2D g2d, int[] area, int index, Font textFont) {
+        if (index >= MENU_ITEMS.length || index >= MENU_ICON_TYPES.length) return;
+
+        int cellX = area[0];
+        int cellY = area[1];
+        int cellW = area[2];
+        int cellH = area[3];
+        int centerX = cellX + cellW / 2;
+        int centerY = cellY + cellH / 2;
+
+        // 根據格子大小調整圖示和文字尺寸
+        int iconSize = Math.min(cellW, cellH) / 5;
+        int circleSize = iconSize * 2;
+        int fontSize = Math.max(36, Math.min(72, cellW / 12));
+
+        // 繪製圖示背景圓圈（更不透明）
+        g2d.setColor(new Color(255, 255, 255, 100));
+        g2d.fillOval(centerX - circleSize / 2, centerY - circleSize / 2 - iconSize / 2, circleSize, circleSize);
+
+        // 繪製向量圖示（先畫陰影再畫白色）
+        int shadowOffset = 3;
+        g2d.setColor(new Color(0, 0, 0, 120));
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX + shadowOffset, centerY - iconSize / 4 + shadowOffset, iconSize);
+        g2d.setColor(TEXT_COLOR);
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - iconSize / 4, iconSize);
+
+        // 繪製文字（先畫陰影再畫白色）
+        Font cellFont = textFont.deriveFont((float) fontSize);
+        g2d.setFont(cellFont);
+        FontMetrics fm = g2d.getFontMetrics();
+        String text = MENU_ITEMS[index][0];
+        int textWidth = fm.stringWidth(text);
+        int textX = centerX - textWidth / 2;
+        int textY = centerY + circleSize / 2 + fm.getAscent();
+
+        g2d.setColor(new Color(0, 0, 0, 150));
+        g2d.drawString(text, textX + 2, textY + 2);
+        g2d.setColor(TEXT_COLOR);
+        g2d.drawString(text, textX, textY);
     }
 
     /**
