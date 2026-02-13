@@ -40,6 +40,7 @@ public class FeatureService {
     private final FeatureRepository featureRepository;
     private final TenantFeatureRepository tenantFeatureRepository;
     private final TenantRepository tenantRepository;
+    private final jakarta.persistence.EntityManager entityManager;
     private final FeatureMapper featureMapper;
 
     // ========================================
@@ -420,6 +421,19 @@ public class FeatureService {
     @Transactional
     public void initializeFeatures() {
         log.info("開始初始化功能定義...");
+
+        // 移除 Hibernate 自動生成的 enum CHECK constraint（新增 enum 值時會衝突）
+        try {
+            entityManager.createNativeQuery(
+                "ALTER TABLE features DROP CONSTRAINT IF EXISTS features_code_check"
+            ).executeUpdate();
+            entityManager.createNativeQuery(
+                "ALTER TABLE tenant_features DROP CONSTRAINT IF EXISTS tenant_features_feature_code_check"
+            ).executeUpdate();
+            entityManager.flush();
+        } catch (Exception e) {
+            log.warn("移除 CHECK constraint 失敗（可忽略）：{}", e.getMessage());
+        }
 
         // 先取得已存在的功能代碼
         java.util.Set<FeatureCode> existingCodes = new java.util.HashSet<>();
