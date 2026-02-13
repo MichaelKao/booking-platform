@@ -423,18 +423,24 @@ public class FeatureService {
 
         int sortOrder = 1;
         for (FeatureCode code : FeatureCode.values()) {
-            if (!featureRepository.existsByCode(code)) {
-                Feature feature = Feature.builder()
-                        .code(code)
-                        .name(code.getName())
-                        .description(code.getDescription())
-                        .isFree(code.isFree())
-                        .monthlyPoints(code.getMonthlyPoints())
-                        .sortOrder(sortOrder++)
-                        .isActive(true)
-                        .build();
-                featureRepository.save(feature);
-                log.info("建立功能定義：{}", code);
+            try {
+                if (!featureRepository.existsByCode(code)) {
+                    Feature feature = Feature.builder()
+                            .code(code)
+                            .name(code.getName())
+                            .description(code.getDescription())
+                            .isFree(code.isFree())
+                            .monthlyPoints(code.getMonthlyPoints())
+                            .sortOrder(sortOrder++)
+                            .isActive(true)
+                            .build();
+                    featureRepository.save(feature);
+                    log.info("建立功能定義：{}", code);
+                } else {
+                    sortOrder++;
+                }
+            } catch (Exception e) {
+                log.error("初始化功能 {} 失敗：{}", code, e.getMessage(), e);
             }
         }
 
