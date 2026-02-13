@@ -505,18 +505,62 @@
         async function saveSchedule() {
             const staffId = document.getElementById('scheduleStaffId').value;
             const schedules = [];
+            const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            let validationError = null;
+
+            // 清除之前的驗證狀態
+            document.querySelectorAll('#scheduleTable .is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
             document.querySelectorAll('#scheduleTable tbody tr').forEach(row => {
                 const dayOfWeek = parseInt(row.dataset.day);
+                const isWorking = row.querySelector('.day-toggle').checked;
+                const startTime = row.querySelector('.start-time').value || null;
+                const endTime = row.querySelector('.end-time').value || null;
+                const breakStart = row.querySelector('.break-start').value || null;
+                const breakEnd = row.querySelector('.break-end').value || null;
+
+                // 只驗證有上班的日期
+                if (isWorking && !validationError) {
+                    // 上班時間驗證：開始必須早於結束
+                    if (startTime && endTime && startTime >= endTime) {
+                        row.querySelector('.end-time').classList.add('is-invalid');
+                        validationError = dayNames[dayOfWeek] + ' 的上班結束時間必須晚於開始時間';
+                    }
+                    // 休息時間驗證：開始必須早於結束
+                    if (breakStart && breakEnd && breakStart >= breakEnd) {
+                        row.querySelector('.break-end').classList.add('is-invalid');
+                        validationError = dayNames[dayOfWeek] + ' 的休息結束時間必須晚於開始時間';
+                    }
+                    // 休息時間不能早於上班時間
+                    if (breakStart && startTime && breakStart < startTime) {
+                        row.querySelector('.break-start').classList.add('is-invalid');
+                        validationError = dayNames[dayOfWeek] + ' 的休息時間不能早於上班時間';
+                    }
+                    // 休息時間不能晚於下班時間
+                    if (breakEnd && endTime && breakEnd > endTime) {
+                        row.querySelector('.break-end').classList.add('is-invalid');
+                        validationError = dayNames[dayOfWeek] + ' 的休息時間不能晚於下班時間';
+                    }
+                    // 休息時間只填一個
+                    if ((breakStart && !breakEnd) || (!breakStart && breakEnd)) {
+                        validationError = dayNames[dayOfWeek] + ' 的休息時間請同時填寫開始和結束，或都不填';
+                    }
+                }
+
                 schedules.push({
                     dayOfWeek: dayOfWeek,
-                    isWorkingDay: row.querySelector('.day-toggle').checked,
-                    startTime: row.querySelector('.start-time').value || null,
-                    endTime: row.querySelector('.end-time').value || null,
-                    breakStartTime: row.querySelector('.break-start').value || null,
-                    breakEndTime: row.querySelector('.break-end').value || null
+                    isWorkingDay: isWorking,
+                    startTime: startTime,
+                    endTime: endTime,
+                    breakStartTime: breakStart,
+                    breakEndTime: breakEnd
                 });
             });
+
+            if (validationError) {
+                showError(validationError);
+                return;
+            }
 
             const btn = document.querySelector('#scheduleModal .btn-primary');
             btn.querySelector('.btn-text').classList.add('d-none');

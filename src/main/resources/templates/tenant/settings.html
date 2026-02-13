@@ -116,11 +116,13 @@
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">休息開始時間</label>
                                                     <input type="time" class="form-control" id="breakStart" placeholder="例如：12:00">
+                                                    <div class="invalid-feedback">休息開始時間不正確</div>
                                                     <div class="form-text">設定午休時間，該時段不可預約（選填）</div>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">休息結束時間</label>
                                                     <input type="time" class="form-control" id="breakEnd" placeholder="例如：13:00">
+                                                    <div class="invalid-feedback">休息結束時間不正確</div>
                                                     <div class="form-text">休息結束後恢復可預約</div>
                                                 </div>
                                             </div>
@@ -537,16 +539,53 @@
             const startEl = document.getElementById('businessStart');
             const endEl = document.getElementById('businessEnd');
             const daysEl = document.getElementById('advanceBookingDays');
+            const breakStartEl = document.getElementById('breakStart');
+            const breakEndEl = document.getElementById('breakEnd');
 
             let isValid = true;
 
-            // 時間驗證
+            // 營業時間驗證：開始必須早於結束
             if (startEl.value && endEl.value && startEl.value >= endEl.value) {
                 endEl.classList.add('is-invalid');
-                showError('結束時間必須晚於開始時間');
+                showError('營業結束時間必須晚於開始時間');
                 isValid = false;
             } else {
                 endEl.classList.remove('is-invalid');
+            }
+
+            // 休息時間驗證：開始必須早於結束
+            if (breakStartEl.value && breakEndEl.value && breakStartEl.value >= breakEndEl.value) {
+                breakEndEl.classList.add('is-invalid');
+                showError('休息結束時間必須晚於開始時間');
+                isValid = false;
+            } else {
+                breakEndEl.classList.remove('is-invalid');
+            }
+
+            // 休息時間驗證：必須在營業時間範圍內
+            if (isValid && startEl.value && endEl.value) {
+                if (breakStartEl.value && breakStartEl.value < startEl.value) {
+                    breakStartEl.classList.add('is-invalid');
+                    showError('休息開始時間不能早於營業開始時間');
+                    isValid = false;
+                } else {
+                    breakStartEl.classList.remove('is-invalid');
+                }
+                if (breakEndEl.value && breakEndEl.value > endEl.value) {
+                    breakEndEl.classList.add('is-invalid');
+                    showError('休息結束時間不能晚於營業結束時間');
+                    isValid = false;
+                } else if (isValid) {
+                    breakEndEl.classList.remove('is-invalid');
+                }
+            }
+
+            // 休息時間驗證：如果只填了一個，提示要填另一個
+            if ((breakStartEl.value && !breakEndEl.value) || (!breakStartEl.value && breakEndEl.value)) {
+                const missing = !breakStartEl.value ? breakStartEl : breakEndEl;
+                missing.classList.add('is-invalid');
+                showError('休息時間請同時填寫開始和結束時間，或都不填');
+                isValid = false;
             }
 
             // 天數驗證
@@ -559,9 +598,6 @@
             }
 
             if (!isValid) return;
-
-            const breakStartEl = document.getElementById('breakStart');
-            const breakEndEl = document.getElementById('breakEnd');
 
             // 收集公休日
             const closedDays = [];
