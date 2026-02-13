@@ -21,6 +21,8 @@ import com.booking.platform.repository.StaffLeaveRepository;
 import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.StaffScheduleRepository;
 import com.booking.platform.repository.TenantRepository;
+import com.booking.platform.repository.line.TenantLineConfigRepository;
+import com.booking.platform.entity.line.TenantLineConfig;
 import com.booking.platform.entity.staff.StaffSchedule;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +74,7 @@ public class LineFlexMessageBuilder {
 
     private final ObjectMapper objectMapper;
     private final TenantRepository tenantRepository;
+    private final TenantLineConfigRepository lineConfigRepository;
     private final ServiceCategoryRepository serviceCategoryRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
@@ -103,6 +106,30 @@ public class LineFlexMessageBuilder {
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
         String shopName = tenantOpt.map(Tenant::getName).orElse("歡迎光臨");
 
+        // ========================================
+        // 讀取自訂配置
+        // ========================================
+        JsonNode menuConfig = loadFlexMenuConfig(tenantId);
+
+        // Header 設定
+        String headerColor = getConfigText(menuConfig, "headerColor", PRIMARY_COLOR);
+        String headerTitle = getConfigText(menuConfig, "headerTitle", "✨ " + shopName)
+                .replace("{shopName}", shopName);
+        String headerSubtitle = getConfigText(menuConfig, "headerSubtitle", "歡迎光臨！請問需要什麼服務呢？");
+        boolean showTip = menuConfig != null && menuConfig.has("showTip") ? menuConfig.get("showTip").asBoolean(true) : true;
+
+        // 按鈕設定（7 個預設按鈕）
+        String[][] defaultButtons = {
+            {"start_booking",   PRIMARY_COLOR, "📅", "開始預約",  "快速預約服務"},
+            {"view_bookings",   LINK_COLOR,    "📋", "我的預約",  "查看或取消預約"},
+            {"start_shopping",  "#FF9800",     "🛍️", "瀏覽商品",  "購買優惠商品"},
+            {"view_coupons",    "#E91E63",     "🎁", "領取票券",  null},
+            {"view_my_coupons", "#9C27B0",     "🎫", "我的票券",  null},
+            {"view_member_info","#673AB7",     "👤", "會員資訊",  "查看點數與等級"},
+            {"contact_shop",    "#5C6BC0",     "📞", "聯絡店家",  "地址、電話、營業時間"}
+        };
+        JsonNode buttonsConfig = menuConfig != null ? menuConfig.get("buttons") : null;
+
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
@@ -110,25 +137,23 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
-        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("backgroundColor", headerColor);
         header.put("paddingAll", "20px");
 
         ArrayNode headerContents = objectMapper.createArrayNode();
 
-        // 店家名稱
         ObjectNode shopNameText = objectMapper.createObjectNode();
         shopNameText.put("type", "text");
-        shopNameText.put("text", "✨ " + shopName);
+        shopNameText.put("text", headerTitle);
         shopNameText.put("color", "#FFFFFF");
         shopNameText.put("size", "xl");
         shopNameText.put("weight", "bold");
         shopNameText.put("align", "center");
         headerContents.add(shopNameText);
 
-        // 歡迎語
         ObjectNode welcomeText = objectMapper.createObjectNode();
         welcomeText.put("type", "text");
-        welcomeText.put("text", "歡迎光臨！請問需要什麼服務呢？");
+        welcomeText.put("text", headerSubtitle);
         welcomeText.put("color", "#FFFFFF");
         welcomeText.put("size", "sm");
         welcomeText.put("align", "center");
@@ -138,49 +163,50 @@ public class LineFlexMessageBuilder {
         header.set("contents", headerContents);
         bubble.set("header", header);
 
-        // Body - 功能說明
-        ObjectNode body = objectMapper.createObjectNode();
-        body.put("type", "box");
-        body.put("layout", "vertical");
-        body.put("spacing", "md");
-        body.put("paddingAll", "20px");
+        // Body - 使用提示
+        if (showTip) {
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("spacing", "md");
+            body.put("paddingAll", "20px");
 
-        ArrayNode bodyContents = objectMapper.createArrayNode();
+            ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        // 使用提示
-        ObjectNode tipBox = objectMapper.createObjectNode();
-        tipBox.put("type", "box");
-        tipBox.put("layout", "vertical");
-        tipBox.put("backgroundColor", "#F5F5F5");
-        tipBox.put("cornerRadius", "8px");
-        tipBox.put("paddingAll", "12px");
+            ObjectNode tipBox = objectMapper.createObjectNode();
+            tipBox.put("type", "box");
+            tipBox.put("layout", "vertical");
+            tipBox.put("backgroundColor", "#F5F5F5");
+            tipBox.put("cornerRadius", "8px");
+            tipBox.put("paddingAll", "12px");
 
-        ArrayNode tipContents = objectMapper.createArrayNode();
+            ArrayNode tipContents = objectMapper.createArrayNode();
 
-        ObjectNode tipTitle = objectMapper.createObjectNode();
-        tipTitle.put("type", "text");
-        tipTitle.put("text", "💡 使用提示");
-        tipTitle.put("size", "sm");
-        tipTitle.put("weight", "bold");
-        tipTitle.put("color", "#333333");
-        tipContents.add(tipTitle);
+            ObjectNode tipTitle = objectMapper.createObjectNode();
+            tipTitle.put("type", "text");
+            tipTitle.put("text", "💡 使用提示");
+            tipTitle.put("size", "sm");
+            tipTitle.put("weight", "bold");
+            tipTitle.put("color", "#333333");
+            tipContents.add(tipTitle);
 
-        ObjectNode tipText = objectMapper.createObjectNode();
-        tipText.put("type", "text");
-        tipText.put("text", "點擊下方按鈕開始使用，或直接輸入「預約」、「幫助」等關鍵字");
-        tipText.put("size", "xs");
-        tipText.put("color", SECONDARY_COLOR);
-        tipText.put("wrap", true);
-        tipText.put("margin", "sm");
-        tipContents.add(tipText);
+            ObjectNode tipText = objectMapper.createObjectNode();
+            tipText.put("type", "text");
+            tipText.put("text", "點擊下方按鈕開始使用，或直接輸入「預約」、「幫助」等關鍵字");
+            tipText.put("size", "xs");
+            tipText.put("color", SECONDARY_COLOR);
+            tipText.put("wrap", true);
+            tipText.put("margin", "sm");
+            tipContents.add(tipText);
 
-        tipBox.set("contents", tipContents);
-        bodyContents.add(tipBox);
+            tipBox.set("contents", tipContents);
+            bodyContents.add(tipBox);
 
-        body.set("contents", bodyContents);
-        bubble.set("body", body);
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+        }
 
-        // Footer - 功能按鈕（帶圖示）
+        // Footer - 功能按鈕
         ObjectNode footer = objectMapper.createObjectNode();
         footer.put("type", "box");
         footer.put("layout", "vertical");
@@ -189,16 +215,16 @@ public class LineFlexMessageBuilder {
 
         ArrayNode footerContents = objectMapper.createArrayNode();
 
-        // 預約按鈕
-        footerContents.add(createMenuButton("📅 開始預約", "快速預約服務", "action=start_booking", PRIMARY_COLOR));
+        // 按鈕 0~2：全寬按鈕（開始預約、我的預約、瀏覽商品）
+        for (int i = 0; i < 3; i++) {
+            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
+            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
+            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
+            String subtitle = getButtonField(buttonsConfig, i, "subtitle", defaultButtons[i][4]);
+            footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[i][0], color));
+        }
 
-        // 查詢預約按鈕
-        footerContents.add(createMenuButton("📋 我的預約", "查看或取消預約", "action=view_bookings", LINK_COLOR));
-
-        // 商品按鈕
-        footerContents.add(createMenuButton("🛍️ 瀏覽商品", "購買優惠商品", "action=start_shopping", "#FF9800"));
-
-        // 票券按鈕（橫向排列兩個）
+        // 按鈕 3~4：票券並排按鈕
         ObjectNode couponRow = objectMapper.createObjectNode();
         couponRow.put("type", "box");
         couponRow.put("layout", "horizontal");
@@ -206,21 +232,76 @@ public class LineFlexMessageBuilder {
         couponRow.put("margin", "sm");
 
         ArrayNode couponRowContents = objectMapper.createArrayNode();
-        couponRowContents.add(createCompactMenuButton("🎁 領取票券", "action=view_coupons", "#E91E63"));
-        couponRowContents.add(createCompactMenuButton("🎫 我的票券", "action=view_my_coupons", "#9C27B0"));
+        for (int i = 3; i <= 4; i++) {
+            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
+            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
+            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
+            couponRowContents.add(createCompactMenuButton(icon + " " + title, "action=" + defaultButtons[i][0], color));
+        }
         couponRow.set("contents", couponRowContents);
         footerContents.add(couponRow);
 
-        // 會員資訊按鈕
-        footerContents.add(createMenuButton("👤 會員資訊", "查看點數與等級", "action=view_member_info", "#673AB7"));
-
-        // 聯絡店家按鈕
-        footerContents.add(createMenuButton("📞 聯絡店家", "地址、電話、營業時間", "action=contact_shop", "#5C6BC0"));
+        // 按鈕 5~6：會員資訊、聯絡店家
+        for (int i = 5; i < 7; i++) {
+            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
+            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
+            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
+            String subtitle = getButtonField(buttonsConfig, i, "subtitle", defaultButtons[i][4]);
+            footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[i][0], color));
+        }
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);
 
         return bubble;
+    }
+
+    /**
+     * 讀取 Flex Menu 自訂配置
+     */
+    private JsonNode loadFlexMenuConfig(String tenantId) {
+        try {
+            return lineConfigRepository.findByTenantId(tenantId)
+                    .map(TenantLineConfig::getFlexMenuConfig)
+                    .filter(config -> config != null && !config.isBlank())
+                    .map(config -> {
+                        try {
+                            return objectMapper.readTree(config);
+                        } catch (Exception e) {
+                            log.warn("解析 flexMenuConfig 失敗，租戶：{}", tenantId);
+                            return null;
+                        }
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("讀取 flexMenuConfig 失敗，租戶：{}", tenantId);
+            return null;
+        }
+    }
+
+    /**
+     * 從配置取得文字值，如無則用預設值
+     */
+    private String getConfigText(JsonNode config, String field, String defaultValue) {
+        if (config != null && config.has(field) && !config.get(field).isNull()) {
+            String value = config.get(field).asText();
+            return value.isEmpty() ? defaultValue : value;
+        }
+        return defaultValue;
+    }
+
+    /**
+     * 從按鈕配置取得欄位值
+     */
+    private String getButtonField(JsonNode buttonsConfig, int index, String field, String defaultValue) {
+        if (buttonsConfig != null && buttonsConfig.isArray() && index < buttonsConfig.size()) {
+            JsonNode btn = buttonsConfig.get(index);
+            if (btn.has(field) && !btn.get(field).isNull()) {
+                String value = btn.get(field).asText();
+                if (!value.isEmpty()) return value;
+            }
+        }
+        return defaultValue;
     }
 
     /**

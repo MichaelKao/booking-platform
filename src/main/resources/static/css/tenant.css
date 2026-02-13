@@ -1941,3 +1941,142 @@
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* ========================================
+   Flex Menu 主選單預覽
+   ======================================== */
+
+.flex-menu-preview-container {
+    display: flex;
+    justify-content: center;
+}
+
+.flex-menu-phone-mockup {
+    width: 280px;
+    background: #e5ddd5;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.flex-menu-bubble {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.flex-menu-header {
+    background-color: #1DB446;
+    padding: 16px;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.flex-menu-header-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.flex-menu-header-subtitle {
+    color: #fff;
+    font-size: 0.7rem;
+    margin-top: 4px;
+    opacity: 0.9;
+}
+
+.flex-menu-tip {
+    background: #F5F5F5;
+    margin: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.flex-menu-tip-title {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.flex-menu-tip-text {
+    font-size: 0.6rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+.flex-menu-buttons {
+    padding: 8px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.flex-menu-btn {
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #fff;
+    cursor: default;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-menu-btn.full {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flex-menu-btn.full .flex-menu-btn-title {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.flex-menu-btn.full .flex-menu-btn-sub {
+    font-size: 0.6rem;
+    opacity: 0.9;
+}
+
+.flex-menu-btn.compact {
+    flex: 1;
+    text-align: center;
+    padding: 8px 6px;
+}
+
+.flex-menu-btn.compact .flex-menu-btn-title {
+    font-size: 0.68rem;
+    font-weight: bold;
+}
+
+.flex-menu-btn-row {
+    display: flex;
+    gap: 6px;
+}
+
+.flex-menu-btn-title {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.flex-menu-btn-sub {
+    font-size: 0.6rem;
+    opacity: 0.85;
+}
+
+/* 按鈕設定列表 */
+.flex-btn-setting {
+    background: #fafafa;
+}
+
+.flex-btn-setting .form-control-color {
+    cursor: pointer;
+}
+
+/* RWD */
+@media (max-width: 576px) {
+    .flex-menu-phone-mockup {
+        width: 100%;
+        max-width: 280px;
+    }
+}

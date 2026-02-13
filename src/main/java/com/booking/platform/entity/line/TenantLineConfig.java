@@ -182,6 +182,17 @@ public class TenantLineConfig {
     private String richMenuCustomConfig;
 
     // ========================================
+    // Flex Menu 自訂配置
+    // ========================================
+
+    /**
+     * Flex Message 主選單配置（JSON）
+     * <p>可自訂按鈕顏色、圖示、標題、副標題、Header 顏色等
+     */
+    @Column(name = "flex_menu_config", columnDefinition = "TEXT")
+    private String flexMenuConfig;
+
+    // ========================================
     // 額度管理
     // ========================================
 

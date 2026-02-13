@@ -5,6 +5,7 @@ import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.line.CreateRichMenuRequest;
 import com.booking.platform.dto.line.LineConfigResponse;
 import com.booking.platform.dto.line.SaveLineConfigRequest;
+import com.booking.platform.repository.line.TenantLineConfigRepository;
 import com.booking.platform.service.line.LineConfigService;
 import com.booking.platform.service.line.LineRichMenuService;
 import jakarta.validation.Valid;
@@ -49,6 +50,7 @@ public class LineConfigController {
 
     private final LineConfigService lineConfigService;
     private final LineRichMenuService richMenuService;
+    private final TenantLineConfigRepository lineConfigRepository;
 
     // ========================================
     // 查詢 API
@@ -241,6 +243,64 @@ public class LineConfigController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
         }
+    }
+
+    // ========================================
+    // Flex Menu 自訂 API
+    // ========================================
+
+    /**
+     * 取得 Flex Menu 主選單配置
+     *
+     * @return Flex Menu 配置 JSON
+     */
+    @GetMapping("/flex-menu")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getFlexMenuConfig() {
+        log.debug("取得 Flex Menu 配置");
+
+        String tenantId = TenantContext.getTenantId();
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+
+        lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+            String flexConfig = config.getFlexMenuConfig();
+            if (flexConfig != null && !flexConfig.isBlank()) {
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    result.putAll(mapper.readValue(flexConfig, new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {}));
+                } catch (Exception e) {
+                    log.warn("解析 flexMenuConfig 失敗，租戶：{}", tenantId);
+                }
+            }
+        });
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    /**
+     * 更新 Flex Menu 主選單配置
+     *
+     * @param configMap 配置 JSON
+     * @return 更新結果
+     */
+    @PutMapping("/flex-menu")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> updateFlexMenuConfig(
+            @RequestBody java.util.Map<String, Object> configMap
+    ) {
+        log.debug("更新 Flex Menu 配置");
+
+        String tenantId = TenantContext.getTenantId();
+
+        lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                config.setFlexMenuConfig(mapper.writeValueAsString(configMap));
+                lineConfigRepository.save(config);
+            } catch (Exception e) {
+                log.error("儲存 flexMenuConfig 失敗，租戶：{}", tenantId, e);
+            }
+        });
+
+        return ResponseEntity.ok(ApiResponse.ok("主選單樣式已儲存", configMap));
     }
 
     /**

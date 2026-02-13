@@ -508,6 +508,122 @@
                             </div>
                         </div>
 
+                        <!-- Flex Message 主選單樣式 -->
+                        <div class="card mb-4" id="flexMenuCard">
+                            <div class="card-header">
+                                <h6 class="m-0"><i class="bi bi-chat-square-text me-2"></i>主選單樣式（Flex Message）</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small text-muted mb-3">自訂顧客在 LINE 聊天室看到的主選單外觀，包含按鈕顏色、圖示和標題。</p>
+
+                                <!-- 即時預覽 -->
+                                <div class="flex-menu-preview-container mb-3">
+                                    <div class="flex-menu-phone-mockup">
+                                        <div class="flex-menu-bubble" id="flexMenuPreview">
+                                            <div class="flex-menu-header" id="flexMenuPreviewHeader">
+                                                <div class="flex-menu-header-title" id="flexMenuPreviewTitle">✨ 店家名稱</div>
+                                                <div class="flex-menu-header-subtitle" id="flexMenuPreviewSubtitle">歡迎光臨！請問需要什麼服務呢？</div>
+                                            </div>
+                                            <div class="flex-menu-tip" id="flexMenuPreviewTip">
+                                                <div class="flex-menu-tip-title">💡 使用提示</div>
+                                                <div class="flex-menu-tip-text">點擊下方按鈕開始使用</div>
+                                            </div>
+                                            <div class="flex-menu-buttons" id="flexMenuPreviewButtons">
+                                                <div class="flex-menu-btn full" data-index="0" style="background:#1DB446;">
+                                                    <span class="flex-menu-btn-title">📅 開始預約</span>
+                                                    <span class="flex-menu-btn-sub">快速預約服務</span>
+                                                </div>
+                                                <div class="flex-menu-btn full" data-index="1" style="background:#0066CC;">
+                                                    <span class="flex-menu-btn-title">📋 我的預約</span>
+                                                    <span class="flex-menu-btn-sub">查看或取消預約</span>
+                                                </div>
+                                                <div class="flex-menu-btn full" data-index="2" style="background:#FF9800;">
+                                                    <span class="flex-menu-btn-title">🛍️ 瀏覽商品</span>
+                                                    <span class="flex-menu-btn-sub">購買優惠商品</span>
+                                                </div>
+                                                <div class="flex-menu-btn-row">
+                                                    <div class="flex-menu-btn compact" data-index="3" style="background:#E91E63;">
+                                                        <span class="flex-menu-btn-title">🎁 領取票券</span>
+                                                    </div>
+                                                    <div class="flex-menu-btn compact" data-index="4" style="background:#9C27B0;">
+                                                        <span class="flex-menu-btn-title">🎫 我的票券</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-menu-btn full" data-index="5" style="background:#673AB7;">
+                                                    <span class="flex-menu-btn-title">👤 會員資訊</span>
+                                                    <span class="flex-menu-btn-sub">查看點數與等級</span>
+                                                </div>
+                                                <div class="flex-menu-btn full" data-index="6" style="background:#5C6BC0;">
+                                                    <span class="flex-menu-btn-title">📞 聯絡店家</span>
+                                                    <span class="flex-menu-btn-sub">地址、電話、營業時間</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="preview-label">即時預覽效果</p>
+
+                                <!-- Header 設定 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Header 顏色</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" id="flexHeaderColor" value="#1DB446" style="width:40px;height:34px;">
+                                        <input type="text" class="form-control form-control-sm" id="flexHeaderColorText" value="#1DB446" style="width:100px;" maxlength="7">
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-sm flex-header-preset" data-color="#1DB446" style="background:#1DB446;width:24px;height:24px;border:1px solid #ccc;border-radius:4px;" title="LINE 綠"></button>
+                                            <button type="button" class="btn btn-sm flex-header-preset" data-color="#0066CC" style="background:#0066CC;width:24px;height:24px;border:1px solid #ccc;border-radius:4px;" title="藍色"></button>
+                                            <button type="button" class="btn btn-sm flex-header-preset" data-color="#9C27B0" style="background:#9C27B0;width:24px;height:24px;border:1px solid #ccc;border-radius:4px;" title="紫色"></button>
+                                            <button type="button" class="btn btn-sm flex-header-preset" data-color="#FF5722" style="background:#FF5722;width:24px;height:24px;border:1px solid #ccc;border-radius:4px;" title="橘色"></button>
+                                            <button type="button" class="btn btn-sm flex-header-preset" data-color="#263238" style="background:#263238;width:24px;height:24px;border:1px solid #ccc;border-radius:4px;" title="暗黑"></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Header 標題 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Header 標題</label>
+                                    <input type="text" class="form-control form-control-sm" id="flexHeaderTitle" value="✨ {shopName}" placeholder="例：✨ {shopName}">
+                                    <div class="form-text">{shopName} 會自動替換為您的店名</div>
+                                </div>
+
+                                <!-- Header 副標題 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">歡迎語</label>
+                                    <input type="text" class="form-control form-control-sm" id="flexHeaderSubtitle" value="歡迎光臨！請問需要什麼服務呢？" maxlength="50">
+                                </div>
+
+                                <!-- 使用提示開關 -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="flexShowTip" checked>
+                                    <label class="form-check-label small" for="flexShowTip">顯示使用提示</label>
+                                </div>
+
+                                <!-- 按鈕設定 -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">按鈕設定</label>
+                                    <div id="flexButtonSettings">
+                                    </div>
+                                </div>
+
+                                <!-- 儲存按鈕 -->
+                                <button type="button" class="btn btn-primary btn-sm w-100 mb-3" onclick="saveFlexMenuConfig()" id="saveFlexMenuBtn">
+                                    <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存主選單樣式</span>
+                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>儲存中...</span>
+                                </button>
+
+                                <!-- 重置按鈕 -->
+                                <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="resetFlexMenuConfig()">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>恢復預設
+                                </button>
+
+                                <!-- LINE 聊天背景說明 -->
+                                <div class="alert alert-light small mt-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    LINE 聊天室背景是 LINE 平台功能，由每位用戶自行在 LINE App「設定 → 聊天 → 背景主題」中更改，無法透過 API 統一設定。
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 使用說明 -->
                         <div class="card">
                             <div class="card-header">
@@ -1144,7 +1260,8 @@
                     'PURPLE': '皇家紫',
                     'ORANGE': '日落橘',
                     'DARK': '暗黑模式',
-                    'CUSTOM': '自訂圖片'
+                    'CUSTOM': '自訂圖片',
+                    'CUSTOM_BG': '自訂背景'
                 };
 
                 const modeLabel = data.mode === 'CUSTOM' ? '自訂選單' : (themeNames[data.theme] || data.theme || '未知');
@@ -1166,7 +1283,12 @@
                             }
                         } catch (e) { /* ignore */ }
                     }
-                } else if (data.theme && data.theme !== 'CUSTOM') {
+                } else if (data.theme === 'CUSTOM_BG' || data.theme === 'CUSTOM') {
+                    // 自訂背景+系統疊加圖示（預設模式），預覽顯示 DARK 主題格子
+                    switchRichMenuMode('default');
+                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK', 'has-custom-image');
+                    preview.classList.add('theme-DARK');
+                } else if (data.theme) {
                     switchRichMenuMode('default');
                     document.querySelectorAll('.theme-btn').forEach(b => {
                         b.style.border = '2px solid transparent';
@@ -1176,17 +1298,6 @@
                         }
                     });
                     updatePreviewTheme(data.theme);
-                } else if (data.theme === 'CUSTOM') {
-                    // 舊的自訂圖片模式（有文字疊加）
-                    switchRichMenuMode('default');
-                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK', 'has-custom-image');
-                    preview.classList.add('theme-DARK');
-                    const customImage = document.getElementById('richMenuCustomImage');
-                    const imageUrl = uploadedCustomImageUrl || data.imageUrl;
-                    if (imageUrl && customImage) {
-                        customImage.src = imageUrl;
-                        preview.classList.add('has-custom-image');
-                    }
                 }
 
                 deleteBtn.classList.remove('d-none');
@@ -1360,6 +1471,221 @@
                 setButtonLoading(btn, false);
             }
         }
+
+        // ========================================
+        // Flex Menu 主選單自訂
+        // ========================================
+
+        const FLEX_DEFAULT_BUTTONS = [
+            { key: 'start_booking',   color: '#1DB446', icon: '📅', title: '開始預約',  subtitle: '快速預約服務' },
+            { key: 'view_bookings',   color: '#0066CC', icon: '📋', title: '我的預約',  subtitle: '查看或取消預約' },
+            { key: 'start_shopping',  color: '#FF9800', icon: '🛍️', title: '瀏覽商品',  subtitle: '購買優惠商品' },
+            { key: 'view_coupons',    color: '#E91E63', icon: '🎁', title: '領取票券',  subtitle: '' },
+            { key: 'view_my_coupons', color: '#9C27B0', icon: '🎫', title: '我的票券',  subtitle: '' },
+            { key: 'view_member_info',color: '#673AB7', icon: '👤', title: '會員資訊',  subtitle: '查看點數與等級' },
+            { key: 'contact_shop',    color: '#5C6BC0', icon: '📞', title: '聯絡店家',  subtitle: '地址、電話、營業時間' }
+        ];
+
+        let flexMenuConfig = {
+            headerColor: '#1DB446',
+            headerTitle: '✨ {shopName}',
+            headerSubtitle: '歡迎光臨！請問需要什麼服務呢？',
+            showTip: true,
+            buttons: JSON.parse(JSON.stringify(FLEX_DEFAULT_BUTTONS))
+        };
+
+        // 初始化按鈕設定列表
+        function renderFlexButtonSettings() {
+            const container = document.getElementById('flexButtonSettings');
+            let html = '';
+            flexMenuConfig.buttons.forEach((btn, i) => {
+                const isCompact = (i === 3 || i === 4);
+                html += `
+                <div class="flex-btn-setting border rounded p-2 mb-2">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <input type="color" class="form-control-color flex-btn-color" data-index="${i}" value="${btn.color}" style="width:30px;height:28px;border:1px solid #ccc;border-radius:4px;padding:0;">
+                        <input type="text" class="form-control form-control-sm flex-btn-icon" data-index="${i}" value="${btn.icon}" style="width:42px;text-align:center;" maxlength="4">
+                        <input type="text" class="form-control form-control-sm flex-btn-title" data-index="${i}" value="${btn.title}" style="flex:1;" maxlength="10">
+                    </div>
+                    ${!isCompact ? `<input type="text" class="form-control form-control-sm flex-btn-subtitle" data-index="${i}" value="${btn.subtitle || ''}" placeholder="副標題（選填）" maxlength="20">` : ''}
+                </div>`;
+            });
+            container.innerHTML = html;
+
+            // 綁定事件
+            container.querySelectorAll('.flex-btn-color').forEach(el => {
+                el.addEventListener('input', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    flexMenuConfig.buttons[idx].color = e.target.value;
+                    updateFlexMenuPreview();
+                });
+            });
+            container.querySelectorAll('.flex-btn-icon').forEach(el => {
+                el.addEventListener('input', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    flexMenuConfig.buttons[idx].icon = e.target.value;
+                    updateFlexMenuPreview();
+                });
+            });
+            container.querySelectorAll('.flex-btn-title').forEach(el => {
+                el.addEventListener('input', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    flexMenuConfig.buttons[idx].title = e.target.value;
+                    updateFlexMenuPreview();
+                });
+            });
+            container.querySelectorAll('.flex-btn-subtitle').forEach(el => {
+                el.addEventListener('input', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    flexMenuConfig.buttons[idx].subtitle = e.target.value;
+                    updateFlexMenuPreview();
+                });
+            });
+        }
+
+        // 更新預覽
+        function updateFlexMenuPreview() {
+            // Header
+            const headerEl = document.getElementById('flexMenuPreviewHeader');
+            headerEl.style.backgroundColor = flexMenuConfig.headerColor;
+            document.getElementById('flexMenuPreviewTitle').textContent = flexMenuConfig.headerTitle.replace('{shopName}', '我的店家');
+            document.getElementById('flexMenuPreviewSubtitle').textContent = flexMenuConfig.headerSubtitle;
+
+            // 使用提示
+            const tipEl = document.getElementById('flexMenuPreviewTip');
+            tipEl.style.display = flexMenuConfig.showTip ? '' : 'none';
+
+            // 按鈕
+            const btns = document.querySelectorAll('#flexMenuPreviewButtons .flex-menu-btn');
+            btns.forEach(btn => {
+                const idx = parseInt(btn.dataset.index);
+                if (idx >= 0 && idx < flexMenuConfig.buttons.length) {
+                    const cfg = flexMenuConfig.buttons[idx];
+                    btn.style.backgroundColor = cfg.color;
+                    const titleEl = btn.querySelector('.flex-menu-btn-title');
+                    if (titleEl) titleEl.textContent = cfg.icon + ' ' + cfg.title;
+                    const subEl = btn.querySelector('.flex-menu-btn-sub');
+                    if (subEl) subEl.textContent = cfg.subtitle || '';
+                }
+            });
+        }
+
+        // Header 顏色控制
+        document.getElementById('flexHeaderColor').addEventListener('input', function(e) {
+            flexMenuConfig.headerColor = e.target.value;
+            document.getElementById('flexHeaderColorText').value = e.target.value;
+            updateFlexMenuPreview();
+        });
+        document.getElementById('flexHeaderColorText').addEventListener('change', function(e) {
+            const val = e.target.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                flexMenuConfig.headerColor = val;
+                document.getElementById('flexHeaderColor').value = val;
+                updateFlexMenuPreview();
+            }
+        });
+        document.querySelectorAll('.flex-header-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const color = this.dataset.color;
+                flexMenuConfig.headerColor = color;
+                document.getElementById('flexHeaderColor').value = color;
+                document.getElementById('flexHeaderColorText').value = color;
+                updateFlexMenuPreview();
+            });
+        });
+
+        // Header 標題和副標題
+        document.getElementById('flexHeaderTitle').addEventListener('input', function(e) {
+            flexMenuConfig.headerTitle = e.target.value;
+            updateFlexMenuPreview();
+        });
+        document.getElementById('flexHeaderSubtitle').addEventListener('input', function(e) {
+            flexMenuConfig.headerSubtitle = e.target.value;
+            updateFlexMenuPreview();
+        });
+
+        // 使用提示開關
+        document.getElementById('flexShowTip').addEventListener('change', function(e) {
+            flexMenuConfig.showTip = e.target.checked;
+            updateFlexMenuPreview();
+        });
+
+        // 載入配置
+        async function loadFlexMenuConfig() {
+            try {
+                const r = await api.get('/api/settings/line/flex-menu');
+                if (r.success && r.data && Object.keys(r.data).length > 0) {
+                    if (r.data.headerColor) flexMenuConfig.headerColor = r.data.headerColor;
+                    if (r.data.headerTitle) flexMenuConfig.headerTitle = r.data.headerTitle;
+                    if (r.data.headerSubtitle !== undefined) flexMenuConfig.headerSubtitle = r.data.headerSubtitle;
+                    if (r.data.showTip !== undefined) flexMenuConfig.showTip = r.data.showTip;
+                    if (r.data.buttons && Array.isArray(r.data.buttons)) {
+                        r.data.buttons.forEach((btn, i) => {
+                            if (i < flexMenuConfig.buttons.length) {
+                                if (btn.color) flexMenuConfig.buttons[i].color = btn.color;
+                                if (btn.icon) flexMenuConfig.buttons[i].icon = btn.icon;
+                                if (btn.title) flexMenuConfig.buttons[i].title = btn.title;
+                                if (btn.subtitle !== undefined) flexMenuConfig.buttons[i].subtitle = btn.subtitle;
+                            }
+                        });
+                    }
+
+                    // 同步到表單
+                    document.getElementById('flexHeaderColor').value = flexMenuConfig.headerColor;
+                    document.getElementById('flexHeaderColorText').value = flexMenuConfig.headerColor;
+                    document.getElementById('flexHeaderTitle').value = flexMenuConfig.headerTitle;
+                    document.getElementById('flexHeaderSubtitle').value = flexMenuConfig.headerSubtitle;
+                    document.getElementById('flexShowTip').checked = flexMenuConfig.showTip;
+
+                    renderFlexButtonSettings();
+                    updateFlexMenuPreview();
+                }
+            } catch (e) {
+                console.error('載入 Flex Menu 配置失敗:', e);
+            }
+        }
+
+        // 儲存配置
+        async function saveFlexMenuConfig() {
+            const btn = document.getElementById('saveFlexMenuBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const r = await api.put('/api/settings/line/flex-menu', flexMenuConfig);
+                if (r.success) {
+                    showSuccess('主選單樣式已儲存！顧客下次開啟聊天時會看到新樣式');
+                } else {
+                    showError('儲存失敗：' + (r.message || '請稍後再試'));
+                }
+            } catch (e) {
+                showError('儲存失敗：' + (e.message || '請稍後再試'));
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        // 重置配置
+        function resetFlexMenuConfig() {
+            flexMenuConfig = {
+                headerColor: '#1DB446',
+                headerTitle: '✨ {shopName}',
+                headerSubtitle: '歡迎光臨！請問需要什麼服務呢？',
+                showTip: true,
+                buttons: JSON.parse(JSON.stringify(FLEX_DEFAULT_BUTTONS))
+            };
+            document.getElementById('flexHeaderColor').value = '#1DB446';
+            document.getElementById('flexHeaderColorText').value = '#1DB446';
+            document.getElementById('flexHeaderTitle').value = '✨ {shopName}';
+            document.getElementById('flexHeaderSubtitle').value = '歡迎光臨！請問需要什麼服務呢？';
+            document.getElementById('flexShowTip').checked = true;
+            renderFlexButtonSettings();
+            updateFlexMenuPreview();
+            showSuccess('已恢復預設樣式（尚未儲存）');
+        }
+
+        // 頁面載入時初始化
+        renderFlexButtonSettings();
+        loadFlexMenuConfig();
     </script>
 </body>
 </html>

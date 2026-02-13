@@ -327,7 +327,8 @@ public class LineRichMenuService {
             // ========================================
             // 9. 儲存 Rich Menu ID 和主題
             // ========================================
-            saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM");
+            // CUSTOM_BG 表示自訂背景+系統疊加圖示（仍屬預設模式）
+            saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM_BG");
 
             return richMenuId;
 
