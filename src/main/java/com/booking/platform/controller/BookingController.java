@@ -45,12 +45,21 @@ public class BookingController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) BookingStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String staffId,
             @RequestParam(required = false) String sort
     ) {
         size = Math.min(size, 100);
         Pageable pageable = PageRequest.of(page, size);
-        return ApiResponse.ok(bookingService.getList(status, date, staffId, pageable));
+
+        // 向後相容：若傳入 date 則視為單日查詢
+        if (date != null && startDate == null && endDate == null) {
+            startDate = date;
+            endDate = date;
+        }
+
+        return ApiResponse.ok(bookingService.getList(status, startDate, endDate, staffId, pageable));
     }
 
     @GetMapping("/{id}")

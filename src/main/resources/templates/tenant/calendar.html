@@ -35,6 +35,16 @@
                     </button>
                 </div>
 
+                <!-- 狀態圖例 -->
+                <div class="calendar-legend">
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--warning-color);"></span>待確認</div>
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--primary-color);"></span>已確認</div>
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--info-color);"></span>進行中</div>
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--success-color);"></span>已完成</div>
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--secondary-color);"></span>已取消</div>
+                    <div class="calendar-legend-item"><span class="calendar-legend-dot" style="background-color: var(--danger-color);"></span>爽約</div>
+                </div>
+
                 <!-- 行事曆 -->
                 <div class="calendar-container">
                     <div id="calendar"></div>
@@ -79,12 +89,27 @@
         const currentPage = 'calendar';
         let calendar = null;
 
+        const STATUS_TEXT = {
+            PENDING: '待確認',
+            CONFIRMED: '已確認',
+            IN_PROGRESS: '進行中',
+            COMPLETED: '已完成',
+            CANCELLED: '已取消',
+            NO_SHOW: '爽約'
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             calendar = initCalendar('calendar', {
                 onEventClick: showBookingDetail,
                 onDateClick: (date) => {
                     const dateStr = date.toISOString().split('T')[0];
                     window.location.href = `/tenant/bookings?date=${dateStr}&action=create`;
+                },
+                eventDidMount: function(info) {
+                    const booking = info.event.extendedProps;
+                    const statusLabel = STATUS_TEXT[booking.status] || booking.status;
+                    const time = (booking.startTime?.substring(0, 5) || '') + ' - ' + (booking.endTime?.substring(0, 5) || '');
+                    info.el.title = `【${statusLabel}】${booking.customerName || ''}\n服務：${booking.serviceName || ''}\n員工：${booking.staffName || '未指定'}\n時間：${time}`;
                 }
             });
         });

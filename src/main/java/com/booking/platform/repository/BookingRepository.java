@@ -40,7 +40,8 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND (CAST(:status AS VARCHAR) IS NULL OR b.status = CAST(:status AS VARCHAR))
-            AND (CAST(:date AS DATE) IS NULL OR b.booking_date = CAST(:date AS DATE))
+            AND (CAST(:startDate AS DATE) IS NULL OR b.booking_date >= CAST(:startDate AS DATE))
+            AND (CAST(:endDate AS DATE) IS NULL OR b.booking_date <= CAST(:endDate AS DATE))
             AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
             ORDER BY b.booking_date DESC, b.start_time ASC
             """,
@@ -49,14 +50,16 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND (CAST(:status AS VARCHAR) IS NULL OR b.status = CAST(:status AS VARCHAR))
-            AND (CAST(:date AS DATE) IS NULL OR b.booking_date = CAST(:date AS DATE))
+            AND (CAST(:startDate AS DATE) IS NULL OR b.booking_date >= CAST(:startDate AS DATE))
+            AND (CAST(:endDate AS DATE) IS NULL OR b.booking_date <= CAST(:endDate AS DATE))
             AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
             """,
             nativeQuery = true)
     Page<Booking> findByTenantIdAndFilters(
             @Param("tenantId") String tenantId,
             @Param("status") String status,
-            @Param("date") LocalDate date,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
             @Param("staffId") String staffId,
             Pageable pageable
     );
@@ -96,7 +99,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     );
 
     /**
-     * 查詢顧客的有效預約（僅已確認）
+     * 查詢顧客的有效預約（待確認 + 已確認）
      * 用於 LINE Bot「我的預約」功能，依日期時間 ASC 排序（最近的排前面）
      */
     @Query("""
@@ -104,7 +107,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenantId = :tenantId
             AND b.customerId = :customerId
             AND b.deletedAt IS NULL
-            AND b.status = 'CONFIRMED'
+            AND b.status IN ('PENDING', 'CONFIRMED')
             ORDER BY b.bookingDate ASC, b.startTime ASC
             """)
     List<Booking> findActiveByCustomerId(

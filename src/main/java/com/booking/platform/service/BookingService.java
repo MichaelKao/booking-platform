@@ -79,7 +79,8 @@ public class BookingService {
 
     public PageResponse<BookingResponse> getList(
             BookingStatus status,
-            LocalDate date,
+            LocalDate startDate,
+            LocalDate endDate,
             String staffId,
             Pageable pageable
     ) {
@@ -103,7 +104,7 @@ public class BookingService {
         String statusStr = status != null ? status.name() : null;
 
         Page<Booking> page = bookingRepository.findByTenantIdAndFilters(
-                tenantId, statusStr, date, staffId, pageable
+                tenantId, statusStr, startDate, endDate, staffId, pageable
         );
 
         List<BookingResponse> content = page.getContent().stream()

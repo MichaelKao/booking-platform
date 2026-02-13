@@ -56,7 +56,11 @@
                                     <i class="bi bi-x-circle"></i>
                                 </button>
                             </div>
-                            <input type="date" class="form-control form-control-sm" id="dateFilter" style="width: 140px;" onchange="loadBookings()">
+                            <div class="d-flex align-items-center gap-1">
+                                <input type="date" class="form-control form-control-sm" id="startDateFilter" style="width: 135px;" onchange="loadBookings()" title="開始日期">
+                                <span class="text-muted small">~</span>
+                                <input type="date" class="form-control form-control-sm" id="endDateFilter" style="width: 135px;" onchange="loadBookings()" title="結束日期">
+                            </div>
                             <select class="form-select form-select-sm" id="statusFilter" style="width: 120px;" onchange="loadBookings()">
                                 <option value="">全部狀態</option>
                                 <option value="PENDING">待確認</option>
@@ -287,7 +291,12 @@
         let currentBookingId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('dateFilter').value = new Date().toISOString().split('T')[0];
+            // 預設顯示今天起 30 天的預約
+            const today = new Date();
+            const endDay = new Date(today);
+            endDay.setDate(endDay.getDate() + 30);
+            document.getElementById('startDateFilter').value = today.toISOString().split('T')[0];
+            document.getElementById('endDateFilter').value = endDay.toISOString().split('T')[0];
             loadBookings();
             loadCustomers();
             loadServices();
@@ -323,11 +332,13 @@
 
         async function loadBookings(page = 0) {
             currentPageNum = page;
-            const date = document.getElementById('dateFilter').value;
+            const startDate = document.getElementById('startDateFilter').value;
+            const endDate = document.getElementById('endDateFilter').value;
             const status = document.getElementById('statusFilter').value;
             const keyword = document.getElementById('searchKeyword').value.trim();
             const params = { page, size: pageSize, sort: 'bookingDate,desc' };
-            if (date) params.date = date;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
             if (status) params.status = status;
             if (keyword) params.keyword = keyword;
 
@@ -956,12 +967,9 @@
         // 匯出預約
         function exportBookings(format) {
             const token = getToken();
-            const dateFilter = document.getElementById('dateFilter').value;
+            const startDate = document.getElementById('startDateFilter').value || new Date().toISOString().split('T')[0];
+            const endDate = document.getElementById('endDateFilter').value || new Date().toISOString().split('T')[0];
             const statusFilter = document.getElementById('statusFilter').value;
-
-            // 計算日期範圍 (預設過去30天)
-            const endDate = dateFilter || new Date().toISOString().split('T')[0];
-            const startDate = new Date(new Date(endDate).setDate(new Date(endDate).getDate() - 30)).toISOString().split('T')[0];
 
             let url = `/api/export/bookings/${format}?startDate=${startDate}&endDate=${endDate}`;
             if (statusFilter) url += `&status=${statusFilter}`;

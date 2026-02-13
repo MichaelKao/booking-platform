@@ -3378,6 +3378,21 @@ public class LineFlexMessageBuilder {
                 bodyContents.add(staffName);
             }
 
+            // 狀態描述文字
+            ObjectNode statusDesc = objectMapper.createObjectNode();
+            statusDesc.put("type", "text");
+            if (BookingStatus.PENDING.equals(booking.getStatus())) {
+                statusDesc.put("text", "⏳ 等待店家確認中");
+                statusDesc.put("color", "#FFA500");
+            } else {
+                statusDesc.put("text", "✓ 預約已確認");
+                statusDesc.put("color", "#4CAF50");
+            }
+            statusDesc.put("size", "sm");
+            statusDesc.put("weight", "bold");
+            statusDesc.put("margin", "md");
+            bodyContents.add(statusDesc);
+
             body.set("contents", bodyContents);
             bubble.set("body", body);
 

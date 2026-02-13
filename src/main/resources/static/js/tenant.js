@@ -481,11 +481,19 @@ function initCalendar(elementId, options = {}) {
                 };
                 const result = await api.get('/api/bookings/calendar', params);
                 if (result.success && result.data) {
+                    const statusPrefix = {
+                        PENDING: '⏳ ',
+                        CONFIRMED: '✓ ',
+                        IN_PROGRESS: '▶ ',
+                        COMPLETED: '✔ ',
+                        CANCELLED: '✗ ',
+                        NO_SHOW: '✗ '
+                    };
                     const events = result.data.map(booking => ({
                         id: booking.id,
-                        title: `${booking.customerName} - ${booking.serviceName}`,
-                        start: booking.startTime,
-                        end: booking.endTime,
+                        title: `${statusPrefix[booking.status] || ''}${booking.customerName || ''} - ${booking.serviceName || ''}`,
+                        start: booking.bookingDate + 'T' + booking.startTime,
+                        end: booking.bookingDate + 'T' + booking.endTime,
                         className: `status-${booking.status.toLowerCase().replace('_', '-')}`,
                         extendedProps: booking
                     }));

@@ -469,6 +469,41 @@
     background-color: var(--secondary-color);
 }
 
+.fc-event.status-no-show {
+    background-color: var(--danger-color);
+}
+
+.fc-event.status-in-progress {
+    background-color: var(--info-color);
+}
+
+/* 行事曆狀態圖例 */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+}
+
+.calendar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.calendar-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
 /* ========================================
    資料表格
    ======================================== */
