@@ -28,6 +28,9 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -276,6 +279,19 @@ public class LineRichMenuService {
      */
     @Transactional
     public String createRichMenuWithCustomImage(String tenantId, byte[] imageBytes) {
+        return createRichMenuWithCustomImage(tenantId, imageBytes, null);
+    }
+
+    /**
+     * 建立自訂圖片 Rich Menu（帶文字顏色）
+     *
+     * @param tenantId 租戶 ID
+     * @param imageBytes 圖片位元組陣列
+     * @param textColorHex 文字顏色（十六進位，如 #FFFFFF），null 則預設白色
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createRichMenuWithCustomImage(String tenantId, byte[] imageBytes, String textColorHex) {
         log.info("開始建立自訂圖片 Rich Menu，租戶：{}", tenantId);
 
         try {
@@ -290,9 +306,21 @@ public class LineRichMenuService {
             byte[] resizedImageBytes = resizeImageToRichMenuSize(imageBytes);
 
             // ========================================
-            // 3. 在背景圖片上疊加選單文字和圖示
+            // 3. 解析文字顏色
             // ========================================
-            byte[] compositeImageBytes = overlayMenuItemsOnImage(resizedImageBytes);
+            Color overlayTextColor = TEXT_COLOR;
+            if (textColorHex != null && textColorHex.startsWith("#") && textColorHex.length() == 7) {
+                try {
+                    overlayTextColor = Color.decode(textColorHex);
+                } catch (NumberFormatException e) {
+                    log.warn("無效的文字顏色：{}，使用預設白色", textColorHex);
+                }
+            }
+
+            // ========================================
+            // 4. 在背景圖片上疊加選單文字和圖示（描邊文字，不遮蓋背景）
+            // ========================================
+            byte[] compositeImageBytes = overlayMenuItemsOnImage(resizedImageBytes, overlayTextColor);
 
             // ========================================
             // 4. 刪除現有的 Rich Menu
@@ -457,20 +485,20 @@ public class LineRichMenuService {
     }
 
     /**
-     * 在背景圖片上疊加選單文字和圖示
+     * 在背景圖片上疊加選單文字和圖示（描邊文字，不遮蓋背景）
      *
      * <p>此方法會在自訂背景圖片上繪製：
      * <ul>
-     *   <li>半透明的格子背景（提高文字可讀性）</li>
-     *   <li>圖示背景圓圈</li>
-     *   <li>向量圖示</li>
-     *   <li>選單文字</li>
+     *   <li>淡色格線（區分各格）</li>
+     *   <li>描邊向量圖示（可在任何背景上清晰可見）</li>
+     *   <li>描邊選單文字（使用 TextLayout 描邊，無需半透明遮罩）</li>
      * </ul>
      *
      * @param backgroundImageBytes 背景圖片位元組陣列（已縮放至 2500x843）
+     * @param textColor 文字與圖示顏色
      * @return 合成後的圖片位元組陣列
      */
-    private byte[] overlayMenuItemsOnImage(byte[] backgroundImageBytes) {
+    private byte[] overlayMenuItemsOnImage(byte[] backgroundImageBytes, Color textColor) {
         try {
             // 讀取背景圖片
             BufferedImage backgroundImage = ImageIO.read(new java.io.ByteArrayInputStream(backgroundImageBytes));
@@ -493,16 +521,19 @@ public class LineRichMenuService {
             // 取得佈局區域
             int[][] layoutAreas = getLayoutAreas(DEFAULT_LAYOUT);
 
-            // 繪製淡色格線（區分各格，不遮蓋背景圖）
-            g2d.setColor(new Color(255, 255, 255, 50));
+            // 繪製淡色格線（區分各格）
+            g2d.setColor(new Color(255, 255, 255, 60));
             g2d.setStroke(new BasicStroke(2));
             drawGridLines(g2d, layoutAreas);
 
-            // 在每個格子中央繪製小型膠囊背景 + 圖示 + 文字（背景圖大面積可見）
+            // 計算描邊顏色（文字亮→黑色描邊，文字暗→白色描邊）
+            Color outlineColor = getContrastOutlineColor(textColor);
+
+            // 在每個格子中央繪製描邊圖示 + 描邊文字（不遮蓋背景圖）
             Font textFont = loadChineseFont(Font.BOLD, 72);
 
             for (int i = 0; i < layoutAreas.length && i < MENU_ITEMS.length; i++) {
-                drawMenuCellCapsule(g2d, layoutAreas[i], i, textFont);
+                drawMenuCellOutlined(g2d, layoutAreas[i], i, textFont, textColor, outlineColor);
             }
 
             g2d.dispose();
@@ -529,6 +560,83 @@ public class LineRichMenuService {
             log.error("圖片合成失敗：{}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理失敗：" + e.getMessage());
         }
+    }
+
+    /**
+     * 根據文字顏色計算對比描邊顏色
+     * 亮色文字 → 黑色描邊，暗色文字 → 白色描邊
+     */
+    private Color getContrastOutlineColor(Color textColor) {
+        double luminance = (0.299 * textColor.getRed() + 0.587 * textColor.getGreen() + 0.114 * textColor.getBlue()) / 255.0;
+        return luminance > 0.5 ? new Color(0, 0, 0, 200) : new Color(255, 255, 255, 200);
+    }
+
+    /**
+     * 在格子中央繪製描邊圖示和描邊文字（無背景遮罩，背景圖完全可見）
+     *
+     * @param g2d Graphics2D 繪圖物件
+     * @param area 區域座標 {x, y, width, height}
+     * @param index 選單項目索引
+     * @param textFont 文字字型
+     * @param textColor 文字填充顏色
+     * @param outlineColor 描邊顏色
+     */
+    private void drawMenuCellOutlined(Graphics2D g2d, int[] area, int index, Font textFont, Color textColor, Color outlineColor) {
+        if (index >= MENU_ITEMS.length || index >= MENU_ICON_TYPES.length) return;
+
+        int cellX = area[0];
+        int cellY = area[1];
+        int cellW = area[2];
+        int cellH = area[3];
+        int centerX = cellX + cellW / 2;
+        int centerY = cellY + cellH / 2;
+
+        // 根據格子大小調整尺寸
+        int iconSize = Math.min(cellW, cellH) / 5;
+        int circleSize = iconSize * 2;
+        int fontSize = Math.max(36, Math.min(72, cellW / 12));
+
+        // ========================================
+        // 1. 繪製描邊圖示（先畫粗描邊，再畫正常圖示）
+        // ========================================
+        int iconCenterY = centerY - iconSize / 4;
+
+        // 描邊層（加粗描邊色）
+        int outlineStrokeWidth = Math.max(10, iconSize / 4);
+        g2d.setStroke(new BasicStroke(outlineStrokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.setColor(outlineColor);
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, iconCenterY, iconSize);
+
+        // 正常層（文字色）
+        int normalStrokeWidth = Math.max(6, iconSize / 8);
+        g2d.setStroke(new BasicStroke(normalStrokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.setColor(textColor);
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, iconCenterY, iconSize);
+
+        // ========================================
+        // 2. 繪製描邊文字（使用 TextLayout 描邊，清晰可讀）
+        // ========================================
+        Font cellFont = textFont.deriveFont((float) fontSize);
+        g2d.setFont(cellFont);
+        FontMetrics fm = g2d.getFontMetrics();
+        String text = MENU_ITEMS[index][0];
+        int textWidth = fm.stringWidth(text);
+        int textX = centerX - textWidth / 2;
+        int textY = centerY + circleSize / 2 + fm.getAscent();
+
+        FontRenderContext frc = g2d.getFontRenderContext();
+        TextLayout textLayout = new TextLayout(text, cellFont, frc);
+        AffineTransform transform = AffineTransform.getTranslateInstance(textX, textY);
+        Shape textShape = textLayout.getOutline(transform);
+
+        // 描邊層
+        g2d.setStroke(new BasicStroke(8, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.setColor(outlineColor);
+        g2d.draw(textShape);
+
+        // 填充層
+        g2d.setColor(textColor);
+        g2d.fill(textShape);
     }
 
     /**

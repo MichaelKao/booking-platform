@@ -190,14 +190,15 @@ public class LineConfigController {
      */
     @PostMapping("/rich-menu/upload-image")
     public ResponseEntity<ApiResponse<java.util.Map<String, String>>> uploadRichMenuImage(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "textColor", required = false) String textColor
     ) {
-        log.debug("上傳自訂 Rich Menu 圖片");
+        log.debug("上傳自訂 Rich Menu 圖片，文字顏色：{}", textColor);
 
         try {
             String tenantId = TenantContext.getTenantId();
             byte[] imageBytes = file.getBytes();
-            String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes);
+            String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes, textColor);
 
             java.util.Map<String, String> result = new java.util.HashMap<>();
             result.put("richMenuId", richMenuId);

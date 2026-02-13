@@ -1699,13 +1699,26 @@
     z-index: 0;
 }
 
-/* 自訂圖片模式：顯示背景圖 + 半透明遮罩 + 文字 */
+/* 自訂圖片模式：顯示背景圖 + 描邊文字（不遮蓋背景） */
 .rich-menu-preview.has-custom-image .rich-menu-custom-image {
     display: block;
 }
 
 .rich-menu-preview.has-custom-image .rich-menu-cell {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: transparent;
+}
+
+.rich-menu-preview.has-custom-image .rich-menu-cell-icon,
+.rich-menu-preview.has-custom-image .rich-menu-cell-text {
+    text-shadow: -2px -2px 0 var(--rm-outline, #000),
+                  2px -2px 0 var(--rm-outline, #000),
+                 -2px  2px 0 var(--rm-outline, #000),
+                  2px  2px 0 var(--rm-outline, #000),
+                  0   -2px 0 var(--rm-outline, #000),
+                  0    2px 0 var(--rm-outline, #000),
+                 -2px  0   0 var(--rm-outline, #000),
+                  2px  0   0 var(--rm-outline, #000);
+    color: var(--rm-text-color, #fff);
 }
 
 /* 手機底部導航列 */
