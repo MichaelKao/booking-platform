@@ -165,7 +165,7 @@ POST /api/auth/logout             # 登出
 | 報表 | `GET /reports/dashboard\|summary\|today\|weekly\|monthly\|daily\|top-services\|top-staff\|hourly\|advanced` |
 | 設定 | `GET/PUT /settings`, `GET /settings/setup-status` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
-| Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image` |
+| Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image\|create-custom` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
 | 行銷推播 | `GET/POST /marketing/pushes`, `POST /marketing/pushes/{id}/send`, `DELETE /marketing/pushes/{id}` |
@@ -304,7 +304,15 @@ scheduler:
 ## LINE Bot 功能
 
 ### Rich Menu（快捷選單）
-底部固定選單，顧客開啟聊天室即可看到：
+底部固定選單，顧客開啟聊天室即可看到（7 格：上排 3 + 下排 4）：
+
+```
+┌──────────┬──────────┬──────────┐
+│ 開始預約 │ 我的預約 │ 瀏覽商品 │  ← 上排 3 格
+├───────┬───────┬───────┬───────┤
+│領取票券│我的票券│會員資訊│聯絡店家│  ← 下排 4 格
+└───────┴───────┴───────┴───────┘
+```
 
 | 功能 | 說明 |
 |------|------|
@@ -312,8 +320,26 @@ scheduler:
 | 我的預約 | 查看預約清單 |
 | 瀏覽商品 | 瀏覽商品列表 |
 | 領取票券 | 查看可領取票券 |
+| 我的票券 | 查看已領取票券 |
 | 會員資訊 | 查看會員資料 |
 | 聯絡店家 | 聯絡客服 |
+
+**兩種模式**：
+
+| 模式 | 說明 |
+|------|------|
+| 預設選單 | 系統生成 7 格選單，可選 5 種主題配色 |
+| 自訂選單 | 店家上傳完整設計圖片，不疊加文字圖示，自行定義每格動作 |
+
+**自訂選單佈局範本**：
+
+| 佈局代碼 | 說明 | 區域數 |
+|---------|------|--------|
+| `3+4` | 上排 3 + 下排 4（預設） | 7 |
+| `2x3` | 經典 2 行 × 3 列 | 6 |
+| `2+3` | 上排 2 + 下排 3 | 5 |
+| `2x2` | 2 行 × 2 列 | 4 |
+| `1+2` | 上排 1（滿版）+ 下排 2 | 3 |
 
 **主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）
 
@@ -322,9 +348,9 @@ scheduler:
 **跨平台字型**：Docker 環境安裝 font-wqy-zenhei（文泉驛正黑），確保中文正確顯示
 
 **即時預覽功能**：在 LINE 設定頁面提供手機模擬預覽，可即時看到：
-- 主題配色切換效果
-- 自訂圖片上傳預覽
-- 6 宮格選單佈局
+- 預設模式：7 格 (3+4) + 主題配色切換效果
+- 自訂模式：佈局選擇器 + 上傳圖片 + 區域數字標記
+- 模式切換 Tab（色塊按鈕，非淡色文字）
 
 ### 主選單（Flex Message）
 用戶隨時輸入任何文字都會顯示主選單（Flex Message），包含：
@@ -495,6 +521,7 @@ Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 ### 排班設定
 - 每週 7 天的上班設定
 - 每天可設：上班開關、開始/結束時間、休息時段
+- **新員工預設排班**：週一至五 09:00-18:00、午休 12:00-13:00、週六日休息
 
 ### 請假管理
 - 支援特定日期請假（事假、病假、休假、特休、其他）
@@ -866,9 +893,10 @@ npx playwright test --list
 | `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
 | `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
 | `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
-| `27-line-category-selection.spec.ts` | LINE Bot 服務分類選擇功能測試 | 26 |
-| `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 16 |
-| `29-time-validation.spec.ts` | 時間/日期驗證測試（開始<結束） | 18 |
+| `27-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 | 67 |
+| `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 12 |
+| `29-time-validation.spec.ts` | 時間/日期驗證（開始<結束）+ 前端防呆 | 16 |
+| `30-rich-menu-custom.spec.ts` | Rich Menu 7 格預覽 + 自訂模式 + 佈局選擇 + API 契約 | - |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -1100,6 +1128,7 @@ tests/
 ├── 27-line-category-selection.spec.ts ← LINE Bot 分類選擇功能
 ├── 28-booking-slot-conflict.spec.ts ← 預約時段衝突與自動分配員工
 ├── 29-time-validation.spec.ts      ← 時間/日期驗證（開始<結束）
+├── 30-rich-menu-custom.spec.ts     ← Rich Menu 7 格預覽 + 自訂模式
 ├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
 ├── fixtures.ts                 ← 共用 Fixture（F12 監控）
 └── utils/test-helpers.ts       ← 共用輔助函式
@@ -1305,4 +1334,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 994 |
+| E2E 測試 | 1001 |

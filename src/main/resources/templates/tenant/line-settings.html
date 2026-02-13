@@ -325,18 +325,14 @@
                                 </div>
 
                                 <!-- 模式切換 Tab -->
-                                <ul class="nav nav-tabs nav-fill mb-3" id="richMenuModeTabs">
-                                    <li class="nav-item">
-                                        <button class="nav-link active" data-mode="default" onclick="switchRichMenuMode('default')">
-                                            <i class="bi bi-palette me-1"></i>預設選單
-                                        </button>
-                                    </li>
-                                    <li class="nav-item">
-                                        <button class="nav-link" data-mode="custom" onclick="switchRichMenuMode('custom')">
-                                            <i class="bi bi-image me-1"></i>自訂選單
-                                        </button>
-                                    </li>
-                                </ul>
+                                <div class="rich-menu-mode-tabs mb-3" id="richMenuModeTabs">
+                                    <button class="rich-menu-mode-tab active" data-mode="default" onclick="switchRichMenuMode('default')">
+                                        <i class="bi bi-palette me-1"></i>預設選單
+                                    </button>
+                                    <button class="rich-menu-mode-tab" data-mode="custom" onclick="switchRichMenuMode('custom')">
+                                        <i class="bi bi-image me-1"></i>自訂選單
+                                    </button>
+                                </div>
 
                                 <!-- Rich Menu 即時預覽 -->
                                 <div class="rich-menu-preview-container mb-3">
@@ -420,6 +416,13 @@
                                                 暗黑
                                             </button>
                                         </div>
+                                    </div>
+
+                                    <!-- 或上傳自訂背景圖片（系統會在上面疊加功能圖示和文字） -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">或上傳自訂背景</label>
+                                        <input type="file" class="form-control form-control-sm" id="defaultBgImage" accept="image/png,image/jpeg">
+                                        <div class="form-text">上傳背景圖片，系統會自動疊加功能圖示和文字</div>
                                     </div>
 
                                     <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createRichMenu()" id="createRichMenuBtn">
@@ -923,7 +926,7 @@
             currentRichMenuMode = mode;
 
             // 更新 Tab 樣式
-            document.querySelectorAll('#richMenuModeTabs .nav-link').forEach(tab => {
+            document.querySelectorAll('#richMenuModeTabs .rich-menu-mode-tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.mode === mode);
             });
 
@@ -952,6 +955,9 @@
             preview.classList.remove('has-custom-image');
             document.getElementById('richMenuCustomImage').src = '';
             uploadedCustomImageUrl = null;
+            // 清除背景圖片上傳
+            const bgInput = document.getElementById('defaultBgImage');
+            if (bgInput) bgInput.value = '';
         }
 
         // 主題按鈕點擊事件
@@ -968,6 +974,23 @@
 
         // 預設選中 GREEN
         document.querySelector('.theme-btn[data-theme="GREEN"]').style.border = '2px solid #000';
+
+        // 預設模式 — 自訂背景圖片預覽
+        document.getElementById('defaultBgImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('richMenuPreview');
+            const customImage = document.getElementById('richMenuCustomImage');
+            if (file) {
+                const url = URL.createObjectURL(file);
+                customImage.src = url;
+                preview.classList.add('has-custom-image');
+                uploadedCustomImageUrl = url;
+            } else {
+                customImage.src = '';
+                preview.classList.remove('has-custom-image');
+                uploadedCustomImageUrl = null;
+            }
+        });
 
         // ========================================
         // 自訂模式 - 佈局選擇
@@ -1205,14 +1228,38 @@
             setButtonLoading(btn, true);
 
             try {
-                const r = await api.post('/api/settings/line/rich-menu/create', {
-                    theme: selectedTheme
-                });
-                if (r.success) {
-                    showSuccess('Rich Menu 建立成功！顧客現在可以看到快捷選單了');
-                    loadRichMenuInfo();
+                const bgFileInput = document.getElementById('defaultBgImage');
+                const hasCustomBg = bgFileInput.files && bgFileInput.files[0];
+
+                if (hasCustomBg) {
+                    // 有自訂背景圖片 → 使用 upload-image API（系統會疊加功能圖示和文字）
+                    const formData = new FormData();
+                    formData.append('file', bgFileInput.files[0]);
+
+                    const response = await fetch('/api/settings/line/rich-menu/upload-image', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + getToken() },
+                        body: formData
+                    });
+                    const r = await response.json();
+                    if (r.success) {
+                        showSuccess('Rich Menu 建立成功！已使用自訂背景搭配功能圖示');
+                        bgFileInput.value = '';
+                        loadRichMenuInfo();
+                    } else {
+                        showError('建立失敗：' + (r.message || '請稍後再試'));
+                    }
                 } else {
-                    showError('建立失敗：' + (r.message || '請稍後再試'));
+                    // 無自訂背景 → 使用主題配色
+                    const r = await api.post('/api/settings/line/rich-menu/create', {
+                        theme: selectedTheme
+                    });
+                    if (r.success) {
+                        showSuccess('Rich Menu 建立成功！顧客現在可以看到快捷選單了');
+                        loadRichMenuInfo();
+                    } else {
+                        showError('建立失敗：' + (r.message || '請稍後再試'));
+                    }
                 }
             } catch (e) {
                 showError('建立失敗：' + (e.message || '請檢查 LINE 設定'));

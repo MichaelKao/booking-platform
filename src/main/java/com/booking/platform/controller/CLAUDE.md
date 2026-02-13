@@ -213,8 +213,9 @@ POST /line/activate   # 啟用 LINE Bot
 POST /line/deactivate # 停用 LINE Bot
 POST /line/test       # 測試 LINE Bot 連線
 GET  /line/rich-menu           # 取得 Rich Menu 資訊
-POST /line/rich-menu/create    # 建立 Rich Menu（使用主題配色）
-POST /line/rich-menu/upload-image  # 上傳自訂 Rich Menu 圖片
+POST /line/rich-menu/create    # 建立 Rich Menu（使用主題配色，7格 3+4 佈局）
+POST /line/rich-menu/upload-image  # 上傳自訂 Rich Menu 圖片（疊加文字）
+POST /line/rich-menu/create-custom # 建立自訂配置 Rich Menu（自訂圖片+佈局+動作，不疊加文字）
 DELETE /line/rich-menu         # 刪除 Rich Menu
 ```
 

@@ -1735,6 +1735,39 @@
 }
 
 /* ========================================
+   Rich Menu 模式切換 Tab
+   ======================================== */
+
+.rich-menu-mode-tabs {
+    display: flex;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--primary-color, #4361ee);
+}
+
+.rich-menu-mode-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #fff;
+    color: var(--primary-color, #4361ee);
+}
+
+.rich-menu-mode-tab.active {
+    background-color: var(--primary-color, #4361ee);
+    color: #fff;
+}
+
+.rich-menu-mode-tab:not(.active):hover {
+    background-color: rgba(67, 97, 238, 0.1);
+}
+
+/* ========================================
    自訂模式 - 佈局選擇器
    ======================================== */
 
