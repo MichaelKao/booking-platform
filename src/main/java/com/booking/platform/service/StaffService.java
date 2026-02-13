@@ -245,7 +245,7 @@ public class StaffService {
                         .breakEndTime(schedule.getBreakEndTime())
                         .build();
             } else {
-                // 預設排班（週一至週五上班）
+                // 預設排班（週一至週五上班，含午休 12:00-13:00）
                 boolean isWorkingDay = day >= 1 && day <= 5;
                 daySchedule = StaffScheduleResponse.DayScheduleResponse.builder()
                         .dayOfWeek(day)
@@ -253,6 +253,8 @@ public class StaffService {
                         .isWorkingDay(isWorkingDay)
                         .startTime(isWorkingDay ? LocalTime.of(9, 0) : null)
                         .endTime(isWorkingDay ? LocalTime.of(18, 0) : null)
+                        .breakStartTime(isWorkingDay ? LocalTime.of(12, 0) : null)
+                        .breakEndTime(isWorkingDay ? LocalTime.of(13, 0) : null)
                         .build();
             }
             daySchedules.add(daySchedule);

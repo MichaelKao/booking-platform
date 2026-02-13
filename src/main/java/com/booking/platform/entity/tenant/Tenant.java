@@ -259,7 +259,7 @@ public class Tenant extends BaseEntity {
      */
     @Column(name = "business_end_time")
     @Builder.Default
-    private LocalTime businessEndTime = LocalTime.of(21, 0);
+    private LocalTime businessEndTime = LocalTime.of(18, 0);
 
     /**
      * 預約時段間隔（分鐘）
@@ -279,19 +279,22 @@ public class Tenant extends BaseEntity {
      * 公休日（JSON 格式，例如：[0,6] 表示週日和週六）
      */
     @Column(name = "closed_days", length = 50)
-    private String closedDays;
+    @Builder.Default
+    private String closedDays = "[0,6]";
 
     /**
      * 休息開始時間（午休）
      */
     @Column(name = "break_start_time")
-    private LocalTime breakStartTime;
+    @Builder.Default
+    private LocalTime breakStartTime = LocalTime.of(12, 0);
 
     /**
      * 休息結束時間（午休）
      */
     @Column(name = "break_end_time")
-    private LocalTime breakEndTime;
+    @Builder.Default
+    private LocalTime breakEndTime = LocalTime.of(13, 0);
 
     // ========================================
     // 通知設定

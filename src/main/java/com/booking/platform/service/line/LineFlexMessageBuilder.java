@@ -1512,7 +1512,7 @@ public class LineFlexMessageBuilder {
         LocalTime businessStart = tenant != null && tenant.getBusinessStartTime() != null
                 ? tenant.getBusinessStartTime() : LocalTime.of(9, 0);
         LocalTime businessEnd = tenant != null && tenant.getBusinessEndTime() != null
-                ? tenant.getBusinessEndTime() : LocalTime.of(21, 0);
+                ? tenant.getBusinessEndTime() : LocalTime.of(18, 0);
         int interval = tenant != null && tenant.getBookingInterval() != null
                 ? tenant.getBookingInterval() : 30;
         LocalTime tenantBreakStart = tenant != null ? tenant.getBreakStartTime() : null;
@@ -2021,7 +2021,7 @@ public class LineFlexMessageBuilder {
 
         Tenant tenant = tenantOpt.get();
         LocalTime businessStart = tenant.getBusinessStartTime() != null ? tenant.getBusinessStartTime() : LocalTime.of(9, 0);
-        LocalTime businessEnd = tenant.getBusinessEndTime() != null ? tenant.getBusinessEndTime() : LocalTime.of(21, 0);
+        LocalTime businessEnd = tenant.getBusinessEndTime() != null ? tenant.getBusinessEndTime() : LocalTime.of(18, 0);
         int interval = tenant.getBookingInterval() != null ? tenant.getBookingInterval() : 30;
         LocalTime breakStart = tenant.getBreakStartTime();
         LocalTime breakEnd = tenant.getBreakEndTime();
