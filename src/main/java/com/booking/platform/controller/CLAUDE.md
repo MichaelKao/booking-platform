@@ -216,6 +216,10 @@ GET  /line/rich-menu           # 取得 Rich Menu 資訊
 POST /line/rich-menu/create    # 建立 Rich Menu（使用主題配色，7格 3+4 佈局）
 POST /line/rich-menu/upload-image  # 上傳自訂 Rich Menu 圖片（疊加文字）
 POST /line/rich-menu/create-custom # 建立自訂配置 Rich Menu（自訂圖片+佈局+動作，不疊加文字）
+POST /line/rich-menu/create-advanced  # 建立進階 Rich Menu（需訂閱 CUSTOM_RICH_MENU）
+POST /line/rich-menu/preview-advanced # 預覽進階 Rich Menu（免費，回傳 PNG）
+GET  /line/rich-menu/advanced-config  # 取得進階設定草稿
+PUT  /line/rich-menu/advanced-config  # 儲存進階設定草稿
 DELETE /line/rich-menu         # 刪除 Rich Menu
 GET  /line/flex-menu           # 取得 Flex Menu 主選單配置
 PUT  /line/flex-menu           # 更新 Flex Menu 主選單配置

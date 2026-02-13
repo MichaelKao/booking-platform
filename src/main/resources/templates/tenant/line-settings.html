@@ -398,6 +398,11 @@
                                                 <img class="rich-menu-custom-bg" id="customPreviewImage" src="" alt="">
                                                 <div class="rich-menu-area-markers" id="customAreaMarkers"></div>
                                             </div>
+                                            <!-- 進階自訂模式預覽 -->
+                                            <div class="rich-menu-preview rich-menu-advanced-preview d-none" id="richMenuAdvancedPreview">
+                                                <div class="adv-preview-bg" id="advPreviewBg"></div>
+                                                <div class="adv-preview-cells" id="advPreviewCells"></div>
+                                            </div>
                                             <div class="phone-bottom-bar">
                                                 <div class="phone-home-indicator"></div>
                                             </div>
@@ -1228,6 +1233,7 @@
             // 切換預覽
             document.getElementById('richMenuPreview').classList.toggle('d-none', mode !== 'default');
             document.getElementById('richMenuCustomPreview').classList.toggle('d-none', mode !== 'custom');
+            document.getElementById('richMenuAdvancedPreview').classList.toggle('d-none', mode !== 'advanced');
 
             if (mode === 'custom') {
                 renderCustomActionsList();
@@ -1236,6 +1242,7 @@
 
             if (mode === 'advanced') {
                 initAdvancedMode();
+                updateAdvancedPreview();
             }
         }
 
@@ -1932,7 +1939,9 @@
             cells: []
         };
         let advBgFile = null;
+        let advBgDataUrl = null; // 背景圖 DataURL（預覽用）
         let advCellIconFiles = {};
+        let advCellIconDataUrls = {}; // 圖示 DataURL（預覽用）
         let advSubscribed = false;
         let advFlexPopups = {}; // cellIndex -> flexPopup config
 
@@ -2000,9 +2009,21 @@
             // 背景圖片監聽
             document.getElementById('advBgImage').addEventListener('change', function(e) {
                 advBgFile = e.target.files[0] || null;
+                if (advBgFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        advBgDataUrl = ev.target.result;
+                        updateAdvancedPreview();
+                    };
+                    reader.readAsDataURL(advBgFile);
+                } else {
+                    advBgDataUrl = null;
+                    updateAdvancedPreview();
+                }
             });
             document.getElementById('advBgColor').addEventListener('input', function(e) {
                 advConfig.backgroundColor = e.target.value;
+                updateAdvancedPreview();
             });
         }
 
@@ -2031,6 +2052,7 @@
                 opt.classList.toggle('active', opt.dataset.layout === layout);
             });
             renderAdvCellSettings();
+            updateAdvancedPreview();
         }
 
         function renderAdvCellSettings() {
@@ -2086,12 +2108,14 @@
                 el.addEventListener('input', e => {
                     const idx = parseInt(e.target.dataset.index);
                     advConfig.cells[idx].label = e.target.value;
+                    updateAdvancedPreview();
                 });
             });
             container.querySelectorAll('.adv-cell-color').forEach(el => {
                 el.addEventListener('input', e => {
                     const idx = parseInt(e.target.dataset.index);
                     advConfig.cells[idx].labelColor = e.target.value;
+                    updateAdvancedPreview();
                 });
             });
             container.querySelectorAll('.adv-cell-icon').forEach(el => {
@@ -2099,8 +2123,118 @@
                     const idx = parseInt(e.target.dataset.index);
                     advCellIconFiles[idx] = e.target.files[0] || null;
                     advConfig.cells[idx].hasIcon = !!e.target.files[0];
+                    // 讀取圖示供預覽
+                    if (advCellIconFiles[idx]) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            advCellIconDataUrls[idx] = ev.target.result;
+                            updateAdvancedPreview();
+                        };
+                        reader.readAsDataURL(advCellIconFiles[idx]);
+                    } else {
+                        delete advCellIconDataUrls[idx];
+                        updateAdvancedPreview();
+                    }
                 });
             });
+        }
+
+        // 進階自訂即時預覽
+        function updateAdvancedPreview() {
+            const preview = document.getElementById('richMenuAdvancedPreview');
+            const bgDiv = document.getElementById('advPreviewBg');
+            const cellsDiv = document.getElementById('advPreviewCells');
+            if (!preview || !bgDiv || !cellsDiv) return;
+
+            const layout = advConfig.layout || '3+4';
+            const size = advConfig.size || 'HALF';
+            const isFull = size === 'FULL';
+
+            // 調整預覽高度（FULL 高度 = 2 倍 HALF）
+            preview.style.height = isFull ? '140px' : '70px';
+
+            // 背景
+            if (advBgDataUrl) {
+                bgDiv.style.backgroundImage = `url(${advBgDataUrl})`;
+                bgDiv.style.backgroundSize = 'cover';
+                bgDiv.style.backgroundPosition = 'center';
+                bgDiv.style.backgroundColor = 'transparent';
+            } else {
+                bgDiv.style.backgroundImage = 'none';
+                bgDiv.style.backgroundColor = advConfig.backgroundColor || '#F5F0E8';
+            }
+
+            // 佈局比例定義（每格 [left%, top%, width%, height%]）
+            const advLayouts = {
+                '3+4': [
+                    [0,0,33.33,50],[33.33,0,33.33,50],[66.67,0,33.33,50],
+                    [0,50,25,50],[25,50,25,50],[50,50,25,50],[75,50,25,50]
+                ],
+                '2x3': [
+                    [0,0,33.33,50],[33.33,0,33.33,50],[66.67,0,33.33,50],
+                    [0,50,33.33,50],[33.33,50,33.33,50],[66.67,50,33.33,50]
+                ],
+                '2+3': [
+                    [0,0,50,50],[50,0,50,50],
+                    [0,50,33.33,50],[33.33,50,33.33,50],[66.67,50,33.33,50]
+                ],
+                '2x2': [
+                    [0,0,50,50],[50,0,50,50],
+                    [0,50,50,50],[50,50,50,50]
+                ],
+                '1+2': [
+                    [0,0,100,50],
+                    [0,50,50,50],[50,50,50,50]
+                ],
+                '3+4+4': [
+                    [0,0,33.33,27.27],[33.33,0,33.33,27.27],[66.67,0,33.33,27.27],
+                    [0,27.27,25,36.36],[25,27.27,25,36.36],[50,27.27,25,36.36],[75,27.27,25,36.36],
+                    [0,63.64,25,36.36],[25,63.64,25,36.36],[50,63.64,25,36.36],[75,63.64,25,36.36]
+                ],
+                '1+4+4': [
+                    [0,0,100,27.27],
+                    [0,27.27,25,36.36],[25,27.27,25,36.36],[50,27.27,25,36.36],[75,27.27,25,36.36],
+                    [0,63.64,25,36.36],[25,63.64,25,36.36],[50,63.64,25,36.36],[75,63.64,25,36.36]
+                ],
+                '4+4': [
+                    [0,0,25,50],[25,0,25,50],[50,0,25,50],[75,0,25,50],
+                    [0,50,25,50],[25,50,25,50],[50,50,25,50],[75,50,25,50]
+                ],
+                '3+4+4+1': [
+                    [0,0,33.33,23],[33.33,0,33.33,23],[66.67,0,33.33,23],
+                    [0,23,25,30.5],[25,23,25,30.5],[50,23,25,30.5],[75,23,25,30.5],
+                    [0,53.5,25,30.5],[25,53.5,25,30.5],[50,53.5,25,30.5],[75,53.5,25,30.5],
+                    [0,84,100,16]
+                ]
+            };
+
+            const areas = advLayouts[layout] || advLayouts['3+4'];
+            const cellCount = layoutCellCounts[layout] || 7;
+
+            let html = '';
+            for (let i = 0; i < cellCount && i < areas.length; i++) {
+                const [left, top, width, height] = areas[i];
+                const cell = advConfig.cells[i] || {};
+                const label = cell.label || '';
+                const labelColor = cell.labelColor || '#FFFFFF';
+                const hasIcon = advCellIconDataUrls[i];
+
+                html += `<div class="adv-preview-cell" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%;">`;
+                // 邊框
+                html += `<div class="adv-preview-cell-border"></div>`;
+                // 圖示
+                if (hasIcon) {
+                    html += `<img class="adv-preview-cell-icon" src="${advCellIconDataUrls[i]}" alt="">`;
+                }
+                // 文字標籤
+                if (label) {
+                    html += `<span class="adv-preview-cell-label" style="color:${labelColor};text-shadow:0 0 2px rgba(0,0,0,0.5);">${label}</span>`;
+                }
+                // 格號
+                html += `<span class="adv-preview-cell-num">${i + 1}</span>`;
+                html += `</div>`;
+            }
+            cellsDiv.innerHTML = html;
         }
 
         function onAdvActionChange(cellIndex, value) {

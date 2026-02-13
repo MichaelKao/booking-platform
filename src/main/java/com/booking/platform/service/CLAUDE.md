@@ -83,7 +83,7 @@ public XxxResponse create(...) { }
 | LineFlexMessageBuilder | Flex Message 構建（主選單自訂配置、服務選單、日期Carousel等） |
 | LineConversationService | 對話狀態管理 |
 | LineNotificationService | LINE 通知發送 (預約提醒) |
-| LineRichMenuService | Rich Menu 管理（7格3+4佈局、5種佈局範本、自訂圖片+區域、主題配色） |
+| LineRichMenuService | Rich Menu 管理（預設/自訂/進階三模式、9種佈局、大尺寸支援、Java2D圖片合成、自訂圖示+文字標籤） |
 
 ### 通知服務
 
