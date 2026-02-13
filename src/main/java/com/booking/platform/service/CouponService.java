@@ -312,17 +312,12 @@ public class CouponService {
             }
         }
 
-        // 計算有效期
+        // 計算有效期（使用票券定義的 validStartAt/validEndAt）
         LocalDateTime validFrom = LocalDateTime.now();
-        LocalDateTime expiresAt = null;
+        LocalDateTime expiresAt = coupon.getValidEndAt();
 
-        if (coupon.getValidDays() != null) {
-            expiresAt = validFrom.plusDays(coupon.getValidDays());
-        } else if (coupon.getValidEndAt() != null) {
-            expiresAt = coupon.getValidEndAt();
-            if (coupon.getValidStartAt() != null) {
-                validFrom = coupon.getValidStartAt();
-            }
+        if (coupon.getValidStartAt() != null && coupon.getValidStartAt().isAfter(LocalDateTime.now())) {
+            validFrom = coupon.getValidStartAt();
         }
 
         // 生成票券代碼
@@ -386,17 +381,12 @@ public class CouponService {
             }
         }
 
-        // 計算有效期
+        // 計算有效期（使用票券定義的 validStartAt/validEndAt）
         LocalDateTime validFrom = LocalDateTime.now();
-        LocalDateTime expiresAt = null;
+        LocalDateTime expiresAt = coupon.getValidEndAt();
 
-        if (coupon.getValidDays() != null) {
-            expiresAt = validFrom.plusDays(coupon.getValidDays());
-        } else if (coupon.getValidEndAt() != null) {
-            expiresAt = coupon.getValidEndAt();
-            if (coupon.getValidStartAt() != null) {
-                validFrom = coupon.getValidStartAt();
-            }
+        if (coupon.getValidStartAt() != null && coupon.getValidStartAt().isAfter(LocalDateTime.now())) {
+            validFrom = coupon.getValidStartAt();
         }
 
         // 生成票券代碼

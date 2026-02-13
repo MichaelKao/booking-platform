@@ -27,7 +27,7 @@ import com.booking.platform.entity.marketing.CouponInstance;
 import com.booking.platform.entity.customer.Customer;
 import com.booking.platform.entity.product.Product;
 import com.booking.platform.enums.BookingStatus;
-import com.booking.platform.enums.CouponStatus;
+
 import com.booking.platform.enums.ProductStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -885,10 +885,8 @@ public class LineWebhookService {
         log.info("處理查看可領取票券，租戶：{}，用戶：{}", tenantId, userId);
 
         try {
-            // 查詢可領取的票券（已發布且未過期）
-            List<Coupon> coupons = couponRepository.findByTenantIdAndStatusAndDeletedAtIsNull(
-                    tenantId, CouponStatus.PUBLISHED
-            );
+            // 查詢可領取的票券（已發布、有庫存、未過期）
+            List<Coupon> coupons = couponRepository.findAvailableByTenantId(tenantId);
 
             if (coupons.isEmpty()) {
                 messageService.replyText(tenantId, replyToken, "目前沒有可領取的票券。");
@@ -988,8 +986,16 @@ public class LineWebhookService {
                 return;
             }
 
-            // 查詢已領取的票券
-            List<CouponInstance> instances = couponInstanceRepository.findByCustomerIdAndTenantId(customerId, tenantId);
+            // 查詢已領取的票券（過濾已過期的 UNUSED 票券，保留已使用的）
+            List<CouponInstance> instances = couponInstanceRepository.findByCustomerIdAndTenantId(customerId, tenantId)
+                    .stream()
+                    .filter(ci -> {
+                        if (ci.getStatus() == com.booking.platform.enums.CouponInstanceStatus.UNUSED) {
+                            return ci.getExpiresAt() == null || !ci.getExpiresAt().isBefore(java.time.LocalDateTime.now());
+                        }
+                        return ci.getStatus() == com.booking.platform.enums.CouponInstanceStatus.USED;
+                    })
+                    .collect(java.util.stream.Collectors.toList());
 
             if (instances.isEmpty()) {
                 messageService.replyText(tenantId, replyToken, "您目前沒有票券。\n請點選「領取票券」領取新票券。");

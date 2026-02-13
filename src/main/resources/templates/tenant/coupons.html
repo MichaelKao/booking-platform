@@ -29,7 +29,7 @@
                     <div class="data-table-body">
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead><tr><th>票券名稱</th><th>類型</th><th>折扣</th><th>有效期限</th><th>已發放/上限</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
+                                <thead><tr><th>票券名稱</th><th>類型</th><th>折扣</th><th>使用期限</th><th>已發放/上限</th><th>狀態</th><th class="text-center">操作</th></tr></thead>
                                 <tbody id="dataTable"><tr><td colspan="7" class="text-center text-muted py-5">載入中...</td></tr></tbody>
                             </table>
                         </div>
@@ -114,13 +114,19 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">有效期天數</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="validDays" min="1" max="365">
-                                <span class="input-group-text">天</span>
-                            </div>
-                            <div class="form-text">從領取日起算</div>
+                            <label class="form-label">使用期限開始</label>
+                            <input type="datetime-local" class="form-control" id="validStartAt">
+                            <div class="form-text">不填則從發放時開始</div>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">使用期限結束 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="validEndAt" required>
+                            <div class="invalid-feedback">請選擇使用期限結束時間</div>
+                            <div class="form-text">到期後票券自動失效</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">發行數量</label>
                             <input type="number" class="form-control" id="totalQuantity" min="1">
@@ -209,7 +215,7 @@
                         } else if (c.type === 'GIFT') {
                             discountText = c.giftItem || '兌換品';
                         }
-                        const validText = c.validDays ? c.validDays + ' 天' : '無期限';
+                        const validText = c.validEndAt ? new Date(c.validEndAt).toLocaleDateString('zh-TW') : '無期限';
                         return `<tr>
                             <td><strong>${escapeHtml(c.name)}</strong></td>
                             <td>${TYPE_MAP[c.type] || c.type}</td>
@@ -258,7 +264,8 @@
                     document.getElementById('minOrderAmount').value = d.minOrderAmount || '';
                     document.getElementById('maxDiscountAmount').value = d.maxDiscountAmount || '';
                     document.getElementById('giftItem').value = d.giftItem || '';
-                    document.getElementById('validDays').value = d.validDays || '';
+                    document.getElementById('validStartAt').value = d.validStartAt ? d.validStartAt.substring(0, 16) : '';
+                    document.getElementById('validEndAt').value = d.validEndAt ? d.validEndAt.substring(0, 16) : '';
                     document.getElementById('totalQuantity').value = d.totalQuantity || '';
                     document.getElementById('limitPerCustomer').value = d.limitPerCustomer || '';
                     document.getElementById('description').value = d.description || '';
@@ -315,6 +322,22 @@
                 }
             }
 
+            // 驗證使用期限
+            const validEndAtEl = document.getElementById('validEndAt');
+            const validStartAtVal = document.getElementById('validStartAt').value;
+            const validEndAtVal = validEndAtEl.value;
+            if (!validEndAtVal) {
+                validEndAtEl.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                validEndAtEl.classList.remove('is-invalid');
+            }
+            if (validStartAtVal && validEndAtVal && validStartAtVal >= validEndAtVal) {
+                validEndAtEl.classList.add('is-invalid');
+                showError('使用期限結束必須晚於開始時間');
+                return;
+            }
+
             if (!isValid) {
                 form.classList.add('was-validated');
                 showError('請檢查表單欄位');
@@ -326,7 +349,8 @@
                 name: nameEl.value.trim(),
                 type: type,
                 description: document.getElementById('description').value.trim() || null,
-                validDays: document.getElementById('validDays').value ? parseInt(document.getElementById('validDays').value) : null,
+                validStartAt: validStartAtVal ? validStartAtVal + ':00' : null,
+                validEndAt: validEndAtVal ? validEndAtVal + ':00' : null,
                 totalQuantity: document.getElementById('totalQuantity').value ? parseInt(document.getElementById('totalQuantity').value) : null,
                 limitPerCustomer: document.getElementById('limitPerCustomer').value ? parseInt(document.getElementById('limitPerCustomer').value) : null
             };

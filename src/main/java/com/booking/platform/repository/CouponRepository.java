@@ -48,6 +48,7 @@ public interface CouponRepository extends JpaRepository<Coupon, String> {
             AND c.deletedAt IS NULL
             AND c.status = 'PUBLISHED'
             AND (c.totalQuantity IS NULL OR c.issuedQuantity < c.totalQuantity)
+            AND (c.validEndAt IS NULL OR c.validEndAt >= CURRENT_TIMESTAMP)
             ORDER BY c.name ASC
             """)
     List<Coupon> findAvailableByTenantId(@Param("tenantId") String tenantId);
