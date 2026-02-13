@@ -985,53 +985,37 @@ public class LineFlexMessageBuilder {
     }
 
     /**
-     * 建構分類卡片（包含該分類下所有服務的選擇按鈕）
+     * 建構分類卡片（包含該分類下所有服務，每個服務為一個可點擊區塊）
      */
     private ObjectNode buildCategoryBubbleWithServices(ServiceCategory category, List<ServiceItem> services) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
-        bubble.put("size", "mega");
+        bubble.put("size", "kilo");
 
         // Header - 分類名稱
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
         header.put("backgroundColor", PRIMARY_COLOR);
-        header.put("paddingAll", "15px");
+        header.put("paddingAll", "12px");
 
-        ArrayNode headerContents = objectMapper.createArrayNode();
+        ObjectNode categoryText = objectMapper.createObjectNode();
+        categoryText.put("type", "text");
+        categoryText.put("text", "📂 " + category.getName());
+        categoryText.put("size", "md");
+        categoryText.put("weight", "bold");
+        categoryText.put("color", "#FFFFFF");
+        categoryText.put("align", "center");
 
-        ObjectNode categoryIcon = objectMapper.createObjectNode();
-        categoryIcon.put("type", "text");
-        categoryIcon.put("text", "📂 " + category.getName());
-        categoryIcon.put("size", "lg");
-        categoryIcon.put("weight", "bold");
-        categoryIcon.put("color", "#FFFFFF");
-        categoryIcon.put("align", "center");
-        headerContents.add(categoryIcon);
-
-        // 分類說明
-        if (category.getDescription() != null && !category.getDescription().isEmpty()) {
-            ObjectNode descText = objectMapper.createObjectNode();
-            descText.put("type", "text");
-            descText.put("text", category.getDescription());
-            descText.put("size", "xs");
-            descText.put("color", "#FFFFFFCC");
-            descText.put("align", "center");
-            descText.put("margin", "sm");
-            descText.put("wrap", true);
-            headerContents.add(descText);
-        }
-
-        header.set("contents", headerContents);
+        header.set("contents", objectMapper.createArrayNode().add(categoryText));
         bubble.set("header", header);
 
-        // Body - 列出所有服務
+        // Body - 每個服務一個可點擊的 box
         ObjectNode body = objectMapper.createObjectNode();
         body.put("type", "box");
         body.put("layout", "vertical");
-        body.put("spacing", "md");
-        body.put("paddingAll", "15px");
+        body.put("spacing", "sm");
+        body.put("paddingAll", "12px");
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
@@ -1042,51 +1026,11 @@ public class LineFlexMessageBuilder {
             if (i > 0) {
                 ObjectNode separator = objectMapper.createObjectNode();
                 separator.put("type", "separator");
-                separator.put("margin", "lg");
+                separator.put("margin", "sm");
                 bodyContents.add(separator);
             }
 
-            // 服務名稱
-            ObjectNode nameText = objectMapper.createObjectNode();
-            nameText.put("type", "text");
-            nameText.put("text", service.getName());
-            nameText.put("size", "md");
-            nameText.put("weight", "bold");
-            nameText.put("color", "#333333");
-            nameText.put("wrap", true);
-            if (i > 0) nameText.put("margin", "lg");
-            bodyContents.add(nameText);
-
-            // 時長 + 價格 一行
-            ObjectNode infoRow = objectMapper.createObjectNode();
-            infoRow.put("type", "box");
-            infoRow.put("layout", "horizontal");
-            infoRow.put("margin", "sm");
-
-            ArrayNode infoContents = objectMapper.createArrayNode();
-
-            ObjectNode durationText = objectMapper.createObjectNode();
-            durationText.put("type", "text");
-            durationText.put("text", String.format("⏱ %d分鐘", service.getDuration()));
-            durationText.put("size", "xs");
-            durationText.put("color", SECONDARY_COLOR);
-            durationText.put("flex", 1);
-            infoContents.add(durationText);
-
-            ObjectNode priceText = objectMapper.createObjectNode();
-            priceText.put("type", "text");
-            priceText.put("text", String.format("💰 NT$ %,d", service.getPrice().intValue()));
-            priceText.put("size", "sm");
-            priceText.put("weight", "bold");
-            priceText.put("color", PRIMARY_COLOR);
-            priceText.put("flex", 1);
-            priceText.put("align", "end");
-            infoContents.add(priceText);
-
-            infoRow.set("contents", infoContents);
-            bodyContents.add(infoRow);
-
-            // 選擇按鈕
+            // 可點擊的服務區塊
             String postbackData = String.format(
                     "action=select_service&serviceId=%s&serviceName=%s&duration=%d&price=%d",
                     service.getId(),
@@ -1095,10 +1039,63 @@ public class LineFlexMessageBuilder {
                     service.getPrice().intValue()
             );
 
-            ObjectNode selectBtn = createButton("選擇", postbackData, PRIMARY_COLOR);
-            selectBtn.put("margin", "sm");
-            selectBtn.put("height", "sm");
-            bodyContents.add(selectBtn);
+            ObjectNode serviceBox = objectMapper.createObjectNode();
+            serviceBox.put("type", "box");
+            serviceBox.put("layout", "vertical");
+            serviceBox.put("paddingAll", "10px");
+            serviceBox.put("cornerRadius", "8px");
+            serviceBox.put("backgroundColor", "#F8F8F8");
+            if (i > 0) serviceBox.put("margin", "sm");
+
+            // 設定整個 box 可點擊
+            ObjectNode boxAction = objectMapper.createObjectNode();
+            boxAction.put("type", "postback");
+            boxAction.put("label", service.getName());
+            boxAction.put("data", postbackData);
+            serviceBox.set("action", boxAction);
+
+            ArrayNode serviceContents = objectMapper.createArrayNode();
+
+            // 服務名稱
+            ObjectNode nameText = objectMapper.createObjectNode();
+            nameText.put("type", "text");
+            nameText.put("text", service.getName());
+            nameText.put("size", "sm");
+            nameText.put("weight", "bold");
+            nameText.put("color", "#333333");
+            nameText.put("wrap", true);
+            serviceContents.add(nameText);
+
+            // 時長 + 價格
+            ObjectNode infoRow = objectMapper.createObjectNode();
+            infoRow.put("type", "box");
+            infoRow.put("layout", "horizontal");
+            infoRow.put("margin", "xs");
+
+            ArrayNode infoContents = objectMapper.createArrayNode();
+
+            ObjectNode durationText = objectMapper.createObjectNode();
+            durationText.put("type", "text");
+            durationText.put("text", String.format("⏱ %d分鐘", service.getDuration()));
+            durationText.put("size", "xxs");
+            durationText.put("color", SECONDARY_COLOR);
+            durationText.put("flex", 1);
+            infoContents.add(durationText);
+
+            ObjectNode priceText = objectMapper.createObjectNode();
+            priceText.put("type", "text");
+            priceText.put("text", String.format("NT$%,d", service.getPrice().intValue()));
+            priceText.put("size", "sm");
+            priceText.put("weight", "bold");
+            priceText.put("color", PRIMARY_COLOR);
+            priceText.put("flex", 0);
+            infoContents.add(priceText);
+
+            infoRow.set("contents", infoContents);
+            serviceContents.add(infoRow);
+
+            serviceBox.set("contents", serviceContents);
+            bodyContents.add(serviceBox);
         }
 
         body.set("contents", bodyContents);

@@ -410,8 +410,14 @@ public class LineWebhookService {
 
         if (categories.size() >= 2 && categoriesWithServices.size() >= 2) {
             // 多個分類 — 顯示分類＋服務合併選單，服務按分類分組
-            JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
-            messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+            try {
+                JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
+                messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+            } catch (Exception e) {
+                log.error("建構分類服務選單失敗，改用一般服務選單，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+                JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+                messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+            }
         } else {
             // 沒有分類 — 直接顯示全部服務
             JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
