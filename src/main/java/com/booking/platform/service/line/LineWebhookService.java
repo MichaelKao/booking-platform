@@ -450,6 +450,12 @@ public class LineWebhookService {
         String duration = params.get("duration");
         String price = params.get("price");
 
+        // 防呆：必要參數不存在
+        if (serviceId == null || serviceId.isEmpty()) {
+            log.warn("select_service 缺少 serviceId，忽略");
+            return;
+        }
+
         conversationService.setSelectedService(
                 tenantId, userId, serviceId, serviceName,
                 duration != null ? Integer.parseInt(duration) : null,
@@ -475,6 +481,14 @@ public class LineWebhookService {
             staffId = null;
         }
 
+        // 防呆：檢查是否有選擇日期（可能是用戶點了舊訊息的按鈕）
+        ConversationContext preCheckContext = conversationService.getContext(tenantId, userId);
+        if (preCheckContext.getSelectedDate() == null) {
+            log.warn("select_staff 但 selectedDate 為 null，引導用戶重新開始");
+            startBookingFlow(tenantId, userId, replyToken);
+            return;
+        }
+
         conversationService.setSelectedStaff(tenantId, userId, staffId, staffName);
 
         // 取得對話上下文
@@ -496,7 +510,22 @@ public class LineWebhookService {
      */
     private void handleSelectDate(String tenantId, String userId, String replyToken, Map<String, String> params) {
         String dateStr = params.get("date");
+
+        // 防呆：日期參數不存在
+        if (dateStr == null || dateStr.isEmpty()) {
+            log.warn("select_date 缺少 date，忽略");
+            return;
+        }
+
         LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+
+        // 防呆：檢查是否有選擇服務（可能是用戶點了舊訊息的按鈕）
+        ConversationContext preCheckContext = conversationService.getContext(tenantId, userId);
+        if (preCheckContext.getSelectedServiceId() == null) {
+            log.warn("select_date 但 selectedServiceId 為 null，引導用戶重新開始");
+            startBookingFlow(tenantId, userId, replyToken);
+            return;
+        }
 
         conversationService.setSelectedDate(tenantId, userId, date);
 
@@ -514,6 +543,21 @@ public class LineWebhookService {
      */
     private void handleSelectTime(String tenantId, String userId, String replyToken, Map<String, String> params) {
         String timeStr = params.get("time");
+
+        // 防呆：時間參數不存在
+        if (timeStr == null || timeStr.isEmpty()) {
+            log.warn("select_time 缺少 time，忽略");
+            return;
+        }
+
+        // 防呆：檢查必要前置資料
+        ConversationContext preCheckContext = conversationService.getContext(tenantId, userId);
+        if (preCheckContext.getSelectedServiceId() == null || preCheckContext.getSelectedDate() == null) {
+            log.warn("select_time 但前置資料不完整，引導用戶重新開始");
+            startBookingFlow(tenantId, userId, replyToken);
+            return;
+        }
+
         LocalTime time = LocalTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_TIME);
 
         conversationService.setSelectedTime(tenantId, userId, time);
@@ -607,13 +651,19 @@ public class LineWebhookService {
     }
 
     /**
-     * 處理返回上一步
+     * 處理返回上一步（使用確定性狀態映射，不依賴 previousState）
      */
     private void handleGoBack(String tenantId, String userId, String replyToken) {
         ConversationContext context = conversationService.goBack(tenantId, userId);
         log.info("返回上一步，租戶：{}，用戶：{}，返回到狀態：{}，日期：{}，員工：{}",
                 tenantId, userId, context.getState(), context.getSelectedDate(), context.getSelectedStaffId());
-        displayCurrentState(tenantId, userId, replyToken, context);
+
+        if (context.getState() == ConversationState.IDLE) {
+            // 返回到 IDLE，顯示主選單
+            replyMainMenu(tenantId, userId, replyToken);
+        } else {
+            displayCurrentState(tenantId, userId, replyToken, context);
+        }
     }
 
     /**

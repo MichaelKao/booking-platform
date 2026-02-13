@@ -1504,14 +1504,37 @@ public class LineFlexMessageBuilder {
     public JsonNode buildDateMenu(String tenantId, Integer duration) {
         // 取得店家設定
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
-        int maxAdvanceDays = tenantOpt.map(Tenant::getMaxAdvanceBookingDays).orElse(30);
-        List<Integer> closedDays = parseClosedDays(tenantOpt.map(Tenant::getClosedDays).orElse(null));
+        Tenant tenant = tenantOpt.orElse(null);
+        int maxAdvanceDays = tenant != null ? (tenant.getMaxAdvanceBookingDays() != null ? tenant.getMaxAdvanceBookingDays() : 30) : 30;
+        List<Integer> closedDays = parseClosedDays(tenant != null ? tenant.getClosedDays() : null);
+
+        // 預先取得營業結束時間（用於過濾今天的剩餘時間）
+        LocalTime businessEnd = tenant != null && tenant.getBusinessEndTime() != null
+                ? tenant.getBusinessEndTime() : LocalTime.of(21, 0);
+
+        // 預先取得所有活躍員工和排班（減少 DB 查詢次數）
+        List<Staff> allActiveStaff = staffRepository
+                .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
+
+        // 建立排班快取：staffId → dayOfWeek → isWorkingDay
+        Map<String, Map<Integer, Boolean>> scheduleCache = new java.util.HashMap<>();
+        for (Staff staff : allActiveStaff) {
+            Map<Integer, Boolean> staffSchedule = new java.util.HashMap<>();
+            for (int dow = 0; dow <= 6; dow++) {
+                Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
+                        .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dow);
+                boolean isWorking = scheduleOpt.isEmpty() ||
+                        Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay());
+                staffSchedule.put(dow, isWorking);
+            }
+            scheduleCache.put(staff.getId(), staffSchedule);
+        }
 
         LocalDate today = LocalDate.now();
         DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)", java.util.Locale.TAIWAN);
         DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
-        // 收集所有可用日期（排除公休日 + 無可預約時段的日期）
+        // 收集所有可用日期（排除公休日 + 無員工上班的日期 + 今天營業時間已過）
         List<LocalDate> availableDates = new java.util.ArrayList<>();
         int dayOffset = 0;
 
@@ -1520,8 +1543,31 @@ public class LineFlexMessageBuilder {
             int dayOfWeek = date.getDayOfWeek().getValue() % 7;
 
             if (!closedDays.contains(dayOfWeek)) {
-                // 檢查該日期是否有任何可預約時段
-                if (hasAnyAvailableSlot(tenantId, date, duration)) {
+                // 檢查是否有員工在該日上班且未請假
+                boolean hasAvailableStaff = false;
+                for (Staff staff : allActiveStaff) {
+                    Boolean isWorking = scheduleCache.getOrDefault(staff.getId(), java.util.Collections.emptyMap())
+                            .getOrDefault(dayOfWeek, true);
+                    if (Boolean.TRUE.equals(isWorking)) {
+                        boolean onLeave = staffLeaveRepository
+                                .findByStaffIdAndLeaveDateAndDeletedAtIsNull(staff.getId(), date)
+                                .isPresent();
+                        if (!onLeave) {
+                            hasAvailableStaff = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 今天額外檢查：營業時間是否已過
+                if (hasAvailableStaff && date.equals(today)) {
+                    LocalTime now = LocalTime.now().plusMinutes(30); // 30 分鐘緩衝
+                    if (!now.isBefore(businessEnd)) {
+                        hasAvailableStaff = false;
+                    }
+                }
+
+                if (hasAvailableStaff) {
                     availableDates.add(date);
                 }
             }
@@ -2001,24 +2047,6 @@ public class LineFlexMessageBuilder {
         }
 
         return slots;
-    }
-
-    /**
-     * 檢查指定日期是否有任何可預約時段（用於過濾日期選單）
-     *
-     * @param tenantId 租戶 ID
-     * @param date     日期
-     * @param duration 服務時長（分鐘）
-     * @return 是否有可預約時段
-     */
-    private boolean hasAnyAvailableSlot(String tenantId, LocalDate date, Integer duration) {
-        List<Staff> availableStaff = getAvailableStaffForDate(tenantId, date);
-        if (availableStaff.isEmpty()) {
-            return false;
-        }
-        // 用 null staffId 檢查「不指定員工」模式的可用時段
-        List<LocalTime> slots = generateAvailableSlots(tenantId, null, date, duration);
-        return !slots.isEmpty();
     }
 
     /**

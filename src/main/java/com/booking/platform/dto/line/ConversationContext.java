@@ -194,14 +194,29 @@ public class ConversationContext implements Serializable {
     }
 
     /**
-     * 回到上一個狀態
+     * 回到上一個狀態（確定性映射，不依賴 previousState）
+     *
+     * <p>根據當前狀態決定返回哪一步，避免重複點擊或亂序點擊導致狀態錯亂
      */
     public void goBack() {
-        if (this.previousState != null) {
-            this.state = this.previousState;
-            this.previousState = null;
-            this.stateChangedAt = LocalDateTime.now();
-        }
+        this.state = switch (this.state) {
+            // 預約流程
+            case SELECTING_SERVICE -> ConversationState.IDLE;
+            case SELECTING_CATEGORY -> ConversationState.IDLE;
+            case SELECTING_DATE -> ConversationState.SELECTING_SERVICE;
+            case SELECTING_STAFF -> ConversationState.SELECTING_DATE;
+            case SELECTING_TIME -> ConversationState.SELECTING_STAFF;
+            case INPUTTING_NOTE -> ConversationState.SELECTING_TIME;
+            case CONFIRMING_BOOKING -> ConversationState.INPUTTING_NOTE;
+            // 商品流程
+            case BROWSING_PRODUCTS -> ConversationState.IDLE;
+            case VIEWING_PRODUCT_DETAIL -> ConversationState.BROWSING_PRODUCTS;
+            case SELECTING_QUANTITY -> ConversationState.VIEWING_PRODUCT_DETAIL;
+            case CONFIRMING_PURCHASE -> ConversationState.SELECTING_QUANTITY;
+            // 其他
+            default -> ConversationState.IDLE;
+        };
+        this.stateChangedAt = LocalDateTime.now();
     }
 
     /**
@@ -229,6 +244,35 @@ public class ConversationContext implements Serializable {
         this.selectedDate = null;
         this.selectedTime = null;
         this.cancelBookingId = null;
+        this.customerNote = null;
+    }
+
+    /**
+     * 清除從日期開始的下游資料（重新選服務時使用）
+     */
+    public void clearDownstreamFromDate() {
+        this.selectedDate = null;
+        this.selectedStaffId = null;
+        this.selectedStaffName = null;
+        this.selectedTime = null;
+        this.customerNote = null;
+    }
+
+    /**
+     * 清除從員工開始的下游資料（重新選日期時使用）
+     */
+    public void clearDownstreamFromStaff() {
+        this.selectedStaffId = null;
+        this.selectedStaffName = null;
+        this.selectedTime = null;
+        this.customerNote = null;
+    }
+
+    /**
+     * 清除從時間開始的下游資料（重新選員工時使用）
+     */
+    public void clearDownstreamFromTime() {
+        this.selectedTime = null;
         this.customerNote = null;
     }
 

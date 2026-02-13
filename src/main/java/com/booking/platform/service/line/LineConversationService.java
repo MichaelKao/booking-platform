@@ -211,6 +211,8 @@ public class LineConversationService {
             Integer price
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
+        // 清除下游資料（日期、員工、時間），防止重複點擊導致舊資料殘留
+        context.clearDownstreamFromDate();
         context.setService(serviceId, serviceName, duration, price);
         // 修改流程：選服務後先選日期，再選員工
         context.transitionTo(ConversationState.SELECTING_DATE);
@@ -238,6 +240,8 @@ public class LineConversationService {
             String staffName
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
+        // 清除下游資料（時間），防止重複點擊導致舊資料殘留
+        context.clearDownstreamFromTime();
         context.setStaff(staffId, staffName);
         // 修改流程：選員工後選時間
         context.transitionTo(ConversationState.SELECTING_TIME);
@@ -263,6 +267,8 @@ public class LineConversationService {
             LocalDate date
     ) {
         ConversationContext context = getContext(tenantId, lineUserId);
+        // 清除下游資料（員工、時間），防止重複點擊導致舊資料殘留
+        context.clearDownstreamFromStaff();
         context.setSelectedDate(date);
         // 修改流程：選日期後選員工
         context.transitionTo(ConversationState.SELECTING_STAFF);
