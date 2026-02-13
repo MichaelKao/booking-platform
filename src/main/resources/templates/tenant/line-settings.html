@@ -332,6 +332,9 @@
                                     <button class="rich-menu-mode-tab" data-mode="custom" onclick="switchRichMenuMode('custom')">
                                         <i class="bi bi-image me-1"></i>自訂選單
                                     </button>
+                                    <button class="rich-menu-mode-tab" data-mode="advanced" onclick="switchRichMenuMode('advanced')">
+                                        <i class="bi bi-stars me-1"></i>進階自訂
+                                    </button>
                                 </div>
 
                                 <!-- Rich Menu 即時預覽 -->
@@ -425,6 +428,12 @@
                                         <div class="form-text">上傳背景圖片，系統會自動疊加描邊文字（不遮蓋背景）</div>
                                     </div>
 
+                                    <!-- 不疊加文字圖示（上傳背景圖時顯示） -->
+                                    <div class="form-check mb-2 d-none" id="noOverlayPanel">
+                                        <input class="form-check-input" type="checkbox" id="noOverlayCheckbox">
+                                        <label class="form-check-label small" for="noOverlayCheckbox">不疊加文字圖示（直接使用背景圖）</label>
+                                    </div>
+
                                     <!-- 文字顏色選擇（上傳背景圖時顯示） -->
                                     <div class="mb-3 d-none" id="textColorPanel">
                                         <label class="form-label small fw-bold">文字顏色</label>
@@ -505,6 +514,124 @@
                                         <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>建立自訂選單</span>
                                         <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
                                     </button>
+                                </div>
+
+                                <!-- ========== 進階自訂模式面板 ========== -->
+                                <div id="advancedModePanel" class="d-none">
+                                    <!-- 未訂閱提示 -->
+                                    <div id="advancedLockedOverlay" class="alert alert-warning d-none">
+                                        <i class="bi bi-lock me-1"></i>
+                                        <strong>進階自訂選單</strong>為付費功能。您可以先預覽設計效果，訂閱後即可發布到 LINE。
+                                        <a href="/tenant/feature-store" class="btn btn-sm btn-warning mt-2 d-block">
+                                            <i class="bi bi-shop me-1"></i>前往功能商店開通
+                                        </a>
+                                    </div>
+
+                                    <!-- Step 1: 尺寸與佈局 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">1</span>選擇尺寸與佈局</label>
+                                        <div class="mb-2">
+                                            <div class="btn-group btn-group-sm w-100" role="group">
+                                                <input type="radio" class="btn-check" name="advMenuSize" id="advSizeHalf" value="HALF" checked onchange="onAdvSizeChange()">
+                                                <label class="btn btn-outline-secondary" for="advSizeHalf">標準 (2行)</label>
+                                                <input type="radio" class="btn-check" name="advMenuSize" id="advSizeFull" value="FULL" onchange="onAdvSizeChange()">
+                                                <label class="btn btn-outline-secondary" for="advSizeFull">大尺寸 (3行+)</label>
+                                            </div>
+                                        </div>
+                                        <div class="layout-selector" id="advLayoutSelector">
+                                            <!-- 標準佈局選項 -->
+                                            <div class="layout-option adv-layout-half active" data-layout="3+4" onclick="selectAdvLayout('3+4')">
+                                                <div class="layout-mini layout-mini-3x4"><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">3+4</div>
+                                            </div>
+                                            <div class="layout-option adv-layout-half" data-layout="2x3" onclick="selectAdvLayout('2x3')">
+                                                <div class="layout-mini layout-mini-2x3"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">2x3</div>
+                                            </div>
+                                            <div class="layout-option adv-layout-half" data-layout="2x2" onclick="selectAdvLayout('2x2')">
+                                                <div class="layout-mini layout-mini-2x2"><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">2x2</div>
+                                            </div>
+                                            <!-- 大尺寸佈局選項（預設隱藏） -->
+                                            <div class="layout-option adv-layout-full d-none" data-layout="3+4+4" onclick="selectAdvLayout('3+4+4')">
+                                                <div class="layout-mini layout-mini-3row"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">3+4+4</div>
+                                            </div>
+                                            <div class="layout-option adv-layout-full d-none" data-layout="1+4+4" onclick="selectAdvLayout('1+4+4')">
+                                                <div class="layout-mini layout-mini-3row"><div style="grid-column:span 4"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">1+4+4</div>
+                                            </div>
+                                            <div class="layout-option adv-layout-full d-none" data-layout="4+4" onclick="selectAdvLayout('4+4')">
+                                                <div class="layout-mini layout-mini-2x2"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                                                <div class="layout-label">4+4</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 2: 背景 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">2</span>背景設定</label>
+                                        <div class="d-flex gap-2 align-items-center mb-2">
+                                            <input type="file" class="form-control form-control-sm" id="advBgImage" accept="image/png,image/jpeg" style="flex:1;">
+                                            <span class="text-muted small">或</span>
+                                            <input type="color" id="advBgColor" value="#F5F0E8" class="form-control form-control-sm form-control-color" style="width:42px;height:32px;" title="純色背景">
+                                        </div>
+                                        <div class="form-text">上傳背景圖片或選擇純色背景</div>
+                                    </div>
+
+                                    <!-- Step 3: 每格設定 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">3</span>每格設定</label>
+                                        <div id="advCellSettings" class="adv-cell-settings"></div>
+                                    </div>
+
+                                    <!-- Step 4: 預覽與發布 -->
+                                    <div class="d-flex gap-2 mb-3">
+                                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="previewAdvancedRichMenu()" id="previewAdvBtn">
+                                            <i class="bi bi-eye me-1"></i>精確預覽
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="saveAdvancedConfig()" id="saveAdvConfigBtn">
+                                            <i class="bi bi-save me-1"></i>儲存草稿
+                                        </button>
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createAdvancedRichMenu()" id="createAdvRichMenuBtn">
+                                        <span class="btn-text"><i class="bi bi-rocket me-1"></i>發布到 LINE</span>
+                                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
+                                    </button>
+                                </div>
+
+                                <!-- Flex 彈窗編輯 Modal -->
+                                <div class="modal fade" id="flexPopupModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title"><i class="bi bi-chat-square-dots me-2"></i>自訂 Flex 彈窗設定</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="hidden" id="flexPopupCellIndex">
+                                                <!-- 類型選擇 -->
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">彈窗類型</label>
+                                                    <div class="btn-group btn-group-sm w-100" role="group">
+                                                        <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupSingle" value="single" checked>
+                                                        <label class="btn btn-outline-secondary" for="flexPopupSingle">單一卡片</label>
+                                                        <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupCarousel" value="carousel">
+                                                        <label class="btn btn-outline-secondary" for="flexPopupCarousel">輪播卡片（多張）</label>
+                                                    </div>
+                                                </div>
+                                                <!-- 卡片列表 -->
+                                                <div id="flexPopupBubbles"></div>
+                                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addFlexPopupBubble()">
+                                                    <i class="bi bi-plus-lg me-1"></i>新增卡片
+                                                </button>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="saveFlexPopup()">確定</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- 刪除按鈕 -->
@@ -1062,6 +1189,7 @@
             // 顯示/隱藏面板
             document.getElementById('defaultModePanel').classList.toggle('d-none', mode !== 'default');
             document.getElementById('customModePanel').classList.toggle('d-none', mode !== 'custom');
+            document.getElementById('advancedModePanel').classList.toggle('d-none', mode !== 'advanced');
 
             // 切換預覽
             document.getElementById('richMenuPreview').classList.toggle('d-none', mode !== 'default');
@@ -1070,6 +1198,10 @@
             if (mode === 'custom') {
                 renderCustomActionsList();
                 updateCustomPreview();
+            }
+
+            if (mode === 'advanced') {
+                initAdvancedMode();
             }
         }
 
@@ -1113,18 +1245,21 @@
             const preview = document.getElementById('richMenuPreview');
             const customImage = document.getElementById('richMenuCustomImage');
             const textColorPanel = document.getElementById('textColorPanel');
+            const noOverlayPanel = document.getElementById('noOverlayPanel');
             if (file) {
                 const url = URL.createObjectURL(file);
                 customImage.src = url;
                 preview.classList.add('has-custom-image');
                 uploadedCustomImageUrl = url;
                 textColorPanel.classList.remove('d-none');
+                noOverlayPanel.classList.remove('d-none');
                 applyTextColorToPreview(selectedTextColor);
             } else {
                 customImage.src = '';
                 preview.classList.remove('has-custom-image');
                 uploadedCustomImageUrl = null;
                 textColorPanel.classList.add('d-none');
+                noOverlayPanel.classList.add('d-none');
             }
         });
 
@@ -1401,10 +1536,12 @@
                 const hasCustomBg = bgFileInput.files && bgFileInput.files[0];
 
                 if (hasCustomBg) {
-                    // 有自訂背景圖片 → 使用 upload-image API（描邊文字，不遮蓋背景）
+                    // 有自訂背景圖片 → 使用 upload-image API
+                    const noOverlay = document.getElementById('noOverlayCheckbox').checked;
                     const formData = new FormData();
                     formData.append('file', bgFileInput.files[0]);
                     formData.append('textColor', selectedTextColor);
+                    formData.append('noOverlay', noOverlay);
 
                     const response = await fetch('/api/settings/line/rich-menu/upload-image', {
                         method: 'POST',
@@ -1413,9 +1550,10 @@
                     });
                     const r = await response.json();
                     if (r.success) {
-                        showSuccess('Rich Menu 建立成功！已使用自訂背景搭配描邊文字');
+                        showSuccess(noOverlay ? 'Rich Menu 建立成功！直接使用背景圖' : 'Rich Menu 建立成功！已使用自訂背景搭配描邊文字');
                         bgFileInput.value = '';
                         document.getElementById('textColorPanel').classList.add('d-none');
+                        document.getElementById('noOverlayPanel').classList.add('d-none');
                         loadRichMenuInfo();
                     } else {
                         showError('建立失敗：' + (r.message || '請稍後再試'));
@@ -1746,6 +1884,449 @@
         // 頁面載入時初始化
         renderFlexButtonSettings();
         loadFlexMenuConfig();
+
+        // ========================================
+        // 進階自訂 Rich Menu
+        // ========================================
+
+        // 進階模式狀態
+        let advConfig = {
+            mode: 'ADVANCED',
+            size: 'HALF',
+            layout: '3+4',
+            backgroundColor: '#F5F0E8',
+            cells: []
+        };
+        let advBgFile = null;
+        let advCellIconFiles = {};
+        let advSubscribed = false;
+        let advFlexPopups = {}; // cellIndex -> flexPopup config
+
+        // 佈局格數對應
+        const layoutCellCounts = {
+            '3+4': 7, '2x3': 6, '2+3': 5, '2x2': 4, '1+2': 3,
+            '3+4+4': 11, '3+4+4+1': 12, '1+4+4': 9, '4+4': 8
+        };
+
+        // 預設動作選項
+        const advActionOptions = [
+            { value: 'start_booking', label: '開始預約' },
+            { value: 'view_bookings', label: '我的預約' },
+            { value: 'start_shopping', label: '瀏覽商品' },
+            { value: 'view_coupons', label: '領取票券' },
+            { value: 'view_my_coupons', label: '我的票券' },
+            { value: 'view_member_info', label: '會員資訊' },
+            { value: 'contact_shop', label: '聯絡店家' },
+            { value: 'main_menu', label: '主選單' },
+            { value: 'flex_popup', label: '自訂彈窗' }
+        ];
+
+        async function initAdvancedMode() {
+            // 檢查是否訂閱
+            try {
+                const r = await api.get('/api/feature-store');
+                if (r.success) {
+                    const feature = r.data.find(f => f.code === 'CUSTOM_RICH_MENU');
+                    advSubscribed = feature && feature.isEnabled;
+                }
+            } catch (e) { advSubscribed = false; }
+
+            const overlay = document.getElementById('advancedLockedOverlay');
+            const publishBtn = document.getElementById('createAdvRichMenuBtn');
+            if (!advSubscribed) {
+                overlay.classList.remove('d-none');
+                publishBtn.disabled = true;
+                publishBtn.title = '需訂閱「進階自訂選單」功能';
+            } else {
+                overlay.classList.add('d-none');
+                publishBtn.disabled = false;
+            }
+
+            // 載入已存設定
+            try {
+                const r = await api.get('/api/settings/line/rich-menu/advanced-config');
+                if (r.success && r.data && Object.keys(r.data).length > 0) {
+                    advConfig = { ...advConfig, ...r.data };
+                    // 恢復 Flex Popup 設定
+                    if (advConfig.cells) {
+                        advConfig.cells.forEach(cell => {
+                            if (cell.flexPopup) advFlexPopups[cell.index] = cell.flexPopup;
+                        });
+                    }
+                }
+            } catch (e) { /* 使用預設值 */ }
+
+            // 設定 UI 狀態
+            if (advConfig.size === 'FULL') {
+                document.getElementById('advSizeFull').checked = true;
+            }
+            onAdvSizeChange();
+            renderAdvCellSettings();
+
+            // 背景圖片監聽
+            document.getElementById('advBgImage').addEventListener('change', function(e) {
+                advBgFile = e.target.files[0] || null;
+            });
+            document.getElementById('advBgColor').addEventListener('input', function(e) {
+                advConfig.backgroundColor = e.target.value;
+            });
+        }
+
+        function onAdvSizeChange() {
+            const size = document.querySelector('input[name="advMenuSize"]:checked').value;
+            advConfig.size = size;
+
+            // 切換佈局選項顯示
+            document.querySelectorAll('.adv-layout-half').forEach(el => {
+                el.classList.toggle('d-none', size === 'FULL');
+            });
+            document.querySelectorAll('.adv-layout-full').forEach(el => {
+                el.classList.toggle('d-none', size === 'HALF');
+            });
+
+            // 預設選中第一個可見的
+            const firstVisible = document.querySelector(`#advLayoutSelector .layout-option.adv-layout-${size.toLowerCase()}:not(.d-none)`);
+            if (firstVisible) {
+                selectAdvLayout(firstVisible.dataset.layout);
+            }
+        }
+
+        function selectAdvLayout(layout) {
+            advConfig.layout = layout;
+            document.querySelectorAll('#advLayoutSelector .layout-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.layout === layout);
+            });
+            renderAdvCellSettings();
+        }
+
+        function renderAdvCellSettings() {
+            const container = document.getElementById('advCellSettings');
+            const cellCount = layoutCellCounts[advConfig.layout] || 7;
+
+            // 確保 cells 陣列足夠
+            while (advConfig.cells.length < cellCount) {
+                advConfig.cells.push({
+                    index: advConfig.cells.length,
+                    label: '',
+                    labelColor: '#FFFFFF',
+                    hasIcon: false,
+                    iconShape: 'circle',
+                    action: { type: 'postback', data: 'action=main_menu' },
+                    flexPopup: null
+                });
+            }
+
+            let html = '';
+            for (let i = 0; i < cellCount; i++) {
+                const cell = advConfig.cells[i] || {};
+                const actionValue = cell.action?.type === 'flex_popup' ? 'flex_popup' : (cell.action?.data?.replace('action=', '') || 'main_menu');
+                const hasFlexPopup = !!advFlexPopups[i];
+
+                html += `
+                <div class="border rounded p-2 mb-2">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                        <span class="badge bg-secondary" style="min-width:28px;">${i + 1}</span>
+                        <input type="text" class="form-control form-control-sm adv-cell-label" data-index="${i}"
+                            value="${cell.label || ''}" placeholder="文字標籤" style="flex:1;">
+                        <input type="color" class="form-control-color adv-cell-color" data-index="${i}"
+                            value="${cell.labelColor || '#FFFFFF'}" style="width:30px;height:28px;border:1px solid #ccc;border-radius:4px;padding:0;">
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <input type="file" class="form-control form-control-sm adv-cell-icon" data-index="${i}"
+                            accept="image/png,image/jpeg" style="flex:1;">
+                        <select class="form-select form-select-sm adv-cell-action" data-index="${i}" style="width:110px;" onchange="onAdvActionChange(${i}, this.value)">
+                            ${advActionOptions.map(opt => `<option value="${opt.value}" ${actionValue === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="mt-1 ${actionValue === 'flex_popup' ? '' : 'd-none'}" id="advFlexPopupBtn_${i}">
+                        <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="openFlexPopupEditor(${i})">
+                            <i class="bi bi-chat-square-dots me-1"></i>${hasFlexPopup ? '編輯彈窗卡片' : '設定彈窗卡片'}
+                        </button>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+
+            // 綁定事件
+            container.querySelectorAll('.adv-cell-label').forEach(el => {
+                el.addEventListener('input', e => {
+                    const idx = parseInt(e.target.dataset.index);
+                    advConfig.cells[idx].label = e.target.value;
+                });
+            });
+            container.querySelectorAll('.adv-cell-color').forEach(el => {
+                el.addEventListener('input', e => {
+                    const idx = parseInt(e.target.dataset.index);
+                    advConfig.cells[idx].labelColor = e.target.value;
+                });
+            });
+            container.querySelectorAll('.adv-cell-icon').forEach(el => {
+                el.addEventListener('change', e => {
+                    const idx = parseInt(e.target.dataset.index);
+                    advCellIconFiles[idx] = e.target.files[0] || null;
+                    advConfig.cells[idx].hasIcon = !!e.target.files[0];
+                });
+            });
+        }
+
+        function onAdvActionChange(cellIndex, value) {
+            const popupBtn = document.getElementById(`advFlexPopupBtn_${cellIndex}`);
+            if (popupBtn) popupBtn.classList.toggle('d-none', value !== 'flex_popup');
+
+            if (value === 'flex_popup') {
+                advConfig.cells[cellIndex].action = { type: 'flex_popup', data: `action=flex_popup&cellKey=${cellIndex}` };
+            } else {
+                advConfig.cells[cellIndex].action = { type: 'postback', data: `action=${value}` };
+            }
+        }
+
+        // Flex 彈窗編輯器
+        function openFlexPopupEditor(cellIndex) {
+            document.getElementById('flexPopupCellIndex').value = cellIndex;
+            const existing = advFlexPopups[cellIndex];
+
+            // 渲染卡片列表
+            const bubbles = existing?.bubbles || [{ heroImageUrl: '', title: '', description: '', buttons: [] }];
+            renderFlexPopupBubbles(bubbles);
+
+            // 設定類型
+            if (bubbles.length > 1) {
+                document.getElementById('flexPopupCarousel').checked = true;
+            } else {
+                document.getElementById('flexPopupSingle').checked = true;
+            }
+
+            new bootstrap.Modal(document.getElementById('flexPopupModal')).show();
+        }
+
+        function renderFlexPopupBubbles(bubbles) {
+            const container = document.getElementById('flexPopupBubbles');
+            let html = '';
+            bubbles.forEach((bubble, i) => {
+                html += `
+                <div class="border rounded p-2 mb-2 flex-popup-bubble" data-index="${i}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="small">卡片 ${i + 1}</strong>
+                        ${i > 0 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlexPopupBubble(${i})"><i class="bi bi-trash"></i></button>` : ''}
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">主圖 URL</label>
+                        <input type="text" class="form-control form-control-sm fp-hero-url" data-index="${i}" value="${bubble.heroImageUrl || ''}" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">標題</label>
+                        <input type="text" class="form-control form-control-sm fp-title" data-index="${i}" value="${bubble.title || ''}" placeholder="卡片標題">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">說明</label>
+                        <input type="text" class="form-control form-control-sm fp-desc" data-index="${i}" value="${bubble.description || ''}" placeholder="卡片說明文字">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small">按鈕</label>
+                        <div class="fp-buttons-list" data-bubble="${i}">
+                            ${(bubble.buttons || []).map((btn, j) => `
+                                <div class="d-flex gap-1 mb-1 fp-button-row" data-btn="${j}">
+                                    <input type="text" class="form-control form-control-sm fp-btn-label" value="${btn.label || ''}" placeholder="按鈕文字" style="flex:1;">
+                                    <select class="form-select form-select-sm fp-btn-type" style="width:80px;">
+                                        <option value="uri" ${btn.action?.type === 'uri' ? 'selected' : ''}>連結</option>
+                                        <option value="postback" ${btn.action?.type === 'postback' ? 'selected' : ''}>動作</option>
+                                    </select>
+                                    <input type="text" class="form-control form-control-sm fp-btn-value" value="${btn.action?.uri || btn.action?.data || ''}" placeholder="${btn.action?.type === 'uri' ? 'URL' : 'action=...'}" style="flex:1;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.fp-button-row').remove()"><i class="bi bi-x"></i></button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addFlexPopupButton(${i})"><i class="bi bi-plus"></i> 按鈕</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function addFlexPopupBubble() {
+            const container = document.getElementById('flexPopupBubbles');
+            const currentCount = container.querySelectorAll('.flex-popup-bubble').length;
+            if (currentCount >= 10) { showWarning('最多 10 張卡片'); return; }
+            const bubbles = collectFlexPopupBubbles();
+            bubbles.push({ heroImageUrl: '', title: '', description: '', buttons: [] });
+            renderFlexPopupBubbles(bubbles);
+        }
+
+        function removeFlexPopupBubble(index) {
+            const bubbles = collectFlexPopupBubbles();
+            bubbles.splice(index, 1);
+            renderFlexPopupBubbles(bubbles);
+        }
+
+        function addFlexPopupButton(bubbleIndex) {
+            const list = document.querySelector(`.fp-buttons-list[data-bubble="${bubbleIndex}"]`);
+            const btnCount = list.querySelectorAll('.fp-button-row').length;
+            const j = btnCount;
+            const html = `
+                <div class="d-flex gap-1 mb-1 fp-button-row" data-btn="${j}">
+                    <input type="text" class="form-control form-control-sm fp-btn-label" value="" placeholder="按鈕文字" style="flex:1;">
+                    <select class="form-select form-select-sm fp-btn-type" style="width:80px;">
+                        <option value="uri">連結</option>
+                        <option value="postback">動作</option>
+                    </select>
+                    <input type="text" class="form-control form-control-sm fp-btn-value" value="" placeholder="URL 或 action=..." style="flex:1;">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.fp-button-row').remove()"><i class="bi bi-x"></i></button>
+                </div>`;
+            list.insertAdjacentHTML('beforeend', html);
+        }
+
+        function collectFlexPopupBubbles() {
+            const bubbles = [];
+            document.querySelectorAll('.flex-popup-bubble').forEach(el => {
+                const i = parseInt(el.dataset.index);
+                const bubble = {
+                    heroImageUrl: el.querySelector('.fp-hero-url').value.trim(),
+                    title: el.querySelector('.fp-title').value.trim(),
+                    description: el.querySelector('.fp-desc').value.trim(),
+                    buttons: []
+                };
+                el.querySelectorAll('.fp-button-row').forEach(row => {
+                    const label = row.querySelector('.fp-btn-label').value.trim();
+                    const type = row.querySelector('.fp-btn-type').value;
+                    const value = row.querySelector('.fp-btn-value').value.trim();
+                    if (label) {
+                        const action = type === 'uri' ? { type: 'uri', uri: value } : { type: 'postback', data: value };
+                        bubble.buttons.push({ label, action });
+                    }
+                });
+                bubbles.push(bubble);
+            });
+            return bubbles;
+        }
+
+        function saveFlexPopup() {
+            const cellIndex = parseInt(document.getElementById('flexPopupCellIndex').value);
+            const type = document.querySelector('input[name="flexPopupType"]:checked').value;
+            const bubbles = collectFlexPopupBubbles();
+
+            if (bubbles.length === 0 || !bubbles[0].title) {
+                showWarning('請至少填寫一張卡片的標題');
+                return;
+            }
+
+            advFlexPopups[cellIndex] = { type, bubbles };
+            advConfig.cells[cellIndex].flexPopup = advFlexPopups[cellIndex];
+
+            bootstrap.Modal.getInstance(document.getElementById('flexPopupModal')).hide();
+            showSuccess('彈窗設定已儲存');
+
+            // 更新按鈕文字
+            const btn = document.querySelector(`#advFlexPopupBtn_${cellIndex} button`);
+            if (btn) btn.innerHTML = '<i class="bi bi-chat-square-dots me-1"></i>編輯彈窗卡片';
+        }
+
+        // 建立進階 Rich Menu 共用函式：建構 FormData
+        function buildAdvancedFormData() {
+            const cellCount = layoutCellCounts[advConfig.layout] || 7;
+            // 更新 cells 的 flexPopup
+            for (let i = 0; i < cellCount; i++) {
+                if (advFlexPopups[i]) {
+                    advConfig.cells[i].flexPopup = advFlexPopups[i];
+                }
+            }
+
+            const configJson = JSON.stringify(advConfig);
+            const formData = new FormData();
+            formData.append('config', configJson);
+
+            if (advBgFile) {
+                formData.append('backgroundImage', advBgFile);
+            }
+
+            Object.entries(advCellIconFiles).forEach(([idx, file]) => {
+                if (file) formData.append(`cellIcon_${idx}`, file);
+            });
+
+            return formData;
+        }
+
+        async function previewAdvancedRichMenu() {
+            const btn = document.getElementById('previewAdvBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>預覽中...';
+
+            try {
+                const formData = buildAdvancedFormData();
+                const response = await fetch('/api/settings/line/rich-menu/preview-advanced', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+
+                    // 顯示在預覽區域
+                    const customPreview = document.getElementById('richMenuCustomPreview');
+                    const previewImg = document.getElementById('customPreviewImage');
+                    const defaultPreview = document.getElementById('richMenuPreview');
+
+                    defaultPreview.classList.add('d-none');
+                    customPreview.classList.remove('d-none');
+                    previewImg.src = url;
+                    previewImg.style.display = 'block';
+                    previewImg.style.width = '100%';
+
+                    showSuccess('預覽圖已生成');
+                } else {
+                    showError('預覽生成失敗');
+                }
+            } catch (e) {
+                showError('預覽失敗：' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-eye me-1"></i>精確預覽';
+            }
+        }
+
+        async function saveAdvancedConfig() {
+            try {
+                const cellCount = layoutCellCounts[advConfig.layout] || 7;
+                for (let i = 0; i < cellCount; i++) {
+                    if (advFlexPopups[i]) advConfig.cells[i].flexPopup = advFlexPopups[i];
+                }
+                const r = await api.put('/api/settings/line/rich-menu/advanced-config', advConfig);
+                if (r.success) showSuccess('配置草稿已儲存');
+            } catch (e) {
+                showError('儲存失敗：' + e.message);
+            }
+        }
+
+        async function createAdvancedRichMenu() {
+            if (!advSubscribed) {
+                showError('需訂閱「進階自訂選單」功能才能發布');
+                return;
+            }
+
+            const btn = document.getElementById('createAdvRichMenuBtn');
+            setButtonLoading(btn, true);
+
+            try {
+                const formData = buildAdvancedFormData();
+                const response = await fetch('/api/settings/line/rich-menu/create-advanced', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
+                    body: formData
+                });
+                const r = await response.json();
+                if (r.success) {
+                    showSuccess('進階自訂選單已發布到 LINE！');
+                    loadRichMenuInfo();
+                } else {
+                    showError('發布失敗：' + (r.message || '請稍後再試'));
+                }
+            } catch (e) {
+                showError('發布失敗：' + e.message);
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
     </script>
 </body>
 </html>

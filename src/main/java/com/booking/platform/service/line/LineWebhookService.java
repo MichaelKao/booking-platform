@@ -344,6 +344,8 @@ public class LineWebhookService {
             case "select_product" -> handleSelectProduct(tenantId, userId, replyToken, params);
             case "select_quantity" -> handleSelectQuantity(tenantId, userId, replyToken, params);
             case "confirm_purchase" -> handleConfirmPurchase(tenantId, userId, replyToken);
+            // 進階自訂 Rich Menu — Flex 彈窗
+            case "flex_popup" -> handleFlexPopup(tenantId, userId, replyToken, params);
             default -> log.debug("未處理的 action：{}", action);
         }
     }
@@ -1424,6 +1426,80 @@ public class LineWebhookService {
         // 使用新的幫助訊息 Flex Message
         JsonNode helpMessage = flexMessageBuilder.buildHelpMessage(tenantId);
         messageService.replyFlex(tenantId, replyToken, "使用說明", helpMessage);
+    }
+
+    // ========================================
+    // 進階自訂 Rich Menu — Flex 彈窗
+    // ========================================
+
+    /**
+     * 處理 Flex 彈窗（進階自訂 Rich Menu 的自訂卡片）
+     *
+     * <p>從 TenantLineConfig.richMenuCustomConfig 讀取對應 cell 的 flexPopup 設定，
+     * 建構 Flex Message 並回覆給用戶
+     *
+     * @param tenantId 租戶 ID
+     * @param userId 用戶 ID
+     * @param replyToken 回覆 Token
+     * @param params Postback 參數（含 cellKey）
+     */
+    private void handleFlexPopup(String tenantId, String userId, String replyToken, Map<String, String> params) {
+        String cellKey = params.get("cellKey");
+        log.info("處理 Flex 彈窗，租戶：{}，用戶：{}，cellKey：{}", tenantId, userId, cellKey);
+
+        try {
+            if (cellKey == null) {
+                replyMainMenu(tenantId, userId, replyToken);
+                return;
+            }
+
+            int cellIndex = Integer.parseInt(cellKey);
+
+            // 從 TenantLineConfig 讀取配置
+            TenantLineConfig lineConfig = lineConfigRepository.findByTenantId(tenantId).orElse(null);
+            if (lineConfig == null || lineConfig.getRichMenuCustomConfig() == null) {
+                replyMainMenu(tenantId, userId, replyToken);
+                return;
+            }
+
+            com.fasterxml.jackson.databind.JsonNode config = objectMapper.readTree(lineConfig.getRichMenuCustomConfig());
+            com.fasterxml.jackson.databind.JsonNode cellsConfig = config.path("cells");
+
+            if (!cellsConfig.isArray()) {
+                replyMainMenu(tenantId, userId, replyToken);
+                return;
+            }
+
+            // 尋找對應 cell 的 flexPopup 設定
+            com.fasterxml.jackson.databind.JsonNode flexPopup = null;
+            for (com.fasterxml.jackson.databind.JsonNode cell : cellsConfig) {
+                if (cell.path("index").asInt(-1) == cellIndex && cell.has("flexPopup")) {
+                    flexPopup = cell.path("flexPopup");
+                    break;
+                }
+            }
+
+            if (flexPopup == null || flexPopup.isNull() || flexPopup.isEmpty()) {
+                replyMainMenu(tenantId, userId, replyToken);
+                return;
+            }
+
+            // 建構 Flex Message
+            com.fasterxml.jackson.databind.JsonNode flexMessage = flexMessageBuilder.buildCustomFlexPopup(flexPopup);
+            if (flexMessage == null) {
+                replyMainMenu(tenantId, userId, replyToken);
+                return;
+            }
+
+            messageService.replyFlex(tenantId, replyToken, "自訂彈窗", flexMessage);
+
+        } catch (NumberFormatException e) {
+            log.warn("無效的 cellKey：{}", cellKey);
+            replyMainMenu(tenantId, userId, replyToken);
+        } catch (Exception e) {
+            log.error("處理 Flex 彈窗失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            replyMainMenu(tenantId, userId, replyToken);
+        }
     }
 
     /**

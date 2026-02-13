@@ -5,12 +5,15 @@ import com.booking.platform.common.tenant.TenantContext;
 import com.booking.platform.dto.line.CreateRichMenuRequest;
 import com.booking.platform.dto.line.LineConfigResponse;
 import com.booking.platform.dto.line.SaveLineConfigRequest;
+import com.booking.platform.enums.FeatureCode;
 import com.booking.platform.repository.line.TenantLineConfigRepository;
+import com.booking.platform.service.FeatureService;
 import com.booking.platform.service.line.LineConfigService;
 import com.booking.platform.service.line.LineRichMenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,6 +54,7 @@ public class LineConfigController {
     private final LineConfigService lineConfigService;
     private final LineRichMenuService richMenuService;
     private final TenantLineConfigRepository lineConfigRepository;
+    private final FeatureService featureService;
 
     // ========================================
     // 查詢 API
@@ -191,14 +195,15 @@ public class LineConfigController {
     @PostMapping("/rich-menu/upload-image")
     public ResponseEntity<ApiResponse<java.util.Map<String, String>>> uploadRichMenuImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "textColor", required = false) String textColor
+            @RequestParam(value = "textColor", required = false) String textColor,
+            @RequestParam(value = "noOverlay", required = false, defaultValue = "false") boolean noOverlay
     ) {
-        log.debug("上傳自訂 Rich Menu 圖片，文字顏色：{}", textColor);
+        log.debug("上傳自訂 Rich Menu 圖片，文字顏色：{}，不疊加：{}", textColor, noOverlay);
 
         try {
             String tenantId = TenantContext.getTenantId();
             byte[] imageBytes = file.getBytes();
-            String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes, textColor);
+            String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes, textColor, noOverlay);
 
             java.util.Map<String, String> result = new java.util.HashMap<>();
             result.put("richMenuId", richMenuId);
@@ -244,6 +249,184 @@ public class LineConfigController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
         }
+    }
+
+    // ========================================
+    // 進階自訂 Rich Menu API（付費功能：CUSTOM_RICH_MENU）
+    // ========================================
+
+    /**
+     * 建立進階自訂 Rich Menu（需訂閱 CUSTOM_RICH_MENU）
+     *
+     * <p>支援：上傳背景圖、每格獨立圖示、自訂文字標籤、大尺寸佈局
+     *
+     * @param backgroundImage 背景圖片（可選）
+     * @param config 配置 JSON 字串
+     * @return Rich Menu ID
+     */
+    @PostMapping("/rich-menu/create-advanced")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> createAdvancedRichMenu(
+            @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @RequestParam("config") String config,
+            @RequestParam(value = "cellIcon_0", required = false) MultipartFile cellIcon0,
+            @RequestParam(value = "cellIcon_1", required = false) MultipartFile cellIcon1,
+            @RequestParam(value = "cellIcon_2", required = false) MultipartFile cellIcon2,
+            @RequestParam(value = "cellIcon_3", required = false) MultipartFile cellIcon3,
+            @RequestParam(value = "cellIcon_4", required = false) MultipartFile cellIcon4,
+            @RequestParam(value = "cellIcon_5", required = false) MultipartFile cellIcon5,
+            @RequestParam(value = "cellIcon_6", required = false) MultipartFile cellIcon6,
+            @RequestParam(value = "cellIcon_7", required = false) MultipartFile cellIcon7,
+            @RequestParam(value = "cellIcon_8", required = false) MultipartFile cellIcon8,
+            @RequestParam(value = "cellIcon_9", required = false) MultipartFile cellIcon9,
+            @RequestParam(value = "cellIcon_10", required = false) MultipartFile cellIcon10,
+            @RequestParam(value = "cellIcon_11", required = false) MultipartFile cellIcon11
+    ) {
+        log.debug("建立進階自訂 Rich Menu");
+
+        try {
+            String tenantId = TenantContext.getTenantId();
+
+            // 需訂閱 CUSTOM_RICH_MENU 才能發布
+            featureService.checkFeatureEnabled(tenantId, FeatureCode.CUSTOM_RICH_MENU);
+
+            // 背景圖片
+            byte[] bgBytes = backgroundImage != null && !backgroundImage.isEmpty()
+                    ? backgroundImage.getBytes() : null;
+
+            // 收集每格圖示
+            MultipartFile[] iconFiles = {
+                    cellIcon0, cellIcon1, cellIcon2, cellIcon3,
+                    cellIcon4, cellIcon5, cellIcon6, cellIcon7,
+                    cellIcon8, cellIcon9, cellIcon10, cellIcon11
+            };
+            java.util.Map<Integer, byte[]> cellIcons = new java.util.HashMap<>();
+            for (int i = 0; i < iconFiles.length; i++) {
+                if (iconFiles[i] != null && !iconFiles[i].isEmpty()) {
+                    cellIcons.put(i, iconFiles[i].getBytes());
+                }
+            }
+
+            String richMenuId = richMenuService.createAdvancedRichMenu(
+                    tenantId, bgBytes, cellIcons, config
+            );
+
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            result.put("richMenuId", richMenuId);
+            result.put("mode", "ADVANCED");
+
+            return ResponseEntity.ok(ApiResponse.ok("進階自訂選單建立成功", result));
+
+        } catch (java.io.IOException e) {
+            log.error("讀取上傳檔案失敗", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
+        }
+    }
+
+    /**
+     * 產生進階 Rich Menu 預覽圖（不需訂閱，免費可用）
+     *
+     * @return 預覽圖片（image/png）
+     */
+    @PostMapping("/rich-menu/preview-advanced")
+    public ResponseEntity<byte[]> previewAdvancedRichMenu(
+            @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @RequestParam("config") String config,
+            @RequestParam(value = "cellIcon_0", required = false) MultipartFile cellIcon0,
+            @RequestParam(value = "cellIcon_1", required = false) MultipartFile cellIcon1,
+            @RequestParam(value = "cellIcon_2", required = false) MultipartFile cellIcon2,
+            @RequestParam(value = "cellIcon_3", required = false) MultipartFile cellIcon3,
+            @RequestParam(value = "cellIcon_4", required = false) MultipartFile cellIcon4,
+            @RequestParam(value = "cellIcon_5", required = false) MultipartFile cellIcon5,
+            @RequestParam(value = "cellIcon_6", required = false) MultipartFile cellIcon6,
+            @RequestParam(value = "cellIcon_7", required = false) MultipartFile cellIcon7,
+            @RequestParam(value = "cellIcon_8", required = false) MultipartFile cellIcon8,
+            @RequestParam(value = "cellIcon_9", required = false) MultipartFile cellIcon9,
+            @RequestParam(value = "cellIcon_10", required = false) MultipartFile cellIcon10,
+            @RequestParam(value = "cellIcon_11", required = false) MultipartFile cellIcon11
+    ) {
+        log.debug("產生進階 Rich Menu 預覽圖");
+
+        try {
+            // 背景圖片
+            byte[] bgBytes = backgroundImage != null && !backgroundImage.isEmpty()
+                    ? backgroundImage.getBytes() : null;
+
+            // 收集每格圖示
+            MultipartFile[] iconFiles = {
+                    cellIcon0, cellIcon1, cellIcon2, cellIcon3,
+                    cellIcon4, cellIcon5, cellIcon6, cellIcon7,
+                    cellIcon8, cellIcon9, cellIcon10, cellIcon11
+            };
+            java.util.Map<Integer, byte[]> cellIcons = new java.util.HashMap<>();
+            for (int i = 0; i < iconFiles.length; i++) {
+                if (iconFiles[i] != null && !iconFiles[i].isEmpty()) {
+                    cellIcons.put(i, iconFiles[i].getBytes());
+                }
+            }
+
+            byte[] previewImage = richMenuService.composeAdvancedRichMenuImage(
+                    bgBytes, cellIcons, config
+            );
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(previewImage);
+
+        } catch (java.io.IOException e) {
+            log.error("產生預覽圖失敗", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * 取得進階 Rich Menu 配置
+     *
+     * @return 配置 JSON
+     */
+    @GetMapping("/rich-menu/advanced-config")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getAdvancedRichMenuConfig() {
+        log.debug("取得進階 Rich Menu 配置");
+
+        String tenantId = TenantContext.getTenantId();
+        String configJson = richMenuService.getAdvancedConfig(tenantId);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        if (configJson != null && !configJson.isBlank()) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                result = mapper.readValue(configJson, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+            } catch (Exception e) {
+                log.warn("解析進階 Rich Menu 配置失敗，租戶：{}", tenantId);
+            }
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    /**
+     * 儲存進階 Rich Menu 配置草稿（不發布到 LINE，不需訂閱）
+     *
+     * @param configMap 配置 JSON
+     * @return 儲存結果
+     */
+    @PutMapping("/rich-menu/advanced-config")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> saveAdvancedRichMenuConfig(
+            @RequestBody java.util.Map<String, Object> configMap
+    ) {
+        log.debug("儲存進階 Rich Menu 配置草稿");
+
+        String tenantId = TenantContext.getTenantId();
+
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String configJson = mapper.writeValueAsString(configMap);
+            richMenuService.saveAdvancedConfig(tenantId, configJson);
+        } catch (Exception e) {
+            log.error("儲存進階 Rich Menu 配置失敗，租戶：{}", tenantId, e);
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok("配置已儲存", configMap));
     }
 
     // ========================================

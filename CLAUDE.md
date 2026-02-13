@@ -166,6 +166,7 @@ POST /api/auth/logout             # 登出
 | 設定 | `GET/PUT /settings`, `GET /settings/setup-status` |
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
 | Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image\|create-custom` |
+| 進階 Rich Menu | `POST /settings/line/rich-menu/create-advanced\|preview-advanced`, `GET/PUT /settings/line/rich-menu/advanced-config` |
 | Flex Menu | `GET/PUT /settings/line/flex-menu` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
@@ -325,22 +326,29 @@ scheduler:
 | 會員資訊 | 查看會員資料 |
 | 聯絡店家 | 聯絡客服 |
 
-**兩種模式**：
+**三種模式**：
 
 | 模式 | 說明 |
 |------|------|
 | 預設選單 | 系統生成 7 格選單，可選 5 種主題配色 |
 | 自訂選單 | 店家上傳完整設計圖片，不疊加文字圖示，自行定義每格動作 |
+| 進階自訂 | 付費功能（`CUSTOM_RICH_MENU`）：上傳背景圖、每格獨立圓形圖示、自訂文字標籤、Flex 彈窗卡片、大尺寸選單 |
 
 **自訂選單佈局範本**：
 
-| 佈局代碼 | 說明 | 區域數 |
-|---------|------|--------|
-| `3+4` | 上排 3 + 下排 4（預設） | 7 |
-| `2x3` | 經典 2 行 × 3 列 | 6 |
-| `2+3` | 上排 2 + 下排 3 | 5 |
-| `2x2` | 2 行 × 2 列 | 4 |
-| `1+2` | 上排 1（滿版）+ 下排 2 | 3 |
+| 佈局代碼 | 說明 | 區域數 | 尺寸 |
+|---------|------|--------|------|
+| `3+4` | 上排 3 + 下排 4（預設） | 7 | Half |
+| `2x3` | 經典 2 行 × 3 列 | 6 | Half |
+| `2+3` | 上排 2 + 下排 3 | 5 | Half |
+| `2x2` | 2 行 × 2 列 | 4 | Half |
+| `1+2` | 上排 1（滿版）+ 下排 2 | 3 | Half |
+| `3+4+4` | 上3+中4+下4 | 11 | Full |
+| `3+4+4+1` | 上3+中4+下4+底1 | 12 | Full |
+| `1+4+4` | 上1+中4+下4 | 9 | Full |
+| `4+4` | 上4+下4 | 8 | Full |
+
+**Rich Menu 尺寸**：Half = 2500×843、Full = 2500×1686（大尺寸，3行以上）
 
 **主題配色**：GREEN（LINE綠）、BLUE（海洋藍）、PURPLE（皇家紫）、ORANGE（日落橘）、DARK（暗黑）、CUSTOM_BG（自訂背景+系統疊加）
 
@@ -735,6 +743,7 @@ ecpay:
 | `PRODUCT_SALES` | 商品銷售功能 | 400 |
 | `AUTO_REMINDER` | 自動預約提醒 | 200 |
 | `AI_ASSISTANT` | AI 智慧客服 | 1000 |
+| `CUSTOM_RICH_MENU` | 進階自訂選單 | 400 |
 
 ### 測試方式
 
@@ -1301,6 +1310,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | `EXTRA_PUSH` | 額外推送額度 | ✅ 已完成 | 突破每月推送限制 |
 | `ADVANCED_CUSTOMER` | 進階顧客管理 | ✅ 已完成 | 顧客標籤與分群、前端 UI 已完成 |
 | `AI_ASSISTANT` | AI 智慧客服 | ✅ 已完成 | Groq Llama 3.3（免費） |
+| `CUSTOM_RICH_MENU` | 進階自訂選單 | ✅ 已完成 | 背景圖+圓形圖示+文字標籤+Flex 彈窗+大尺寸選單 |
 | `MULTI_ACCOUNT` | 多帳號管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
 | `MULTI_BRANCH` | 多分店管理 | ❌ 未實作 | 複雜功能，不顯示在功能商店 |
 

@@ -94,6 +94,11 @@ public class LineRichMenuService {
     private static final int MENU_HEIGHT = 843;
 
     /**
+     * Rich Menu 圖片高度（全尺寸，3 行以上）
+     */
+    private static final int MENU_HEIGHT_FULL = 1686;
+
+    /**
      * 預設佈局：上排 3 格 + 下排 4 格
      */
     private static final String DEFAULT_LAYOUT = "3+4";
@@ -292,7 +297,21 @@ public class LineRichMenuService {
      */
     @Transactional
     public String createRichMenuWithCustomImage(String tenantId, byte[] imageBytes, String textColorHex) {
-        log.info("開始建立自訂圖片 Rich Menu，租戶：{}", tenantId);
+        return createRichMenuWithCustomImage(tenantId, imageBytes, textColorHex, false);
+    }
+
+    /**
+     * 建立自訂圖片 Rich Menu（帶文字顏色，可選不疊加文字圖示）
+     *
+     * @param tenantId 租戶 ID
+     * @param imageBytes 圖片位元組陣列
+     * @param textColorHex 文字顏色（十六進位，如 #FFFFFF），null 則預設白色
+     * @param noOverlay true 時跳過疊加文字和圖示，直接使用背景圖
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createRichMenuWithCustomImage(String tenantId, byte[] imageBytes, String textColorHex, boolean noOverlay) {
+        log.info("開始建立自訂圖片 Rich Menu，租戶：{}，noOverlay：{}", tenantId, noOverlay);
 
         try {
             // ========================================
@@ -306,21 +325,26 @@ public class LineRichMenuService {
             byte[] resizedImageBytes = resizeImageToRichMenuSize(imageBytes);
 
             // ========================================
-            // 3. 解析文字顏色
+            // 3. 決定最終圖片（是否疊加文字圖示）
             // ========================================
-            Color overlayTextColor = TEXT_COLOR;
-            if (textColorHex != null && textColorHex.startsWith("#") && textColorHex.length() == 7) {
-                try {
-                    overlayTextColor = Color.decode(textColorHex);
-                } catch (NumberFormatException e) {
-                    log.warn("無效的文字顏色：{}，使用預設白色", textColorHex);
+            byte[] finalImageBytes;
+            if (noOverlay) {
+                // 不疊加文字圖示，直接使用縮放後的背景圖
+                finalImageBytes = resizedImageBytes;
+                log.info("noOverlay=true，跳過疊加文字圖示");
+            } else {
+                // 解析文字顏色
+                Color overlayTextColor = TEXT_COLOR;
+                if (textColorHex != null && textColorHex.startsWith("#") && textColorHex.length() == 7) {
+                    try {
+                        overlayTextColor = Color.decode(textColorHex);
+                    } catch (NumberFormatException e) {
+                        log.warn("無效的文字顏色：{}，使用預設白色", textColorHex);
+                    }
                 }
+                // 在背景圖片上疊加選單文字和圖示
+                finalImageBytes = overlayMenuItemsOnImage(resizedImageBytes, overlayTextColor);
             }
-
-            // ========================================
-            // 4. 在背景圖片上疊加選單文字和圖示（描邊文字，不遮蓋背景）
-            // ========================================
-            byte[] compositeImageBytes = overlayMenuItemsOnImage(resizedImageBytes, overlayTextColor);
 
             // ========================================
             // 4. 刪除現有的 Rich Menu
@@ -341,9 +365,9 @@ public class LineRichMenuService {
             log.info("Rich Menu 建立成功，ID：{}", richMenuId);
 
             // ========================================
-            // 7. 上傳合成後的圖片
+            // 7. 上傳圖片
             // ========================================
-            uploadRichMenuImage(tenantId, richMenuId, compositeImageBytes);
+            uploadRichMenuImage(tenantId, richMenuId, finalImageBytes);
             log.info("Rich Menu 自訂圖片上傳成功");
 
             // ========================================
@@ -355,7 +379,6 @@ public class LineRichMenuService {
             // ========================================
             // 9. 儲存 Rich Menu ID 和主題
             // ========================================
-            // CUSTOM_BG 表示自訂背景+系統疊加圖示（仍屬預設模式）
             saveRichMenuIdAndTheme(tenantId, richMenuId, "CUSTOM_BG");
 
             return richMenuId;
@@ -881,6 +904,7 @@ public class LineRichMenuService {
      * 使用指定佈局和選單項目建立 Rich Menu 請求結構
      */
     private ObjectNode buildRichMenuRequestWithLayout(String shopName, String layout, String[][] menuItems) {
+        int menuHeight = getMenuHeightForLayout(layout);
         ObjectNode root = objectMapper.createObjectNode();
 
         // 基本設定
@@ -891,12 +915,12 @@ public class LineRichMenuService {
         // 尺寸
         ObjectNode size = objectMapper.createObjectNode();
         size.put("width", MENU_WIDTH);
-        size.put("height", MENU_HEIGHT);
+        size.put("height", menuHeight);
         root.set("size", size);
 
         // 區域（依佈局動態計算）
         ArrayNode areas = objectMapper.createArrayNode();
-        int[][] layoutAreas = getLayoutAreas(layout);
+        int[][] layoutAreas = getLayoutAreasWithHeight(layout, menuHeight);
 
         for (int i = 0; i < layoutAreas.length && i < menuItems.length; i++) {
             areas.add(createAreaObject(
@@ -940,31 +964,45 @@ public class LineRichMenuService {
      * 取得佈局的區域定義（每個區域為 {x, y, width, height}）
      */
     private int[][] getLayoutAreas(String layout) {
+        return getLayoutAreasWithHeight(layout, MENU_HEIGHT);
+    }
+
+    /**
+     * 取得佈局的區域定義（支援指定高度）
+     *
+     * @param layout 佈局代碼
+     * @param menuHeight 選單高度（843 或 1686）
+     * @return 區域陣列
+     */
+    private int[][] getLayoutAreasWithHeight(String layout, int menuHeight) {
+        int rowTopH = menuHeight / 2;
+        int rowBottomH = menuHeight - rowTopH;
+
         switch (layout) {
             case "3+4": {
                 int topW = MENU_WIDTH / 3;
                 int topLastW = MENU_WIDTH - topW * 2;
                 int bottomW = MENU_WIDTH / 4;
                 return new int[][] {
-                        {0, 0, topW, ROW_TOP_HEIGHT},
-                        {topW, 0, topW, ROW_TOP_HEIGHT},
-                        {topW * 2, 0, topLastW, ROW_TOP_HEIGHT},
-                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW * 2, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW * 3, ROW_TOP_HEIGHT, MENU_WIDTH - bottomW * 3, ROW_BOTTOM_HEIGHT}
+                        {0, 0, topW, rowTopH},
+                        {topW, 0, topW, rowTopH},
+                        {topW * 2, 0, topLastW, rowTopH},
+                        {0, rowTopH, bottomW, rowBottomH},
+                        {bottomW, rowTopH, bottomW, rowBottomH},
+                        {bottomW * 2, rowTopH, bottomW, rowBottomH},
+                        {bottomW * 3, rowTopH, MENU_WIDTH - bottomW * 3, rowBottomH}
                 };
             }
             case "2x3": {
                 int cellW = MENU_WIDTH / 3;
                 int lastW = MENU_WIDTH - cellW * 2;
                 return new int[][] {
-                        {0, 0, cellW, ROW_TOP_HEIGHT},
-                        {cellW, 0, cellW, ROW_TOP_HEIGHT},
-                        {cellW * 2, 0, lastW, ROW_TOP_HEIGHT},
-                        {0, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
-                        {cellW, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
-                        {cellW * 2, ROW_TOP_HEIGHT, lastW, ROW_BOTTOM_HEIGHT}
+                        {0, 0, cellW, rowTopH},
+                        {cellW, 0, cellW, rowTopH},
+                        {cellW * 2, 0, lastW, rowTopH},
+                        {0, rowTopH, cellW, rowBottomH},
+                        {cellW, rowTopH, cellW, rowBottomH},
+                        {cellW * 2, rowTopH, lastW, rowBottomH}
                 };
             }
             case "2+3": {
@@ -972,33 +1010,140 @@ public class LineRichMenuService {
                 int bottomW = MENU_WIDTH / 3;
                 int bottomLastW = MENU_WIDTH - bottomW * 2;
                 return new int[][] {
-                        {0, 0, topW, ROW_TOP_HEIGHT},
-                        {topW, 0, MENU_WIDTH - topW, ROW_TOP_HEIGHT},
-                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW * 2, ROW_TOP_HEIGHT, bottomLastW, ROW_BOTTOM_HEIGHT}
+                        {0, 0, topW, rowTopH},
+                        {topW, 0, MENU_WIDTH - topW, rowTopH},
+                        {0, rowTopH, bottomW, rowBottomH},
+                        {bottomW, rowTopH, bottomW, rowBottomH},
+                        {bottomW * 2, rowTopH, bottomLastW, rowBottomH}
                 };
             }
             case "2x2": {
                 int cellW = MENU_WIDTH / 2;
                 return new int[][] {
-                        {0, 0, cellW, ROW_TOP_HEIGHT},
-                        {cellW, 0, MENU_WIDTH - cellW, ROW_TOP_HEIGHT},
-                        {0, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
-                        {cellW, ROW_TOP_HEIGHT, MENU_WIDTH - cellW, ROW_BOTTOM_HEIGHT}
+                        {0, 0, cellW, rowTopH},
+                        {cellW, 0, MENU_WIDTH - cellW, rowTopH},
+                        {0, rowTopH, cellW, rowBottomH},
+                        {cellW, rowTopH, MENU_WIDTH - cellW, rowBottomH}
                 };
             }
             case "1+2": {
                 int bottomW = MENU_WIDTH / 2;
                 return new int[][] {
-                        {0, 0, MENU_WIDTH, ROW_TOP_HEIGHT},
-                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
-                        {bottomW, ROW_TOP_HEIGHT, MENU_WIDTH - bottomW, ROW_BOTTOM_HEIGHT}
+                        {0, 0, MENU_WIDTH, rowTopH},
+                        {0, rowTopH, bottomW, rowBottomH},
+                        {bottomW, rowTopH, MENU_WIDTH - bottomW, rowBottomH}
+                };
+            }
+            // ========================================
+            // 大尺寸佈局（Full: 2500x1686，3 行以上）
+            // ========================================
+            case "3+4+4": {
+                int rowH = menuHeight / 3;
+                int lastRowH = menuHeight - rowH * 2;
+                int topW = MENU_WIDTH / 3;
+                int topLastW = MENU_WIDTH - topW * 2;
+                int midW = MENU_WIDTH / 4;
+                int bottomW = MENU_WIDTH / 4;
+                return new int[][] {
+                        // 上排 3 格
+                        {0, 0, topW, rowH},
+                        {topW, 0, topW, rowH},
+                        {topW * 2, 0, topLastW, rowH},
+                        // 中排 4 格
+                        {0, rowH, midW, rowH},
+                        {midW, rowH, midW, rowH},
+                        {midW * 2, rowH, midW, rowH},
+                        {midW * 3, rowH, MENU_WIDTH - midW * 3, rowH},
+                        // 下排 4 格
+                        {0, rowH * 2, bottomW, lastRowH},
+                        {bottomW, rowH * 2, bottomW, lastRowH},
+                        {bottomW * 2, rowH * 2, bottomW, lastRowH},
+                        {bottomW * 3, rowH * 2, MENU_WIDTH - bottomW * 3, lastRowH}
+                };
+            }
+            case "3+4+4+1": {
+                int rowH = menuHeight / 4;
+                int lastRowH = menuHeight - rowH * 3;
+                int topW = MENU_WIDTH / 3;
+                int topLastW = MENU_WIDTH - topW * 2;
+                int midW = MENU_WIDTH / 4;
+                return new int[][] {
+                        // 上排 3 格
+                        {0, 0, topW, rowH},
+                        {topW, 0, topW, rowH},
+                        {topW * 2, 0, topLastW, rowH},
+                        // 中排 4 格
+                        {0, rowH, midW, rowH},
+                        {midW, rowH, midW, rowH},
+                        {midW * 2, rowH, midW, rowH},
+                        {midW * 3, rowH, MENU_WIDTH - midW * 3, rowH},
+                        // 下排 4 格
+                        {0, rowH * 2, midW, rowH},
+                        {midW, rowH * 2, midW, rowH},
+                        {midW * 2, rowH * 2, midW, rowH},
+                        {midW * 3, rowH * 2, MENU_WIDTH - midW * 3, rowH},
+                        // 底部 1 格（全寬）
+                        {0, rowH * 3, MENU_WIDTH, lastRowH}
+                };
+            }
+            case "1+4+4": {
+                int rowH = menuHeight / 3;
+                int lastRowH = menuHeight - rowH * 2;
+                int midW = MENU_WIDTH / 4;
+                return new int[][] {
+                        // 上排 1 格（Logo 滿版）
+                        {0, 0, MENU_WIDTH, rowH},
+                        // 中排 4 格
+                        {0, rowH, midW, rowH},
+                        {midW, rowH, midW, rowH},
+                        {midW * 2, rowH, midW, rowH},
+                        {midW * 3, rowH, MENU_WIDTH - midW * 3, rowH},
+                        // 下排 4 格
+                        {0, rowH * 2, midW, lastRowH},
+                        {midW, rowH * 2, midW, lastRowH},
+                        {midW * 2, rowH * 2, midW, lastRowH},
+                        {midW * 3, rowH * 2, MENU_WIDTH - midW * 3, lastRowH}
+                };
+            }
+            case "4+4": {
+                int rowH = menuHeight / 2;
+                int lastRowH = menuHeight - rowH;
+                int cellW = MENU_WIDTH / 4;
+                return new int[][] {
+                        // 上排 4 格
+                        {0, 0, cellW, rowH},
+                        {cellW, 0, cellW, rowH},
+                        {cellW * 2, 0, cellW, rowH},
+                        {cellW * 3, 0, MENU_WIDTH - cellW * 3, rowH},
+                        // 下排 4 格
+                        {0, rowH, cellW, lastRowH},
+                        {cellW, rowH, cellW, lastRowH},
+                        {cellW * 2, rowH, cellW, lastRowH},
+                        {cellW * 3, rowH, MENU_WIDTH - cellW * 3, lastRowH}
                 };
             }
             default:
-                return getLayoutAreas(DEFAULT_LAYOUT);
+                return getLayoutAreasWithHeight(DEFAULT_LAYOUT, MENU_HEIGHT);
         }
+    }
+
+    /**
+     * 判斷佈局是否為大尺寸（Full: 2500x1686）
+     */
+    private boolean isFullSizeLayout(String layout) {
+        return layout != null && (
+                layout.equals("3+4+4") ||
+                layout.equals("3+4+4+1") ||
+                layout.equals("1+4+4") ||
+                layout.equals("4+4")
+        );
+    }
+
+    /**
+     * 取得佈局對應的選單高度
+     */
+    private int getMenuHeightForLayout(String layout) {
+        return isFullSizeLayout(layout) ? MENU_HEIGHT_FULL : MENU_HEIGHT;
     }
 
     // ========================================
@@ -1673,5 +1818,435 @@ public class LineRichMenuService {
             log.error("建立自訂配置 Rich Menu 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
             throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗：" + e.getMessage());
         }
+    }
+
+    // ========================================
+    // 進階自訂 Rich Menu（付費功能：CUSTOM_RICH_MENU）
+    // ========================================
+
+    /**
+     * 將圖片縮放到指定尺寸（支援 Full/Half 兩種高度）
+     *
+     * @param imageBytes 原始圖片
+     * @param targetWidth 目標寬度
+     * @param targetHeight 目標高度
+     * @return 縮放後的圖片位元組陣列
+     */
+    private byte[] resizeImageToSize(byte[] imageBytes, int targetWidth, int targetHeight) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+            if (originalImage == null) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "無法讀取圖片");
+            }
+
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+
+            if (originalWidth == targetWidth && originalHeight == targetHeight) {
+                return imageBytes;
+            }
+
+            log.info("縮放圖片：{}x{} → {}x{}", originalWidth, originalHeight, targetWidth, targetHeight);
+
+            // Cover 策略
+            double scale = Math.max((double) targetWidth / originalWidth, (double) targetHeight / originalHeight);
+            int scaledWidth = (int) Math.round(originalWidth * scale);
+            int scaledHeight = (int) Math.round(originalHeight * scale);
+
+            BufferedImage scaledImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = scaledImage.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
+            g2d.dispose();
+
+            // 置中裁切
+            int cropX = (scaledWidth - targetWidth) / 2;
+            int cropY = (scaledHeight - targetHeight) / 2;
+            BufferedImage cropped = scaledImage.getSubimage(cropX, cropY, targetWidth, targetHeight);
+
+            BufferedImage output = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D outG = output.createGraphics();
+            outG.drawImage(cropped, 0, 0, null);
+            outG.dispose();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(output, "png", baos);
+            byte[] result = baos.toByteArray();
+
+            // 超過 1MB 轉 JPEG
+            if (result.length > MAX_IMAGE_SIZE) {
+                log.warn("圖片超過 1MB（{}KB），轉為 JPEG", result.length / 1024);
+                baos = new ByteArrayOutputStream();
+                ImageIO.write(output, "jpg", baos);
+                result = baos.toByteArray();
+                if (result.length > MAX_IMAGE_SIZE) {
+                    throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理後仍超過 1MB");
+                }
+            }
+
+            return result;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片處理失敗：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 合成進階自訂 Rich Menu 圖片
+     *
+     * <p>合成步驟：
+     * <ol>
+     *   <li>載入/縮放背景到目標尺寸</li>
+     *   <li>對每格有自訂圖示的 cell：圓形裁切後繪製到格子中心偏上</li>
+     *   <li>對每格繪製文字標籤（可設顏色、帶陰影描邊）</li>
+     *   <li>匯出 PNG（超過 1MB 轉 JPEG）</li>
+     * </ol>
+     *
+     * @param backgroundBytes 背景圖片（可為 null，則使用純色）
+     * @param cellIcons 每格圖示 Map（key=格子索引, value=圖示圖片 bytes）
+     * @param configJson 配置 JSON
+     * @return 合成後的圖片位元組陣列
+     */
+    public byte[] composeAdvancedRichMenuImage(
+            byte[] backgroundBytes,
+            java.util.Map<Integer, byte[]> cellIcons,
+            String configJson
+    ) {
+        try {
+            JsonNode config = objectMapper.readTree(configJson);
+            String layout = config.path("layout").asText(DEFAULT_LAYOUT);
+            String bgColor = config.path("backgroundColor").asText("#F5F0E8");
+            JsonNode cellsConfig = config.path("cells");
+
+            int menuHeight = getMenuHeightForLayout(layout);
+            int[][] layoutAreas = getLayoutAreasWithHeight(layout, menuHeight);
+
+            // ========================================
+            // 1. 建立畫布 + 背景
+            // ========================================
+            BufferedImage canvas = new BufferedImage(MENU_WIDTH, menuHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = canvas.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+            if (backgroundBytes != null && backgroundBytes.length > 0) {
+                // 使用背景圖片
+                byte[] resizedBg = resizeImageToSize(backgroundBytes, MENU_WIDTH, menuHeight);
+                BufferedImage bgImage = ImageIO.read(new java.io.ByteArrayInputStream(resizedBg));
+                if (bgImage != null) {
+                    g2d.drawImage(bgImage, 0, 0, MENU_WIDTH, menuHeight, null);
+                }
+            } else {
+                // 使用純色背景
+                try {
+                    g2d.setColor(Color.decode(bgColor));
+                } catch (NumberFormatException e) {
+                    g2d.setColor(new Color(0xF5, 0xF0, 0xE8));
+                }
+                g2d.fillRect(0, 0, MENU_WIDTH, menuHeight);
+            }
+
+            // ========================================
+            // 2. 對每格繪製圖示和文字
+            // ========================================
+            Font textFont = loadChineseFont(Font.BOLD, 48);
+
+            for (int i = 0; i < layoutAreas.length; i++) {
+                int[] area = layoutAreas[i];
+                int cellX = area[0];
+                int cellY = area[1];
+                int cellW = area[2];
+                int cellH = area[3];
+                int centerX = cellX + cellW / 2;
+                int centerY = cellY + cellH / 2;
+
+                // 取得 cell 配置
+                JsonNode cellConfig = null;
+                if (cellsConfig != null && cellsConfig.isArray()) {
+                    for (JsonNode c : cellsConfig) {
+                        if (c.path("index").asInt(-1) == i) {
+                            cellConfig = c;
+                            break;
+                        }
+                    }
+                }
+
+                // 繪製圓形圖示
+                if (cellIcons != null && cellIcons.containsKey(i)) {
+                    byte[] iconBytes = cellIcons.get(i);
+                    if (iconBytes != null && iconBytes.length > 0) {
+                        try {
+                            BufferedImage iconImg = ImageIO.read(new java.io.ByteArrayInputStream(iconBytes));
+                            if (iconImg != null) {
+                                int iconSize = Math.min(cellW, cellH) / 3;
+                                String iconShape = cellConfig != null ? cellConfig.path("iconShape").asText("circle") : "circle";
+
+                                // 縮放圖示
+                                BufferedImage scaledIcon = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB);
+                                Graphics2D iconG = scaledIcon.createGraphics();
+                                iconG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                                iconG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                                // 圓形裁切
+                                if ("circle".equals(iconShape)) {
+                                    iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, iconSize, iconSize));
+                                }
+                                iconG.drawImage(iconImg, 0, 0, iconSize, iconSize, null);
+                                iconG.dispose();
+
+                                // 繪製到畫布（格子中心偏上）
+                                int iconX = centerX - iconSize / 2;
+                                int iconY = centerY - iconSize / 2 - cellH / 8;
+                                g2d.drawImage(scaledIcon, iconX, iconY, null);
+                            }
+                        } catch (IOException e) {
+                            log.warn("載入格子 {} 圖示失敗：{}", i, e.getMessage());
+                        }
+                    }
+                }
+
+                // 繪製文字標籤
+                String label = cellConfig != null ? cellConfig.path("label").asText("") : "";
+                if (!label.isEmpty()) {
+                    String labelColorHex = cellConfig != null ? cellConfig.path("labelColor").asText("#FFFFFF") : "#FFFFFF";
+                    int labelSize = cellConfig != null ? cellConfig.path("labelSize").asInt(0) : 0;
+                    if (labelSize <= 0) {
+                        labelSize = Math.max(28, Math.min(48, cellW / 14));
+                    }
+
+                    Color labelColor;
+                    try {
+                        labelColor = Color.decode(labelColorHex);
+                    } catch (NumberFormatException e) {
+                        labelColor = Color.WHITE;
+                    }
+
+                    Font cellFont = textFont.deriveFont((float) labelSize);
+                    g2d.setFont(cellFont);
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int textWidth = fm.stringWidth(label);
+                    int textX = centerX - textWidth / 2;
+
+                    // 文字位置：圖示下方或格子中心
+                    boolean hasIcon = cellIcons != null && cellIcons.containsKey(i);
+                    int textY;
+                    if (hasIcon) {
+                        int iconSize = Math.min(cellW, cellH) / 3;
+                        textY = centerY + iconSize / 2 + fm.getAscent() / 2;
+                    } else {
+                        textY = centerY + fm.getAscent() / 4;
+                    }
+
+                    // 描邊文字（提高可讀性）
+                    Color outlineColor = getContrastOutlineColor(labelColor);
+                    FontRenderContext frc = g2d.getFontRenderContext();
+                    TextLayout textLayout = new TextLayout(label, cellFont, frc);
+                    AffineTransform transform = AffineTransform.getTranslateInstance(textX, textY);
+                    Shape textShape = textLayout.getOutline(transform);
+
+                    g2d.setStroke(new BasicStroke(4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    g2d.setColor(outlineColor);
+                    g2d.draw(textShape);
+                    g2d.setColor(labelColor);
+                    g2d.fill(textShape);
+                }
+            }
+
+            g2d.dispose();
+
+            // ========================================
+            // 3. 匯出
+            // ========================================
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(canvas, "png", baos);
+            byte[] result = baos.toByteArray();
+
+            if (result.length > MAX_IMAGE_SIZE) {
+                log.warn("合成圖片超過 1MB（{}KB），轉為 JPEG", result.length / 1024);
+                // 轉 RGB（JPEG 不支援 ARGB）
+                BufferedImage rgbImage = new BufferedImage(MENU_WIDTH, menuHeight, BufferedImage.TYPE_INT_RGB);
+                Graphics2D rgbG = rgbImage.createGraphics();
+                rgbG.drawImage(canvas, 0, 0, null);
+                rgbG.dispose();
+                baos = new ByteArrayOutputStream();
+                ImageIO.write(rgbImage, "jpg", baos);
+                result = baos.toByteArray();
+            }
+
+            log.info("進階 Rich Menu 圖片合成完成，大小：{}KB", result.length / 1024);
+            return result;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("進階 Rich Menu 圖片合成失敗：{}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "圖片合成失敗：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 建立進階自訂 Rich Menu 並發布到 LINE
+     *
+     * @param tenantId 租戶 ID
+     * @param backgroundBytes 背景圖片（可為 null）
+     * @param cellIcons 每格圖示
+     * @param configJson 配置 JSON
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createAdvancedRichMenu(
+            String tenantId,
+            byte[] backgroundBytes,
+            java.util.Map<Integer, byte[]> cellIcons,
+            String configJson
+    ) {
+        log.info("開始建立進階自訂 Rich Menu，租戶：{}", tenantId);
+
+        try {
+            // ========================================
+            // 1. 合成圖片
+            // ========================================
+            byte[] compositeImage = composeAdvancedRichMenuImage(backgroundBytes, cellIcons, configJson);
+
+            // ========================================
+            // 2. 解析配置取得佈局和選單項目
+            // ========================================
+            JsonNode config = objectMapper.readTree(configJson);
+            String layout = config.path("layout").asText(DEFAULT_LAYOUT);
+            JsonNode cellsConfig = config.path("cells");
+
+            int menuHeight = getMenuHeightForLayout(layout);
+            int[][] layoutAreas = getLayoutAreasWithHeight(layout, menuHeight);
+
+            // 從 cells 配置建立選單項目
+            int cellCount = Math.min(
+                    cellsConfig != null && cellsConfig.isArray() ? cellsConfig.size() : layoutAreas.length,
+                    layoutAreas.length
+            );
+
+            String[][] menuItems = new String[cellCount][2];
+            for (int i = 0; i < cellCount; i++) {
+                JsonNode cellConfig = null;
+                if (cellsConfig != null && cellsConfig.isArray()) {
+                    for (JsonNode c : cellsConfig) {
+                        if (c.path("index").asInt(-1) == i) {
+                            cellConfig = c;
+                            break;
+                        }
+                    }
+                }
+
+                String label = cellConfig != null ? cellConfig.path("label").asText("選單 " + (i + 1)) : "選單 " + (i + 1);
+                String action = "main_menu";
+
+                if (cellConfig != null && cellConfig.has("action")) {
+                    JsonNode actionNode = cellConfig.path("action");
+                    if (actionNode.isTextual()) {
+                        action = actionNode.asText("main_menu");
+                    } else if (actionNode.isObject()) {
+                        String actionType = actionNode.path("type").asText("");
+                        if ("flex_popup".equals(actionType)) {
+                            action = "flex_popup&cellKey=" + i;
+                        } else {
+                            action = actionNode.path("data").asText("main_menu");
+                        }
+                    }
+                }
+
+                menuItems[i][0] = label;
+                menuItems[i][1] = action;
+            }
+
+            // ========================================
+            // 3. 刪除現有 Rich Menu
+            // ========================================
+            deleteRichMenu(tenantId);
+
+            // ========================================
+            // 4. 取得店家名稱
+            // ========================================
+            String shopName = tenantRepository.findById(tenantId)
+                    .map(Tenant::getName)
+                    .orElse("預約服務");
+
+            // ========================================
+            // 5. 建立 Rich Menu 結構
+            // ========================================
+            ObjectNode requestBody = buildRichMenuRequestWithLayout(shopName, layout, menuItems);
+            String accessToken = getAccessToken(tenantId);
+            String url = apiEndpoint + CREATE_RICH_MENU_API;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, HttpMethod.POST, request, JsonNode.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立進階 Rich Menu 失敗");
+            }
+
+            String richMenuId = response.getBody().path("richMenuId").asText();
+            log.info("進階 Rich Menu 建立成功，ID：{}", richMenuId);
+
+            // ========================================
+            // 6. 上傳圖片 + 設為預設
+            // ========================================
+            uploadRichMenuImage(tenantId, richMenuId, compositeImage);
+            setDefaultRichMenu(tenantId, richMenuId);
+
+            // ========================================
+            // 7. 儲存 mode=ADVANCED + config
+            // ========================================
+            lineConfigRepository.findByTenantId(tenantId).ifPresent(lineConfig -> {
+                lineConfig.setRichMenuId(richMenuId);
+                lineConfig.setRichMenuTheme("ADVANCED");
+                lineConfig.setRichMenuMode("ADVANCED");
+                lineConfig.setRichMenuCustomConfig(configJson);
+                lineConfigRepository.save(lineConfig);
+            });
+
+            return richMenuId;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("建立進階 Rich Menu 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立進階 Rich Menu 失敗：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 取得進階 Rich Menu 配置
+     *
+     * @param tenantId 租戶 ID
+     * @return 配置 JSON 字串（可能為 null）
+     */
+    public String getAdvancedConfig(String tenantId) {
+        return lineConfigRepository.findByTenantId(tenantId)
+                .map(TenantLineConfig::getRichMenuCustomConfig)
+                .orElse(null);
+    }
+
+    /**
+     * 儲存進階 Rich Menu 配置草稿（不發布到 LINE）
+     *
+     * @param tenantId 租戶 ID
+     * @param configJson 配置 JSON
+     */
+    @Transactional
+    public void saveAdvancedConfig(String tenantId, String configJson) {
+        lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+            config.setRichMenuCustomConfig(configJson);
+            lineConfigRepository.save(config);
+        });
+        log.info("儲存進階 Rich Menu 配置草稿，租戶：{}", tenantId);
     }
 }

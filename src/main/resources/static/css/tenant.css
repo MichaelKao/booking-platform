@@ -2093,3 +2093,54 @@
         max-width: 280px;
     }
 }
+
+/* ========================================
+   進階自訂 Rich Menu
+   ======================================== */
+
+/* 大尺寸佈局 mini 預覽（3行） */
+.layout-mini-3row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1px;
+    background: #dee2e6;
+    height: 48px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.layout-mini-3row > div {
+    background: #adb5bd;
+}
+
+/* 每格設定區塊 */
+.adv-cell-settings .border {
+    transition: border-color 0.15s;
+}
+
+.adv-cell-settings .border:hover {
+    border-color: var(--primary-color) !important;
+}
+
+.adv-cell-settings .adv-cell-label {
+    font-size: 0.8rem;
+}
+
+.adv-cell-settings .adv-cell-action {
+    font-size: 0.75rem;
+}
+
+/* Flex 彈窗 Modal 卡片 */
+#flexPopupBubbles .card {
+    border-color: #e0e0e0;
+}
+
+#flexPopupBubbles .card-header {
+    background: #f8f9fa;
+    padding: 0.5rem 0.75rem;
+}
+
+#flexPopupBubbles .card-body {
+    padding: 0.75rem;
+}

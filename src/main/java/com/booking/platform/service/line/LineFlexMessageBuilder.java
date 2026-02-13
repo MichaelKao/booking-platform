@@ -5838,4 +5838,190 @@ public class LineFlexMessageBuilder {
 
         return bubble;
     }
+
+    // ========================================
+    // 進階自訂 Rich Menu - Flex 彈窗
+    // ========================================
+
+    /**
+     * 建構自訂 Flex 彈窗（單一 Bubble 或 Carousel）
+     *
+     * <p>支援格式：
+     * <ul>
+     *   <li>單一 Bubble：heroImage + title + description + buttons</li>
+     *   <li>Carousel：多張 Bubble 卡片可左右滑動</li>
+     * </ul>
+     *
+     * @param flexPopupConfig 彈窗配置 JSON
+     * @return Flex Message JSON
+     */
+    public JsonNode buildCustomFlexPopup(JsonNode flexPopupConfig) {
+        if (flexPopupConfig == null) {
+            return buildMainMenu(null);
+        }
+
+        String type = flexPopupConfig.path("type").asText("carousel");
+        JsonNode bubblesConfig = flexPopupConfig.path("bubbles");
+
+        if (!bubblesConfig.isArray() || bubblesConfig.isEmpty()) {
+            // 如果沒有卡片，返回主選單
+            return null;
+        }
+
+        if ("carousel".equals(type) && bubblesConfig.size() > 1) {
+            // 多張卡片 → Carousel
+            ObjectNode carousel = objectMapper.createObjectNode();
+            carousel.put("type", "carousel");
+            ArrayNode contents = objectMapper.createArrayNode();
+
+            for (JsonNode bubbleConfig : bubblesConfig) {
+                contents.add(buildCustomFlexBubble(bubbleConfig));
+            }
+
+            carousel.set("contents", contents);
+
+            // 包裝為 Flex Message
+            ObjectNode flexMessage = objectMapper.createObjectNode();
+            flexMessage.put("type", "flex");
+            flexMessage.put("altText", "自訂選單");
+            flexMessage.set("contents", carousel);
+            return flexMessage;
+        } else {
+            // 單張卡片 → Bubble
+            JsonNode bubble = buildCustomFlexBubble(bubblesConfig.get(0));
+
+            ObjectNode flexMessage = objectMapper.createObjectNode();
+            flexMessage.put("type", "flex");
+            flexMessage.put("altText", "自訂選單");
+            flexMessage.set("contents", bubble);
+            return flexMessage;
+        }
+    }
+
+    /**
+     * 建構單張 Flex Bubble 卡片
+     *
+     * @param bubbleConfig 卡片配置
+     * @return Bubble JSON
+     */
+    private JsonNode buildCustomFlexBubble(JsonNode bubbleConfig) {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // ========================================
+        // Hero（主圖）
+        // ========================================
+        String heroImageUrl = bubbleConfig.path("heroImageUrl").asText("");
+        if (!heroImageUrl.isEmpty()) {
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", heroImageUrl);
+            hero.put("size", "full");
+            hero.put("aspectRatio", "20:13");
+            hero.put("aspectMode", "cover");
+            bubble.set("hero", hero);
+        }
+
+        // ========================================
+        // Body（標題 + 說明）
+        // ========================================
+        String title = bubbleConfig.path("title").asText("");
+        String description = bubbleConfig.path("description").asText("");
+
+        if (!title.isEmpty() || !description.isEmpty()) {
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("type", "box");
+            body.put("layout", "vertical");
+            body.put("paddingAll", "15px");
+            ArrayNode bodyContents = objectMapper.createArrayNode();
+
+            if (!title.isEmpty()) {
+                ObjectNode titleText = objectMapper.createObjectNode();
+                titleText.put("type", "text");
+                titleText.put("text", title);
+                titleText.put("weight", "bold");
+                titleText.put("size", "lg");
+                titleText.put("wrap", true);
+                bodyContents.add(titleText);
+            }
+
+            if (!description.isEmpty()) {
+                ObjectNode descText = objectMapper.createObjectNode();
+                descText.put("type", "text");
+                descText.put("text", description);
+                descText.put("size", "sm");
+                descText.put("color", "#888888");
+                descText.put("wrap", true);
+                if (!title.isEmpty()) {
+                    descText.put("margin", "md");
+                }
+                bodyContents.add(descText);
+            }
+
+            body.set("contents", bodyContents);
+            bubble.set("body", body);
+        }
+
+        // ========================================
+        // Footer（按鈕）
+        // ========================================
+        JsonNode buttonsConfig = bubbleConfig.path("buttons");
+        if (buttonsConfig.isArray() && !buttonsConfig.isEmpty()) {
+            ObjectNode footer = objectMapper.createObjectNode();
+            footer.put("type", "box");
+            footer.put("layout", "vertical");
+            footer.put("spacing", "sm");
+            footer.put("paddingAll", "15px");
+
+            ArrayNode footerContents = objectMapper.createArrayNode();
+
+            for (JsonNode btnConfig : buttonsConfig) {
+                String btnLabel = btnConfig.path("label").asText("按鈕");
+                JsonNode btnAction = btnConfig.path("action");
+
+                ObjectNode button = objectMapper.createObjectNode();
+                button.put("type", "button");
+                button.put("style", "primary");
+                button.put("height", "sm");
+
+                // 按鈕顏色
+                String btnColor = btnConfig.path("color").asText("#1DB446");
+                button.put("color", btnColor);
+
+                ObjectNode action = objectMapper.createObjectNode();
+                String actionType = btnAction.path("type").asText("postback");
+
+                switch (actionType) {
+                    case "uri" -> {
+                        action.put("type", "uri");
+                        action.put("label", btnLabel);
+                        action.put("uri", btnAction.path("uri").asText("https://example.com"));
+                    }
+                    case "postback" -> {
+                        action.put("type", "postback");
+                        action.put("label", btnLabel);
+                        action.put("data", btnAction.path("data").asText("action=main_menu"));
+                        action.put("displayText", btnLabel);
+                    }
+                    default -> {
+                        action.put("type", "postback");
+                        action.put("label", btnLabel);
+                        action.put("data", "action=main_menu");
+                        action.put("displayText", btnLabel);
+                    }
+                }
+
+                button.set("action", action);
+                footerContents.add(button);
+            }
+
+            // 加入「返回主選單」按鈕
+            footerContents.add(createButton("↩ 返回主選單", "action=main_menu", "#AAAAAA"));
+
+            footer.set("contents", footerContents);
+            bubble.set("footer", footer);
+        }
+
+        return bubble;
+    }
 }
