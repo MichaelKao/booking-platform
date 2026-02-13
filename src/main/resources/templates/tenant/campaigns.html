@@ -37,6 +37,7 @@
                                         <th>活動名稱</th>
                                         <th>類型</th>
                                         <th>活動期間</th>
+                                        <th class="text-center">參與人數</th>
                                         <th class="text-center">狀態</th>
                                         <th class="text-center" style="width: 180px;">操作</th>
                                     </tr>
@@ -117,6 +118,68 @@
                                 <span><span id="descCount">0</span>/500</span>
                             </div>
                         </div>
+
+                        <hr class="my-3">
+                        <h6 class="mb-3"><i class="bi bi-megaphone me-1"></i>推播與獎勵設定</h6>
+
+                        <!-- 推播訊息 -->
+                        <div class="mb-3">
+                            <label class="form-label">推播訊息</label>
+                            <textarea class="form-control" id="pushMessage" rows="3" maxlength="1000"
+                                      placeholder="發布活動時將推送此訊息給所有 LINE 追蹤者（選填）"></textarea>
+                            <div class="form-text">發布時會透過 LINE 推播通知給所有追蹤者</div>
+                        </div>
+
+                        <div class="row">
+                            <!-- 關聯票券 -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">關聯票券</label>
+                                <select class="form-select" id="couponId">
+                                    <option value="">不關聯票券</option>
+                                </select>
+                                <div class="form-text">發布時自動發放票券給追蹤者</div>
+                            </div>
+                            <!-- 贈送點數 -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">贈送點數</label>
+                                <input type="number" class="form-control" id="bonusPoints" min="0" max="99999"
+                                       placeholder="0">
+                                <div class="form-text">排程觸發時自動贈送點數</div>
+                            </div>
+                        </div>
+
+                        <!-- SPENDING_THRESHOLD 限定 -->
+                        <div class="mb-3" id="thresholdSection" style="display:none;">
+                            <label class="form-label">滿額門檻金額 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input type="number" class="form-control" id="thresholdAmount" min="1" max="999999"
+                                       placeholder="例如：1000">
+                            </div>
+                            <div class="form-text">顧客消費達此金額時觸發活動</div>
+                        </div>
+
+                        <!-- RECALL 限定 -->
+                        <div class="mb-3" id="recallSection" style="display:none;">
+                            <label class="form-label">未到訪天數門檻</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="recallDays" min="1" max="365"
+                                       placeholder="例如：30">
+                                <span class="input-group-text">天</span>
+                            </div>
+                            <div class="form-text">超過此天數未到訪的顧客將被觸發</div>
+                        </div>
+
+                        <!-- BIRTHDAY / RECALL 限定 -->
+                        <div class="mb-3" id="autoTriggerSection" style="display:none;">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isAutoTrigger">
+                                <label class="form-check-label" for="isAutoTrigger">
+                                    啟用排程自動觸發
+                                </label>
+                            </div>
+                            <div class="form-text" id="autoTriggerHint">勾選後系統會依排程自動發送獎勵</div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -155,15 +218,44 @@
 
             document.getElementById('type').addEventListener('change', function() {
                 document.getElementById('typeHint').textContent = TYPE_HINTS[this.value] || '';
+                toggleTypeFields(this.value);
             });
         });
+
+        // 根據活動類型顯示/隱藏對應欄位
+        function toggleTypeFields(type) {
+            document.getElementById('thresholdSection').style.display = type === 'SPENDING_THRESHOLD' ? '' : 'none';
+            document.getElementById('recallSection').style.display = type === 'RECALL' ? '' : 'none';
+            const showAutoTrigger = type === 'BIRTHDAY' || type === 'RECALL';
+            document.getElementById('autoTriggerSection').style.display = showAutoTrigger ? '' : 'none';
+            if (type === 'BIRTHDAY') {
+                document.getElementById('autoTriggerHint').textContent = '生日當天自動發送票券/點數';
+            } else if (type === 'RECALL') {
+                document.getElementById('autoTriggerHint').textContent = '久未到訪時自動發送票券/點數';
+            }
+        }
+
+        // 載入票券下拉選項
+        async function loadCoupons() {
+            try {
+                const r = await api.get('/api/coupons');
+                const items = r.data?.content || r.data || [];
+                const select = document.getElementById('couponId');
+                select.innerHTML = '<option value="">不關聯票券</option>';
+                items.filter(c => c.status === 'PUBLISHED').forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+                });
+            } catch (e) {
+                console.error('載入票券列表失敗:', e);
+            }
+        }
 
         async function loadData() {
             try {
                 const r = await api.get('/api/campaigns');
                 const items = r.data?.content || r.data || [];
                 document.getElementById('dataTable').innerHTML = items.length === 0
-                    ? `<tr><td colspan="5" class="text-center text-muted py-5">
+                    ? `<tr><td colspan="6" class="text-center text-muted py-5">
                         <i class="bi bi-megaphone" style="font-size: 2rem;"></i>
                         <p class="mt-2 mb-0">尚無行銷活動</p>
                         <button class="btn btn-primary btn-sm mt-2" onclick="openCreateModal()">
@@ -179,6 +271,7 @@
                             </td>
                             <td><span class="badge bg-light text-dark">${TYPE_MAP[c.type] || c.type}</span></td>
                             <td class="small">${period}</td>
+                            <td class="text-center">${c.participantCount || 0}</td>
                             <td class="text-center">${getCampaignStatusBadge(c.status)}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
@@ -193,7 +286,7 @@
                     }).join('');
             } catch (e) {
                 console.error('載入活動失敗:', e);
-                document.getElementById('dataTable').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-5">載入失敗</td></tr>';
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">載入失敗</td></tr>';
             }
         }
 
@@ -204,11 +297,14 @@
             document.getElementById('descCount').textContent = '0';
             document.getElementById('typeHint').textContent = TYPE_HINTS['BIRTHDAY'];
             document.getElementById('modalTitle').textContent = '新增活動';
+            toggleTypeFields('BIRTHDAY');
+            loadCoupons();
             new bootstrap.Modal(document.getElementById('formModal')).show();
         }
 
         async function editData(id) {
             try {
+                await loadCoupons();
                 const r = await api.get(`/api/campaigns/${id}`);
                 if (r.success && r.data) {
                     const d = r.data;
@@ -221,6 +317,14 @@
                     document.getElementById('description').value = d.description || '';
                     document.getElementById('descCount').textContent = (d.description || '').length;
                     document.getElementById('typeHint').textContent = TYPE_HINTS[d.type] || '';
+                    // 新欄位回填
+                    document.getElementById('pushMessage').value = d.pushMessage || '';
+                    document.getElementById('couponId').value = d.couponId || '';
+                    document.getElementById('bonusPoints').value = d.bonusPoints || '';
+                    document.getElementById('thresholdAmount').value = d.thresholdAmount || '';
+                    document.getElementById('recallDays').value = d.recallDays || '';
+                    document.getElementById('isAutoTrigger').checked = d.isAutoTrigger || false;
+                    toggleTypeFields(d.type || 'BIRTHDAY');
                     document.getElementById('modalTitle').textContent = '編輯活動';
                     new bootstrap.Modal(document.getElementById('formModal')).show();
                 }
@@ -268,12 +372,19 @@
             }
 
             const id = document.getElementById('dataId').value;
+            const typeVal = document.getElementById('type').value;
             const data = {
                 name: nameEl.value.trim(),
-                type: document.getElementById('type').value,
+                type: typeVal,
                 startAt: formatDateTimeForApi(startVal),
                 endAt: formatDateTimeForApi(endVal),
-                description: document.getElementById('description').value.trim() || null
+                description: document.getElementById('description').value.trim() || null,
+                pushMessage: document.getElementById('pushMessage').value.trim() || null,
+                couponId: document.getElementById('couponId').value || null,
+                bonusPoints: document.getElementById('bonusPoints').value ? parseInt(document.getElementById('bonusPoints').value) : null,
+                thresholdAmount: typeVal === 'SPENDING_THRESHOLD' && document.getElementById('thresholdAmount').value ? parseFloat(document.getElementById('thresholdAmount').value) : null,
+                recallDays: typeVal === 'RECALL' && document.getElementById('recallDays').value ? parseInt(document.getElementById('recallDays').value) : null,
+                isAutoTrigger: (typeVal === 'BIRTHDAY' || typeVal === 'RECALL') ? document.getElementById('isAutoTrigger').checked : false
             };
 
             const btn = document.getElementById('saveBtn');
@@ -299,7 +410,7 @@
         }
 
         async function publishCampaign(id) {
-            if (!await showConfirm('確定要發布此活動嗎？發布後活動將立即生效。')) return;
+            if (!await showConfirm('確定要發布此活動嗎？發布後活動將立即生效，若有設定推播訊息將發送給所有 LINE 追蹤者。')) return;
             try {
                 const r = await api.post(`/api/campaigns/${id}/publish`);
                 if (r.success) { showSuccess('活動已發布'); loadData(); }

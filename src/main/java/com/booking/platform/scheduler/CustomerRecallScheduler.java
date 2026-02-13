@@ -1,10 +1,14 @@
 package com.booking.platform.scheduler;
 
 import com.booking.platform.entity.customer.Customer;
+import com.booking.platform.entity.marketing.Campaign;
 import com.booking.platform.entity.tenant.Tenant;
+import com.booking.platform.enums.CampaignType;
 import com.booking.platform.enums.FeatureCode;
+import com.booking.platform.repository.CampaignRepository;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.TenantRepository;
+import com.booking.platform.service.CampaignPushService;
 import com.booking.platform.service.FeatureService;
 import com.booking.platform.service.line.LineNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,8 @@ public class CustomerRecallScheduler {
     private final TenantRepository tenantRepository;
     private final LineNotificationService lineNotificationService;
     private final FeatureService featureService;
+    private final CampaignRepository campaignRepository;
+    private final CampaignPushService campaignPushService;
 
     @Value("${scheduler.customer-recall.enabled:true}")
     private boolean enabled;
@@ -93,6 +99,13 @@ public class CustomerRecallScheduler {
                     log.debug("店家 {} 有 {} 位顧客需要喚回（本次發送 {} 位）",
                             tenant.getName(), inactiveCustomers.size(), customersToNotify.size());
 
+                    // 查詢 ACTIVE 的 RECALL 活動（isAutoTrigger=true）
+                    List<Campaign> recallCampaigns = campaignRepository
+                            .findActiveByTenantIdAndType(tenant.getId(), CampaignType.RECALL, LocalDateTime.now())
+                            .stream()
+                            .filter(c -> Boolean.TRUE.equals(c.getIsAutoTrigger()))
+                            .toList();
+
                     for (Customer customer : customersToNotify) {
                         try {
                             // 發送喚回通知
@@ -101,6 +114,16 @@ public class CustomerRecallScheduler {
                                     customer,
                                     tenant.getCustomerRecallMessage()
                             );
+
+                            // 觸發活動獎勵（發票券、送點數）
+                            for (Campaign campaign : recallCampaigns) {
+                                try {
+                                    campaignPushService.triggerForCustomer(tenant.getId(), campaign, customer);
+                                } catch (Exception ce) {
+                                    log.warn("喚回活動獎勵觸發失敗，活動：{}，顧客：{}，錯誤：{}",
+                                            campaign.getName(), customer.getId(), ce.getMessage());
+                                }
+                            }
 
                             // 更新最後喚回時間
                             customer.setLastRecallAt(LocalDateTime.now());

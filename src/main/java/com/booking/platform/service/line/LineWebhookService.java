@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * LINE Webhook 處理服務
@@ -887,6 +888,17 @@ public class LineWebhookService {
         try {
             // 查詢可領取的票券（已發布、有庫存、未過期）
             List<Coupon> coupons = couponRepository.findAvailableByTenantId(tenantId);
+
+            // 取得顧客 ID，過濾已領滿的票券
+            String customerId = lineUserService.getCustomerId(tenantId, userId);
+            if (customerId != null) {
+                coupons = coupons.stream().filter(coupon -> {
+                    long claimed = couponInstanceRepository.countByCustomerAndCoupon(
+                            tenantId, coupon.getId(), customerId);
+                    int limit = coupon.getLimitPerCustomer() != null ? coupon.getLimitPerCustomer() : 1;
+                    return claimed < limit;
+                }).collect(Collectors.toList());
+            }
 
             if (coupons.isEmpty()) {
                 messageService.replyText(tenantId, replyToken, "目前沒有可領取的票券。");

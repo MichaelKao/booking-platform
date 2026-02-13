@@ -1,10 +1,14 @@
 package com.booking.platform.scheduler;
 
 import com.booking.platform.entity.customer.Customer;
+import com.booking.platform.entity.marketing.Campaign;
 import com.booking.platform.entity.tenant.Tenant;
+import com.booking.platform.enums.CampaignType;
 import com.booking.platform.enums.FeatureCode;
+import com.booking.platform.repository.CampaignRepository;
 import com.booking.platform.repository.CustomerRepository;
 import com.booking.platform.repository.TenantRepository;
+import com.booking.platform.service.CampaignPushService;
 import com.booking.platform.service.FeatureService;
 import com.booking.platform.service.line.LineNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,6 +41,8 @@ public class BirthdayGreetingScheduler {
     private final TenantRepository tenantRepository;
     private final LineNotificationService lineNotificationService;
     private final FeatureService featureService;
+    private final CampaignRepository campaignRepository;
+    private final CampaignPushService campaignPushService;
 
     @Value("${scheduler.birthday-greeting.enabled:true}")
     private boolean enabled;
@@ -81,6 +88,13 @@ public class BirthdayGreetingScheduler {
 
                     log.debug("店家 {} 有 {} 位顧客今天生日", tenant.getName(), birthdayCustomers.size());
 
+                    // 查詢 ACTIVE 的 BIRTHDAY 活動（isAutoTrigger=true）
+                    List<Campaign> birthdayCampaigns = campaignRepository
+                            .findActiveByTenantIdAndType(tenant.getId(), CampaignType.BIRTHDAY, LocalDateTime.now())
+                            .stream()
+                            .filter(c -> Boolean.TRUE.equals(c.getIsAutoTrigger()))
+                            .toList();
+
                     for (Customer customer : birthdayCustomers) {
                         try {
                             // 發送生日祝福
@@ -89,6 +103,17 @@ public class BirthdayGreetingScheduler {
                                     customer,
                                     tenant.getBirthdayGreetingMessage()
                             );
+
+                            // 觸發活動獎勵（發票券、送點數）
+                            for (Campaign campaign : birthdayCampaigns) {
+                                try {
+                                    campaignPushService.triggerForCustomer(tenant.getId(), campaign, customer);
+                                } catch (Exception ce) {
+                                    log.warn("生日活動獎勵觸發失敗，活動：{}，顧客：{}，錯誤：{}",
+                                            campaign.getName(), customer.getId(), ce.getMessage());
+                                }
+                            }
+
                             totalSent++;
                         } catch (Exception e) {
                             log.error("發送生日祝福失敗，顧客 ID：{}，錯誤：{}", customer.getId(), e.getMessage());

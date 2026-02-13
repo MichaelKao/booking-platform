@@ -40,6 +40,7 @@ public class CampaignService {
     private final CampaignRepository campaignRepository;
     private final CouponRepository couponRepository;
     private final CampaignMapper campaignMapper;
+    private final CampaignPushService campaignPushService;
 
     // ========================================
     // 查詢方法
@@ -237,6 +238,11 @@ public class CampaignService {
         entity = campaignRepository.save(entity);
 
         log.info("行銷活動已發布，ID：{}", id);
+
+        // 發布後，如果有推播訊息，發送 LINE 通知給所有追蹤者
+        if (entity.getPushMessage() != null && !entity.getPushMessage().isBlank()) {
+            campaignPushService.sendCampaignPush(tenantId, entity);
+        }
 
         return campaignMapper.toResponse(entity);
     }
