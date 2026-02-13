@@ -1216,7 +1216,7 @@ public class LineFlexMessageBuilder {
      * @param date      預約日期
      * @return Flex Message 內容
      */
-    public JsonNode buildStaffMenuByDate(String tenantId, String serviceId, LocalDate date) {
+    public JsonNode buildStaffMenuByDate(String tenantId, String serviceId, LocalDate date, Integer duration) {
         // 如果日期為 null，使用今天
         if (date == null) {
             date = LocalDate.now();
@@ -1249,6 +1249,17 @@ public class LineFlexMessageBuilder {
                 if (!onLeave) {
                     availableStaff.add(staff);
                 }
+            }
+        }
+
+        // 檢查每位員工的可預約時段數量
+        Map<String, Integer> staffSlotCounts = new java.util.LinkedHashMap<>();
+        int totalStaffWithSlots = 0;
+        for (Staff staff : availableStaff) {
+            int slotCount = getAvailableSlotCount(tenantId, staff.getId(), date, duration);
+            staffSlotCounts.put(staff.getId(), slotCount);
+            if (slotCount > 0) {
+                totalStaffWithSlots++;
             }
         }
 
@@ -1305,11 +1316,11 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bodyContents = objectMapper.createArrayNode();
 
-        if (availableStaff.isEmpty()) {
-            // 沒有可用員工
+        if (availableStaff.isEmpty() || totalStaffWithSlots == 0) {
+            // 沒有可用員工或全部員工都沒有可預約時段
             ObjectNode noStaffText = objectMapper.createObjectNode();
             noStaffText.put("type", "text");
-            noStaffText.put("text", "此日期沒有可預約的服務人員");
+            noStaffText.put("text", "此日期沒有可預約的時段");
             noStaffText.put("size", "sm");
             noStaffText.put("color", SECONDARY_COLOR);
             noStaffText.put("wrap", true);
@@ -1318,7 +1329,7 @@ public class LineFlexMessageBuilder {
 
             ObjectNode tipText = objectMapper.createObjectNode();
             tipText.put("type", "text");
-            tipText.put("text", "請選擇其他日期");
+            tipText.put("text", "請返回選擇其他日期");
             tipText.put("size", "xs");
             tipText.put("color", SECONDARY_COLOR);
             tipText.put("wrap", true);
@@ -1342,19 +1353,26 @@ public class LineFlexMessageBuilder {
             separator.put("margin", "md");
             bodyContents.add(separator);
 
-            // 不指定選項（推薦）
+            // 不指定選項（推薦）- 只在有可用員工時顯示
             bodyContents.add(createStaffButton("🎲 不指定（推薦）", "系統自動安排最佳人員", null));
 
-            // 可用員工列表
+            // 可用員工列表（區分有無可預約時段）
             for (Staff staff : availableStaff) {
-                String bio = staff.getBio() != null && !staff.getBio().isEmpty()
-                        ? staff.getBio()
-                        : "專業服務人員";
-                bodyContents.add(createStaffButton(
-                        staff.getName(),
-                        bio,
-                        staff.getId()
-                ));
+                int slotCount = staffSlotCounts.getOrDefault(staff.getId(), 0);
+                if (slotCount > 0) {
+                    // 有可預約時段 - 可點擊
+                    String bio = staff.getBio() != null && !staff.getBio().isEmpty()
+                            ? staff.getBio() + "（" + slotCount + " 個時段）"
+                            : "可預約 " + slotCount + " 個時段";
+                    bodyContents.add(createStaffButton(
+                            staff.getName(),
+                            bio,
+                            staff.getId()
+                    ));
+                } else {
+                    // 無可預約時段 - 不可點擊，灰色顯示
+                    bodyContents.add(createDisabledStaffRow(staff.getName(), "今日無可預約時段"));
+                }
             }
         }
 
@@ -1425,6 +1443,54 @@ public class LineFlexMessageBuilder {
         return box;
     }
 
+    /**
+     * 建構不可點擊的員工列（無可預約時段）
+     */
+    private ObjectNode createDisabledStaffRow(String name, String reason) {
+        ObjectNode box = objectMapper.createObjectNode();
+        box.put("type", "box");
+        box.put("layout", "horizontal");
+        box.put("spacing", "md");
+        box.put("paddingAll", "10px");
+        box.put("borderWidth", "1px");
+        box.put("borderColor", "#E0E0E0");
+        box.put("cornerRadius", "8px");
+        box.put("backgroundColor", "#F5F5F5");
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        // 員工資訊
+        ObjectNode infoBox = objectMapper.createObjectNode();
+        infoBox.put("type", "box");
+        infoBox.put("layout", "vertical");
+        infoBox.put("flex", 3);
+
+        ArrayNode infoContents = objectMapper.createArrayNode();
+
+        ObjectNode nameText = objectMapper.createObjectNode();
+        nameText.put("type", "text");
+        nameText.put("text", name);
+        nameText.put("weight", "bold");
+        nameText.put("color", "#BDBDBD");
+        infoContents.add(nameText);
+
+        ObjectNode reasonText = objectMapper.createObjectNode();
+        reasonText.put("type", "text");
+        reasonText.put("text", reason);
+        reasonText.put("size", "xs");
+        reasonText.put("color", "#BDBDBD");
+        infoContents.add(reasonText);
+
+        infoBox.set("contents", infoContents);
+        contents.add(infoBox);
+
+        box.set("contents", contents);
+
+        // 不設定 action，讓此區塊不可點擊
+
+        return box;
+    }
+
     // ========================================
     // 4. 日期選單
     // ========================================
@@ -1435,7 +1501,7 @@ public class LineFlexMessageBuilder {
      * @param tenantId 租戶 ID
      * @return Flex Message 內容（Carousel 格式）
      */
-    public JsonNode buildDateMenu(String tenantId) {
+    public JsonNode buildDateMenu(String tenantId, Integer duration) {
         // 取得店家設定
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
         int maxAdvanceDays = tenantOpt.map(Tenant::getMaxAdvanceBookingDays).orElse(30);
@@ -1445,7 +1511,7 @@ public class LineFlexMessageBuilder {
         DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)", java.util.Locale.TAIWAN);
         DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
-        // 收集所有可用日期
+        // 收集所有可用日期（排除公休日 + 無可預約時段的日期）
         List<LocalDate> availableDates = new java.util.ArrayList<>();
         int dayOffset = 0;
 
@@ -1454,9 +1520,17 @@ public class LineFlexMessageBuilder {
             int dayOfWeek = date.getDayOfWeek().getValue() % 7;
 
             if (!closedDays.contains(dayOfWeek)) {
-                availableDates.add(date);
+                // 檢查該日期是否有任何可預約時段
+                if (hasAnyAvailableSlot(tenantId, date, duration)) {
+                    availableDates.add(date);
+                }
             }
             dayOffset++;
+        }
+
+        // 如果沒有任何可預約日期，顯示提示訊息
+        if (availableDates.isEmpty()) {
+            return buildNoAvailableDateBubble();
         }
 
         // 如果日期少於等於 10 個，使用單一 Bubble
@@ -1587,6 +1661,67 @@ public class LineFlexMessageBuilder {
             String label = date.equals(today) ? "今天 " + displayDate : displayDate;
             bodyContents.add(createDateButton(label, dataDate));
         }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        bubble.set("footer", createBackFooter());
+        return bubble;
+    }
+
+    /**
+     * 建構無可預約日期提示 Bubble
+     */
+    private JsonNode buildNoAvailableDateBubble() {
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("paddingAll", "15px");
+
+        ObjectNode headerText = objectMapper.createObjectNode();
+        headerText.put("type", "text");
+        headerText.put("text", "📅 選擇日期");
+        headerText.put("size", "lg");
+        headerText.put("weight", "bold");
+        headerText.put("color", "#FFFFFF");
+        headerText.put("align", "center");
+
+        header.set("contents", objectMapper.createArrayNode().add(headerText));
+        bubble.set("header", header);
+
+        // Body
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "md");
+        body.put("paddingAll", "20px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        ObjectNode noDateText = objectMapper.createObjectNode();
+        noDateText.put("type", "text");
+        noDateText.put("text", "目前沒有可預約的日期");
+        noDateText.put("size", "md");
+        noDateText.put("weight", "bold");
+        noDateText.put("color", SECONDARY_COLOR);
+        noDateText.put("align", "center");
+        noDateText.put("wrap", true);
+        bodyContents.add(noDateText);
+
+        ObjectNode tipText = objectMapper.createObjectNode();
+        tipText.put("type", "text");
+        tipText.put("text", "所有日期的時段都已額滿，請稍後再試或聯繫店家");
+        tipText.put("size", "xs");
+        tipText.put("color", SECONDARY_COLOR);
+        tipText.put("align", "center");
+        tipText.put("wrap", true);
+        tipText.put("margin", "md");
+        bodyContents.add(tipText);
 
         body.set("contents", bodyContents);
         bubble.set("body", body);
@@ -1734,6 +1869,12 @@ public class LineFlexMessageBuilder {
     private List<LocalTime> generateAvailableSlots(String tenantId, String staffId, LocalDate date, Integer duration) {
         List<LocalTime> slots = new ArrayList<>();
 
+        // 防護：日期為 null 時返回空
+        if (date == null) {
+            log.warn("generateAvailableSlots 收到 null date，返回空時段");
+            return slots;
+        }
+
         // 取得店家設定
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
         if (tenantOpt.isEmpty()) {
@@ -1860,6 +2001,38 @@ public class LineFlexMessageBuilder {
         }
 
         return slots;
+    }
+
+    /**
+     * 檢查指定日期是否有任何可預約時段（用於過濾日期選單）
+     *
+     * @param tenantId 租戶 ID
+     * @param date     日期
+     * @param duration 服務時長（分鐘）
+     * @return 是否有可預約時段
+     */
+    private boolean hasAnyAvailableSlot(String tenantId, LocalDate date, Integer duration) {
+        List<Staff> availableStaff = getAvailableStaffForDate(tenantId, date);
+        if (availableStaff.isEmpty()) {
+            return false;
+        }
+        // 用 null staffId 檢查「不指定員工」模式的可用時段
+        List<LocalTime> slots = generateAvailableSlots(tenantId, null, date, duration);
+        return !slots.isEmpty();
+    }
+
+    /**
+     * 取得指定員工在指定日期的可預約時段數量
+     *
+     * @param tenantId 租戶 ID
+     * @param staffId  員工 ID
+     * @param date     日期
+     * @param duration 服務時長（分鐘）
+     * @return 可預約時段數量
+     */
+    private int getAvailableSlotCount(String tenantId, String staffId, LocalDate date, Integer duration) {
+        List<LocalTime> slots = generateAvailableSlots(tenantId, staffId, date, duration);
+        return slots.size();
     }
 
     /**

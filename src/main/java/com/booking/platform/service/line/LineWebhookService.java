@@ -186,7 +186,7 @@ public class LineWebhookService {
             }
 
         } catch (Exception e) {
-            log.error("處理 Webhook 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage());
+            log.error("處理 Webhook 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
         }
     }
 
@@ -456,8 +456,9 @@ public class LineWebhookService {
                 price != null ? Integer.parseInt(price) : null
         );
 
-        // 新流程：選完服務後顯示日期選單
-        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
+        // 新流程：選完服務後顯示日期選單（傳入服務時長過濾無可用時段的日期）
+        Integer serviceDuration = duration != null ? Integer.parseInt(duration) : null;
+        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, serviceDuration);
         messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
     }
 
@@ -502,8 +503,9 @@ public class LineWebhookService {
         // 取得對話上下文
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
-        // 新流程：選完日期後顯示員工選單（根據日期篩選可用員工）
-        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(tenantId, context.getSelectedServiceId(), date);
+        // 新流程：選完日期後顯示員工選單（根據日期篩選可用員工，傳入服務時長檢查可預約時段）
+        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
+                tenantId, context.getSelectedServiceId(), date, context.getSelectedServiceDuration());
         messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
     }
 
@@ -609,6 +611,8 @@ public class LineWebhookService {
      */
     private void handleGoBack(String tenantId, String userId, String replyToken) {
         ConversationContext context = conversationService.goBack(tenantId, userId);
+        log.info("返回上一步，租戶：{}，用戶：{}，返回到狀態：{}，日期：{}，員工：{}",
+                tenantId, userId, context.getState(), context.getSelectedDate(), context.getSelectedStaffId());
         displayCurrentState(tenantId, userId, replyToken, context);
     }
 
@@ -624,49 +628,81 @@ public class LineWebhookService {
      * 根據當前狀態顯示對應的 UI
      */
     private void displayCurrentState(String tenantId, String userId, String replyToken, ConversationContext context) {
-        switch (context.getState()) {
-            case SELECTING_CATEGORY -> {
-                JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
-                messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
-            }
-            case SELECTING_SERVICE -> {
-                // 檢查是否有多個分類，有則顯示分類＋服務合併選單
-                List<ServiceCategory> cats = serviceCategoryRepository.findByTenantId(tenantId, true);
-                List<String> catIds = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
-                if (cats.size() >= 2 && catIds.size() >= 2) {
-                    JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
-                    messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
-                } else {
-                    JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
-                    messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+        try {
+            switch (context.getState()) {
+                case SELECTING_CATEGORY -> {
+                    JsonNode categoryMenu = flexMessageBuilder.buildCategoryMenu(tenantId);
+                    messageService.replyFlex(tenantId, replyToken, "請選擇服務分類", categoryMenu);
                 }
+                case SELECTING_SERVICE -> {
+                    // 檢查是否有多個分類，有則顯示分類＋服務合併選單
+                    List<ServiceCategory> cats = serviceCategoryRepository.findByTenantId(tenantId, true);
+                    List<String> catIds = serviceItemRepository.findDistinctBookableCategoryIds(tenantId);
+                    if (cats.size() >= 2 && catIds.size() >= 2) {
+                        try {
+                            JsonNode serviceMenu = flexMessageBuilder.buildCategoryServiceMenu(tenantId);
+                            messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                        } catch (Exception e) {
+                            log.warn("分類服務選單建構失敗，改用一般選單：{}", e.getMessage());
+                            JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+                            messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                        }
+                    } else {
+                        JsonNode serviceMenu = flexMessageBuilder.buildServiceMenu(tenantId);
+                        messageService.replyFlex(tenantId, replyToken, "請選擇服務", serviceMenu);
+                    }
+                }
+                case SELECTING_STAFF -> {
+                    // 返回選員工時需要根據已選日期篩選，傳入服務時長檢查可預約時段
+                    LocalDate selectedDate = context.getSelectedDate();
+                    if (selectedDate == null) {
+                        log.warn("SELECTING_STAFF 狀態但 selectedDate 為 null，返回日期選單");
+                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                        messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
+                    } else {
+                        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
+                                tenantId, context.getSelectedServiceId(), selectedDate,
+                                context.getSelectedServiceDuration());
+                        messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+                    }
+                }
+                case SELECTING_DATE -> {
+                    JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                    messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
+                }
+                case SELECTING_TIME -> {
+                    LocalDate selectedDate = context.getSelectedDate();
+                    if (selectedDate == null) {
+                        log.warn("SELECTING_TIME 狀態但 selectedDate 為 null，返回日期選單");
+                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                        messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
+                    } else {
+                        JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
+                                tenantId, context.getSelectedStaffId(),
+                                selectedDate, context.getSelectedServiceDuration()
+                        );
+                        messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
+                    }
+                }
+                case INPUTTING_NOTE -> {
+                    JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
+                    messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
+                }
+                case CONFIRMING_BOOKING -> {
+                    JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+                    messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
+                }
+                default -> replyMainMenu(tenantId, userId, replyToken);
             }
-            case SELECTING_STAFF -> {
-                // 返回選員工時需要根據已選日期篩選
-                JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
-                        tenantId, context.getSelectedServiceId(), context.getSelectedDate());
-                messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+        } catch (Exception e) {
+            log.error("顯示當前狀態失敗，租戶：{}，用戶：{}，狀態：{}，錯誤：{}",
+                    tenantId, userId, context.getState(), e.getMessage(), e);
+            // 回覆提示訊息，避免用戶看不到任何回應
+            try {
+                messageService.replyText(tenantId, replyToken, "操作處理中發生錯誤，請重新開始預約。");
+            } catch (Exception ex) {
+                log.error("回覆錯誤訊息也失敗：{}", ex.getMessage());
             }
-            case SELECTING_DATE -> {
-                JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId);
-                messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
-            }
-            case SELECTING_TIME -> {
-                JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
-                        tenantId, context.getSelectedStaffId(),
-                        context.getSelectedDate(), context.getSelectedServiceDuration()
-                );
-                messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
-            }
-            case INPUTTING_NOTE -> {
-                JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
-                messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
-            }
-            case CONFIRMING_BOOKING -> {
-                JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
-                messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
-            }
-            default -> replyMainMenu(tenantId, userId, replyToken);
         }
     }
 
