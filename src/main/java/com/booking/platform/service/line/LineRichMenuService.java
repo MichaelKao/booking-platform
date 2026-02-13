@@ -1354,6 +1354,71 @@ public class LineRichMenuService {
     }
 
     /**
+     * 繪製膠囊式選單格子（自訂背景專用）
+     *
+     * <p>只在圖示+文字區域底下畫一個小型圓角膠囊半透明背景，
+     * 讓大部分背景圖片都能看到，同時確保文字清晰可讀。
+     *
+     * @param g2d Graphics2D 繪圖物件
+     * @param area 區域座標 {x, y, width, height}
+     * @param index 選單項目索引
+     * @param textFont 文字字型
+     */
+    private void drawMenuCellCapsule(Graphics2D g2d, int[] area, int index, Font textFont) {
+        if (index >= MENU_ITEMS.length || index >= MENU_ICON_TYPES.length) return;
+
+        int cellX = area[0];
+        int cellY = area[1];
+        int cellW = area[2];
+        int cellH = area[3];
+        int centerX = cellX + cellW / 2;
+        int centerY = cellY + cellH / 2;
+
+        // 根據格子大小調整尺寸
+        int iconSize = Math.min(cellW, cellH) / 5;
+        int circleSize = iconSize * 2;
+        int fontSize = Math.max(36, Math.min(72, cellW / 12));
+
+        // 計算文字尺寸
+        Font cellFont = textFont.deriveFont((float) fontSize);
+        g2d.setFont(cellFont);
+        FontMetrics fm = g2d.getFontMetrics();
+        String text = MENU_ITEMS[index][0];
+        int textWidth = fm.stringWidth(text);
+        int textHeight = fm.getAscent();
+
+        // 計算膠囊範圍（包含圖示圓圈 + 文字 + padding）
+        int capsulePadH = 20;
+        int capsulePadV = 14;
+        int capsuleW = Math.max(circleSize, textWidth) + capsulePadH * 2;
+        int capsuleTop = centerY - circleSize / 2 - iconSize / 2 - capsulePadV;
+        int capsuleBottom = centerY + circleSize / 2 + textHeight + capsulePadV + 4;
+        int capsuleH = capsuleBottom - capsuleTop;
+        int capsuleX = centerX - capsuleW / 2;
+
+        // 繪製膠囊半透明背景
+        g2d.setColor(new Color(0, 0, 0, 140));
+        g2d.fillRoundRect(capsuleX, capsuleTop, capsuleW, capsuleH, 24, 24);
+
+        // 繪製向量圖示（白色，帶陰影）
+        int shadowOffset = 2;
+        g2d.setColor(new Color(0, 0, 0, 80));
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX + shadowOffset, centerY - iconSize / 4 + shadowOffset, iconSize);
+        g2d.setColor(TEXT_COLOR);
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - iconSize / 4, iconSize);
+
+        // 繪製文字（白色，帶陰影）
+        g2d.setFont(cellFont);
+        int textX = centerX - textWidth / 2;
+        int textY = centerY + circleSize / 2 + fm.getAscent();
+
+        g2d.setColor(new Color(0, 0, 0, 120));
+        g2d.drawString(text, textX + 2, textY + 2);
+        g2d.setColor(TEXT_COLOR);
+        g2d.drawString(text, textX, textY);
+    }
+
+    /**
      * 繪製格線（根據佈局區域自動計算需要的線條）
      *
      * @param g2d Graphics2D 繪圖物件
