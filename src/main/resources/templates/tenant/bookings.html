@@ -119,6 +119,32 @@
     <div class="toast-container"></div>
     <div th:replace="~{tenant/layout :: confirm-modal}"></div>
 
+    <!-- 取消原因 Modal -->
+    <div class="modal fade" id="cancelReasonModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-circle me-2"></i>取消預約</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">取消後將透過 LINE 通知顧客，請填寫原因讓顧客了解。</p>
+                    <div class="mb-3">
+                        <label class="form-label">取消原因</label>
+                        <textarea class="form-control" id="cancelReason" rows="3" maxlength="200" placeholder="例：店家臨時公休、員工請假、時段調整..."></textarea>
+                        <div class="form-text d-flex justify-content-end"><span id="cancelReasonCount">0</span>/200</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">返回</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelBtn" onclick="executeCancelBooking()">
+                        <i class="bi bi-x-circle me-1"></i>確定取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 新增預約 Modal -->
     <div class="modal fade" id="bookingModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -310,6 +336,11 @@
             // 搜尋欄位監聽
             document.getElementById('searchKeyword').addEventListener('input', function() {
                 document.getElementById('clearSearchBtn').style.display = this.value ? 'block' : 'none';
+            });
+
+            // 取消原因字數統計
+            document.getElementById('cancelReason').addEventListener('input', function() {
+                document.getElementById('cancelReasonCount').textContent = this.value.length;
             });
 
             // 檢查是否從 Dashboard 跳轉並需要開啟 Modal
@@ -620,12 +651,68 @@
             } catch (e) { showError('確認預約失敗：' + (e.message || '')); }
         }
 
-        async function cancelBooking(id) {
-            if (!await showConfirm('確定要取消此預約嗎？此操作無法復原。')) return;
+        let cancelTargetId = null;
+        let batchCancelIds = [];
+
+        function cancelBooking(id) {
+            cancelTargetId = id;
+            batchCancelIds = [];
+            document.getElementById('cancelReason').value = '';
+            document.getElementById('cancelReasonCount').textContent = '0';
+            document.querySelector('#cancelReasonModal .modal-title').innerHTML =
+                '<i class="bi bi-x-circle me-2"></i>取消預約';
+            new bootstrap.Modal(document.getElementById('cancelReasonModal')).show();
+        }
+
+        async function executeCancelBooking() {
+            const reason = document.getElementById('cancelReason').value.trim();
+            const btn = document.getElementById('confirmCancelBtn');
+            btn.disabled = true;
+
             try {
-                const r = await api.post(`/api/bookings/${id}/cancel`);
-                if (r.success) { showSuccess('預約已取消'); loadBookings(currentPageNum); }
-            } catch (e) { showError('取消預約失敗：' + (e.message || '')); }
+                if (cancelTargetId) {
+                    // 單筆取消
+                    const url = reason
+                        ? `/api/bookings/${cancelTargetId}/cancel?reason=${encodeURIComponent(reason)}`
+                        : `/api/bookings/${cancelTargetId}/cancel`;
+                    const r = await api.post(url);
+                    if (r.success) {
+                        showSuccess('預約已取消' + (reason ? '，已通知顧客' : ''));
+                        bootstrap.Modal.getInstance(document.getElementById('cancelReasonModal')).hide();
+                        loadBookings(currentPageNum);
+                    }
+                } else if (batchCancelIds.length > 0) {
+                    // 批次取消
+                    let successCount = 0, failCount = 0;
+                    for (const id of batchCancelIds) {
+                        try {
+                            const url = reason
+                                ? `/api/bookings/${id}/cancel?reason=${encodeURIComponent(reason)}`
+                                : `/api/bookings/${id}/cancel`;
+                            await api.post(url);
+                            successCount++;
+                        } catch (e) {
+                            failCount++;
+                        }
+                    }
+                    bootstrap.Modal.getInstance(document.getElementById('cancelReasonModal')).hide();
+                    if (successCount > 0) {
+                        showSuccess(`成功取消 ${successCount} 筆預約${failCount > 0 ? `，${failCount} 筆失敗` : ''}`);
+                    } else {
+                        showError('批次取消失敗');
+                    }
+                    clearSelection();
+                    loadBookings();
+                }
+            } catch (e) {
+                showError('取消預約失敗：' + (e.message || ''));
+            } finally {
+                btn.disabled = false;
+                cancelTargetId = null;
+                batchCancelIds = [];
+                document.querySelector('#cancelReasonModal .modal-title').innerHTML =
+                    '<i class="bi bi-x-circle me-2"></i>取消預約';
+            }
         }
 
         async function completeBooking(id) {
@@ -759,42 +846,26 @@
             }
 
             // 過濾出可取消的預約（PENDING 或 CONFIRMED）
-            const cancellableIds = [];
+            const ids = [];
             document.querySelectorAll('.booking-checkbox:checked').forEach(cb => {
                 if (['PENDING', 'CONFIRMED'].includes(cb.dataset.status)) {
-                    cancellableIds.push(cb.dataset.id);
+                    ids.push(cb.dataset.id);
                 }
             });
 
-            if (cancellableIds.length === 0) {
+            if (ids.length === 0) {
                 showWarning('選取的預約中沒有可取消的預約');
                 return;
             }
 
-            const confirmed = await showConfirm(`確定要批次取消 ${cancellableIds.length} 筆預約嗎？此操作無法復原！`);
-            if (!confirmed) return;
-
-            let successCount = 0;
-            let failCount = 0;
-
-            for (const id of cancellableIds) {
-                try {
-                    await api.post(`/api/bookings/${id}/cancel`);
-                    successCount++;
-                } catch (e) {
-                    failCount++;
-                    console.error(`取消預約 ${id} 失敗:`, e);
-                }
-            }
-
-            if (successCount > 0) {
-                showSuccess(`成功取消 ${successCount} 筆預約${failCount > 0 ? `，${failCount} 筆失敗` : ''}`);
-            } else {
-                showError(`批次取消失敗`);
-            }
-
-            clearSelection();
-            loadBookings();
+            // 用 cancel reason modal，設定為批次模式
+            cancelTargetId = null;
+            batchCancelIds = ids;
+            document.getElementById('cancelReason').value = '';
+            document.getElementById('cancelReasonCount').textContent = '0';
+            document.querySelector('#cancelReasonModal .modal-title').innerHTML =
+                `<i class="bi bi-x-circle me-2"></i>批次取消 ${ids.length} 筆預約`;
+            new bootstrap.Modal(document.getElementById('cancelReasonModal')).show();
         }
 
         // ========================================

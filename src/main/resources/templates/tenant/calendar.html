@@ -81,6 +81,31 @@
         </div>
     </div>
 
+    <!-- 取消原因 Modal -->
+    <div class="modal fade" id="cancelReasonModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-circle me-2"></i>取消預約</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">取消後將透過 LINE 通知顧客，請填寫原因讓顧客了解。</p>
+                    <div class="mb-3">
+                        <label class="form-label">取消原因</label>
+                        <textarea class="form-control" id="cancelReason" rows="3" maxlength="200" placeholder="例：店家臨時公休、員工請假、時段調整..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">返回</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelBtn" onclick="executeCancelBooking()">
+                        <i class="bi bi-x-circle me-1"></i>確定取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts with FullCalendar -->
     <th:block th:replace="~{tenant/layout :: scripts-with-calendar}"></th:block>
 
@@ -128,10 +153,14 @@
             `;
 
             let actionButtons = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>';
-            actionButtons += `<a href="/tenant/bookings?id=${booking.id}" class="btn btn-primary">查看詳情</a>`;
+            actionButtons += `<a href="/tenant/bookings?id=${booking.id}" class="btn btn-outline-primary">查看詳情</a>`;
 
             if (booking.status === 'PENDING') {
                 actionButtons += `<button class="btn btn-success" onclick="confirmBookingFromCalendar('${booking.id}')">確認</button>`;
+                actionButtons += `<button class="btn btn-danger" onclick="cancelBookingFromCalendar('${booking.id}')">取消</button>`;
+            }
+            if (booking.status === 'CONFIRMED') {
+                actionButtons += `<button class="btn btn-danger" onclick="cancelBookingFromCalendar('${booking.id}')">取消</button>`;
             }
             actions.innerHTML = actionButtons;
 
@@ -141,12 +170,44 @@
 
         async function confirmBookingFromCalendar(bookingId) {
             try {
-                await api.put(`/api/bookings/${bookingId}/confirm`);
+                await api.post(`/api/bookings/${bookingId}/confirm`);
                 showSuccess('預約已確認');
                 bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
                 calendar.refetchEvents();
             } catch (error) {
                 console.error('確認預約失敗:', error);
+                showError('確認預約失敗：' + (error.message || '請稍後再試'));
+            }
+        }
+
+        let cancelTargetId = null;
+
+        function cancelBookingFromCalendar(bookingId) {
+            cancelTargetId = bookingId;
+            document.getElementById('cancelReason').value = '';
+            bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+            new bootstrap.Modal(document.getElementById('cancelReasonModal')).show();
+        }
+
+        async function executeCancelBooking() {
+            if (!cancelTargetId) return;
+            const reason = document.getElementById('cancelReason').value.trim();
+            const btn = document.getElementById('confirmCancelBtn');
+            btn.disabled = true;
+            try {
+                const url = reason
+                    ? `/api/bookings/${cancelTargetId}/cancel?reason=${encodeURIComponent(reason)}`
+                    : `/api/bookings/${cancelTargetId}/cancel`;
+                await api.post(url);
+                showSuccess('預約已取消' + (reason ? '，已通知顧客' : ''));
+                bootstrap.Modal.getInstance(document.getElementById('cancelReasonModal')).hide();
+                calendar.refetchEvents();
+            } catch (error) {
+                console.error('取消預約失敗:', error);
+                showError('取消預約失敗：' + (error.message || '請稍後再試'));
+            } finally {
+                btn.disabled = false;
+                cancelTargetId = null;
             }
         }
 
