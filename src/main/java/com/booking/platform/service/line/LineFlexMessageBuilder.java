@@ -1508,33 +1508,65 @@ public class LineFlexMessageBuilder {
         int maxAdvanceDays = tenant != null ? (tenant.getMaxAdvanceBookingDays() != null ? tenant.getMaxAdvanceBookingDays() : 30) : 30;
         List<Integer> closedDays = parseClosedDays(tenant != null ? tenant.getClosedDays() : null);
 
-        // 預先取得營業結束時間（用於過濾今天的剩餘時間）
+        // 預先取得店家營業設定
+        LocalTime businessStart = tenant != null && tenant.getBusinessStartTime() != null
+                ? tenant.getBusinessStartTime() : LocalTime.of(9, 0);
         LocalTime businessEnd = tenant != null && tenant.getBusinessEndTime() != null
                 ? tenant.getBusinessEndTime() : LocalTime.of(21, 0);
+        int interval = tenant != null && tenant.getBookingInterval() != null
+                ? tenant.getBookingInterval() : 30;
+        LocalTime tenantBreakStart = tenant != null ? tenant.getBreakStartTime() : null;
+        LocalTime tenantBreakEnd = tenant != null ? tenant.getBreakEndTime() : null;
+        int serviceDuration = duration != null ? duration : 60;
 
-        // 預先取得所有活躍員工和排班（減少 DB 查詢次數）
+        // 預先取得所有活躍員工和排班（含工作時段，減少 DB 查詢次數）
         List<Staff> allActiveStaff = staffRepository
                 .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
 
-        // 建立排班快取：staffId → dayOfWeek → isWorkingDay
-        Map<String, Map<Integer, Boolean>> scheduleCache = new java.util.HashMap<>();
+        // 建立排班快取：staffId → dayOfWeek → StaffSchedule（含工時）
+        Map<String, Map<Integer, StaffSchedule>> scheduleCache = new java.util.HashMap<>();
         for (Staff staff : allActiveStaff) {
-            Map<Integer, Boolean> staffSchedule = new java.util.HashMap<>();
+            Map<Integer, StaffSchedule> staffScheduleMap = new java.util.HashMap<>();
             for (int dow = 0; dow <= 6; dow++) {
                 Optional<StaffSchedule> scheduleOpt = staffScheduleRepository
                         .findByStaffIdAndDayOfWeek(staff.getId(), tenantId, dow);
-                boolean isWorking = scheduleOpt.isEmpty() ||
-                        Boolean.TRUE.equals(scheduleOpt.get().getIsWorkingDay());
-                staffSchedule.put(dow, isWorking);
+                scheduleOpt.ifPresent(s -> staffScheduleMap.put(s.getDayOfWeek(), s));
             }
-            scheduleCache.put(staff.getId(), staffSchedule);
+            scheduleCache.put(staff.getId(), staffScheduleMap);
         }
 
         LocalDate today = LocalDate.now();
         DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("M/d (E)", java.util.Locale.TAIWAN);
         DateTimeFormatter dataFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
-        // 收集所有可用日期（排除公休日 + 無員工上班的日期 + 今天營業時間已過）
+        // 批次取得日期範圍內所有 CONFIRMED 預約（一次查詢，避免逐日逐時段查 DB）
+        LocalDate endDate = today.plusDays(maxAdvanceDays + 30);
+        List<Booking> confirmedBookings = bookingRepository.findConfirmedBookingsInDateRange(tenantId, today, endDate);
+
+        // 建立快取：staffId → date → List<Booking>
+        Map<String, Map<LocalDate, List<Booking>>> bookingCache = new java.util.HashMap<>();
+        for (Booking b : confirmedBookings) {
+            bookingCache
+                    .computeIfAbsent(b.getStaffId(), k -> new java.util.HashMap<>())
+                    .computeIfAbsent(b.getBookingDate(), k -> new java.util.ArrayList<>())
+                    .add(b);
+        }
+
+        // 批次取得所有員工的請假資料
+        Map<String, java.util.Set<LocalDate>> leaveCache = new java.util.HashMap<>();
+        for (Staff staff : allActiveStaff) {
+            var leaves = staffLeaveRepository.findByStaffIdAndDateRange(
+                    staff.getId(), today, endDate);
+            if (leaves != null && !leaves.isEmpty()) {
+                java.util.Set<LocalDate> leaveDates = new java.util.HashSet<>();
+                for (var leave : leaves) {
+                    leaveDates.add(leave.getLeaveDate());
+                }
+                leaveCache.put(staff.getId(), leaveDates);
+            }
+        }
+
+        // 收集所有可用日期（實際檢查是否有可預約時段）
         List<LocalDate> availableDates = new java.util.ArrayList<>();
         int dayOffset = 0;
 
@@ -1543,31 +1575,91 @@ public class LineFlexMessageBuilder {
             int dayOfWeek = date.getDayOfWeek().getValue() % 7;
 
             if (!closedDays.contains(dayOfWeek)) {
-                // 檢查是否有員工在該日上班且未請假
-                boolean hasAvailableStaff = false;
+                // 逐一檢查員工，只要有任何一位員工的任何一個時段可用即可
+                boolean dateHasSlot = false;
+
                 for (Staff staff : allActiveStaff) {
-                    Boolean isWorking = scheduleCache.getOrDefault(staff.getId(), java.util.Collections.emptyMap())
-                            .getOrDefault(dayOfWeek, true);
-                    if (Boolean.TRUE.equals(isWorking)) {
-                        boolean onLeave = staffLeaveRepository
-                                .findByStaffIdAndLeaveDateAndDeletedAtIsNull(staff.getId(), date)
-                                .isPresent();
-                        if (!onLeave) {
-                            hasAvailableStaff = true;
-                            break;
+                    // 檢查排班：是否上班
+                    StaffSchedule schedule = scheduleCache
+                            .getOrDefault(staff.getId(), java.util.Collections.emptyMap())
+                            .get(dayOfWeek);
+                    boolean isWorking = (schedule == null) || Boolean.TRUE.equals(schedule.getIsWorkingDay());
+                    if (!isWorking) continue;
+
+                    // 檢查請假（使用快取）
+                    java.util.Set<LocalDate> staffLeaves = leaveCache.get(staff.getId());
+                    if (staffLeaves != null && staffLeaves.contains(date)) continue;
+
+                    // 計算此員工在此日的有效工作時段（取店家營業時間與員工排班的交集）
+                    LocalTime effStart = businessStart;
+                    LocalTime effEnd = businessEnd;
+                    if (schedule != null && schedule.getStartTime() != null) {
+                        effStart = effStart.isBefore(schedule.getStartTime()) ? schedule.getStartTime() : effStart;
+                    }
+                    if (schedule != null && schedule.getEndTime() != null) {
+                        effEnd = effEnd.isAfter(schedule.getEndTime()) ? schedule.getEndTime() : effEnd;
+                    }
+
+                    // 今天額外檢查：跳過已過去的時段
+                    if (date.equals(today)) {
+                        LocalTime minTime = LocalTime.now().plusMinutes(30);
+                        if (!minTime.isBefore(effEnd)) continue;
+                        if (minTime.isAfter(effStart)) {
+                            int minutesPast = (minTime.getHour() * 60 + minTime.getMinute())
+                                    - (effStart.getHour() * 60 + effStart.getMinute());
+                            int skip = (int) Math.ceil((double) minutesPast / interval);
+                            effStart = effStart.plusMinutes((long) skip * interval);
                         }
                     }
-                }
 
-                // 今天額外檢查：營業時間是否已過
-                if (hasAvailableStaff && date.equals(today)) {
-                    LocalTime now = LocalTime.now().plusMinutes(30); // 30 分鐘緩衝
-                    if (!now.isBefore(businessEnd)) {
-                        hasAvailableStaff = false;
+                    // 取得員工休息時間
+                    LocalTime staffBreakStart = schedule != null ? schedule.getBreakStartTime() : null;
+                    LocalTime staffBreakEnd = schedule != null ? schedule.getBreakEndTime() : null;
+
+                    // 取得此員工此日的已確認預約（從快取）
+                    List<Booking> staffDateBookings = bookingCache
+                            .getOrDefault(staff.getId(), java.util.Collections.emptyMap())
+                            .getOrDefault(date, java.util.Collections.emptyList());
+
+                    // 遍歷時段，找到至少一個可用時段即可
+                    LocalTime current = effStart;
+                    while (!current.plusMinutes(serviceDuration).isAfter(effEnd)) {
+                        boolean slotOk = true;
+
+                        // 店家休息時間
+                        if (tenantBreakStart != null && tenantBreakEnd != null) {
+                            if (isTimeOverlapping(current, current.plusMinutes(serviceDuration), tenantBreakStart, tenantBreakEnd)) {
+                                slotOk = false;
+                            }
+                        }
+                        // 員工休息時間
+                        if (slotOk && staffBreakStart != null && staffBreakEnd != null) {
+                            if (isTimeOverlapping(current, current.plusMinutes(serviceDuration), staffBreakStart, staffBreakEnd)) {
+                                slotOk = false;
+                            }
+                        }
+                        // 預約衝突（記憶體內比對，無 DB 查詢）
+                        if (slotOk) {
+                            LocalTime slotEnd = current.plusMinutes(serviceDuration);
+                            for (Booking b : staffDateBookings) {
+                                if (b.getStartTime().isBefore(slotEnd) && b.getEndTime().isAfter(current)) {
+                                    slotOk = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (slotOk) {
+                            dateHasSlot = true;
+                            break;
+                        }
+                        current = current.plusMinutes(interval);
                     }
+
+                    if (dateHasSlot) break;
                 }
 
-                if (hasAvailableStaff) {
+                if (dateHasSlot) {
                     availableDates.add(date);
                 }
             }

@@ -117,6 +117,22 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // ========================================
 
     /**
+     * 批次取得指定日期範圍內所有 CONFIRMED 預約（用於日期選單快取）
+     */
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            """)
+    List<Booking> findConfirmedBookingsInDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /**
      * 檢查時段是否有衝突（僅檢查已確認的預約）
      * PENDING 不佔用時段，只有 CONFIRMED 才算衝突
      */
