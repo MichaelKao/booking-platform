@@ -329,12 +329,20 @@
                                     <button class="rich-menu-mode-tab active" data-mode="default" onclick="switchRichMenuMode('default')">
                                         <i class="bi bi-palette me-1"></i>預設選單
                                     </button>
-                                    <button class="rich-menu-mode-tab" data-mode="custom" onclick="switchRichMenuMode('custom')">
+                                    <button class="rich-menu-mode-tab d-none" data-mode="custom" id="customMenuTab" onclick="switchRichMenuMode('custom')">
                                         <i class="bi bi-image me-1"></i>自訂選單
                                     </button>
-                                    <button class="rich-menu-mode-tab" data-mode="advanced" onclick="switchRichMenuMode('advanced')">
+                                    <button class="rich-menu-mode-tab d-none" data-mode="advanced" id="advancedMenuTab" onclick="switchRichMenuMode('advanced')">
                                         <i class="bi bi-stars me-1"></i>進階自訂
                                     </button>
+                                </div>
+                                <!-- 未訂閱自訂選單功能提示 -->
+                                <div id="customMenuLocked" class="alert alert-light border mb-3 d-none">
+                                    <i class="bi bi-lock me-1"></i>
+                                    <strong>自訂選單</strong>與<strong>進階自訂</strong>為付費功能，開通後即可使用。
+                                    <a href="/tenant/feature-store" class="btn btn-sm btn-outline-primary ms-2">
+                                        <i class="bi bi-shop me-1"></i>前往功能商店
+                                    </a>
                                 </div>
 
                                 <!-- Rich Menu 即時預覽 -->
@@ -803,6 +811,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadLineSettings();
+            checkCustomMenuFeature();
 
             // 初始化所有 tooltips
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -831,6 +840,31 @@
             } else {
                 field.type = 'password';
                 icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+
+        // 檢查自訂選單功能訂閱狀態
+        async function checkCustomMenuFeature() {
+            try {
+                const r = await api.get('/api/feature-store');
+                if (r.success) {
+                    const feature = r.data.find(f => f.code === 'CUSTOM_RICH_MENU');
+                    const subscribed = feature && feature.isEnabled;
+                    if (subscribed) {
+                        // 已訂閱：顯示自訂/進階 Tab
+                        document.getElementById('customMenuTab').classList.remove('d-none');
+                        document.getElementById('advancedMenuTab').classList.remove('d-none');
+                        document.getElementById('customMenuLocked').classList.add('d-none');
+                    } else {
+                        // 未訂閱：隱藏 Tab，顯示提示
+                        document.getElementById('customMenuTab').classList.add('d-none');
+                        document.getElementById('advancedMenuTab').classList.add('d-none');
+                        document.getElementById('customMenuLocked').classList.remove('d-none');
+                    }
+                }
+            } catch (e) {
+                // 無法檢查時預設隱藏
+                document.getElementById('customMenuLocked').classList.remove('d-none');
             }
         }
 

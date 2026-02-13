@@ -202,6 +202,8 @@ public class LineConfigController {
 
         try {
             String tenantId = TenantContext.getTenantId();
+            // 自訂選單需訂閱 CUSTOM_RICH_MENU
+            featureService.checkFeatureEnabled(tenantId, FeatureCode.CUSTOM_RICH_MENU);
             byte[] imageBytes = file.getBytes();
             String richMenuId = richMenuService.createRichMenuWithCustomImage(tenantId, imageBytes, textColor, noOverlay);
 
@@ -235,6 +237,8 @@ public class LineConfigController {
 
         try {
             String tenantId = TenantContext.getTenantId();
+            // 自訂選單需訂閱 CUSTOM_RICH_MENU
+            featureService.checkFeatureEnabled(tenantId, FeatureCode.CUSTOM_RICH_MENU);
             byte[] imageBytes = file.getBytes();
             String richMenuId = richMenuService.createCustomConfigRichMenu(tenantId, imageBytes, config);
 
