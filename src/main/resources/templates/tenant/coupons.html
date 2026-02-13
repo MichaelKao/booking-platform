@@ -14,6 +14,16 @@
                         <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-1"></i>新增票券</button>
                     </div>
                 </div>
+                <!-- 狀態說明 -->
+                <div class="alert alert-light mb-3 py-2 d-none d-md-block">
+                    <div class="d-flex gap-3 flex-wrap small">
+                        <span><span class="badge bg-secondary">草稿</span> 新建立，需發布才能讓顧客領取</span>
+                        <span><span class="badge bg-success">已發布</span> 顧客可領取中</span>
+                        <span><span class="badge bg-warning text-dark">已暫停</span> 暫停領取</span>
+                        <span><span class="badge bg-danger">已結束</span> 不可再領取</span>
+                    </div>
+                </div>
+
                 <div class="data-table-container">
                     <div class="data-table-header"><h6 class="data-table-title">票券列表</h6></div>
                     <div class="data-table-body">
@@ -209,8 +219,11 @@
                             <td>${getCouponStatusBadge(c.status)}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary" onclick="editData('${c.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-outline-danger" onclick="deleteData('${c.id}')" title="刪除"><i class="bi bi-trash"></i></button>
+                                    ${c.status === 'DRAFT' ? `<button class="btn btn-success" onclick="publishCoupon('${c.id}')" title="發布"><i class="bi bi-megaphone"></i></button>` : ''}
+                                    ${c.status === 'PUBLISHED' ? `<button class="btn btn-warning" onclick="pauseCoupon('${c.id}')" title="暫停"><i class="bi bi-pause-circle"></i></button>` : ''}
+                                    ${c.status === 'PAUSED' ? `<button class="btn btn-success" onclick="resumeCoupon('${c.id}')" title="恢復"><i class="bi bi-play-circle"></i></button>` : ''}
+                                    ${['DRAFT', 'PAUSED'].includes(c.status) ? `<button class="btn btn-outline-primary" onclick="editData('${c.id}')" title="編輯"><i class="bi bi-pencil"></i></button>` : ''}
+                                    ${c.status !== 'ENDED' ? `<button class="btn btn-outline-danger" onclick="deleteData('${c.id}')" title="刪除"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
                             </td>
                         </tr>`;
@@ -339,6 +352,34 @@
                 console.error('儲存票券失敗:', e);
                 showError('儲存失敗: ' + (e.message || '請稍後再試'));
             }
+        }
+
+        // ========================================
+        // 票券狀態操作
+        // ========================================
+
+        async function publishCoupon(id) {
+            if (!await showConfirm('確定要發布此票券嗎？發布後顧客可從 LINE 領取。')) return;
+            try {
+                const r = await api.post(`/api/coupons/${id}/publish`);
+                if (r.success) { showSuccess('票券已發布'); loadData(); }
+            } catch (e) { showError('發布失敗：' + (e.message || '')); }
+        }
+
+        async function pauseCoupon(id) {
+            if (!await showConfirm('確定要暫停此票券嗎？暫停後顧客無法領取。')) return;
+            try {
+                const r = await api.post(`/api/coupons/${id}/pause`);
+                if (r.success) { showSuccess('票券已暫停'); loadData(); }
+            } catch (e) { showError('暫停失敗：' + (e.message || '')); }
+        }
+
+        async function resumeCoupon(id) {
+            if (!await showConfirm('確定要恢復此票券嗎？恢復後顧客可繼續領取。')) return;
+            try {
+                const r = await api.post(`/api/coupons/${id}/resume`);
+                if (r.success) { showSuccess('票券已恢復發布'); loadData(); }
+            } catch (e) { showError('恢復失敗：' + (e.message || '')); }
         }
 
         async function deleteData(id) {
