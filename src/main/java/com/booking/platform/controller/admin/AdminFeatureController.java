@@ -97,9 +97,14 @@ public class AdminFeatureController {
      * 初始化功能定義
      */
     @PostMapping("/features/initialize")
-    public ApiResponse<Void> initializeFeatures() {
-        featureService.initializeFeatures();
-        return ApiResponse.ok("功能定義初始化成功", null);
+    public ApiResponse<String> initializeFeatures() {
+        try {
+            featureService.initializeFeatures();
+            return ApiResponse.ok("功能定義初始化成功", null);
+        } catch (Exception e) {
+            // error logged in GlobalExceptionHandler
+            return ApiResponse.error("INIT_FAILED", "初始化失敗：" + e.getClass().getSimpleName() + " - " + e.getMessage());
+        }
     }
 
     // ========================================
