@@ -91,20 +91,19 @@ public class LineRichMenuService {
     private static final int MENU_HEIGHT = 843;
 
     /**
-     * 選單格數（2行 x 3列）
+     * 預設佈局：上排 3 格 + 下排 4 格
      */
-    private static final int COLS = 3;
-    private static final int ROWS = 2;
+    private static final String DEFAULT_LAYOUT = "3+4";
 
     /**
-     * 每格寬度
+     * 上排高度
      */
-    private static final int CELL_WIDTH = MENU_WIDTH / COLS;
+    private static final int ROW_TOP_HEIGHT = MENU_HEIGHT / 2;
 
     /**
-     * 每格高度
+     * 下排高度
      */
-    private static final int CELL_HEIGHT = MENU_HEIGHT / ROWS;
+    private static final int ROW_BOTTOM_HEIGHT = MENU_HEIGHT - ROW_TOP_HEIGHT;
 
     // ========================================
     // API 端點
@@ -149,10 +148,26 @@ public class LineRichMenuService {
     // 選單項目
     // ========================================
 
+    // 選單項目（7 個，與主選單 Flex Message 同步）
+    // 上排 3 個、下排 4 個
+    private static final String[][] ROW1_ITEMS = {
+            {"開始預約", "start_booking"},
+            {"我的預約", "view_bookings"},
+            {"瀏覽商品", "start_shopping"}
+    };
+    private static final String[][] ROW2_ITEMS = {
+            {"領取票券", "view_coupons"},
+            {"我的票券", "view_my_coupons"},
+            {"會員資訊", "view_member_info"},
+            {"聯絡店家", "contact_shop"}
+    };
+
+    // 合併為完整列表（供圖片渲染使用）
     private static final String[][] MENU_ITEMS = {
             {"開始預約", "start_booking"},
             {"我的預約", "view_bookings"},
             {"瀏覽商品", "start_shopping"},
+            {"領取票券", "view_coupons"},
             {"我的票券", "view_my_coupons"},
             {"會員資訊", "view_member_info"},
             {"聯絡店家", "contact_shop"}
@@ -163,7 +178,8 @@ public class LineRichMenuService {
         CALENDAR,    // 開始預約 - 日曆
         CLIPBOARD,   // 我的預約 - 剪貼板
         CART,        // 瀏覽商品 - 購物車
-        GIFT,        // 領取票券 - 禮物
+        TICKET,      // 領取票券 - 票券
+        GIFT,        // 我的票券 - 禮物
         PERSON,      // 會員資訊 - 人像
         PHONE        // 聯絡店家 - 電話
     }
@@ -172,6 +188,7 @@ public class LineRichMenuService {
             IconType.CALENDAR,
             IconType.CLIPBOARD,
             IconType.CART,
+            IconType.TICKET,
             IconType.GIFT,
             IconType.PERSON,
             IconType.PHONE
@@ -472,58 +489,27 @@ public class LineRichMenuService {
             // 繪製背景圖片
             g2d.drawImage(backgroundImage, 0, 0, MENU_WIDTH, MENU_HEIGHT, null);
 
-            // 在每個格子上繪製半透明遮罩（提高文字可讀性）
-            Color overlayColor = new Color(0, 0, 0, 120);  // 半透明黑色
-            g2d.setColor(overlayColor);
+            // 取得佈局區域
+            int[][] layoutAreas = getLayoutAreas(DEFAULT_LAYOUT);
 
-            for (int row = 0; row < ROWS; row++) {
-                for (int col = 0; col < COLS; col++) {
-                    int x = col * CELL_WIDTH;
-                    int y = row * CELL_HEIGHT;
-                    g2d.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
-                }
+            // 在每個格子上繪製半透明遮罩（提高文字可讀性）
+            Color overlayColor = new Color(0, 0, 0, 120);
+            g2d.setColor(overlayColor);
+            for (int[] area : layoutAreas) {
+                g2d.fillRect(area[0], area[1], area[2], area[3]);
             }
 
             // 繪製格線（淡色）
             g2d.setColor(new Color(255, 255, 255, 50));
             g2d.setStroke(new BasicStroke(2));
+            drawGridLines(g2d, layoutAreas);
 
-            for (int col = 1; col < COLS; col++) {
-                int x = col * CELL_WIDTH;
-                g2d.drawLine(x, 0, x, MENU_HEIGHT);
-            }
-            for (int row = 1; row < ROWS; row++) {
-                int y = row * CELL_HEIGHT;
-                g2d.drawLine(0, y, MENU_WIDTH, y);
-            }
-
-            // 繪製選單項目（放大版本）
+            // 繪製選單項目
             Font textFont = loadChineseFont(Font.BOLD, 72);
+            Color bgColor = new Color(0x26, 0x32, 0x38);  // DARK 作為背景參考色
 
-            for (int row = 0; row < ROWS; row++) {
-                for (int col = 0; col < COLS; col++) {
-                    int index = row * COLS + col;
-                    if (index < MENU_ITEMS.length) {
-                        int centerX = col * CELL_WIDTH + CELL_WIDTH / 2;
-                        int centerY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
-
-                        // 繪製圖示背景圓圈（放大）
-                        g2d.setColor(ICON_BG_COLOR);
-                        int circleSize = 200;
-                        g2d.fillOval(centerX - circleSize / 2, centerY - 120, circleSize, circleSize);
-
-                        // 繪製向量圖示（放大）
-                        g2d.setColor(TEXT_COLOR);
-                        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 20, 100);
-
-                        // 繪製文字（調整位置）
-                        g2d.setFont(textFont);
-                        FontMetrics textMetrics = g2d.getFontMetrics();
-                        String text = MENU_ITEMS[index][0];
-                        int textWidth = textMetrics.stringWidth(text);
-                        g2d.drawString(text, centerX - textWidth / 2, centerY + 130);
-                    }
-                }
+            for (int i = 0; i < layoutAreas.length && i < MENU_ITEMS.length; i++) {
+                drawMenuCell(g2d, layoutAreas[i], i, textFont, bgColor);
             }
 
             g2d.dispose();
@@ -570,6 +556,12 @@ public class LineRichMenuService {
         }
         if (config.getRichMenuTheme() != null) {
             info.put("theme", config.getRichMenuTheme());
+        }
+        if (config.getRichMenuMode() != null) {
+            info.put("mode", config.getRichMenuMode());
+        }
+        if (config.getRichMenuCustomConfig() != null) {
+            info.put("customConfig", config.getRichMenuCustomConfig());
         }
         return info;
     }
@@ -778,9 +770,16 @@ public class LineRichMenuService {
     // ========================================
 
     /**
-     * 建立 Rich Menu 請求結構
+     * 建立 Rich Menu 請求結構（預設 3+4 佈局）
      */
     private ObjectNode buildRichMenuRequest(String shopName) {
+        return buildRichMenuRequestWithLayout(shopName, DEFAULT_LAYOUT, MENU_ITEMS);
+    }
+
+    /**
+     * 使用指定佈局和選單項目建立 Rich Menu 請求結構
+     */
+    private ObjectNode buildRichMenuRequestWithLayout(String shopName, String layout, String[][] menuItems) {
         ObjectNode root = objectMapper.createObjectNode();
 
         // 基本設定
@@ -794,16 +793,16 @@ public class LineRichMenuService {
         size.put("height", MENU_HEIGHT);
         root.set("size", size);
 
-        // 區域（6 格：2行 x 3列）
+        // 區域（依佈局動態計算）
         ArrayNode areas = objectMapper.createArrayNode();
+        int[][] layoutAreas = getLayoutAreas(layout);
 
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                int index = row * COLS + col;
-                if (index < MENU_ITEMS.length) {
-                    areas.add(createAreaObject(row, col, MENU_ITEMS[index][0], MENU_ITEMS[index][1]));
-                }
-            }
+        for (int i = 0; i < layoutAreas.length && i < menuItems.length; i++) {
+            areas.add(createAreaObject(
+                    layoutAreas[i][0], layoutAreas[i][1],
+                    layoutAreas[i][2], layoutAreas[i][3],
+                    menuItems[i][0], menuItems[i][1]
+            ));
         }
 
         root.set("areas", areas);
@@ -812,17 +811,17 @@ public class LineRichMenuService {
     }
 
     /**
-     * 建立區域物件
+     * 建立區域物件（使用明確的座標和尺寸）
      */
-    private ObjectNode createAreaObject(int row, int col, String label, String action) {
+    private ObjectNode createAreaObject(int x, int y, int width, int height, String label, String action) {
         ObjectNode area = objectMapper.createObjectNode();
 
         // 邊界
         ObjectNode bounds = objectMapper.createObjectNode();
-        bounds.put("x", col * CELL_WIDTH);
-        bounds.put("y", row * CELL_HEIGHT);
-        bounds.put("width", CELL_WIDTH);
-        bounds.put("height", CELL_HEIGHT);
+        bounds.put("x", x);
+        bounds.put("y", y);
+        bounds.put("width", width);
+        bounds.put("height", height);
         area.set("bounds", bounds);
 
         // 動作
@@ -834,6 +833,71 @@ public class LineRichMenuService {
         area.set("action", actionNode);
 
         return area;
+    }
+
+    /**
+     * 取得佈局的區域定義（每個區域為 {x, y, width, height}）
+     */
+    private int[][] getLayoutAreas(String layout) {
+        switch (layout) {
+            case "3+4": {
+                int topW = MENU_WIDTH / 3;
+                int topLastW = MENU_WIDTH - topW * 2;
+                int bottomW = MENU_WIDTH / 4;
+                return new int[][] {
+                        {0, 0, topW, ROW_TOP_HEIGHT},
+                        {topW, 0, topW, ROW_TOP_HEIGHT},
+                        {topW * 2, 0, topLastW, ROW_TOP_HEIGHT},
+                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW * 2, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW * 3, ROW_TOP_HEIGHT, MENU_WIDTH - bottomW * 3, ROW_BOTTOM_HEIGHT}
+                };
+            }
+            case "2x3": {
+                int cellW = MENU_WIDTH / 3;
+                int lastW = MENU_WIDTH - cellW * 2;
+                return new int[][] {
+                        {0, 0, cellW, ROW_TOP_HEIGHT},
+                        {cellW, 0, cellW, ROW_TOP_HEIGHT},
+                        {cellW * 2, 0, lastW, ROW_TOP_HEIGHT},
+                        {0, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
+                        {cellW, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
+                        {cellW * 2, ROW_TOP_HEIGHT, lastW, ROW_BOTTOM_HEIGHT}
+                };
+            }
+            case "2+3": {
+                int topW = MENU_WIDTH / 2;
+                int bottomW = MENU_WIDTH / 3;
+                int bottomLastW = MENU_WIDTH - bottomW * 2;
+                return new int[][] {
+                        {0, 0, topW, ROW_TOP_HEIGHT},
+                        {topW, 0, MENU_WIDTH - topW, ROW_TOP_HEIGHT},
+                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW * 2, ROW_TOP_HEIGHT, bottomLastW, ROW_BOTTOM_HEIGHT}
+                };
+            }
+            case "2x2": {
+                int cellW = MENU_WIDTH / 2;
+                return new int[][] {
+                        {0, 0, cellW, ROW_TOP_HEIGHT},
+                        {cellW, 0, MENU_WIDTH - cellW, ROW_TOP_HEIGHT},
+                        {0, ROW_TOP_HEIGHT, cellW, ROW_BOTTOM_HEIGHT},
+                        {cellW, ROW_TOP_HEIGHT, MENU_WIDTH - cellW, ROW_BOTTOM_HEIGHT}
+                };
+            }
+            case "1+2": {
+                int bottomW = MENU_WIDTH / 2;
+                return new int[][] {
+                        {0, 0, MENU_WIDTH, ROW_TOP_HEIGHT},
+                        {0, ROW_TOP_HEIGHT, bottomW, ROW_BOTTOM_HEIGHT},
+                        {bottomW, ROW_TOP_HEIGHT, MENU_WIDTH - bottomW, ROW_BOTTOM_HEIGHT}
+                };
+            }
+            default:
+                return getLayoutAreas(DEFAULT_LAYOUT);
+        }
     }
 
     // ========================================
@@ -872,50 +936,19 @@ public class LineRichMenuService {
         g2d.setColor(themeColor);
         g2d.fillRect(0, 0, MENU_WIDTH, MENU_HEIGHT);
 
+        // 取得佈局區域
+        int[][] layoutAreas = getLayoutAreas(DEFAULT_LAYOUT);
+
         // 繪製格線（淡色）
         g2d.setColor(new Color(255, 255, 255, 30));
         g2d.setStroke(new BasicStroke(2));
-
-        // 垂直線
-        for (int col = 1; col < COLS; col++) {
-            int x = col * CELL_WIDTH;
-            g2d.drawLine(x, 0, x, MENU_HEIGHT);
-        }
-
-        // 水平線
-        for (int row = 1; row < ROWS; row++) {
-            int y = row * CELL_HEIGHT;
-            g2d.drawLine(0, y, MENU_WIDTH, y);
-        }
+        drawGridLines(g2d, layoutAreas);
 
         // 繪製每個選單項目
-        // 使用跨平台字型載入策略
-        Font textFont = loadChineseFont(Font.BOLD, 72);  // 放大字體
+        Font textFont = loadChineseFont(Font.BOLD, 72);
 
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                int index = row * COLS + col;
-                if (index < MENU_ITEMS.length) {
-                    int centerX = col * CELL_WIDTH + CELL_WIDTH / 2;
-                    int centerY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
-
-                    // 繪製圖示背景圓圈（放大）
-                    g2d.setColor(ICON_BG_COLOR);
-                    int circleSize = 200;
-                    g2d.fillOval(centerX - circleSize / 2, centerY - 120, circleSize, circleSize);
-
-                    // 繪製向量圖示（放大）
-                    g2d.setColor(TEXT_COLOR);
-                    drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - 20, 100);
-
-                    // 繪製文字（調整位置）
-                    g2d.setFont(textFont);
-                    FontMetrics textMetrics = g2d.getFontMetrics();
-                    String text = MENU_ITEMS[index][0];
-                    int textWidth = textMetrics.stringWidth(text);
-                    g2d.drawString(text, centerX - textWidth / 2, centerY + 130);
-                }
-            }
+        for (int i = 0; i < layoutAreas.length && i < MENU_ITEMS.length; i++) {
+            drawMenuCell(g2d, layoutAreas[i], i, textFont, themeColor);
         }
 
         g2d.dispose();
@@ -969,6 +1002,8 @@ public class LineRichMenuService {
         lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
             config.setRichMenuId(richMenuId);
             config.setRichMenuTheme(theme);
+            config.setRichMenuMode("CUSTOM".equals(theme) ? "CUSTOM" : "DEFAULT");
+            config.setRichMenuCustomConfig(null);
             lineConfigRepository.save(config);
         });
     }
@@ -1007,6 +1042,10 @@ public class LineRichMenuService {
             case PERSON:
                 // 人像圖示
                 drawPersonIcon(g2d, centerX, centerY, size);
+                break;
+            case TICKET:
+                // 票券圖示
+                drawTicketIcon(g2d, centerX, centerY, size);
                 break;
             case PHONE:
                 // 電話圖示
@@ -1129,6 +1168,32 @@ public class LineRichMenuService {
     }
 
     /**
+     * 繪製票券圖示（領取票券）
+     */
+    private void drawTicketIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 0.7);
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+
+        // 票券主體（圓角矩形）
+        g2d.drawRoundRect(x, y, w, h, 8, 8);
+
+        // 虛線分隔（左側 1/3）
+        int lineX = x + w / 3;
+        for (int dy = y + 6; dy < y + h - 4; dy += 8) {
+            g2d.fillRect(lineX - 1, dy, 2, 4);
+        }
+
+        // 右側百分比符號（表示折扣）
+        int symCx = x + w * 2 / 3;
+        int dotR = 4;
+        g2d.fillOval(symCx - 8, cy - 10, dotR * 2, dotR * 2);
+        g2d.fillOval(symCx + 2, cy + 2, dotR * 2, dotR * 2);
+        g2d.drawLine(symCx + 6, cy - 10, symCx - 6, cy + 10);
+    }
+
+    /**
      * 繪製電話圖示（聯絡店家）
      */
     private void drawPhoneIcon(Graphics2D g2d, int cx, int cy, int size) {
@@ -1204,5 +1269,199 @@ public class LineRichMenuService {
         log.warn("找不到支援中文的字型，使用預設 SansSerif（可能無法正確顯示中文）");
         log.warn("可用字型列表：{}", String.join(", ", availableFonts));
         return new Font("SansSerif", style, size);
+    }
+
+    // ========================================
+    // 私有方法 - 繪圖輔助
+    // ========================================
+
+    /**
+     * 繪製單一選單格子（圖示 + 文字）
+     *
+     * @param g2d Graphics2D 繪圖物件
+     * @param area 區域座標 {x, y, width, height}
+     * @param index 選單項目索引
+     * @param textFont 文字字型
+     * @param bgColor 背景色（未使用，保留供未來擴展）
+     */
+    private void drawMenuCell(Graphics2D g2d, int[] area, int index, Font textFont, Color bgColor) {
+        if (index >= MENU_ITEMS.length || index >= MENU_ICON_TYPES.length) return;
+
+        int cellX = area[0];
+        int cellY = area[1];
+        int cellW = area[2];
+        int cellH = area[3];
+        int centerX = cellX + cellW / 2;
+        int centerY = cellY + cellH / 2;
+
+        // 根據格子大小調整圖示和文字尺寸
+        int iconSize = Math.min(cellW, cellH) / 5;
+        int circleSize = iconSize * 2;
+        int fontSize = Math.max(36, Math.min(72, cellW / 12));
+
+        // 繪製圖示背景圓圈
+        g2d.setColor(ICON_BG_COLOR);
+        g2d.fillOval(centerX - circleSize / 2, centerY - circleSize / 2 - iconSize / 2, circleSize, circleSize);
+
+        // 繪製向量圖示
+        g2d.setColor(TEXT_COLOR);
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - iconSize / 4, iconSize);
+
+        // 繪製文字
+        Font cellFont = textFont.deriveFont((float) fontSize);
+        g2d.setFont(cellFont);
+        FontMetrics fm = g2d.getFontMetrics();
+        String text = MENU_ITEMS[index][0];
+        int textWidth = fm.stringWidth(text);
+        g2d.drawString(text, centerX - textWidth / 2, centerY + circleSize / 2 + fm.getAscent());
+    }
+
+    /**
+     * 繪製格線（根據佈局區域自動計算需要的線條）
+     *
+     * @param g2d Graphics2D 繪圖物件
+     * @param layoutAreas 佈局區域陣列
+     */
+    private void drawGridLines(Graphics2D g2d, int[][] layoutAreas) {
+        java.util.Set<Integer> verticalLines = new java.util.TreeSet<>();
+        java.util.Set<Integer> horizontalLines = new java.util.TreeSet<>();
+
+        for (int[] area : layoutAreas) {
+            int right = area[0] + area[2];
+            int bottom = area[1] + area[3];
+            if (right > 0 && right < MENU_WIDTH) verticalLines.add(right);
+            if (bottom > 0 && bottom < MENU_HEIGHT) horizontalLines.add(bottom);
+        }
+
+        // 繪製水平線（只畫跨越整個寬度的）
+        for (int y : horizontalLines) {
+            g2d.drawLine(0, y, MENU_WIDTH, y);
+        }
+
+        // 繪製垂直線（根據所在行判斷高度）
+        for (int[] area : layoutAreas) {
+            int right = area[0] + area[2];
+            if (right > 0 && right < MENU_WIDTH) {
+                g2d.drawLine(right, area[1], right, area[1] + area[3]);
+            }
+        }
+    }
+
+    // ========================================
+    // 公開方法 - 自訂配置 Rich Menu
+    // ========================================
+
+    /**
+     * 使用自訂圖片和佈局配置建立 Rich Menu
+     *
+     * <p>圖片不疊加任何文字/圖示，直接上傳。
+     * 根據 config 中定義的佈局和動作建立 Rich Menu 區域。
+     *
+     * @param tenantId 租戶 ID
+     * @param imageBytes 圖片位元組陣列
+     * @param configJson 配置 JSON 字串
+     * @return Rich Menu ID
+     */
+    @Transactional
+    public String createCustomConfigRichMenu(String tenantId, byte[] imageBytes, String configJson) {
+        log.info("開始建立自訂配置 Rich Menu，租戶：{}", tenantId);
+
+        try {
+            // ========================================
+            // 1. 驗證圖片
+            // ========================================
+            validateImage(imageBytes);
+
+            // ========================================
+            // 2. 解析配置
+            // ========================================
+            JsonNode config = objectMapper.readTree(configJson);
+            String layout = config.path("layout").asText(DEFAULT_LAYOUT);
+            JsonNode areasConfig = config.path("areas");
+
+            if (!areasConfig.isArray() || areasConfig.isEmpty()) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "請設定至少一個選單區域");
+            }
+
+            // 驗證佈局
+            int[][] layoutAreas = getLayoutAreas(layout);
+            if (areasConfig.size() > layoutAreas.length) {
+                throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR,
+                        "區域數量（" + areasConfig.size() + "）超過佈局上限（" + layoutAreas.length + "）");
+            }
+
+            // 建立選單項目陣列
+            String[][] menuItems = new String[areasConfig.size()][2];
+            for (int i = 0; i < areasConfig.size(); i++) {
+                JsonNode areaNode = areasConfig.get(i);
+                menuItems[i][0] = areaNode.path("label").asText("選單 " + (i + 1));
+                menuItems[i][1] = areaNode.path("action").asText("main_menu");
+            }
+
+            // ========================================
+            // 3. 刪除現有的 Rich Menu
+            // ========================================
+            deleteRichMenu(tenantId);
+
+            // ========================================
+            // 4. 縮放圖片至 2500x843（不疊加文字）
+            // ========================================
+            byte[] resizedImageBytes = resizeImageToRichMenuSize(imageBytes);
+
+            // ========================================
+            // 5. 取得店家名稱
+            // ========================================
+            String shopName = tenantRepository.findById(tenantId)
+                    .map(Tenant::getName)
+                    .orElse("預約服務");
+
+            // ========================================
+            // 6. 建立 Rich Menu（用自訂區域）
+            // ========================================
+            ObjectNode requestBody = buildRichMenuRequestWithLayout(shopName, layout, menuItems);
+            String accessToken = getAccessToken(tenantId);
+            String url = apiEndpoint + CREATE_RICH_MENU_API;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, HttpMethod.POST, request, JsonNode.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗");
+            }
+
+            String richMenuId = response.getBody().path("richMenuId").asText();
+            log.info("自訂 Rich Menu 建立成功，ID：{}", richMenuId);
+
+            // ========================================
+            // 7. 上傳圖片 + 設為預設
+            // ========================================
+            uploadRichMenuImage(tenantId, richMenuId, resizedImageBytes);
+            setDefaultRichMenu(tenantId, richMenuId);
+
+            // ========================================
+            // 8. 儲存 mode=CUSTOM + config
+            // ========================================
+            lineConfigRepository.findByTenantId(tenantId).ifPresent(lineConfig -> {
+                lineConfig.setRichMenuId(richMenuId);
+                lineConfig.setRichMenuTheme("CUSTOM");
+                lineConfig.setRichMenuMode("CUSTOM");
+                lineConfig.setRichMenuCustomConfig(configJson);
+                lineConfigRepository.save(lineConfig);
+            });
+
+            return richMenuId;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("建立自訂配置 Rich Menu 失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.LINE_API_ERROR, "建立 Rich Menu 失敗：" + e.getMessage());
+        }
     }
 }

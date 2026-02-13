@@ -169,6 +169,18 @@ public class TenantLineConfig {
     @Column(name = "rich_menu_theme", length = 20)
     private String richMenuTheme;
 
+    /**
+     * Rich Menu 模式：DEFAULT（系統生成）/ CUSTOM（自訂圖片+區域）
+     */
+    @Column(name = "rich_menu_mode", length = 20)
+    private String richMenuMode;
+
+    /**
+     * 自訂 Rich Menu 配置（JSON）
+     */
+    @Column(name = "rich_menu_custom_config", columnDefinition = "TEXT")
+    private String richMenuCustomConfig;
+
     // ========================================
     // 額度管理
     // ========================================

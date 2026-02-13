@@ -210,6 +210,40 @@ public class LineConfigController {
     }
 
     /**
+     * 建立自訂配置 Rich Menu（自訂圖片+佈局+動作）
+     *
+     * <p>圖片不疊加文字/圖示，直接上傳。由 config JSON 定義佈局和每格動作。
+     *
+     * @param file 圖片檔案
+     * @param config 配置 JSON 字串
+     * @return Rich Menu ID
+     */
+    @PostMapping("/rich-menu/create-custom")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> createCustomRichMenu(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("config") String config
+    ) {
+        log.debug("建立自訂配置 Rich Menu");
+
+        try {
+            String tenantId = TenantContext.getTenantId();
+            byte[] imageBytes = file.getBytes();
+            String richMenuId = richMenuService.createCustomConfigRichMenu(tenantId, imageBytes, config);
+
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            result.put("richMenuId", richMenuId);
+            result.put("theme", "CUSTOM");
+            result.put("mode", "CUSTOM");
+
+            return ResponseEntity.ok(ApiResponse.ok("自訂選單建立成功", result));
+        } catch (java.io.IOException e) {
+            log.error("讀取上傳檔案失敗", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
+        }
+    }
+
+    /**
      * 刪除 Rich Menu
      *
      * @return 操作結果

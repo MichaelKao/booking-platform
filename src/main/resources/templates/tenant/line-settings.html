@@ -324,11 +324,24 @@
                                     </div>
                                 </div>
 
+                                <!-- 模式切換 Tab -->
+                                <ul class="nav nav-tabs nav-fill mb-3" id="richMenuModeTabs">
+                                    <li class="nav-item">
+                                        <button class="nav-link active" data-mode="default" onclick="switchRichMenuMode('default')">
+                                            <i class="bi bi-palette me-1"></i>預設選單
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link" data-mode="custom" onclick="switchRichMenuMode('custom')">
+                                            <i class="bi bi-image me-1"></i>自訂選單
+                                        </button>
+                                    </li>
+                                </ul>
+
                                 <!-- Rich Menu 即時預覽 -->
                                 <div class="rich-menu-preview-container mb-3">
                                     <div class="phone-mockup">
                                         <div class="phone-screen">
-                                            <!-- LINE 聊天室頭部 -->
                                             <div class="line-header">
                                                 <span class="line-header-back"><i class="bi bi-chevron-left"></i></span>
                                                 <div class="line-header-avatar"><i class="bi bi-shop"></i></div>
@@ -338,40 +351,46 @@
                                                     <i class="bi bi-three-dots-vertical"></i>
                                                 </div>
                                             </div>
-                                            <!-- LINE 聊天區域 -->
                                             <div class="line-chat-area">
                                                 <div class="line-chat-hint">顧客聊天區域</div>
                                             </div>
-                                            <!-- Rich Menu 預覽 -->
-                                            <div class="rich-menu-preview theme-GREEN" id="richMenuPreview">
-                                                <div class="rich-menu-cell">
+                                            <!-- 預設模式預覽（7 格：3+4） -->
+                                            <div class="rich-menu-preview layout-3x4 theme-GREEN" id="richMenuPreview">
+                                                <div class="rich-menu-cell cell-row1">
                                                     <i class="bi bi-calendar-check rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">開始預約</span>
                                                 </div>
-                                                <div class="rich-menu-cell">
+                                                <div class="rich-menu-cell cell-row1">
                                                     <i class="bi bi-clipboard-check rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">我的預約</span>
                                                 </div>
-                                                <div class="rich-menu-cell">
+                                                <div class="rich-menu-cell cell-row1">
                                                     <i class="bi bi-cart3 rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">瀏覽商品</span>
                                                 </div>
-                                                <div class="rich-menu-cell">
-                                                    <i class="bi bi-gift rich-menu-cell-icon"></i>
+                                                <div class="rich-menu-cell cell-row2">
+                                                    <i class="bi bi-ticket-perforated rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">領取票券</span>
                                                 </div>
-                                                <div class="rich-menu-cell">
+                                                <div class="rich-menu-cell cell-row2">
+                                                    <i class="bi bi-gift rich-menu-cell-icon"></i>
+                                                    <span class="rich-menu-cell-text">我的票券</span>
+                                                </div>
+                                                <div class="rich-menu-cell cell-row2">
                                                     <i class="bi bi-person-circle rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">會員資訊</span>
                                                 </div>
-                                                <div class="rich-menu-cell">
+                                                <div class="rich-menu-cell cell-row2">
                                                     <i class="bi bi-telephone rich-menu-cell-icon"></i>
                                                     <span class="rich-menu-cell-text">聯絡店家</span>
                                                 </div>
-                                                <!-- 自訂圖片疊層 -->
                                                 <img class="rich-menu-custom-image" id="richMenuCustomImage" src="" alt="自訂 Rich Menu">
                                             </div>
-                                            <!-- 手機底部 -->
+                                            <!-- 自訂模式預覽 -->
+                                            <div class="rich-menu-preview rich-menu-custom-preview d-none" id="richMenuCustomPreview">
+                                                <img class="rich-menu-custom-bg" id="customPreviewImage" src="" alt="">
+                                                <div class="rich-menu-area-markers" id="customAreaMarkers"></div>
+                                            </div>
                                             <div class="phone-bottom-bar">
                                                 <div class="phone-home-indicator"></div>
                                             </div>
@@ -380,48 +399,97 @@
                                 </div>
                                 <p class="preview-label">即時預覽效果</p>
 
-                                <!-- 主題選擇 -->
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold">選擇主題配色</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <button type="button" class="btn btn-sm theme-btn" data-theme="GREEN" style="background-color: #1DB446; color: white; border: 2px solid transparent;">
-                                            LINE 綠
-                                        </button>
-                                        <button type="button" class="btn btn-sm theme-btn" data-theme="BLUE" style="background-color: #2196F3; color: white; border: 2px solid transparent;">
-                                            海洋藍
-                                        </button>
-                                        <button type="button" class="btn btn-sm theme-btn" data-theme="PURPLE" style="background-color: #9C27B0; color: white; border: 2px solid transparent;">
-                                            皇家紫
-                                        </button>
-                                        <button type="button" class="btn btn-sm theme-btn" data-theme="ORANGE" style="background-color: #FF5722; color: white; border: 2px solid transparent;">
-                                            日落橘
-                                        </button>
-                                        <button type="button" class="btn btn-sm theme-btn" data-theme="DARK" style="background-color: #263238; color: white; border: 2px solid transparent;">
-                                            暗黑
-                                        </button>
+                                <!-- ========== 預設模式面板 ========== -->
+                                <div id="defaultModePanel">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">選擇主題配色</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-sm theme-btn" data-theme="GREEN" style="background-color: #1DB446; color: white; border: 2px solid transparent;">
+                                                LINE 綠
+                                            </button>
+                                            <button type="button" class="btn btn-sm theme-btn" data-theme="BLUE" style="background-color: #2196F3; color: white; border: 2px solid transparent;">
+                                                海洋藍
+                                            </button>
+                                            <button type="button" class="btn btn-sm theme-btn" data-theme="PURPLE" style="background-color: #9C27B0; color: white; border: 2px solid transparent;">
+                                                皇家紫
+                                            </button>
+                                            <button type="button" class="btn btn-sm theme-btn" data-theme="ORANGE" style="background-color: #FF5722; color: white; border: 2px solid transparent;">
+                                                日落橘
+                                            </button>
+                                            <button type="button" class="btn btn-sm theme-btn" data-theme="DARK" style="background-color: #263238; color: white; border: 2px solid transparent;">
+                                                暗黑
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createRichMenu()" id="createRichMenuBtn">
+                                        <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>建立主題選單</span>
+                                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
+                                    </button>
                                 </div>
 
-                                <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createRichMenu()" id="createRichMenuBtn">
-                                    <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>建立主題選單</span>
-                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
-                                </button>
-
-                                <hr>
-
-                                <!-- 自訂圖片上傳 -->
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold">或上傳自訂圖片</label>
-                                    <input type="file" class="form-control form-control-sm" id="richMenuImage" accept="image/png,image/jpeg">
-                                    <div class="form-text">
-                                        格式：PNG/JPG（任意尺寸，系統會自動縮放至 2500x843）
+                                <!-- ========== 自訂模式面板 ========== -->
+                                <div id="customModePanel" class="d-none">
+                                    <!-- 步驟 1：選擇佈局 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">1</span>選擇佈局</label>
+                                        <div class="layout-selector" id="layoutSelector">
+                                            <div class="layout-option active" data-layout="3+4" onclick="selectLayout('3+4')">
+                                                <div class="layout-mini layout-mini-3x4">
+                                                    <div></div><div></div><div></div>
+                                                    <div></div><div></div><div></div><div></div>
+                                                </div>
+                                                <div class="layout-label">3+4</div>
+                                            </div>
+                                            <div class="layout-option" data-layout="2x3" onclick="selectLayout('2x3')">
+                                                <div class="layout-mini layout-mini-2x3">
+                                                    <div></div><div></div><div></div>
+                                                    <div></div><div></div><div></div>
+                                                </div>
+                                                <div class="layout-label">2x3</div>
+                                            </div>
+                                            <div class="layout-option" data-layout="2+3" onclick="selectLayout('2+3')">
+                                                <div class="layout-mini layout-mini-2x3-top2">
+                                                    <div></div><div></div>
+                                                    <div></div><div></div><div></div>
+                                                </div>
+                                                <div class="layout-label">2+3</div>
+                                            </div>
+                                            <div class="layout-option" data-layout="2x2" onclick="selectLayout('2x2')">
+                                                <div class="layout-mini layout-mini-2x2">
+                                                    <div></div><div></div>
+                                                    <div></div><div></div>
+                                                </div>
+                                                <div class="layout-label">2x2</div>
+                                            </div>
+                                            <div class="layout-option" data-layout="1+2" onclick="selectLayout('1+2')">
+                                                <div class="layout-mini layout-mini-1x2">
+                                                    <div></div>
+                                                    <div></div><div></div>
+                                                </div>
+                                                <div class="layout-label">1+2</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <button type="button" class="btn btn-outline-success btn-sm w-100 mb-3" onclick="uploadCustomRichMenu()" id="uploadRichMenuBtn">
-                                    <span class="btn-text"><i class="bi bi-upload me-1"></i>上傳自訂圖片</span>
-                                    <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>上傳中...</span>
-                                </button>
+                                    <!-- 步驟 2：上傳圖片 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">2</span>上傳圖片</label>
+                                        <input type="file" class="form-control form-control-sm" id="customRichMenuImage" accept="image/png,image/jpeg">
+                                        <div class="form-text">PNG/JPG，任意尺寸，系統自動縮放至 2500x843</div>
+                                    </div>
+
+                                    <!-- 步驟 3：設定動作 -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold"><span class="badge bg-primary me-1">3</span>設定每格動作</label>
+                                        <div id="customActionsList"></div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-success btn-sm w-100 mb-3" onclick="createCustomRichMenu()" id="createCustomRichMenuBtn">
+                                        <span class="btn-text"><i class="bi bi-plus-lg me-1"></i>建立自訂選單</span>
+                                        <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>建立中...</span>
+                                    </button>
+                                </div>
 
                                 <!-- 刪除按鈕 -->
                                 <button type="button" class="btn btn-outline-danger btn-sm w-100 d-none" onclick="deleteRichMenu()" id="deleteRichMenuBtn">
@@ -815,32 +883,85 @@
         // ========================================
 
         let selectedTheme = 'GREEN';
-        let uploadedCustomImageUrl = null;  // 保存上傳的自訂圖片
+        let uploadedCustomImageUrl = null;
+        let currentRichMenuMode = 'default';  // default 或 custom
+        let selectedLayout = '3+4';
 
-        // 更新預覽主題
+        // 動作選項定義
+        const ACTION_OPTIONS = [
+            { value: 'start_booking', label: '開始預約' },
+            { value: 'view_bookings', label: '我的預約' },
+            { value: 'start_shopping', label: '瀏覽商品' },
+            { value: 'view_coupons', label: '領取票券' },
+            { value: 'view_my_coupons', label: '我的票券' },
+            { value: 'view_member_info', label: '會員資訊' },
+            { value: 'contact_shop', label: '聯絡店家' },
+            { value: 'main_menu', label: '主選單' }
+        ];
+
+        // 佈局格數對應
+        const LAYOUT_COUNTS = {
+            '3+4': 7, '2x3': 6, '2+3': 5, '2x2': 4, '1+2': 3
+        };
+
+        // 預設動作（依佈局格數截取）
+        const DEFAULT_ACTIONS = [
+            { action: 'start_booking', label: '開始預約' },
+            { action: 'view_bookings', label: '我的預約' },
+            { action: 'start_shopping', label: '瀏覽商品' },
+            { action: 'view_coupons', label: '領取票券' },
+            { action: 'view_my_coupons', label: '我的票券' },
+            { action: 'view_member_info', label: '會員資訊' },
+            { action: 'contact_shop', label: '聯絡店家' }
+        ];
+
+        // ========================================
+        // 模式切換
+        // ========================================
+
+        function switchRichMenuMode(mode) {
+            currentRichMenuMode = mode;
+
+            // 更新 Tab 樣式
+            document.querySelectorAll('#richMenuModeTabs .nav-link').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.mode === mode);
+            });
+
+            // 顯示/隱藏面板
+            document.getElementById('defaultModePanel').classList.toggle('d-none', mode !== 'default');
+            document.getElementById('customModePanel').classList.toggle('d-none', mode !== 'custom');
+
+            // 切換預覽
+            document.getElementById('richMenuPreview').classList.toggle('d-none', mode !== 'default');
+            document.getElementById('richMenuCustomPreview').classList.toggle('d-none', mode !== 'custom');
+
+            if (mode === 'custom') {
+                renderCustomActionsList();
+                updateCustomPreview();
+            }
+        }
+
+        // ========================================
+        // 預設模式
+        // ========================================
+
         function updatePreviewTheme(theme) {
             const preview = document.getElementById('richMenuPreview');
-            // 移除所有主題 class
             preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK');
-            // 添加新主題 class
             preview.classList.add('theme-' + theme);
-            // 移除自訂圖片模式
             preview.classList.remove('has-custom-image');
             document.getElementById('richMenuCustomImage').src = '';
-            uploadedCustomImageUrl = null;  // 清除自訂圖片
+            uploadedCustomImageUrl = null;
         }
 
         // 主題按鈕點擊事件
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // 移除所有選中狀態
                 document.querySelectorAll('.theme-btn').forEach(b => {
                     b.style.border = '2px solid transparent';
                 });
-                // 設定選中狀態
                 this.style.border = '2px solid #000';
                 selectedTheme = this.dataset.theme;
-                // 更新預覽
                 updatePreviewTheme(selectedTheme);
             });
         });
@@ -848,24 +969,130 @@
         // 預設選中 GREEN
         document.querySelector('.theme-btn[data-theme="GREEN"]').style.border = '2px solid #000';
 
-        // 圖片上傳即時預覽
-        document.getElementById('richMenuImage').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const preview = document.getElementById('richMenuPreview');
-                    const customImage = document.getElementById('richMenuCustomImage');
-                    // 保存上傳的圖片 URL
-                    uploadedCustomImageUrl = event.target.result;
-                    customImage.src = uploadedCustomImageUrl;
-                    // 移除主題色，使用暗色背景搭配自訂圖片
-                    preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE');
-                    preview.classList.add('theme-DARK', 'has-custom-image');
-                };
-                reader.readAsDataURL(file);
+        // ========================================
+        // 自訂模式 - 佈局選擇
+        // ========================================
+
+        function selectLayout(layout) {
+            selectedLayout = layout;
+            document.querySelectorAll('.layout-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.layout === layout);
+            });
+            renderCustomActionsList();
+            updateCustomPreview();
+        }
+
+        // 渲染動作下拉選單列表
+        function renderCustomActionsList() {
+            const count = LAYOUT_COUNTS[selectedLayout] || 7;
+            const container = document.getElementById('customActionsList');
+            let html = '';
+
+            for (let i = 0; i < count; i++) {
+                const defaultAction = DEFAULT_ACTIONS[i] || DEFAULT_ACTIONS[0];
+                html += `
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text"><span class="badge bg-primary">${i + 1}</span></span>
+                        <select class="form-select form-select-sm custom-action-select" data-index="${i}">
+                            ${ACTION_OPTIONS.map(opt =>
+                                `<option value="${opt.value}" ${opt.value === defaultAction.action ? 'selected' : ''}>${opt.label}</option>`
+                            ).join('')}
+                            <option value="_custom">自訂連結...</option>
+                        </select>
+                        <input type="text" class="form-control form-control-sm custom-action-label d-none"
+                               data-index="${i}" placeholder="按鈕文字" value="${defaultAction.label}">
+                    </div>
+                    <input type="text" class="form-control form-control-sm mb-2 custom-action-url d-none"
+                           data-index="${i}" placeholder="輸入網址（https://...）">
+                `;
+            }
+            container.innerHTML = html;
+
+            // 監聽自訂連結切換
+            container.querySelectorAll('.custom-action-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const idx = this.dataset.index;
+                    const urlInput = container.querySelector(`.custom-action-url[data-index="${idx}"]`);
+                    const labelInput = container.querySelector(`.custom-action-label[data-index="${idx}"]`);
+                    if (this.value === '_custom') {
+                        urlInput.classList.remove('d-none');
+                        labelInput.classList.remove('d-none');
+                        labelInput.value = '';
+                    } else {
+                        urlInput.classList.add('d-none');
+                        labelInput.classList.add('d-none');
+                        const opt = ACTION_OPTIONS.find(o => o.value === this.value);
+                        labelInput.value = opt ? opt.label : '';
+                    }
+                    updateCustomPreview();
+                });
+            });
+        }
+
+        // ========================================
+        // 自訂模式 - 圖片上傳即時預覽
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const customImageInput = document.getElementById('customRichMenuImage');
+            if (customImageInput) {
+                customImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            document.getElementById('customPreviewImage').src = event.target.result;
+                            updateCustomPreview();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
             }
         });
+
+        // 更新自訂模式預覽
+        function updateCustomPreview() {
+            const preview = document.getElementById('richMenuCustomPreview');
+            const markers = document.getElementById('customAreaMarkers');
+            const count = LAYOUT_COUNTS[selectedLayout] || 7;
+
+            // 佈局比例定義（每格的 left%, top%, width%, height%）
+            const layouts = {
+                '3+4': [
+                    [0,0,33.33,50],[33.33,0,33.33,50],[66.67,0,33.33,50],
+                    [0,50,25,50],[25,50,25,50],[50,50,25,50],[75,50,25,50]
+                ],
+                '2x3': [
+                    [0,0,33.33,50],[33.33,0,33.33,50],[66.67,0,33.33,50],
+                    [0,50,33.33,50],[33.33,50,33.33,50],[66.67,50,33.33,50]
+                ],
+                '2+3': [
+                    [0,0,50,50],[50,0,50,50],
+                    [0,50,33.33,50],[33.33,50,33.33,50],[66.67,50,33.33,50]
+                ],
+                '2x2': [
+                    [0,0,50,50],[50,0,50,50],
+                    [0,50,50,50],[50,50,50,50]
+                ],
+                '1+2': [
+                    [0,0,100,50],
+                    [0,50,50,50],[50,50,50,50]
+                ]
+            };
+
+            const areas = layouts[selectedLayout] || layouts['3+4'];
+            let html = '';
+            for (let i = 0; i < count && i < areas.length; i++) {
+                const [left, top, width, height] = areas[i];
+                html += `<div class="rich-menu-area-number" style="left:${left + width/2 - 4}%;top:${top + height/2 - 6}%;">${i + 1}</div>`;
+                html += `<div class="rich-menu-area-border" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%;"></div>`;
+            }
+            markers.innerHTML = html;
+        }
+
+        // ========================================
+        // Rich Menu 資訊載入
+        // ========================================
 
         async function loadRichMenuInfo() {
             try {
@@ -896,10 +1123,28 @@
                     'DARK': '暗黑模式',
                     'CUSTOM': '自訂圖片'
                 };
-                themeText.textContent = '主題：' + (themeNames[data.theme] || data.theme || '未知');
 
-                // 選中對應的主題按鈕並更新預覽
-                if (data.theme && data.theme !== 'CUSTOM') {
+                const modeLabel = data.mode === 'CUSTOM' ? '自訂選單' : (themeNames[data.theme] || data.theme || '未知');
+                themeText.textContent = '模式：' + modeLabel;
+
+                if (data.mode === 'CUSTOM') {
+                    // 自訂模式：切換到自訂 Tab
+                    switchRichMenuMode('custom');
+                    // 載入已儲存的配置
+                    if (data.customConfig) {
+                        try {
+                            const config = JSON.parse(data.customConfig);
+                            if (config.layout) {
+                                selectedLayout = config.layout;
+                                selectLayout(config.layout);
+                            }
+                            if (config.areas) {
+                                restoreCustomActions(config.areas);
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+                } else if (data.theme && data.theme !== 'CUSTOM') {
+                    switchRichMenuMode('default');
                     document.querySelectorAll('.theme-btn').forEach(b => {
                         b.style.border = '2px solid transparent';
                         if (b.dataset.theme === data.theme) {
@@ -907,20 +1152,18 @@
                             selectedTheme = data.theme;
                         }
                     });
-                    // 更新預覽主題
                     updatePreviewTheme(data.theme);
                 } else if (data.theme === 'CUSTOM') {
-                    // 自訂圖片模式
+                    // 舊的自訂圖片模式（有文字疊加）
+                    switchRichMenuMode('default');
                     preview.classList.remove('theme-GREEN', 'theme-BLUE', 'theme-PURPLE', 'theme-ORANGE', 'theme-DARK', 'has-custom-image');
                     preview.classList.add('theme-DARK');
                     const customImage = document.getElementById('richMenuCustomImage');
-                    // 優先使用已上傳的圖片，其次使用 API 返回的 URL
                     const imageUrl = uploadedCustomImageUrl || data.imageUrl;
                     if (imageUrl && customImage) {
                         customImage.src = imageUrl;
                         preview.classList.add('has-custom-image');
                     }
-                    // 如果沒有圖片 URL，顯示暗色主題預覽（而非破圖）
                 }
 
                 deleteBtn.classList.remove('d-none');
@@ -929,10 +1172,33 @@
                 statusBadge.textContent = '未設定';
                 themeText.textContent = '';
                 deleteBtn.classList.add('d-none');
-                // 重置預覽
                 updatePreviewTheme('GREEN');
             }
         }
+
+        // 還原自訂動作設定
+        function restoreCustomActions(areas) {
+            const container = document.getElementById('customActionsList');
+            areas.forEach((area, i) => {
+                const select = container.querySelector(`.custom-action-select[data-index="${i}"]`);
+                if (select) {
+                    const isKnown = ACTION_OPTIONS.some(o => o.value === area.action);
+                    if (isKnown) {
+                        select.value = area.action;
+                    } else {
+                        select.value = '_custom';
+                        const urlInput = container.querySelector(`.custom-action-url[data-index="${i}"]`);
+                        const labelInput = container.querySelector(`.custom-action-label[data-index="${i}"]`);
+                        if (urlInput) { urlInput.classList.remove('d-none'); urlInput.value = area.action; }
+                        if (labelInput) { labelInput.classList.remove('d-none'); labelInput.value = area.label || ''; }
+                    }
+                }
+            });
+        }
+
+        // ========================================
+        // Rich Menu 操作
+        // ========================================
 
         async function createRichMenu() {
             const btn = document.getElementById('createRichMenuBtn');
@@ -955,61 +1221,72 @@
             }
         }
 
-        async function uploadCustomRichMenu() {
-            const fileInput = document.getElementById('richMenuImage');
+        async function createCustomRichMenu() {
+            const fileInput = document.getElementById('customRichMenuImage');
             if (!fileInput.files || !fileInput.files[0]) {
-                showError('請選擇圖片檔案');
+                showError('請先上傳圖片');
                 return;
             }
 
             const file = fileInput.files[0];
-
-            // 驗證檔案大小
-            if (file.size > 1024 * 1024) {
-                showError('圖片大小不能超過 1MB');
-                return;
-            }
-
-            // 驗證檔案類型
             if (!['image/png', 'image/jpeg'].includes(file.type)) {
                 showError('請上傳 PNG 或 JPG 格式的圖片');
                 return;
             }
 
-            const btn = document.getElementById('uploadRichMenuBtn');
+            // 收集配置
+            const count = LAYOUT_COUNTS[selectedLayout] || 7;
+            const areas = [];
+            const container = document.getElementById('customActionsList');
+
+            for (let i = 0; i < count; i++) {
+                const select = container.querySelector(`.custom-action-select[data-index="${i}"]`);
+                const labelInput = container.querySelector(`.custom-action-label[data-index="${i}"]`);
+                const urlInput = container.querySelector(`.custom-action-url[data-index="${i}"]`);
+
+                let action = select ? select.value : 'main_menu';
+                let label = '';
+
+                if (action === '_custom') {
+                    action = urlInput ? urlInput.value.trim() : '';
+                    label = labelInput ? labelInput.value.trim() : ('選單 ' + (i + 1));
+                    if (!action) {
+                        showError(`請填寫第 ${i + 1} 格的連結網址`);
+                        return;
+                    }
+                } else {
+                    const opt = ACTION_OPTIONS.find(o => o.value === action);
+                    label = opt ? opt.label : ('選單 ' + (i + 1));
+                }
+
+                areas.push({ action, label });
+            }
+
+            const config = JSON.stringify({ layout: selectedLayout, areas });
+
+            const btn = document.getElementById('createCustomRichMenuBtn');
             setButtonLoading(btn, true);
 
             try {
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('config', config);
 
-                const response = await fetch('/api/settings/line/rich-menu/upload-image', {
+                const response = await fetch('/api/settings/line/rich-menu/create-custom', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + getToken()
-                    },
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
                     body: formData
                 });
 
                 const r = await response.json();
-
                 if (r.success) {
-                    showSuccess('自訂 Rich Menu 建立成功！');
-                    fileInput.value = '';
-                    // 保持自訂圖片預覽，不重新載入（因為 API 不會返回圖片 URL）
-                    // 更新狀態顯示
-                    const statusBadge = document.getElementById('richMenuStatusBadge');
-                    const themeText = document.getElementById('richMenuThemeText');
-                    const deleteBtn = document.getElementById('deleteRichMenuBtn');
-                    statusBadge.className = 'badge bg-success me-2';
-                    statusBadge.textContent = '已啟用';
-                    themeText.textContent = '主題：自訂圖片';
-                    deleteBtn.classList.remove('d-none');
+                    showSuccess('自訂選單建立成功！');
+                    loadRichMenuInfo();
                 } else {
-                    showError('上傳失敗：' + (r.message || '請確認圖片格式正確'));
+                    showError('建立失敗：' + (r.message || '請確認圖片和設定'));
                 }
             } catch (e) {
-                showError('上傳失敗：' + (e.message || '請稍後再試'));
+                showError('建立失敗：' + (e.message || '請稍後再試'));
             } finally {
                 setButtonLoading(btn, false);
             }
