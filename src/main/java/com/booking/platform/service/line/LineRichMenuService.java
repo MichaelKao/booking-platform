@@ -1123,7 +1123,52 @@ public class LineRichMenuService {
                 };
             }
             default:
+                // 支援自訂格數佈局（格式：custom_RxC，例如 custom_3x4）
+                if (layout != null && layout.startsWith("custom_")) {
+                    return parseCustomGridLayout(layout, menuHeight);
+                }
                 return getLayoutAreasWithHeight(DEFAULT_LAYOUT, MENU_HEIGHT);
+        }
+    }
+
+    /**
+     * 解析自訂格數佈局（custom_RxC）
+     *
+     * @param layout 佈局代碼（如 custom_2x3, custom_3x4）
+     * @param menuHeight 選單高度
+     * @return 均等分割的區域陣列
+     */
+    private int[][] parseCustomGridLayout(String layout, int menuHeight) {
+        try {
+            String grid = layout.replace("custom_", "");
+            String[] parts = grid.split("x");
+            int rows = Integer.parseInt(parts[0]);
+            int cols = Integer.parseInt(parts[1]);
+
+            // 限制範圍
+            rows = Math.max(1, Math.min(rows, 4));
+            cols = Math.max(1, Math.min(cols, 5));
+
+            int cellCount = rows * cols;
+            int[][] areas = new int[cellCount][4];
+            int cellW = MENU_WIDTH / cols;
+            int cellH = menuHeight / rows;
+
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    int idx = r * cols + c;
+                    int x = c * cellW;
+                    int y = r * cellH;
+                    // 最後一列/行使用剩餘空間，避免像素縫隙
+                    int w = (c == cols - 1) ? (MENU_WIDTH - x) : cellW;
+                    int h = (r == rows - 1) ? (menuHeight - y) : cellH;
+                    areas[idx] = new int[]{x, y, w, h};
+                }
+            }
+            return areas;
+        } catch (Exception e) {
+            log.warn("解析自訂佈局失敗：{}，使用預設佈局", layout);
+            return getLayoutAreasWithHeight(DEFAULT_LAYOUT, MENU_HEIGHT);
         }
     }
 
@@ -1131,12 +1176,18 @@ public class LineRichMenuService {
      * 判斷佈局是否為大尺寸（Full: 2500x1686）
      */
     private boolean isFullSizeLayout(String layout) {
-        return layout != null && (
-                layout.equals("3+4+4") ||
+        if (layout == null) return false;
+        // 自訂佈局 3 行以上為大尺寸
+        if (layout.startsWith("custom_")) {
+            try {
+                int rows = Integer.parseInt(layout.replace("custom_", "").split("x")[0]);
+                return rows > 2;
+            } catch (Exception e) { return false; }
+        }
+        return layout.equals("3+4+4") ||
                 layout.equals("3+4+4+1") ||
                 layout.equals("1+4+4") ||
-                layout.equals("4+4")
-        );
+                layout.equals("4+4");
     }
 
     /**

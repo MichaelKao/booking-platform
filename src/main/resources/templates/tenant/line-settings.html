@@ -441,10 +441,13 @@
                                         <div class="form-text">上傳背景圖片，系統會自動疊加描邊文字（不遮蓋背景）</div>
                                     </div>
 
-                                    <!-- 不疊加文字圖示（上傳背景圖時顯示） -->
+                                    <!-- 不疊加文字圖示（上傳背景圖時顯示，預設勾選） -->
                                     <div class="form-check mb-2 d-none" id="noOverlayPanel">
-                                        <input class="form-check-input" type="checkbox" id="noOverlayCheckbox">
-                                        <label class="form-check-label small" for="noOverlayCheckbox">不疊加文字圖示（直接使用背景圖）</label>
+                                        <input class="form-check-input" type="checkbox" id="noOverlayCheckbox" checked>
+                                        <label class="form-check-label small" for="noOverlayCheckbox">
+                                            直接使用背景圖（不疊加系統文字圖示）
+                                        </label>
+                                        <div class="form-text text-muted" style="font-size:0.75rem;">取消勾選可讓系統在背景上疊加「開始預約」等文字和圖示</div>
                                     </div>
 
                                     <!-- 文字顏色選擇（上傳背景圖時顯示） -->
@@ -578,6 +581,40 @@
                                                 <div class="layout-mini layout-mini-2x2"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                                                 <div class="layout-label">4+4</div>
                                             </div>
+                                            <div class="layout-option adv-layout-full d-none" data-layout="3+4+4+1" onclick="selectAdvLayout('3+4+4+1')">
+                                                <div class="layout-mini layout-mini-3row"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div style="grid-column:span 4"></div></div>
+                                                <div class="layout-label">3+4+4+1</div>
+                                            </div>
+                                        </div>
+                                        <!-- 自訂格數 -->
+                                        <div class="mt-2 p-2 border rounded bg-light">
+                                            <label class="form-label small fw-bold mb-1"><i class="bi bi-grid-3x3-gap me-1"></i>自訂格數</label>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <label class="small text-muted">行數</label>
+                                                    <select class="form-select form-select-sm" id="advCustomRows" style="width:60px;" onchange="onCustomGridChange()">
+                                                        <option value="1">1</option>
+                                                        <option value="2" selected>2</option>
+                                                        <option value="3">3</option>
+                                                        <option value="4">4</option>
+                                                    </select>
+                                                </div>
+                                                <span class="text-muted">x</span>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <label class="small text-muted">列數</label>
+                                                    <select class="form-select form-select-sm" id="advCustomCols" style="width:60px;" onchange="onCustomGridChange()">
+                                                        <option value="1">1</option>
+                                                        <option value="2">2</option>
+                                                        <option value="3" selected>3</option>
+                                                        <option value="4">4</option>
+                                                        <option value="5">5</option>
+                                                    </select>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="applyCustomGrid()">
+                                                    <i class="bi bi-check-lg"></i> 套用
+                                                </button>
+                                            </div>
+                                            <div class="form-text" style="font-size:0.72rem;">自由定義格數，每格可獨立設定功能</div>
                                         </div>
                                     </div>
 
@@ -1287,14 +1324,16 @@
             const customImage = document.getElementById('richMenuCustomImage');
             const textColorPanel = document.getElementById('textColorPanel');
             const noOverlayPanel = document.getElementById('noOverlayPanel');
+            const noOverlay = document.getElementById('noOverlayCheckbox');
             if (file) {
                 const url = URL.createObjectURL(file);
                 customImage.src = url;
                 preview.classList.add('has-custom-image');
                 uploadedCustomImageUrl = url;
-                textColorPanel.classList.remove('d-none');
                 noOverlayPanel.classList.remove('d-none');
-                applyTextColorToPreview(selectedTextColor);
+                // 根據 noOverlay 狀態決定是否顯示文字顏色面板
+                textColorPanel.classList.toggle('d-none', noOverlay.checked);
+                if (!noOverlay.checked) applyTextColorToPreview(selectedTextColor);
             } else {
                 customImage.src = '';
                 preview.classList.remove('has-custom-image');
@@ -1302,6 +1341,12 @@
                 textColorPanel.classList.add('d-none');
                 noOverlayPanel.classList.add('d-none');
             }
+        });
+
+        // noOverlay checkbox 變更事件：勾選=不疊加文字（隱藏顏色面板），取消=疊加文字（顯示顏色面板）
+        document.getElementById('noOverlayCheckbox').addEventListener('change', function() {
+            const textColorPanel = document.getElementById('textColorPanel');
+            textColorPanel.classList.toggle('d-none', this.checked);
         });
 
         // 文字顏色預設色按鈕
@@ -2055,6 +2100,54 @@
             updateAdvancedPreview();
         }
 
+        // 自訂格數：套用 NxM 均等格線佈局
+        function onCustomGridChange() {
+            // 預覽用，不自動套用
+        }
+        function applyCustomGrid() {
+            const rows = parseInt(document.getElementById('advCustomRows').value);
+            const cols = parseInt(document.getElementById('advCustomCols').value);
+            const cellCount = rows * cols;
+            if (cellCount < 1 || cellCount > 20) {
+                showWarning('格數範圍 1-20');
+                return;
+            }
+
+            // 根據行數自動切換尺寸
+            if (rows > 2) {
+                document.getElementById('advSizeFull').checked = true;
+                advConfig.size = 'FULL';
+            }
+
+            // 建立自訂佈局名稱（例如 "custom_2x3"）
+            const customLayout = `custom_${rows}x${cols}`;
+            advConfig.layout = customLayout;
+
+            // 動態計算佈局比例
+            const cellWidth = 100 / cols;
+            const cellHeight = 100 / rows;
+            const areas = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    areas.push([c * cellWidth, r * cellHeight, cellWidth, cellHeight]);
+                }
+            }
+            // 加入動態佈局到 layoutCellCounts
+            layoutCellCounts[customLayout] = cellCount;
+            // 存到自訂佈局暫存
+            if (!window._customAdvLayouts) window._customAdvLayouts = {};
+            window._customAdvLayouts[customLayout] = areas;
+
+            // 取消所有預設佈局選中狀態
+            document.querySelectorAll('#advLayoutSelector .layout-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+
+            renderAdvCellSettings();
+            updateAdvancedPreview();
+            showSuccess(`已套用 ${rows} 行 x ${cols} 列 = ${cellCount} 格`);
+        }
+
         function renderAdvCellSettings() {
             const container = document.getElementById('advCellSettings');
             const cellCount = layoutCellCounts[advConfig.layout] || 7;
@@ -2208,7 +2301,10 @@
                 ]
             };
 
-            const areas = advLayouts[layout] || advLayouts['3+4'];
+            // 先檢查是否有自訂佈局
+            const areas = (window._customAdvLayouts && window._customAdvLayouts[layout])
+                ? window._customAdvLayouts[layout]
+                : (advLayouts[layout] || advLayouts['3+4']);
             const cellCount = layoutCellCounts[layout] || 7;
 
             let html = '';
@@ -2264,7 +2360,10 @@
                 document.getElementById('flexPopupSingle').checked = true;
             }
 
-            new bootstrap.Modal(document.getElementById('flexPopupModal')).show();
+            // 使用 getOrCreateInstance 避免重複建立 Modal 實例導致畫面卡住
+            const modalEl = document.getElementById('flexPopupModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
         }
 
         function renderFlexPopupBubbles(bubbles) {
@@ -2380,7 +2479,8 @@
             advFlexPopups[cellIndex] = { type, bubbles };
             advConfig.cells[cellIndex].flexPopup = advFlexPopups[cellIndex];
 
-            bootstrap.Modal.getInstance(document.getElementById('flexPopupModal')).hide();
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('flexPopupModal'));
+            if (modalInstance) modalInstance.hide();
             showSuccess('彈窗設定已儲存');
 
             // 更新按鈕文字
@@ -2430,16 +2530,22 @@
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
 
-                    // 顯示在預覽區域
-                    const customPreview = document.getElementById('richMenuCustomPreview');
-                    const previewImg = document.getElementById('customPreviewImage');
-                    const defaultPreview = document.getElementById('richMenuPreview');
+                    // 顯示在進階預覽區域
+                    const advPreview = document.getElementById('richMenuAdvancedPreview');
+                    const bgDiv = document.getElementById('advPreviewBg');
+                    const cellsDiv = document.getElementById('advPreviewCells');
 
-                    defaultPreview.classList.add('d-none');
-                    customPreview.classList.remove('d-none');
-                    previewImg.src = url;
-                    previewImg.style.display = 'block';
-                    previewImg.style.width = '100%';
+                    // 隱藏其他預覽，顯示進階預覽
+                    document.getElementById('richMenuPreview').classList.add('d-none');
+                    document.getElementById('richMenuCustomPreview').classList.add('d-none');
+                    advPreview.classList.remove('d-none');
+
+                    // 用精確預覽圖片替換即時預覽
+                    bgDiv.style.backgroundImage = `url(${url})`;
+                    bgDiv.style.backgroundSize = 'cover';
+                    bgDiv.style.backgroundPosition = 'center';
+                    cellsDiv.innerHTML = ''; // 清空格子預覽，顯示完整合成圖
+                    advPreview.style.height = advConfig.size === 'FULL' ? '140px' : '70px';
 
                     showSuccess('預覽圖已生成');
                 } else {
