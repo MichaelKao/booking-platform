@@ -379,7 +379,14 @@ public class LineConfigController {
 
         } catch (java.io.IOException e) {
             log.error("產生預覽圖失敗", e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(("{\"success\":false,\"message\":\"預覽圖生成失敗：" + e.getMessage() + "\"}").getBytes());
+        } catch (Exception e) {
+            log.error("產生預覽圖失敗", e);
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(("{\"success\":false,\"message\":\"預覽圖生成失敗：" + e.getMessage() + "\"}").getBytes());
         }
     }
 

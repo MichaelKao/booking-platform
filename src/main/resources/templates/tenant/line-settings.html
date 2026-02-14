@@ -564,9 +564,17 @@
                                                 <div class="layout-mini layout-mini-2x3"><div></div><div></div><div></div><div></div><div></div><div></div></div>
                                                 <div class="layout-label">2x3</div>
                                             </div>
+                                            <div class="layout-option adv-layout-half" data-layout="2+3" onclick="selectAdvLayout('2+3')">
+                                                <div class="layout-mini" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;width:100%;height:100%;"><div style="background:#aaa;border-radius:1px;"></div><div style="background:#aaa;border-radius:1px;"></div><div style="background:#888;border-radius:1px;grid-column:span 1;"></div><div style="background:#888;border-radius:1px;"></div><div style="background:#888;border-radius:1px;"></div></div>
+                                                <div class="layout-label">2+3</div>
+                                            </div>
                                             <div class="layout-option adv-layout-half" data-layout="2x2" onclick="selectAdvLayout('2x2')">
                                                 <div class="layout-mini layout-mini-2x2"><div></div><div></div><div></div><div></div></div>
                                                 <div class="layout-label">2x2</div>
+                                            </div>
+                                            <div class="layout-option adv-layout-half" data-layout="1+2" onclick="selectAdvLayout('1+2')">
+                                                <div class="layout-mini" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;width:100%;height:100%;"><div style="background:#aaa;border-radius:1px;grid-column:span 2;"></div><div style="background:#888;border-radius:1px;"></div><div style="background:#888;border-radius:1px;"></div></div>
+                                                <div class="layout-label">1+2</div>
                                             </div>
                                             <!-- 大尺寸佈局選項（預設隱藏） -->
                                             <div class="layout-option adv-layout-full d-none" data-layout="3+4+4" onclick="selectAdvLayout('3+4+4')">
@@ -636,6 +644,7 @@
                                     </div>
 
                                     <!-- Step 4: 預覽與發布 -->
+                                    <label class="form-label small fw-bold"><span class="badge bg-primary me-1">4</span>預覽與發布</label>
                                     <div class="d-flex gap-2 mb-3">
                                         <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="previewAdvancedRichMenu()" id="previewAdvBtn">
                                             <i class="bi bi-eye me-1"></i>精確預覽
@@ -2009,6 +2018,38 @@
             { value: 'flex_popup', label: '自訂彈窗' }
         ];
 
+        // HTML 特殊字元轉義（防止 XSS）
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // 從 custom_RxC 字串反推格數並重建 areas
+        function reconstructCustomGrid(layout) {
+            if (!layout || !layout.startsWith('custom_')) return false;
+            try {
+                const grid = layout.replace('custom_', '');
+                const [rows, cols] = grid.split('x').map(Number);
+                if (!rows || !cols || rows < 1 || rows > 4 || cols < 1 || cols > 5) return false;
+                const cellCount = rows * cols;
+                const cellWidth = 100 / cols;
+                const cellHeight = 100 / rows;
+                const areas = [];
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        areas.push([c * cellWidth, r * cellHeight, cellWidth, cellHeight]);
+                    }
+                }
+                layoutCellCounts[layout] = cellCount;
+                if (!window._customAdvLayouts) window._customAdvLayouts = {};
+                window._customAdvLayouts[layout] = areas;
+                // 同步 UI 的行列選擇器
+                document.getElementById('advCustomRows').value = rows;
+                document.getElementById('advCustomCols').value = cols;
+                return true;
+            } catch (e) { return false; }
+        }
+
         async function initAdvancedMode() {
             // 檢查是否訂閱
             try {
@@ -2031,10 +2072,12 @@
             }
 
             // 載入已存設定
+            let savedLayout = null;
             try {
                 const r = await api.get('/api/settings/line/rich-menu/advanced-config');
                 if (r.success && r.data && Object.keys(r.data).length > 0) {
                     advConfig = { ...advConfig, ...r.data };
+                    savedLayout = advConfig.layout; // 記住已存的佈局
                     // 恢復 Flex Popup 設定
                     if (advConfig.cells) {
                         advConfig.cells.forEach(cell => {
@@ -2048,8 +2091,47 @@
             if (advConfig.size === 'FULL') {
                 document.getElementById('advSizeFull').checked = true;
             }
-            onAdvSizeChange();
+
+            // 先切換尺寸顯示（但不讓它覆蓋已存佈局）
+            const size = advConfig.size || 'HALF';
+            document.querySelectorAll('.adv-layout-half').forEach(el => {
+                el.classList.toggle('d-none', size === 'FULL');
+            });
+            document.querySelectorAll('.adv-layout-full').forEach(el => {
+                el.classList.toggle('d-none', size === 'HALF');
+            });
+
+            // 還原已存的佈局
+            if (savedLayout) {
+                if (savedLayout.startsWith('custom_')) {
+                    // 自訂格數：重建 areas 並取消預設佈局選中
+                    reconstructCustomGrid(savedLayout);
+                    document.querySelectorAll('#advLayoutSelector .layout-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                } else {
+                    // 預設佈局：選中對應按鈕
+                    advConfig.layout = savedLayout;
+                    document.querySelectorAll('#advLayoutSelector .layout-option').forEach(opt => {
+                        opt.classList.toggle('active', opt.dataset.layout === savedLayout);
+                    });
+                }
+            } else {
+                // 無已存設定，選中第一個可見佈局
+                const firstVisible = document.querySelector(`#advLayoutSelector .layout-option.adv-layout-${size.toLowerCase()}:not(.d-none)`);
+                if (firstVisible) {
+                    advConfig.layout = firstVisible.dataset.layout;
+                    firstVisible.classList.add('active');
+                }
+            }
+
+            // 還原背景顏色
+            if (advConfig.backgroundColor) {
+                document.getElementById('advBgColor').value = advConfig.backgroundColor;
+            }
+
             renderAdvCellSettings();
+            updateAdvancedPreview();
 
             // 背景圖片監聽
             document.getElementById('advBgImage').addEventListener('change', function(e) {
@@ -2084,7 +2166,14 @@
                 el.classList.toggle('d-none', size === 'HALF');
             });
 
-            // 預設選中第一個可見的
+            // 若目前佈局是自訂格數，不切換
+            if (advConfig.layout && advConfig.layout.startsWith('custom_')) return;
+
+            // 若目前佈局在新尺寸中可見，保持不變
+            const currentBtn = document.querySelector(`#advLayoutSelector .layout-option[data-layout="${advConfig.layout}"]:not(.d-none)`);
+            if (currentBtn) return;
+
+            // 否則選中第一個可見佈局
             const firstVisible = document.querySelector(`#advLayoutSelector .layout-option.adv-layout-${size.toLowerCase()}:not(.d-none)`);
             if (firstVisible) {
                 selectAdvLayout(firstVisible.dataset.layout);
@@ -2100,9 +2189,11 @@
             updateAdvancedPreview();
         }
 
-        // 自訂格數：套用 NxM 均等格線佈局
+        // 自訂格數（下拉選單 onchange，僅預覽提示用）
         function onCustomGridChange() {
-            // 預覽用，不自動套用
+            const rows = parseInt(document.getElementById('advCustomRows').value);
+            const cols = parseInt(document.getElementById('advCustomCols').value);
+            document.querySelector('#advLayoutSelector + .mt-2 .form-text').textContent = `${rows} 行 × ${cols} 列 = ${rows * cols} 格（點「套用」生效）`;
         }
         function applyCustomGrid() {
             const rows = parseInt(document.getElementById('advCustomRows').value);
@@ -2176,7 +2267,7 @@
                     <div class="d-flex align-items-center gap-1 mb-1">
                         <span class="badge bg-secondary" style="min-width:28px;">${i + 1}</span>
                         <input type="text" class="form-control form-control-sm adv-cell-label" data-index="${i}"
-                            value="${cell.label || ''}" placeholder="文字標籤" style="flex:1;">
+                            value="${escHtml(cell.label)}" placeholder="文字標籤" style="flex:1;">
                         <input type="color" class="form-control-color adv-cell-color" data-index="${i}"
                             value="${cell.labelColor || '#FFFFFF'}" style="width:30px;height:28px;border:1px solid #ccc;border-radius:4px;padding:0;">
                     </div>
@@ -2324,7 +2415,7 @@
                 }
                 // 文字標籤
                 if (label) {
-                    html += `<span class="adv-preview-cell-label" style="color:${labelColor};text-shadow:0 0 2px rgba(0,0,0,0.5);">${label}</span>`;
+                    html += `<span class="adv-preview-cell-label" style="color:${labelColor};text-shadow:0 0 2px rgba(0,0,0,0.5);">${escHtml(label)}</span>`;
                 }
                 // 格號
                 html += `<span class="adv-preview-cell-num">${i + 1}</span>`;
@@ -2378,27 +2469,27 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">主圖 URL</label>
-                        <input type="text" class="form-control form-control-sm fp-hero-url" data-index="${i}" value="${bubble.heroImageUrl || ''}" placeholder="https://example.com/image.jpg">
+                        <input type="text" class="form-control form-control-sm fp-hero-url" data-index="${i}" value="${escHtml(bubble.heroImageUrl)}" placeholder="https://example.com/image.jpg">
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">標題</label>
-                        <input type="text" class="form-control form-control-sm fp-title" data-index="${i}" value="${bubble.title || ''}" placeholder="卡片標題">
+                        <input type="text" class="form-control form-control-sm fp-title" data-index="${i}" value="${escHtml(bubble.title)}" placeholder="卡片標題">
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">說明</label>
-                        <input type="text" class="form-control form-control-sm fp-desc" data-index="${i}" value="${bubble.description || ''}" placeholder="卡片說明文字">
+                        <input type="text" class="form-control form-control-sm fp-desc" data-index="${i}" value="${escHtml(bubble.description)}" placeholder="卡片說明文字">
                     </div>
                     <div class="mb-1">
                         <label class="form-label small">按鈕</label>
                         <div class="fp-buttons-list" data-bubble="${i}">
                             ${(bubble.buttons || []).map((btn, j) => `
                                 <div class="d-flex gap-1 mb-1 fp-button-row" data-btn="${j}">
-                                    <input type="text" class="form-control form-control-sm fp-btn-label" value="${btn.label || ''}" placeholder="按鈕文字" style="flex:1;">
+                                    <input type="text" class="form-control form-control-sm fp-btn-label" value="${escHtml(btn.label)}" placeholder="按鈕文字" style="flex:1;">
                                     <select class="form-select form-select-sm fp-btn-type" style="width:80px;">
                                         <option value="uri" ${btn.action?.type === 'uri' ? 'selected' : ''}>連結</option>
                                         <option value="postback" ${btn.action?.type === 'postback' ? 'selected' : ''}>動作</option>
                                     </select>
-                                    <input type="text" class="form-control form-control-sm fp-btn-value" value="${btn.action?.uri || btn.action?.data || ''}" placeholder="${btn.action?.type === 'uri' ? 'URL' : 'action=...'}" style="flex:1;">
+                                    <input type="text" class="form-control form-control-sm fp-btn-value" value="${escHtml(btn.action?.uri || btn.action?.data)}" placeholder="${btn.action?.type === 'uri' ? 'URL' : 'action=...'}" style="flex:1;">
                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.fp-button-row').remove()"><i class="bi bi-x"></i></button>
                                 </div>
                             `).join('')}
@@ -2527,29 +2618,38 @@
                 });
 
                 if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('image/')) {
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
 
-                    // 顯示在進階預覽區域
-                    const advPreview = document.getElementById('richMenuAdvancedPreview');
-                    const bgDiv = document.getElementById('advPreviewBg');
-                    const cellsDiv = document.getElementById('advPreviewCells');
+                        // 顯示在進階預覽區域
+                        const advPreview = document.getElementById('richMenuAdvancedPreview');
+                        const bgDiv = document.getElementById('advPreviewBg');
+                        const cellsDiv = document.getElementById('advPreviewCells');
 
-                    // 隱藏其他預覽，顯示進階預覽
-                    document.getElementById('richMenuPreview').classList.add('d-none');
-                    document.getElementById('richMenuCustomPreview').classList.add('d-none');
-                    advPreview.classList.remove('d-none');
+                        // 隱藏其他預覽，顯示進階預覽
+                        document.getElementById('richMenuPreview').classList.add('d-none');
+                        document.getElementById('richMenuCustomPreview').classList.add('d-none');
+                        advPreview.classList.remove('d-none');
 
-                    // 用精確預覽圖片替換即時預覽
-                    bgDiv.style.backgroundImage = `url(${url})`;
-                    bgDiv.style.backgroundSize = 'cover';
-                    bgDiv.style.backgroundPosition = 'center';
-                    cellsDiv.innerHTML = ''; // 清空格子預覽，顯示完整合成圖
-                    advPreview.style.height = advConfig.size === 'FULL' ? '140px' : '70px';
+                        // 用精確預覽圖片替換即時預覽
+                        bgDiv.style.backgroundImage = `url(${url})`;
+                        bgDiv.style.backgroundSize = 'cover';
+                        bgDiv.style.backgroundPosition = 'center';
+                        cellsDiv.innerHTML = ''; // 清空格子預覽，顯示完整合成圖
+                        advPreview.style.height = advConfig.size === 'FULL' ? '140px' : '70px';
 
-                    showSuccess('預覽圖已生成');
+                        showSuccess('預覽圖已生成');
+                    } else {
+                        const r = await response.json();
+                        showError('預覽生成失敗：' + (r.message || '未知錯誤'));
+                    }
                 } else {
-                    showError('預覽生成失敗');
+                    try {
+                        const r = await response.json();
+                        showError('預覽生成失敗：' + (r.message || '請稍後再試'));
+                    } catch { showError('預覽生成失敗'); }
                 }
             } catch (e) {
                 showError('預覽失敗：' + e.message);

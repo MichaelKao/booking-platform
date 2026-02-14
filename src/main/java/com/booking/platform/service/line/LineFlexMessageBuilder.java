@@ -5853,11 +5853,11 @@ public class LineFlexMessageBuilder {
      * </ul>
      *
      * @param flexPopupConfig 彈窗配置 JSON
-     * @return Flex Message JSON
+     * @return Flex Message JSON（null 或無效配置時回傳 null，由呼叫端決定 fallback）
      */
     public JsonNode buildCustomFlexPopup(JsonNode flexPopupConfig) {
         if (flexPopupConfig == null) {
-            return buildMainMenu(null);
+            return null;
         }
 
         String type = flexPopupConfig.path("type").asText("carousel");

@@ -1966,6 +1966,9 @@ public class LineRichMenuService {
             java.util.Map<Integer, byte[]> cellIcons,
             String configJson
     ) {
+        if (configJson == null || configJson.isBlank()) {
+            throw new BusinessException(ErrorCode.SYS_VALIDATION_ERROR, "進階選單配置不能為空");
+        }
         try {
             JsonNode config = objectMapper.readTree(configJson);
             String layout = config.path("layout").asText(DEFAULT_LAYOUT);
@@ -2039,15 +2042,18 @@ public class LineRichMenuService {
                                 // 縮放圖示
                                 BufferedImage scaledIcon = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB);
                                 Graphics2D iconG = scaledIcon.createGraphics();
-                                iconG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                                iconG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                                try {
+                                    iconG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                                    iconG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                                // 圓形裁切
-                                if ("circle".equals(iconShape)) {
-                                    iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, iconSize, iconSize));
+                                    // 圓形裁切
+                                    if ("circle".equals(iconShape)) {
+                                        iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, iconSize, iconSize));
+                                    }
+                                    iconG.drawImage(iconImg, 0, 0, iconSize, iconSize, null);
+                                } finally {
+                                    iconG.dispose();
                                 }
-                                iconG.drawImage(iconImg, 0, 0, iconSize, iconSize, null);
-                                iconG.dispose();
 
                                 // 繪製到畫布（格子中心偏上）
                                 int iconX = centerX - iconSize / 2;
