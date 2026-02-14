@@ -2829,13 +2829,6 @@ public class LineRichMenuService {
                                 g2d.drawImage(cellImg, drawX, drawY, drawW, drawH, null);
                                 g2d.setClip(oldClip);
 
-                                // 底部漸層（讓文字可讀）
-                                GradientPaint gradient = new GradientPaint(
-                                        cellX, cellY + cellH / 2, new Color(0, 0, 0, 0),
-                                        cellX, cellY + cellH, new Color(0, 0, 0, 160)
-                                );
-                                g2d.setPaint(gradient);
-                                g2d.fillRect(cellX, cellY, cellW, cellH);
                                 hasCellImage = true;
                             }
                         }
@@ -2876,55 +2869,52 @@ public class LineRichMenuService {
                     }
                 }
 
-                // ── 繪製文字標籤 ──
-                String label = cellConfig != null ? cellConfig.path("label").asText("") : "";
-                if (!label.isEmpty()) {
-                    // 有 cell 背景圖時強制使用白色文字
-                    String labelColorHex = hasCellImage ? "#FFFFFF" :
-                            (cellConfig != null ? cellConfig.path("labelColor").asText("#FFFFFF") : "#FFFFFF");
-                    int labelSize = cellConfig != null ? cellConfig.path("labelSize").asInt(0) : 0;
-                    if (labelSize <= 0) {
-                        labelSize = Math.max(28, Math.min(48, cellW / 14));
+                // ── 繪製文字標籤（有 cell 背景圖時跳過，圖片就是圖片）──
+                if (!hasCellImage) {
+                    String label = cellConfig != null ? cellConfig.path("label").asText("") : "";
+                    if (!label.isEmpty()) {
+                        String labelColorHex = cellConfig != null ? cellConfig.path("labelColor").asText("#FFFFFF") : "#FFFFFF";
+                        int labelSize = cellConfig != null ? cellConfig.path("labelSize").asInt(0) : 0;
+                        if (labelSize <= 0) {
+                            labelSize = Math.max(28, Math.min(48, cellW / 14));
+                        }
+
+                        Color labelColor;
+                        try {
+                            labelColor = Color.decode(labelColorHex);
+                        } catch (NumberFormatException e) {
+                            labelColor = Color.WHITE;
+                        }
+
+                        Font cellFont = textFont.deriveFont((float) labelSize);
+                        g2d.setFont(cellFont);
+                        FontMetrics fm = g2d.getFontMetrics();
+                        int textWidth = fm.stringWidth(label);
+                        int textX = centerX - textWidth / 2;
+
+                        // 文字位置：有圖示時在圖示下方，否則格子中心
+                        boolean hasIcon = cellIcons != null && cellIcons.containsKey(i);
+                        int textY;
+                        if (hasIcon) {
+                            int iconSize = Math.min(cellW, cellH) / 3;
+                            textY = centerY + iconSize / 2 + fm.getAscent() / 2;
+                        } else {
+                            textY = centerY + fm.getAscent() / 4;
+                        }
+
+                        // 描邊文字（提高可讀性）
+                        Color outlineColor = getContrastOutlineColor(labelColor);
+                        FontRenderContext frc = g2d.getFontRenderContext();
+                        TextLayout textLayout = new TextLayout(label, cellFont, frc);
+                        AffineTransform transform = AffineTransform.getTranslateInstance(textX, textY);
+                        Shape textShape = textLayout.getOutline(transform);
+
+                        g2d.setStroke(new BasicStroke(4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        g2d.setColor(outlineColor);
+                        g2d.draw(textShape);
+                        g2d.setColor(labelColor);
+                        g2d.fill(textShape);
                     }
-
-                    Color labelColor;
-                    try {
-                        labelColor = Color.decode(labelColorHex);
-                    } catch (NumberFormatException e) {
-                        labelColor = Color.WHITE;
-                    }
-
-                    Font cellFont = textFont.deriveFont((float) labelSize);
-                    g2d.setFont(cellFont);
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int textWidth = fm.stringWidth(label);
-                    int textX = centerX - textWidth / 2;
-
-                    // 文字位置：有背景圖時放底部，有圖示時在圖示下方，否則格子中心
-                    boolean hasIcon = !hasCellImage && cellIcons != null && cellIcons.containsKey(i);
-                    int textY;
-                    if (hasCellImage) {
-                        // 放在格子底部（漸層區域內）
-                        textY = cellY + cellH - fm.getDescent() - 15;
-                    } else if (hasIcon) {
-                        int iconSize = Math.min(cellW, cellH) / 3;
-                        textY = centerY + iconSize / 2 + fm.getAscent() / 2;
-                    } else {
-                        textY = centerY + fm.getAscent() / 4;
-                    }
-
-                    // 描邊文字（提高可讀性）
-                    Color outlineColor = getContrastOutlineColor(labelColor);
-                    FontRenderContext frc = g2d.getFontRenderContext();
-                    TextLayout textLayout = new TextLayout(label, cellFont, frc);
-                    AffineTransform transform = AffineTransform.getTranslateInstance(textX, textY);
-                    Shape textShape = textLayout.getOutline(transform);
-
-                    g2d.setStroke(new BasicStroke(4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                    g2d.setColor(outlineColor);
-                    g2d.draw(textShape);
-                    g2d.setColor(labelColor);
-                    g2d.fill(textShape);
                 }
             }
 

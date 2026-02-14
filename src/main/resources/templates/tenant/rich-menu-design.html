@@ -135,7 +135,7 @@
                             </div>
                             <div class="card-body py-2">
                                 <div class="d-flex flex-wrap gap-2" id="layoutSelector">
-                                    <div class="rm-layout" data-layout="3+4" title="上排3+下排4（7格，標準尺寸）">
+                                    <div class="rm-layout selected" data-layout="3+4" title="上排3+下排4（7格，標準尺寸）">
                                         <div class="rm-layout-mini"><div class="lrow"><i></i><i></i><i></i></div><div class="lrow"><i></i><i></i><i></i><i></i></div></div>
                                         <small>3+4</small>
                                     </div>
@@ -147,7 +147,7 @@
                                         <div class="rm-layout-mini"><div class="lrow"><i></i><i></i></div><div class="lrow"><i></i><i></i></div></div>
                                         <small>2x2</small>
                                     </div>
-                                    <div class="rm-layout selected" data-layout="3+4+4" title="上排3+中排4+下排4（11格，大尺寸）">
+                                    <div class="rm-layout" data-layout="3+4+4" title="上排3+中排4+下排4（11格，大尺寸）">
                                         <div class="rm-layout-mini"><div class="lrow"><i></i><i></i><i></i></div><div class="lrow"><i></i><i></i><i></i><i></i></div><div class="lrow"><i></i><i></i><i></i><i></i></div></div>
                                         <small>3+4+4</small>
                                     </div>
@@ -488,7 +488,7 @@
     // Rich Menu 狀態
     // ================================================================
     let rmTheme = 'BOUTIQUE';
-    let rmLayout = '3+4+4';
+    let rmLayout = '3+4';
     let rmCells = [];
     let fpConfigs = {}; // flex popup per cell
     let fpEditingCell = -1;
@@ -514,24 +514,12 @@
     const SAMPLES = {
         pet: [
             {
-                name: '溫馨寵物店', desc: '柔和精品風，適合寵物美容/旅館', theme:'BOUTIQUE', layout:'3+4+4',
+                name: '溫馨寵物店', desc: '精品風，適合寵物美容/旅館', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'服務價目',a:'flex_popup'},{l:'毛寶貝沙龍',a:'show_menu'},{l:'最新優惠',a:'flex_popup'},
-                    {l:'立即預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡我們',a:'contact_shop'},{l:'寵物商品',a:'start_shopping'},{l:'領取好康',a:'view_coupons'},{l:'集點優惠',a:'view_coupons'}
+                    {l:'預約美容',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'寵物商品',a:'start_shopping'},
+                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800&h=520&fit=crop', title:'🐕 基礎洗澡', description:'小型犬 $500 / 中型犬 $700 / 大型犬 $900\n含吹整、耳朵清潔、指甲修剪', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1535930749574-1399327ce78f?w=800&h=520&fit=crop', title:'✨ 精緻美容', description:'小型犬 $800 / 中型犬 $1200 / 大型犬 $1500\n洗澡+全身修剪造型+SPA護毛', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&h=520&fit=crop', title:'🛁 藥浴療程', description:'皮膚問題毛孩專用\n$1000 起，依體型計價', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=520&fit=crop', title:'🎉 新客優惠', description:'首次美容享 8 折優惠！\n加入會員再送 100 點', buttons:[{label:'領取票券',action:{type:'postback',data:'action=view_coupons'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&h=520&fit=crop', title:'🎫 套票方案', description:'洗澡 5 次券 $2200（省 $300）\n美容 3 次券 $2900（省 $500）', buttons:[{label:'查看詳情',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#8D6E63', headerTitle:'🐾 {shopName}', headerSubtitle:'歡迎帶毛寶貝來找我們！' }
             },
             {
@@ -555,23 +543,12 @@
         ],
         beauty: [
             {
-                name: '粉嫩美甲', desc: '精品風，適合美甲/美睫工作室', theme:'BOUTIQUE', layout:'3+4+4',
+                name: '粉嫩美甲', desc: '精品風，適合美甲/美睫工作室', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'服務項目',a:'flex_popup'},{l:'我的美甲',a:'show_menu'},{l:'本月優惠',a:'flex_popup'},
-                    {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡店家',a:'contact_shop'},{l:'美甲商品',a:'start_shopping'},{l:'領取優惠',a:'view_coupons'},{l:'會員集點',a:'view_coupons'}
+                    {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'美甲商品',a:'start_shopping'},
+                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=520&fit=crop', title:'💅 凝膠美甲', description:'單色 $800 / 漸層 $1000\n法式 $1200 / 手繪設計 $1500 起', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800&h=520&fit=crop', title:'👁️ 美睫嫁接', description:'自然款 80 根 $800\n濃密款 120 根 $1200\n山茶花 $1500', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&h=520&fit=crop', title:'✨ 手足保養', description:'手部保養 $600\n足部保養 $800\n手足套餐 $1200', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800&h=520&fit=crop', title:'🎀 閨蜜同行優惠', description:'兩人同行第二位 7 折\n三人以上每人再折 $100', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#E91E63', headerTitle:'💅 {shopName}', headerSubtitle:'讓指尖綻放美麗光芒 ✨' }
             },
             {
@@ -595,23 +572,12 @@
         ],
         hair: [
             {
-                name: '潮流髮廊', desc: '精品風，適合設計師工作室', theme:'BOUTIQUE', layout:'3+4+4',
+                name: '潮流髮廊', desc: '精品風，適合設計師工作室', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'價目表',a:'flex_popup'},{l:'髮型沙龍',a:'show_menu'},{l:'本月優惠',a:'flex_popup'},
-                    {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡我們',a:'contact_shop'},{l:'髮品商城',a:'start_shopping'},{l:'領取優惠',a:'view_coupons'},{l:'推薦好友',a:'view_coupons'}
+                    {l:'預約剪髮',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'髮品商城',a:'start_shopping'},
+                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=520&fit=crop', title:'✂️ 剪髮', description:'設計師剪髮 $600\n資深設計師 $800\n總監 $1200\n含洗髮＋造型', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&h=520&fit=crop', title:'🎨 染髮', description:'全染 $2500 起\n挑染 $1800 起\n漂髮另計\n使用日本進口染劑', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=520&fit=crop', title:'💫 燙髮', description:'冷燙 $2000 起\n溫塑燙 $3000 起\n日式護髮燙 $3500 起', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=800&h=520&fit=crop', title:'🎁 首次來店禮', description:'新客剪髮享 8 折\n加購護髮再折 $200', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#795548', headerTitle:'✂️ {shopName}', headerSubtitle:'打造屬於你的獨特風格' }
             },
             {
@@ -635,23 +601,12 @@
         ],
         clinic: [
             {
-                name: '醫美中心', desc: '海洋藍專業感，適合醫美/皮膚科', theme:'BLUE', layout:'3+4+4',
+                name: '醫美中心', desc: '海洋藍專業感，適合醫美/皮膚科', theme:'BLUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'療程介紹',a:'flex_popup'},{l:'醫美中心',a:'show_menu'},{l:'優惠方案',a:'flex_popup'},
-                    {l:'預約諮詢',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡診所',a:'contact_shop'},{l:'保養品',a:'start_shopping'},{l:'限時優惠',a:'view_coupons'},{l:'會員特價',a:'view_coupons'}
+                    {l:'預約諮詢',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'保養品',a:'start_shopping'},
+                    {l:'限時優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&h=520&fit=crop', title:'💉 玻尿酸填充', description:'蘋果肌 / 法令紋 / 下巴\n$8,000 起，由專業醫師操作', buttons:[{label:'預約諮詢',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=520&fit=crop', title:'✨ 雷射除斑', description:'皮秒雷射 $3,500 起\n飛梭雷射 $5,000 起\n依面積計價', buttons:[{label:'預約諮詢',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=800&h=520&fit=crop', title:'🧴 水光注射', description:'全臉水光針 $4,500\n加購頸部 +$1,500\n使用原廠正貨', buttons:[{label:'預約諮詢',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=520&fit=crop', title:'🎉 首次諮詢免費', description:'首次到院免掛號費\n療程享新客 9 折優惠', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#1565C0', headerTitle:'🏥 {shopName}', headerSubtitle:'專業醫師團隊，安心變美' }
             },
             {
@@ -675,23 +630,12 @@
         ],
         fitness: [
             {
-                name: '活力健身', desc: 'LINE 綠運動風，適合健身房', theme:'GREEN', layout:'3+4+4',
+                name: '活力健身', desc: 'LINE 綠運動風，適合健身房', theme:'GREEN', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'課程表',a:'flex_popup'},{l:'健身房',a:'show_menu'},{l:'優惠方案',a:'flex_popup'},
-                    {l:'預約課程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡教練',a:'contact_shop'},{l:'營養補充',a:'start_shopping'},{l:'體驗券',a:'view_coupons'},{l:'揪團運動',a:'view_coupons'}
+                    {l:'預約課程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'營養補充',a:'start_shopping'},
+                    {l:'體驗券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡教練',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=520&fit=crop', title:'🏋️ 一對一教練課', description:'體態評估 + 客製化訓練\n單堂 $1200 / 10堂 $9800', buttons:[{label:'預約課程',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&h=520&fit=crop', title:'🧘 團體瑜珈', description:'每堂 60 分鐘 / 小班制\n單堂 $350 / 月票 $2800', buttons:[{label:'預約課程',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=800&h=520&fit=crop', title:'🥊 拳擊有氧', description:'燃脂最強！每堂 45 分鐘\n單堂 $400 / 月票 $3200', buttons:[{label:'預約課程',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=520&fit=crop', title:'🎁 新會員優惠', description:'首月月費 5 折！\n加購教練課再折 $500', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#2E7D32', headerTitle:'💪 {shopName}', headerSubtitle:'突破極限，成就更好的自己！' }
             },
             {
@@ -715,23 +659,12 @@
         ],
         restaurant: [
             {
-                name: '質感餐廳', desc: '精品風，適合餐廳/咖啡廳', theme:'BOUTIQUE', layout:'3+4+4',
+                name: '質感餐廳', desc: '精品風，適合餐廳/咖啡廳', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'菜單',a:'flex_popup'},{l:'品味餐廳',a:'show_menu'},{l:'今日特餐',a:'flex_popup'},
-                    {l:'訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡店家',a:'contact_shop'},{l:'外帶菜單',a:'start_shopping'},{l:'優惠券',a:'view_coupons'},{l:'壽星優惠',a:'view_coupons'}
+                    {l:'預約訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'外帶菜單',a:'start_shopping'},
+                    {l:'優惠券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=520&fit=crop', title:'🥩 主餐', description:'菲力牛排 $580\n香煎鮭魚 $480\n松露燉飯 $420\n附湯品＋沙拉＋飲品', buttons:[{label:'訂位用餐',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800&h=520&fit=crop', title:'🍰 甜點', description:'提拉米蘇 $180\n焦糖布蕾 $160\n巧克力熔岩 $200', buttons:[{label:'外帶訂購',action:{type:'postback',data:'action=start_shopping'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=520&fit=crop', title:'☕ 飲品', description:'拿鐵 $140 / 卡布奇諾 $150\n手沖咖啡 $180 / 特調飲 $160', buttons:[{label:'外帶訂購',action:{type:'postback',data:'action=start_shopping'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=520&fit=crop', title:'🎉 商業午餐特惠', description:'週一至五 11:30-14:00\n主餐+飲品 只要 $299', buttons:[{label:'立即訂位',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#A1887F', headerTitle:'🍽️ {shopName}', headerSubtitle:'為您呈獻最精緻的美食體驗' }
             },
             {
@@ -755,23 +688,12 @@
         ],
         spa: [
             {
-                name: '頂級 SPA', desc: '精品風奢華感，適合 SPA 會館', theme:'BOUTIQUE', layout:'3+4+4',
+                name: '頂級 SPA', desc: '精品風奢華感，適合 SPA 會館', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'療程介紹',a:'flex_popup'},{l:'SPA 會館',a:'show_menu'},{l:'限時優惠',a:'flex_popup'},
-                    {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-                    {l:'聯絡我們',a:'contact_shop'},{l:'保養商品',a:'start_shopping'},{l:'好康優惠',a:'view_coupons'},{l:'閨蜜方案',a:'view_coupons'}
+                    {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'保養商品',a:'start_shopping'},
+                    {l:'好康優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
                 ],
-                flexPopups: {
-                    0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&h=520&fit=crop', title:'💆 瑞典式按摩', description:'全身放鬆 60min $1,500\n深層舒壓 90min $2,200\n含精油芳療', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&h=520&fit=crop', title:'🌸 臉部護理', description:'保濕亮白 $1,200\n深層清潔 $1,500\nAnti-Aging $2,500', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&h=520&fit=crop', title:'🛀 身體SPA', description:'岩盤浴 $800\n死海泥裹敷 $1,800\n全身去角質 $1,200', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
-                    ]},
-                    2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800&h=520&fit=crop', title:'👯 閨蜜雙人套餐', description:'兩人同行享套餐價 $3,600\n含按摩 60min + 臉部護理', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
-                    ]}
-                },
                 fmConfig: { headerColor:'#8D6E63', headerTitle:'🌿 {shopName}', headerSubtitle:'沉浸在極致放鬆的感官之旅' }
             },
             {
@@ -871,9 +793,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1535930749574-1399327ce78f?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1535930749574-1399327ce78f?w=500&h=400&fit=crop'
         },
         beauty: {
             start_booking:   'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=500&h=400&fit=crop',
@@ -882,9 +802,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=500&h=400&fit=crop'
         },
         hair: {
             start_booking:   'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=500&h=400&fit=crop',
@@ -893,9 +811,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1522337094846-8a818192de1f?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1560869713-7d0a29430803?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1562004760-aceed7bb0fe3?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1522337094846-8a818192de1f?w=500&h=400&fit=crop'
         },
         clinic: {
             start_booking:   'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=500&h=400&fit=crop',
@@ -904,9 +820,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1551076805-e1869033e561?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&h=400&fit=crop'
         },
         fitness: {
             start_booking:   'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&h=400&fit=crop',
@@ -915,9 +829,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1576678927484-cc907957088c?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=500&h=400&fit=crop'
         },
         restaurant: {
             start_booking:   'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=400&fit=crop',
@@ -926,9 +838,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&h=400&fit=crop'
         },
         spa: {
             start_booking:   'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&h=400&fit=crop',
@@ -937,9 +847,7 @@
             view_coupons:    'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&h=400&fit=crop',
             view_my_coupons: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&h=400&fit=crop',
             view_member_info:'https://images.unsplash.com/photo-1531299204812-e6d44d9a185c?w=500&h=400&fit=crop',
-            contact_shop:    'https://images.unsplash.com/photo-1596178060671-7a80dc8059ea?w=500&h=400&fit=crop',
-            flex_popup:      'https://images.unsplash.com/photo-1552693673-1bf958298935?w=500&h=400&fit=crop',
-            show_menu:       'https://images.unsplash.com/photo-1470259078422-826894b933aa?w=500&h=400&fit=crop'
+            contact_shop:    'https://images.unsplash.com/photo-1596178060671-7a80dc8059ea?w=500&h=400&fit=crop'
         }
     };
 
@@ -950,16 +858,14 @@
         { v:'view_coupons',     l:'領取票券',   ic:'🎁' },
         { v:'view_my_coupons',  l:'我的票券',   ic:'🎫' },
         { v:'view_member_info', l:'會員資訊',   ic:'👤' },
-        { v:'contact_shop',     l:'聯絡店家',   ic:'📞' },
-        { v:'show_menu',        l:'主選單',     ic:'🏠' },
-        { v:'flex_popup',       l:'Flex 彈窗',  ic:'🪟' }
+        { v:'contact_shop',     l:'聯絡店家',   ic:'📞' }
     ];
     const LAYOUT_ROWS = { '3+4':[3,4], '2x3':[3,3], '2x2':[2,2], '3+4+4':[3,4,4], '4+4':[4,4] };
     const LAYOUT_DEFAULTS = {
         '3+4+4': [
-            {l:'服務價目',a:'flex_popup'},{l:'我的店家',a:'show_menu'},{l:'最新優惠',a:'flex_popup'},
-            {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
-            {l:'聯絡店家',a:'contact_shop'},{l:'瀏覽商品',a:'start_shopping'},{l:'領取票券',a:'view_coupons'},{l:'電子優惠券',a:'view_coupons'}
+            {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},
+            {l:'領取票券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'},
+            {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},{l:'領取票券',a:'view_coupons'}
         ],
         '3+4': [
             {l:'開始預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},
@@ -975,7 +881,7 @@
         ],
         '4+4': [
             {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},{l:'領取票券',a:'view_coupons'},
-            {l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'},{l:'主選單',a:'show_menu'}
+            {l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'},{l:'開始預約',a:'start_booking'}
         ]
     };
 
@@ -1250,7 +1156,7 @@
                     d.style.backgroundImage = `url('${cell.imageUrl}')`;
                     d.style.backgroundSize = 'cover';
                     d.style.backgroundPosition = 'center';
-                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci" style="text-shadow:0 1px 4px rgba(0,0,0,.8)">${cell.icon||getIcon(cell.action)}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.5);padding:1px 6px;border-radius:4px">${esc(cell.label)}</span>`;
+                    d.innerHTML = `<span class="cn">${ci}</span>`;
                 } else {
                     if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
                     d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
