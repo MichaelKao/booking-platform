@@ -862,6 +862,87 @@
         ]
     };
 
+    // 每業種的 Rich Menu 格子圖片（依動作分類，自動套用到 sample 的每一格）
+    const RM_CELL_IMAGES = {
+        pet: {
+            start_booking:   'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1535930749574-1399327ce78f?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?w=500&h=400&fit=crop'
+        },
+        beauty: {
+            start_booking:   'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=400&fit=crop'
+        },
+        hair: {
+            start_booking:   'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1522337094846-8a818192de1f?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1560869713-7d0a29430803?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1562004760-aceed7bb0fe3?w=500&h=400&fit=crop'
+        },
+        clinic: {
+            start_booking:   'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1551076805-e1869033e561?w=500&h=400&fit=crop'
+        },
+        fitness: {
+            start_booking:   'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1576678927484-cc907957088c?w=500&h=400&fit=crop'
+        },
+        restaurant: {
+            start_booking:   'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&h=400&fit=crop'
+        },
+        spa: {
+            start_booking:   'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&h=400&fit=crop',
+            view_bookings:   'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&h=400&fit=crop',
+            start_shopping:  'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=500&h=400&fit=crop',
+            view_coupons:    'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&h=400&fit=crop',
+            view_my_coupons: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&h=400&fit=crop',
+            view_member_info:'https://images.unsplash.com/photo-1531299204812-e6d44d9a185c?w=500&h=400&fit=crop',
+            contact_shop:    'https://images.unsplash.com/photo-1596178060671-7a80dc8059ea?w=500&h=400&fit=crop',
+            flex_popup:      'https://images.unsplash.com/photo-1552693673-1bf958298935?w=500&h=400&fit=crop',
+            show_menu:       'https://images.unsplash.com/photo-1470259078422-826894b933aa?w=500&h=400&fit=crop'
+        }
+    };
+
     const ACTIONS = [
         { v:'start_booking',    l:'開始預約',   ic:'📅' },
         { v:'view_bookings',    l:'查詢預約',   ic:'📋' },
@@ -994,8 +1075,12 @@
         // 套用佈局
         rmLayout = s.layout;
         selectEl('#layoutSelector .rm-layout', rmLayout);
-        // 套用格子
-        rmCells = s.cells.map((c, i) => ({ index:i, label:c.l, action:c.a, icon:getIcon(c.a) }));
+        // 套用格子（自動帶入業種主題圖片）
+        const cellImages = RM_CELL_IMAGES[catKey] || {};
+        rmCells = s.cells.map((c, i) => ({
+            index:i, label:c.l, action:c.a, icon:getIcon(c.a),
+            imageUrl: c.img || cellImages[c.a] || ''
+        }));
         // 套用 Flex 彈窗
         fpConfigs = {};
         if (s.flexPopups) Object.entries(s.flexPopups).forEach(([k,v]) => { fpConfigs[parseInt(k)] = JSON.parse(JSON.stringify(v)); });
@@ -1101,14 +1186,16 @@
             const tr = document.createElement('tr');
             tr.dataset.i = i;
             const hasIcon = !!cellIconFiles[i];
+            const hasImg = !!cell.imageUrl;
             tr.innerHTML = `
                 <td><span class="cell-badge">${i}</span></td>
                 <td><input type="text" class="form-control" value="${esc(cell.label)}" data-f="label"></td>
                 <td><select class="form-select" data-f="action">
                     ${ACTIONS.map(a => `<option value="${a.v}" ${a.v===cell.action?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
                 </select></td>
-                <td>
-                    <label class="btn btn-sm ${hasIcon?'btn-success':'btn-outline-secondary'} py-0 px-1" title="${hasIcon?'已上傳圖示（點擊更換）':'上傳格子圖示'}">
+                <td style="min-width:80px">
+                    ${hasImg?`<img src="${cell.imageUrl}" style="width:32px;height:24px;object-fit:cover;border-radius:3px;vertical-align:middle;cursor:pointer" title="點擊清除圖片" data-f="clearImg">`:''}
+                    <label class="btn btn-sm ${hasIcon?'btn-success':(hasImg?'btn-info':'btn-outline-secondary')} py-0 px-1" title="${hasIcon?'已上傳圖示':'上傳格子圖示'}">
                         <i class="bi ${hasIcon?'bi-check-lg':'bi-upload'}"></i>
                         <input type="file" class="d-none" accept="image/png,image/jpeg" data-f="icon" data-ci="${i}">
                     </label>
@@ -1127,6 +1214,8 @@
                     renderCellTable();
                 }
             });
+            const clearBtn = tr.querySelector('[data-f="clearImg"]');
+            if (clearBtn) clearBtn.addEventListener('click', () => { rmCells[i].imageUrl = ''; renderCellTable(); updateRmPreview(); });
             tbody.appendChild(tr);
         });
     }
@@ -1156,9 +1245,16 @@
                 const d = document.createElement('div');
                 d.className = 'rm-prev-cell';
                 d.dataset.c = ci;
-                // 有背景圖時加半透明遮罩讓文字更清楚
-                if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
-                d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
+                // 有格子背景圖時使用格子圖片，否則整體背景遮罩
+                if (cell.imageUrl) {
+                    d.style.backgroundImage = `url('${cell.imageUrl}')`;
+                    d.style.backgroundSize = 'cover';
+                    d.style.backgroundPosition = 'center';
+                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci" style="text-shadow:0 1px 4px rgba(0,0,0,.8)">${cell.icon||getIcon(cell.action)}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.5);padding:1px 6px;border-radius:4px">${esc(cell.label)}</span>`;
+                } else {
+                    if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
+                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
+                }
                 const idx = ci;
                 d.addEventListener('click', () => {
                     document.querySelectorAll('.rm-prev-cell').forEach(e => e.classList.remove('active'));
@@ -1272,6 +1368,7 @@
             cells: rmCells.map((c, i) => {
                 const o = { index:i, label:c.label, action: c.action==='flex_popup'?`flex_popup&cellKey=${i}`:c.action };
                 if (c.action==='flex_popup' && fpConfigs[i]) o.flexPopup = fpConfigs[i];
+                if (c.imageUrl) o.imageUrl = c.imageUrl;
                 return o;
             })
         };

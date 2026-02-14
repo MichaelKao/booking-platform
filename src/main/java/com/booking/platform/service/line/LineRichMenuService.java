@@ -2249,10 +2249,37 @@ public class LineRichMenuService {
      * @return 可用的中文字型
      */
     private Font loadChineseFont(int style, int size) {
-        // 候選字型列表（依優先順序）
-        // 注意：Docker 環境安裝的是 font-wqy-zenhei（文泉驛正黑）
+        // ========================================
+        // 1. 優先嘗試直接載入字型檔案（最可靠）
+        // ========================================
+        String[] fontFilePaths = {
+                "/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc",  // Alpine font-wqy-zenhei
+                "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",           // Debian/Ubuntu
+                "/usr/share/fonts/wqy-zenhei/wqy-zenhei.ttc",             // CentOS/RHEL
+                "/usr/share/fonts/wenquanyi/wqy-microhei/wqy-microhei.ttc" // Alpine 微米黑
+        };
+
+        for (String path : fontFilePaths) {
+            java.io.File fontFile = new java.io.File(path);
+            if (fontFile.exists()) {
+                try {
+                    Font font = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                    font = font.deriveFont(style, (float) size);
+                    if (font.canDisplay('預')) {
+                        log.debug("使用字型檔案：{}", path);
+                        return font;
+                    }
+                } catch (Exception e) {
+                    log.warn("載入字型檔案失敗 {}：{}", path, e.getMessage());
+                }
+            }
+        }
+
+        // ========================================
+        // 2. 備援：使用系統字型名稱查找
+        // ========================================
         String[] fontCandidates = {
-                "WenQuanYi Zen Hei",     // Docker/Linux - 文泉驛正黑（優先使用）
+                "WenQuanYi Zen Hei",     // Docker/Linux - 文泉驛正黑
                 "WenQuanYi Micro Hei",   // Linux - 文泉驛微米黑
                 "Noto Sans CJK TC",      // Linux - Google Noto 字型
                 "Noto Sans TC",          // Linux - Noto 變體
@@ -2265,26 +2292,22 @@ public class LineRichMenuService {
                 "SansSerif"              // Java 邏輯字型（最後備援）
         };
 
-        // 取得系統可用字型
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         java.util.Set<String> availableFonts = new java.util.HashSet<>();
         for (String fontName : ge.getAvailableFontFamilyNames()) {
             availableFonts.add(fontName);
         }
 
-        // 嘗試找到可用的中文字型
         for (String fontName : fontCandidates) {
             if (availableFonts.contains(fontName)) {
                 Font font = new Font(fontName, style, size);
-                // 驗證字型確實可以顯示中文
                 if (font.canDisplay('預')) {
-                    log.debug("使用字型：{}", fontName);
+                    log.debug("使用系統字型：{}", fontName);
                     return font;
                 }
             }
         }
 
-        // 如果都找不到，使用 SansSerif 並記錄警告
         log.warn("找不到支援中文的字型，使用預設 SansSerif（可能無法正確顯示中文）");
         log.warn("可用字型列表：{}", String.join(", ", availableFonts));
         return new Font("SansSerif", style, size);
@@ -2605,6 +2628,37 @@ public class LineRichMenuService {
      * @param targetHeight 目標高度
      * @return 縮放後的圖片位元組陣列
      */
+
+    /**
+     * 安全下載圖片（不拋異常，失敗回傳 null）
+     */
+    private byte[] downloadImageSafe(String imageUrl) {
+        try {
+            java.net.URL url = new java.net.URL(imageUrl);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(10000);
+            conn.setRequestProperty("User-Agent", "BookingPlatform/1.0");
+
+            int status = conn.getResponseCode();
+            if (status == java.net.HttpURLConnection.HTTP_MOVED_TEMP
+                    || status == java.net.HttpURLConnection.HTTP_MOVED_PERM
+                    || status == 307 || status == 308) {
+                String redirect = conn.getHeaderField("Location");
+                conn = (java.net.HttpURLConnection) new java.net.URL(redirect).openConnection();
+                conn.setRequestProperty("User-Agent", "BookingPlatform/1.0");
+            }
+
+            if (conn.getResponseCode() == 200) {
+                return conn.getInputStream().readAllBytes();
+            }
+        } catch (Exception e) {
+            log.warn("下載圖片失敗 {}：{}", imageUrl, e.getMessage());
+        }
+        return null;
+    }
+
     private byte[] resizeImageToSize(byte[] imageBytes, int targetWidth, int targetHeight) {
         try {
             BufferedImage originalImage = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
@@ -2751,8 +2805,47 @@ public class LineRichMenuService {
                     }
                 }
 
-                // 繪製圓形圖示
-                if (cellIcons != null && cellIcons.containsKey(i)) {
+                // ── 檢查是否有 cell 背景圖片 URL ──
+                String cellImageUrl = cellConfig != null ? cellConfig.path("imageUrl").asText("") : "";
+                boolean hasCellImage = false;
+                if (!cellImageUrl.isEmpty()) {
+                    try {
+                        byte[] cellImgBytes = downloadImageSafe(cellImageUrl);
+                        if (cellImgBytes != null) {
+                            BufferedImage cellImg = ImageIO.read(new java.io.ByteArrayInputStream(cellImgBytes));
+                            if (cellImg != null) {
+                                // Cover 策略：填滿整格（置中裁切）
+                                double scaleX = (double) cellW / cellImg.getWidth();
+                                double scaleY = (double) cellH / cellImg.getHeight();
+                                double scale = Math.max(scaleX, scaleY);
+                                int drawW = (int) (cellImg.getWidth() * scale);
+                                int drawH = (int) (cellImg.getHeight() * scale);
+                                int drawX = cellX + (cellW - drawW) / 2;
+                                int drawY = cellY + (cellH - drawH) / 2;
+
+                                // 裁切到格子範圍
+                                Shape oldClip = g2d.getClip();
+                                g2d.setClip(cellX, cellY, cellW, cellH);
+                                g2d.drawImage(cellImg, drawX, drawY, drawW, drawH, null);
+                                g2d.setClip(oldClip);
+
+                                // 底部漸層（讓文字可讀）
+                                GradientPaint gradient = new GradientPaint(
+                                        cellX, cellY + cellH / 2, new Color(0, 0, 0, 0),
+                                        cellX, cellY + cellH, new Color(0, 0, 0, 160)
+                                );
+                                g2d.setPaint(gradient);
+                                g2d.fillRect(cellX, cellY, cellW, cellH);
+                                hasCellImage = true;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("下載格子 {} 背景圖片失敗：{}", i, e.getMessage());
+                    }
+                }
+
+                // ── 繪製圓形圖示（無 cell 背景圖時才顯示）──
+                if (!hasCellImage && cellIcons != null && cellIcons.containsKey(i)) {
                     byte[] iconBytes = cellIcons.get(i);
                     if (iconBytes != null && iconBytes.length > 0) {
                         try {
@@ -2761,14 +2854,11 @@ public class LineRichMenuService {
                                 int iconSize = Math.min(cellW, cellH) / 3;
                                 String iconShape = cellConfig != null ? cellConfig.path("iconShape").asText("circle") : "circle";
 
-                                // 縮放圖示
                                 BufferedImage scaledIcon = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB);
                                 Graphics2D iconG = scaledIcon.createGraphics();
                                 try {
                                     iconG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                                     iconG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                                    // 圓形裁切
                                     if ("circle".equals(iconShape)) {
                                         iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, iconSize, iconSize));
                                     }
@@ -2776,8 +2866,6 @@ public class LineRichMenuService {
                                 } finally {
                                     iconG.dispose();
                                 }
-
-                                // 繪製到畫布（格子中心偏上）
                                 int iconX = centerX - iconSize / 2;
                                 int iconY = centerY - iconSize / 2 - cellH / 8;
                                 g2d.drawImage(scaledIcon, iconX, iconY, null);
@@ -2788,10 +2876,12 @@ public class LineRichMenuService {
                     }
                 }
 
-                // 繪製文字標籤
+                // ── 繪製文字標籤 ──
                 String label = cellConfig != null ? cellConfig.path("label").asText("") : "";
                 if (!label.isEmpty()) {
-                    String labelColorHex = cellConfig != null ? cellConfig.path("labelColor").asText("#FFFFFF") : "#FFFFFF";
+                    // 有 cell 背景圖時強制使用白色文字
+                    String labelColorHex = hasCellImage ? "#FFFFFF" :
+                            (cellConfig != null ? cellConfig.path("labelColor").asText("#FFFFFF") : "#FFFFFF");
                     int labelSize = cellConfig != null ? cellConfig.path("labelSize").asInt(0) : 0;
                     if (labelSize <= 0) {
                         labelSize = Math.max(28, Math.min(48, cellW / 14));
@@ -2810,10 +2900,13 @@ public class LineRichMenuService {
                     int textWidth = fm.stringWidth(label);
                     int textX = centerX - textWidth / 2;
 
-                    // 文字位置：圖示下方或格子中心
-                    boolean hasIcon = cellIcons != null && cellIcons.containsKey(i);
+                    // 文字位置：有背景圖時放底部，有圖示時在圖示下方，否則格子中心
+                    boolean hasIcon = !hasCellImage && cellIcons != null && cellIcons.containsKey(i);
                     int textY;
-                    if (hasIcon) {
+                    if (hasCellImage) {
+                        // 放在格子底部（漸層區域內）
+                        textY = cellY + cellH - fm.getDescent() - 15;
+                    } else if (hasIcon) {
                         int iconSize = Math.min(cellW, cellH) / 3;
                         textY = centerY + iconSize / 2 + fm.getAscent() / 2;
                     } else {
