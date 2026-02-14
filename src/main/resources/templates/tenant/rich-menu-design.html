@@ -199,12 +199,25 @@
 
                         <!-- 發布 -->
                         <div class="d-flex gap-2 mb-4">
+                            <button class="btn btn-outline-info" id="btnPreview" onclick="previewRichMenu()">
+                                <i class="bi bi-eye me-1"></i>精確預覽
+                            </button>
                             <button class="btn btn-primary flex-fill" id="btnPublish" onclick="publishRichMenu()">
                                 <i class="bi bi-send me-2"></i>發布到 LINE
                             </button>
                             <button class="btn btn-outline-secondary" onclick="saveDraft()">
                                 <i class="bi bi-save me-1"></i>儲存草稿
                             </button>
+                        </div>
+                        <!-- 精確預覽結果 -->
+                        <div class="card mb-4 d-none" id="previewResultCard">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0"><i class="bi bi-image me-2"></i>伺服器合成圖（發布後實際效果）</h6>
+                                <button class="btn btn-sm btn-outline-secondary py-0" onclick="document.getElementById('previewResultCard').classList.add('d-none')"><i class="bi bi-x-lg"></i></button>
+                            </div>
+                            <div class="card-body p-2">
+                                <img id="previewResultImg" src="" alt="預覽" style="width:100%;border-radius:6px;">
+                            </div>
                         </div>
                     </div>
 
@@ -440,6 +453,7 @@
     .rm-preview.t-BLUE { background:#2196F3; }
     .rm-preview.t-PURPLE { background:#9C27B0; }
     .rm-preview.t-ORANGE { background:#FF9800; }
+    .rm-preview[style*="background-image"] .cl { color:#fff !important; text-shadow:0 1px 3px rgba(0,0,0,.7); }
     .rm-preview.t-DARK { background:#2C3E50; }
 
     /* ── 格子設定表 ── */
@@ -515,7 +529,9 @@
     let fpConfigs = {}; // flex popup per cell
     let fpEditingCell = -1;
     let rmBgFile = null; // 背景圖 File
+    let rmBgUrl = ''; // 背景圖 URL（範本用）
     let cellIconFiles = {}; // { cellIndex: File }
+    let rmConfigLoaded = false; // 防止 API 覆蓋使用者套用的範本
 
     // ================================================================
     // 範本庫 — 每業種 3 個 sample
@@ -549,7 +565,7 @@
                     ]},
                     2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
                         { heroImageUrl:'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=520&fit=crop', title:'🎉 新客優惠', description:'首次美容享 8 折優惠！\n加入會員再送 100 點', buttons:[{label:'領取票券',action:{type:'postback',data:'action=view_coupons'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1583337130417-13571c13e106?w=800&h=520&fit=crop', title:'🎫 套票方案', description:'洗澡 5 次券 $2200（省 $300）\n美容 3 次券 $2900（省 $500）', buttons:[{label:'查看詳情',action:{type:'postback',data:'action=view_coupons'}}] }
+                        { heroImageUrl:'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&h=520&fit=crop', title:'🎫 套票方案', description:'洗澡 5 次券 $2200（省 $300）\n美容 3 次券 $2900（省 $500）', buttons:[{label:'查看詳情',action:{type:'postback',data:'action=view_coupons'}}] }
                     ]}
                 },
                 fmConfig: { headerColor:'#8D6E63', headerTitle:'🐾 {shopName}', headerSubtitle:'歡迎帶毛寶貝來找我們！' }
@@ -616,7 +632,7 @@
         hair: [
             {
                 name: '潮流髮廊', desc: '精品風，適合設計師工作室', theme:'BOUTIQUE', layout:'3+4+4',
-                img: 'https://images.unsplash.com/photo-1521590832167-7228f2a5c5a8?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600&h=300&fit=crop',
                 cells: [
                     {l:'價目表',a:'flex_popup'},{l:'髮型沙龍',a:'show_menu'},{l:'本月優惠',a:'flex_popup'},
                     {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
@@ -624,7 +640,7 @@
                 ],
                 flexPopups: {
                     0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
-                        { heroImageUrl:'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&h=520&fit=crop', title:'✂️ 剪髮', description:'設計師剪髮 $600\n資深設計師 $800\n總監 $1200\n含洗髮＋造型', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
+                        { heroImageUrl:'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=520&fit=crop', title:'✂️ 剪髮', description:'設計師剪髮 $600\n資深設計師 $800\n總監 $1200\n含洗髮＋造型', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
                         { heroImageUrl:'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&h=520&fit=crop', title:'🎨 染髮', description:'全染 $2500 起\n挑染 $1800 起\n漂髮另計\n使用日本進口染劑', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
                         { heroImageUrl:'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=520&fit=crop', title:'💫 燙髮', description:'冷燙 $2000 起\n溫塑燙 $3000 起\n日式護髮燙 $3500 起', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
                     ]},
@@ -786,7 +802,7 @@
                     0: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
                         { heroImageUrl:'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&h=520&fit=crop', title:'💆 瑞典式按摩', description:'全身放鬆 60min $1,500\n深層舒壓 90min $2,200\n含精油芳療', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
                         { heroImageUrl:'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&h=520&fit=crop', title:'🌸 臉部護理', description:'保濕亮白 $1,200\n深層清潔 $1,500\nAnti-Aging $2,500', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] },
-                        { heroImageUrl:'https://images.unsplash.com/photo-1540555700478-4be289fbec6b?w=800&h=520&fit=crop', title:'🛀 身體SPA', description:'岩盤浴 $800\n死海泥裹敷 $1,800\n全身去角質 $1,200', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
+                        { heroImageUrl:'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&h=520&fit=crop', title:'🛀 身體SPA', description:'岩盤浴 $800\n死海泥裹敷 $1,800\n全身去角質 $1,200', buttons:[{label:'立即預約',action:{type:'postback',data:'action=start_booking'}}] }
                     ]},
                     2: { type:'carousel', imageAspectRatio:'20:13', bubbles:[
                         { heroImageUrl:'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800&h=520&fit=crop', title:'👯 閨蜜雙人套餐', description:'兩人同行享套餐價 $3,600\n含按摩 60min + 臉部護理', buttons:[{label:'領取優惠',action:{type:'postback',data:'action=view_coupons'}}] }
@@ -946,6 +962,7 @@
     function applySample(catKey, idx) {
         const s = SAMPLES[catKey]?.[idx];
         if (!s) return;
+        rmConfigLoaded = true; // 防止 API 覆蓋
         // 套用主題
         rmTheme = s.theme;
         selectEl('#themeSelector .rm-theme', rmTheme);
@@ -957,11 +974,21 @@
         // 套用 Flex 彈窗
         fpConfigs = {};
         if (s.flexPopups) Object.entries(s.flexPopups).forEach(([k,v]) => { fpConfigs[parseInt(k)] = JSON.parse(JSON.stringify(v)); });
-        // 清除圖片（範本不含本地圖檔）
+        // 設定背景圖 URL（從範本縮圖 URL 推算高解析版本）
         cellIconFiles = {};
         rmBgFile = null;
         document.getElementById('rmBgImage').value = '';
-        document.getElementById('rmBgPreviewWrap').classList.add('d-none');
+        if (s.img && s.img.includes('unsplash.com')) {
+            const isFullSize = (LAYOUT_ROWS[s.layout] || [3,4]).length >= 3;
+            const h = isFullSize ? 1686 : 843;
+            rmBgUrl = s.img.replace(/\?.*/, `?w=2500&h=${h}&fit=crop&q=85`);
+            // 在背景預覽顯示
+            document.getElementById('rmBgPreviewImg').src = s.img;
+            document.getElementById('rmBgPreviewWrap').classList.remove('d-none');
+        } else {
+            rmBgUrl = '';
+            document.getElementById('rmBgPreviewWrap').classList.add('d-none');
+        }
         // 刷新 UI
         renderCellTable();
         updateRmPreview();
@@ -972,9 +999,9 @@
             if (s.fmConfig.headerSubtitle) { fmConfig.headerSubtitle = s.fmConfig.headerSubtitle; document.getElementById('fmHeaderSubtitle').value = s.fmConfig.headerSubtitle; }
             updateFmPreview();
         }
-        showSuccess(`已套用「${s.name}」範本！可自由修改再發布`);
-        // 滾動到設定區
-        document.getElementById('themeSelector').scrollIntoView({ behavior:'smooth', block:'nearest' });
+        showSuccess(`已套用「${s.name}」範本！Rich Menu + Flex 主選單皆已更新，點「精確預覽」查看實際效果`);
+        // 滾動到預覽區
+        document.getElementById('rmPreview').scrollIntoView({ behavior:'smooth', block:'center' });
     }
 
     function initRM() {
@@ -1013,7 +1040,8 @@
                 if (cfg.cells) cfg.cells.forEach(cell => { if (cell.flexPopup) fpConfigs[cell.index] = cell.flexPopup; });
             }
         } catch(e) { console.debug('載入 RM 配置失敗', e); }
-        applyLayout(rmLayout);
+        if (!rmConfigLoaded) { applyLayout(rmLayout); }
+        rmConfigLoaded = true;
     }
 
     function selectEl(selector, val) {
@@ -1078,6 +1106,16 @@
         const c = document.getElementById('rmPreview');
         c.innerHTML = '';
         c.className = `rm-preview t-${rmTheme}`;
+        // 背景圖
+        if (rmBgUrl) {
+            c.style.backgroundImage = `url('${rmBgUrl.replace(/w=\d+/, 'w=600').replace(/h=\d+/, 'h=400')}')`;
+            c.style.backgroundSize = 'cover';
+            c.style.backgroundPosition = 'center';
+        } else if (rmBgFile) {
+            // 本地檔案已在 rmBgImage change 事件中處理
+        } else {
+            c.style.backgroundImage = '';
+        }
         const rows = LAYOUT_ROWS[rmLayout] || [3,4];
         let ci = 0;
         rows.forEach(cols => {
@@ -1089,6 +1127,8 @@
                 const d = document.createElement('div');
                 d.className = 'rm-prev-cell';
                 d.dataset.c = ci;
+                // 有背景圖時加半透明遮罩讓文字更清楚
+                if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
                 d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
                 const idx = ci;
                 d.addEventListener('click', () => {
@@ -1103,24 +1143,32 @@
             c.appendChild(row);
         });
         c.style.minHeight = rows.length >= 3 ? '170px' : '110px';
+        // 更新資訊
+        const totalCells = rows.reduce((a,b)=>a+b,0);
+        const sizeLabel = rows.length >= 3 ? '大尺寸' : '標準';
+        document.getElementById('rmCurrentInfo').textContent = `${rmTheme} / ${rmLayout}（${totalCells}格）/ ${sizeLabel}${rmBgUrl?' / 含背景圖':''}`;
     }
 
     // ── 背景圖 ──
     document.getElementById('rmBgImage').addEventListener('change', function(e) {
         if (e.target.files[0]) {
             rmBgFile = e.target.files[0];
+            rmBgUrl = ''; // 本地檔案優先
             const reader = new FileReader();
             reader.onload = ev => {
                 document.getElementById('rmBgPreviewImg').src = ev.target.result;
                 document.getElementById('rmBgPreviewWrap').classList.remove('d-none');
+                updateRmPreview();
             };
             reader.readAsDataURL(rmBgFile);
         }
     });
     function clearBgImage() {
         rmBgFile = null;
+        rmBgUrl = '';
         document.getElementById('rmBgImage').value = '';
         document.getElementById('rmBgPreviewWrap').classList.add('d-none');
+        updateRmPreview();
     }
 
     // ── 發布 RM ──
@@ -1128,27 +1176,62 @@
         const btn = document.getElementById('btnPublish');
         btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>發布中...';
         try {
-            // 有背景圖、有自訂圖示、精品風、或 3 行以上 → 走進階 API
-            const useAdvanced = rmBgFile || Object.keys(cellIconFiles).length > 0 || rmTheme === 'BOUTIQUE' || LAYOUT_ROWS[rmLayout].length >= 3;
+            // 有背景圖(檔案/URL)、有自訂圖示、精品風、或 3 行以上 → 走進階 API
+            const useAdvanced = rmBgFile || rmBgUrl || Object.keys(cellIconFiles).length > 0 || rmTheme === 'BOUTIQUE' || LAYOUT_ROWS[rmLayout].length >= 3;
             if (useAdvanced) {
                 const config = buildRmConfig();
                 const fd = new FormData();
                 fd.append('config', JSON.stringify(config));
-                if (rmBgFile) fd.append('backgroundImage', rmBgFile);
+                if (rmBgFile) {
+                    fd.append('backgroundImage', rmBgFile);
+                } else if (rmBgUrl) {
+                    fd.append('backgroundImageUrl', rmBgUrl);
+                }
                 Object.entries(cellIconFiles).forEach(([idx, file]) => {
                     fd.append('cellIcon_' + idx, file);
                 });
                 const r = await fetch('/api/settings/line/rich-menu/create-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
                 const d = await r.json();
-                if (d.success) { showSuccess('Rich Menu 已發布！'); document.getElementById('rmCurrentInfo').textContent = `線上版本：${rmTheme}`; }
+                if (d.success) { showSuccess('Rich Menu 已發布到 LINE！顧客開啟聊天即可看到'); }
                 else showError(d.message || '發布失敗');
             } else {
                 const r = await api.post('/api/settings/line/rich-menu/create', { theme: rmTheme });
-                if (r.success) { showSuccess('Rich Menu 已發布！'); document.getElementById('rmCurrentInfo').textContent = `線上版本：${rmTheme}`; }
+                if (r.success) { showSuccess('Rich Menu 已發布到 LINE！顧客開啟聊天即可看到'); }
                 else showError(r.message || '發布失敗');
             }
         } catch(e) { showError('發布失敗：'+e.message); }
         finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-2"></i>發布到 LINE'; }
+    }
+
+    async function previewRichMenu() {
+        const btn = document.getElementById('btnPreview');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>產生中...';
+        try {
+            const config = buildRmConfig();
+            const fd = new FormData();
+            fd.append('config', JSON.stringify(config));
+            if (rmBgFile) {
+                fd.append('backgroundImage', rmBgFile);
+            } else if (rmBgUrl) {
+                fd.append('backgroundImageUrl', rmBgUrl);
+            }
+            Object.entries(cellIconFiles).forEach(([idx, file]) => {
+                fd.append('cellIcon_' + idx, file);
+            });
+            const r = await fetch('/api/settings/line/rich-menu/preview-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
+            if (r.ok) {
+                const blob = await r.blob();
+                const url = URL.createObjectURL(blob);
+                document.getElementById('previewResultImg').src = url;
+                document.getElementById('previewResultCard').classList.remove('d-none');
+                document.getElementById('previewResultCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
+                showSuccess('預覽圖已產生！這就是發布後顧客看到的樣子');
+            } else {
+                const d = await r.json().catch(()=>null);
+                showError(d?.message || '預覽失敗');
+            }
+        } catch(e) { showError('預覽失敗：'+e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-eye me-1"></i>精確預覽'; }
     }
 
     function buildRmConfig() {

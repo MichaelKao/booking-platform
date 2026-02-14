@@ -271,6 +271,7 @@ public class LineConfigController {
     @PostMapping("/rich-menu/create-advanced")
     public ResponseEntity<ApiResponse<java.util.Map<String, String>>> createAdvancedRichMenu(
             @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @RequestParam(value = "backgroundImageUrl", required = false) String backgroundImageUrl,
             @RequestParam("config") String config,
             @RequestParam(value = "cellIcon_0", required = false) MultipartFile cellIcon0,
             @RequestParam(value = "cellIcon_1", required = false) MultipartFile cellIcon1,
@@ -293,9 +294,12 @@ public class LineConfigController {
             // 需訂閱 CUSTOM_RICH_MENU 才能發布
             featureService.checkFeatureEnabled(tenantId, FeatureCode.CUSTOM_RICH_MENU);
 
-            // 背景圖片
+            // 背景圖片（優先使用上傳檔案，其次使用 URL）
             byte[] bgBytes = backgroundImage != null && !backgroundImage.isEmpty()
                     ? backgroundImage.getBytes() : null;
+            if (bgBytes == null && backgroundImageUrl != null && !backgroundImageUrl.isBlank()) {
+                bgBytes = downloadImage(backgroundImageUrl);
+            }
 
             // 收集每格圖示
             MultipartFile[] iconFiles = {
@@ -335,6 +339,7 @@ public class LineConfigController {
     @PostMapping("/rich-menu/preview-advanced")
     public ResponseEntity<byte[]> previewAdvancedRichMenu(
             @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @RequestParam(value = "backgroundImageUrl", required = false) String backgroundImageUrl,
             @RequestParam("config") String config,
             @RequestParam(value = "cellIcon_0", required = false) MultipartFile cellIcon0,
             @RequestParam(value = "cellIcon_1", required = false) MultipartFile cellIcon1,
@@ -352,9 +357,12 @@ public class LineConfigController {
         log.debug("產生進階 Rich Menu 預覽圖");
 
         try {
-            // 背景圖片
+            // 背景圖片（優先使用上傳檔案，其次使用 URL）
             byte[] bgBytes = backgroundImage != null && !backgroundImage.isEmpty()
                     ? backgroundImage.getBytes() : null;
+            if (bgBytes == null && backgroundImageUrl != null && !backgroundImageUrl.isBlank()) {
+                bgBytes = downloadImage(backgroundImageUrl);
+            }
 
             // 收集每格圖示
             MultipartFile[] iconFiles = {
@@ -511,5 +519,39 @@ public class LineConfigController {
         richMenuService.deleteRichMenu(tenantId);
 
         return ResponseEntity.ok(ApiResponse.ok("Rich Menu 已刪除", null));
+    }
+
+    /**
+     * 從 URL 下載圖片（用於範本套用時的背景圖）
+     */
+    private byte[] downloadImage(String imageUrl) {
+        try {
+            log.debug("下載圖片：{}", imageUrl);
+            java.net.URL url = new java.net.URL(imageUrl);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(15000);
+            conn.setRequestProperty("User-Agent", "BookingPlatform/1.0");
+
+            // 處理重導向
+            int status = conn.getResponseCode();
+            if (status == java.net.HttpURLConnection.HTTP_MOVED_TEMP
+                    || status == java.net.HttpURLConnection.HTTP_MOVED_PERM
+                    || status == 307 || status == 308) {
+                String redirect = conn.getHeaderField("Location");
+                conn = (java.net.HttpURLConnection) new java.net.URL(redirect).openConnection();
+                conn.setRequestProperty("User-Agent", "BookingPlatform/1.0");
+            }
+
+            if (conn.getResponseCode() == 200) {
+                return conn.getInputStream().readAllBytes();
+            }
+            log.warn("下載圖片失敗，HTTP {}", conn.getResponseCode());
+            return null;
+        } catch (Exception e) {
+            log.warn("下載圖片失敗：{}", e.getMessage());
+            return null;
+        }
     }
 }
