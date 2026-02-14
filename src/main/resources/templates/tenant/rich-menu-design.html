@@ -8,171 +8,319 @@
             <header th:replace="~{tenant/layout :: topbar}"></header>
             <main id="content">
                 <div class="page-header">
-                    <h1 class="page-title">選單設計</h1>
-                    <p class="page-subtitle">設計 LINE 聊天室底部的 Rich Menu 快捷選單</p>
+                    <h1 class="page-title"><i class="bi bi-palette-fill me-2"></i>選單設計</h1>
+                    <p class="page-subtitle">自訂 LINE Rich Menu（底部快捷選單）與 Flex 主選單外觀</p>
                 </div>
 
+                <!-- 使用說明（可收合） -->
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#usageGuide" style="cursor:pointer">
+                        <strong><i class="bi bi-lightbulb me-1"></i>如何使用選單設計？</strong>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="usageGuide">
+                        <hr class="my-2">
+                        <div class="row small">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Rich Menu（底部快捷選單）</h6>
+                                <p>顧客打開 LINE 聊天室時，<strong>固定在螢幕底部</strong>的圖片選單。</p>
+                                <ol class="ps-3 mb-2">
+                                    <li>選擇<strong>主題風格</strong>（精品風、LINE綠、藍等配色）</li>
+                                    <li>選擇<strong>佈局</strong>（3+4 = 7格、3+4+4 = 11格...）</li>
+                                    <li>設定每格的<strong>文字</strong>和<strong>點擊動作</strong></li>
+                                    <li>若動作選「Flex 彈窗」，可設計<strong>輪播卡片</strong>（放圖片、標題、按鈕）</li>
+                                    <li>點「<strong>發布到 LINE</strong>」即生效</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Flex 主選單（對話氣泡選單）</h6>
+                                <p>顧客<strong>輸入任何文字</strong>時彈出的 Flex Message 選單卡片。</p>
+                                <ol class="ps-3 mb-2">
+                                    <li>設定<strong>Header</strong>的顏色、標題、歡迎語</li>
+                                    <li>自訂每個<strong>按鈕</strong>的顏色、圖示 emoji、標題、副標題</li>
+                                    <li>開關「<strong>使用提示</strong>」區塊</li>
+                                    <li>下方即時預覽，所見即所得</li>
+                                    <li>點「<strong>儲存主選單</strong>」即生效</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="mt-2 p-2 bg-light rounded small">
+                            <strong>Flex 彈窗卡片怎麼用？</strong> 在 Rich Menu 的格子動作選「Flex 彈窗」，點右邊的 <i class="bi bi-pencil-square"></i> 編輯 →
+                            可以做成<strong>單張卡片</strong>或<strong>多張輪播</strong>（顧客可左右滑動）。每張卡片可放：主圖（URL）、標題、描述、一個按鈕。
+                            常見用途：服務價目表、最新優惠、活動資訊等。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================ Tab 切換 ================ -->
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabRichMenu" type="button">
+                            <i class="bi bi-grid-3x2 me-1"></i>Rich Menu（底部選單）
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFlexMenu" type="button">
+                            <i class="bi bi-chat-square-text me-1"></i>Flex 主選單（氣泡選單）
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                <!-- ================================================================ -->
+                <!-- TAB 1: Rich Menu 設計                                             -->
+                <!-- ================================================================ -->
+                <div class="tab-pane fade show active" id="tabRichMenu">
                 <div class="row">
-                    <!-- 左側：設定面板 -->
+                    <!-- 左側：設定 -->
                     <div class="col-lg-7">
                         <!-- 主題選擇 -->
-                        <div class="card mb-4">
-                            <div class="card-header">
+                        <div class="card mb-3">
+                            <div class="card-header py-2">
                                 <h6 class="m-0"><i class="bi bi-palette me-2"></i>主題風格</h6>
                             </div>
-                            <div class="card-body">
-                                <div class="row g-3" id="themeSelector">
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card selected" data-theme="BOUTIQUE">
-                                            <div class="theme-preview" style="background: linear-gradient(135deg, #F7ECDF, #F0D8C8); border: 2px solid #C89B6E;"></div>
-                                            <small class="d-block text-center mt-1">精品風</small>
-                                        </div>
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap gap-2" id="themeSelector">
+                                    <div class="rm-theme selected" data-theme="BOUTIQUE">
+                                        <div class="rm-theme-color" style="background:linear-gradient(135deg,#F7ECDF,#F0D8C8);border:2px solid #C89B6E;"></div>
+                                        <small>精品風</small>
                                     </div>
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card" data-theme="GREEN">
-                                            <div class="theme-preview" style="background: #06C755;"></div>
-                                            <small class="d-block text-center mt-1">LINE 綠</small>
-                                        </div>
+                                    <div class="rm-theme" data-theme="GREEN">
+                                        <div class="rm-theme-color" style="background:#06C755;"></div>
+                                        <small>LINE 綠</small>
                                     </div>
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card" data-theme="BLUE">
-                                            <div class="theme-preview" style="background: #2196F3;"></div>
-                                            <small class="d-block text-center mt-1">海洋藍</small>
-                                        </div>
+                                    <div class="rm-theme" data-theme="BLUE">
+                                        <div class="rm-theme-color" style="background:#2196F3;"></div>
+                                        <small>海洋藍</small>
                                     </div>
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card" data-theme="PURPLE">
-                                            <div class="theme-preview" style="background: #9C27B0;"></div>
-                                            <small class="d-block text-center mt-1">皇家紫</small>
-                                        </div>
+                                    <div class="rm-theme" data-theme="PURPLE">
+                                        <div class="rm-theme-color" style="background:#9C27B0;"></div>
+                                        <small>皇家紫</small>
                                     </div>
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card" data-theme="ORANGE">
-                                            <div class="theme-preview" style="background: #FF9800;"></div>
-                                            <small class="d-block text-center mt-1">日落橘</small>
-                                        </div>
+                                    <div class="rm-theme" data-theme="ORANGE">
+                                        <div class="rm-theme-color" style="background:#FF9800;"></div>
+                                        <small>日落橘</small>
                                     </div>
-                                    <div class="col-4 col-md-3">
-                                        <div class="theme-card" data-theme="DARK">
-                                            <div class="theme-preview" style="background: #2C3E50;"></div>
-                                            <small class="d-block text-center mt-1">暗黑</small>
-                                        </div>
+                                    <div class="rm-theme" data-theme="DARK">
+                                        <div class="rm-theme-color" style="background:#2C3E50;"></div>
+                                        <small>暗黑</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 佈局選擇（精品風時顯示） -->
-                        <div class="card mb-4" id="layoutCard">
-                            <div class="card-header">
-                                <h6 class="m-0"><i class="bi bi-grid-3x3 me-2"></i>佈局選擇</h6>
+                        <!-- 佈局選擇 -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2">
+                                <h6 class="m-0"><i class="bi bi-grid-3x3 me-2"></i>佈局</h6>
                             </div>
-                            <div class="card-body">
-                                <div class="row g-2" id="layoutSelector">
-                                    <div class="col-6 col-md-4">
-                                        <div class="layout-card selected" data-layout="3+4+4">
-                                            <div class="layout-mini">
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr;"><span></span><span></span><span></span></div>
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr 1fr;"><span></span><span></span><span></span><span></span></div>
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr 1fr;"><span></span><span></span><span></span><span></span></div>
-                                            </div>
-                                            <small>3+4+4（11格）</small>
-                                        </div>
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap gap-2" id="layoutSelector">
+                                    <div class="rm-layout" data-layout="3+4" title="上排3+下排4（7格，標準尺寸）">
+                                        <div class="rm-layout-mini"><div class="lrow c3"></div><div class="lrow c4"></div></div>
+                                        <small>3+4</small>
                                     </div>
-                                    <div class="col-6 col-md-4">
-                                        <div class="layout-card" data-layout="3+4">
-                                            <div class="layout-mini">
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr;"><span></span><span></span><span></span></div>
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr 1fr;"><span></span><span></span><span></span><span></span></div>
-                                            </div>
-                                            <small>3+4（7格）</small>
-                                        </div>
+                                    <div class="rm-layout" data-layout="2x3" title="2行x3列（6格，標準尺寸）">
+                                        <div class="rm-layout-mini"><div class="lrow c3"></div><div class="lrow c3"></div></div>
+                                        <small>2x3</small>
                                     </div>
-                                    <div class="col-6 col-md-4">
-                                        <div class="layout-card" data-layout="2x3">
-                                            <div class="layout-mini">
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr;"><span></span><span></span><span></span></div>
-                                                <div class="layout-row" style="grid-template-columns: 1fr 1fr 1fr;"><span></span><span></span><span></span></div>
-                                            </div>
-                                            <small>2x3（6格）</small>
-                                        </div>
+                                    <div class="rm-layout" data-layout="2x2" title="2行x2列（4格，標準尺寸）">
+                                        <div class="rm-layout-mini"><div class="lrow c2"></div><div class="lrow c2"></div></div>
+                                        <small>2x2</small>
                                     </div>
+                                    <div class="rm-layout selected" data-layout="3+4+4" title="上排3+中排4+下排4（11格，大尺寸）">
+                                        <div class="rm-layout-mini"><div class="lrow c3"></div><div class="lrow c4"></div><div class="lrow c4"></div></div>
+                                        <small>3+4+4</small>
+                                    </div>
+                                    <div class="rm-layout" data-layout="4+4" title="上排4+下排4（8格，大尺寸）">
+                                        <div class="rm-layout-mini"><div class="lrow c4"></div><div class="lrow c4"></div></div>
+                                        <small>4+4</small>
+                                    </div>
+                                </div>
+                                <div class="form-text mt-1">3行佈局自動使用大尺寸（Full），2行使用標準尺寸（Half）</div>
+                            </div>
+                        </div>
+
+                        <!-- 背景圖片 -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2"><h6 class="m-0"><i class="bi bi-image me-2"></i>背景圖片（選填）</h6></div>
+                            <div class="card-body py-2">
+                                <input type="file" class="form-control form-control-sm" id="rmBgImage" accept="image/png,image/jpeg">
+                                <div class="form-text">上傳背景圖，系統會在上面疊加每格的圖示和文字。PNG/JPG，建議 2500x843（標準）或 2500x1686（大尺寸）。不上傳則使用主題配色。</div>
+                                <div id="rmBgPreviewWrap" class="mt-2 d-none">
+                                    <img id="rmBgPreviewImg" src="" alt="" style="max-width:100%;border-radius:6px;border:1px solid #ddd;">
+                                    <button class="btn btn-sm btn-outline-danger mt-1" onclick="clearBgImage()"><i class="bi bi-x me-1"></i>移除背景</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 每格動作設定 -->
-                        <div class="card mb-4">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h6 class="m-0"><i class="bi bi-hand-index me-2"></i>格子動作設定</h6>
-                                <small class="text-muted">點擊右側預覽中的格子可快速選取</small>
+                        <!-- 格子設定 -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0"><i class="bi bi-hand-index me-2"></i>每格設定</h6>
+                                <small class="text-muted">點預覽格子可快速定位</small>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-sm mb-0" id="cellConfigTable">
-                                        <thead>
+                                    <table class="table table-sm table-hover mb-0" id="cellTable">
+                                        <thead class="table-light">
                                             <tr>
-                                                <th style="width:60px">格子</th>
-                                                <th style="width:120px">標籤</th>
+                                                <th style="width:38px">#</th>
+                                                <th style="width:100px">標籤</th>
                                                 <th>動作</th>
-                                                <th style="width:80px">Flex</th>
+                                                <th style="width:70px">圖示</th>
+                                                <th style="width:40px"></th>
                                             </tr>
                                         </thead>
-                                        <tbody id="cellConfigBody">
-                                            <!-- JS 動態產生 -->
-                                        </tbody>
+                                        <tbody id="cellTableBody"></tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 發布按鈕 -->
+                        <!-- 發布 -->
                         <div class="d-flex gap-2 mb-4">
-                            <button class="btn btn-primary btn-lg flex-fill" id="btnPublish" onclick="publishRichMenu()">
+                            <button class="btn btn-primary flex-fill" id="btnPublish" onclick="publishRichMenu()">
                                 <i class="bi bi-send me-2"></i>發布到 LINE
                             </button>
-                            <button class="btn btn-outline-secondary btn-lg" id="btnSaveDraft" onclick="saveDraft()">
+                            <button class="btn btn-outline-secondary" onclick="saveDraft()">
                                 <i class="bi bi-save me-1"></i>儲存草稿
                             </button>
                         </div>
                     </div>
 
-                    <!-- 右側：即時預覽 -->
+                    <!-- 右側：預覽 -->
                     <div class="col-lg-5">
-                        <div class="card sticky-top" style="top: 20px;">
-                            <div class="card-header">
-                                <h6 class="m-0"><i class="bi bi-phone me-2"></i>即時預覽</h6>
-                            </div>
+                        <div class="card sticky-top" style="top:16px">
+                            <div class="card-header py-2"><h6 class="m-0"><i class="bi bi-phone me-2"></i>Rich Menu 預覽</h6></div>
                             <div class="card-body p-3">
-                                <!-- 手機模擬框 -->
-                                <div class="phone-mockup mx-auto">
-                                    <div class="phone-screen">
-                                        <!-- LINE 聊天室背景 -->
-                                        <div class="line-chat-bg">
-                                            <div class="chat-header-bar">
-                                                <i class="bi bi-chevron-left"></i>
-                                                <span id="previewShopName">我的店家</span>
-                                                <i class="bi bi-list"></i>
-                                            </div>
-                                            <div class="chat-messages">
-                                                <div class="chat-bubble">歡迎光臨！請點選下方選單開始</div>
-                                            </div>
+                                <div class="phone-frame mx-auto">
+                                    <div class="phone-inner">
+                                        <div class="line-top-bar">
+                                            <i class="bi bi-chevron-left"></i>
+                                            <span id="previewShopName">我的店家</span>
+                                            <i class="bi bi-three-dots-vertical"></i>
                                         </div>
-                                        <!-- Rich Menu 預覽 -->
-                                        <div class="rich-menu-preview" id="richMenuPreview">
-                                            <!-- JS 動態產生 -->
+                                        <div class="line-chat-area">
+                                            <div class="line-chat-bubble">歡迎光臨！點選下方選單開始</div>
                                         </div>
+                                        <div class="rm-preview" id="rmPreview"></div>
                                     </div>
                                 </div>
-
-                                <!-- 目前線上版本 -->
-                                <div class="mt-3 text-center">
-                                    <small class="text-muted" id="currentMenuInfo">載入中...</small>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted" id="rmCurrentInfo">載入中...</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                </div>
+
+                <!-- ================================================================ -->
+                <!-- TAB 2: Flex 主選單設計                                             -->
+                <!-- ================================================================ -->
+                <div class="tab-pane fade" id="tabFlexMenu">
+                <div class="row">
+                    <!-- 左側：設定 -->
+                    <div class="col-lg-7">
+                        <!-- Header -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2"><h6 class="m-0"><i class="bi bi-card-heading me-2"></i>Header 區塊</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-4">
+                                        <label class="form-label small fw-bold">背景色</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="color" class="form-control-color" id="fmHeaderColor" value="#1DB446" style="width:38px;height:34px;">
+                                            <input type="text" class="form-control form-control-sm" id="fmHeaderColorText" value="#1DB446" style="width:80px" maxlength="7">
+                                        </div>
+                                        <div class="d-flex gap-1 mt-1">
+                                            <span class="fm-color-dot" data-color="#1DB446" style="background:#1DB446" title="LINE 綠"></span>
+                                            <span class="fm-color-dot" data-color="#0066CC" style="background:#0066CC" title="藍"></span>
+                                            <span class="fm-color-dot" data-color="#9C27B0" style="background:#9C27B0" title="紫"></span>
+                                            <span class="fm-color-dot" data-color="#FF5722" style="background:#FF5722" title="橘"></span>
+                                            <span class="fm-color-dot" data-color="#C89B6E" style="background:#C89B6E" title="金"></span>
+                                            <span class="fm-color-dot" data-color="#263238" style="background:#263238" title="暗"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="form-label small fw-bold">標題</label>
+                                        <input type="text" class="form-control form-control-sm fm-input" id="fmHeaderTitle" value="✨ {shopName}" data-field="headerTitle">
+                                        <div class="form-text">{shopName} 自動替換為店名</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">歡迎語</label>
+                                        <input type="text" class="form-control form-control-sm fm-input" id="fmHeaderSubtitle" value="歡迎光臨！請問需要什麼服務呢？" data-field="headerSubtitle" maxlength="50">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="fmShowTip" checked>
+                                            <label class="form-check-label small" for="fmShowTip">顯示「使用提示」區塊</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 按鈕設定 -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2"><h6 class="m-0"><i class="bi bi-grid-fill me-2"></i>按鈕設定（共 7 個）</h6></div>
+                            <div class="card-body" id="fmButtonList"></div>
+                        </div>
+
+                        <!-- 預約流程步驟自訂（收合） -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2" data-bs-toggle="collapse" data-bs-target="#stepPanel" style="cursor:pointer">
+                                <h6 class="m-0"><i class="bi bi-diagram-3 me-2"></i>預約流程步驟自訂 <i class="bi bi-chevron-down float-end"></i></h6>
+                            </div>
+                            <div class="collapse" id="stepPanel">
+                                <div class="card-body">
+                                    <p class="small text-muted mb-2">自訂預約過程中每步的 Header 顏色與標題文字</p>
+                                    <div id="fmStepList"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 儲存 -->
+                        <div class="d-flex gap-2 mb-4">
+                            <button class="btn btn-primary flex-fill" onclick="saveFlexMenu()">
+                                <i class="bi bi-check-lg me-2"></i>儲存主選單
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetFlexMenu()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>恢復預設
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 右側：預覽 -->
+                    <div class="col-lg-5">
+                        <div class="card sticky-top" style="top:16px">
+                            <div class="card-header py-2"><h6 class="m-0"><i class="bi bi-phone me-2"></i>Flex 主選單預覽</h6></div>
+                            <div class="card-body p-3">
+                                <div class="fm-phone-frame mx-auto">
+                                    <!-- 模擬 LINE 氣泡 -->
+                                    <div class="fm-bubble" id="fmPreview">
+                                        <div class="fm-header" id="fmPrevHeader">
+                                            <div class="fm-header-title" id="fmPrevTitle">✨ 我的店家</div>
+                                            <div class="fm-header-sub" id="fmPrevSub">歡迎光臨！請問需要什麼服務呢？</div>
+                                        </div>
+                                        <div class="fm-tip" id="fmPrevTip">
+                                            <div class="fm-tip-title">💡 使用提示</div>
+                                            <div class="fm-tip-text">點擊下方按鈕開始使用</div>
+                                        </div>
+                                        <div class="fm-buttons" id="fmPrevButtons"></div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-light small mt-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    這是顧客輸入任何文字時看到的主選單氣泡，和 Rich Menu 是兩個不同的東西。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div><!-- /tab-content -->
             </main>
             <footer th:replace="~{tenant/layout :: footer}"></footer>
         </div>
@@ -180,44 +328,53 @@
 
     <div class="sidebar-overlay"></div>
     <div class="toast-container"></div>
-    <div class="loading-overlay" style="display: none;"><div class="loading-spinner"></div></div>
+    <div class="loading-overlay" style="display:none"><div class="loading-spinner"></div></div>
     <div th:replace="~{tenant/layout :: confirm-modal}"></div>
 
-    <!-- Flex 彈窗編輯 Modal -->
+    <!-- Flex 彈窗 Modal -->
     <div class="modal fade" id="flexPopupModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-window-stack me-2"></i>Flex 彈窗設定</h5>
+                    <h5 class="modal-title"><i class="bi bi-window-stack me-2"></i>Flex 彈窗卡片設定</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- 彈窗類型 -->
+                    <div class="alert alert-info small py-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        顧客點擊 Rich Menu 該格時，會<strong>彈出</strong>下方設計的卡片。可做「單張卡片」或「多張輪播」（左右滑動）。
+                        每張卡片可放主圖、標題、描述、按鈕。
+                    </div>
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">類型</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="flexType" id="flexTypeSingle" value="single" checked>
-                            <label class="btn btn-outline-primary" for="flexTypeSingle">單一卡片</label>
-                            <input type="radio" class="btn-check" name="flexType" id="flexTypeCarousel" value="carousel">
-                            <label class="btn btn-outline-primary" for="flexTypeCarousel">輪播卡片</label>
+                        <label class="form-label fw-bold small">類型</label>
+                        <div class="btn-group btn-group-sm w-100">
+                            <input type="radio" class="btn-check" name="fpType" id="fpTypeSingle" value="single" checked>
+                            <label class="btn btn-outline-primary" for="fpTypeSingle">單一卡片</label>
+                            <input type="radio" class="btn-check" name="fpType" id="fpTypeCarousel" value="carousel">
+                            <label class="btn btn-outline-primary" for="fpTypeCarousel">輪播卡片（可左右滑）</label>
                         </div>
                     </div>
 
-                    <!-- 卡片列表 -->
-                    <div id="flexCardList">
-                        <!-- JS 動態產生 -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">圖片比例</label>
+                        <select class="form-select form-select-sm" id="fpImageRatio" style="width:200px">
+                            <option value="20:13" selected>20:13（預設 LINE 比例）</option>
+                            <option value="1:1">1:1（正方形）</option>
+                            <option value="4:3">4:3</option>
+                            <option value="16:9">16:9（寬螢幕）</option>
+                        </select>
                     </div>
 
-                    <!-- 新增卡片按鈕 -->
-                    <button class="btn btn-outline-primary btn-sm mt-2" id="btnAddFlexCard" onclick="addFlexCard()">
+                    <div id="fpCardList"></div>
+
+                    <button class="btn btn-outline-primary btn-sm mt-2" id="btnAddCard" onclick="addFpCard()">
                         <i class="bi bi-plus-circle me-1"></i>新增卡片
                     </button>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveFlexPopupConfig()">
-                        <i class="bi bi-check-lg me-1"></i>確定
-                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="saveFpConfig()"><i class="bi bi-check-lg me-1"></i>確定</button>
                 </div>
             </div>
         </div>
@@ -226,728 +383,632 @@
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
 
     <style>
-        /* 主題選擇器 */
-        .theme-card {
-            cursor: pointer;
-            padding: 8px;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        .theme-card:hover { border-color: #dee2e6; }
-        .theme-card.selected { border-color: var(--primary-color, #4e73df); background: rgba(78, 115, 223, 0.05); }
-        .theme-preview {
-            width: 100%;
-            aspect-ratio: 3/2;
-            border-radius: 6px;
-        }
+    /* ── 主題選擇 ── */
+    .rm-theme { cursor:pointer; text-align:center; padding:6px; border:2px solid transparent; border-radius:8px; transition:.2s; min-width:60px; }
+    .rm-theme:hover { border-color:#dee2e6; }
+    .rm-theme.selected { border-color:var(--primary-color,#4e73df); background:rgba(78,115,223,.06); }
+    .rm-theme-color { width:48px; height:32px; border-radius:6px; margin:0 auto; }
 
-        /* 佈局選擇器 */
-        .layout-card {
-            cursor: pointer;
-            padding: 10px;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .layout-card:hover { border-color: #adb5bd; }
-        .layout-card.selected { border-color: var(--primary-color, #4e73df); background: rgba(78, 115, 223, 0.05); }
-        .layout-mini {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            margin-bottom: 6px;
-        }
-        .layout-row {
-            display: grid;
-            gap: 2px;
-        }
-        .layout-row span {
-            height: 18px;
-            background: #dee2e6;
-            border-radius: 3px;
-        }
+    /* ── 佈局選擇 ── */
+    .rm-layout { cursor:pointer; text-align:center; padding:8px 10px; border:2px solid #dee2e6; border-radius:8px; transition:.2s; min-width:64px; }
+    .rm-layout:hover { border-color:#adb5bd; }
+    .rm-layout.selected { border-color:var(--primary-color,#4e73df); background:rgba(78,115,223,.06); }
+    .rm-layout-mini { display:flex; flex-direction:column; gap:2px; margin-bottom:4px; }
+    .lrow { display:grid; gap:2px; }
+    .lrow span { height:14px; background:#bbb; border-radius:2px; display:block; }
+    .lrow.c2 { grid-template-columns:1fr 1fr; }
+    .lrow.c3 { grid-template-columns:1fr 1fr 1fr; }
+    .lrow.c4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+    .lrow.c2::before,.lrow.c2::after,.lrow.c3::before,.lrow.c3::after,.lrow.c4::before,.lrow.c4::after { content:''; height:14px; background:#bbb; border-radius:2px; }
+    /* override: lrow children are auto-filled via grid */
+    .lrow.c2 { grid-template-columns:repeat(2,1fr); }
+    .lrow.c3 { grid-template-columns:repeat(3,1fr); }
+    .lrow.c4 { grid-template-columns:repeat(4,1fr); }
+    /* pseudo approach to fill grid cells */
+    .lrow::before,.lrow::after { display:none; }
 
-        /* 手機模擬框 */
-        .phone-mockup {
-            width: 280px;
-            background: #000;
-            border-radius: 30px;
-            padding: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-        .phone-screen {
-            background: #fff;
-            border-radius: 24px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 480px;
-        }
-        .line-chat-bg {
-            flex: 1;
-            background: #7AADBA;
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-header-bar {
-            background: #fff;
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-        .chat-bubble {
-            background: #fff;
-            border-radius: 16px;
-            padding: 10px 14px;
-            font-size: 12px;
-            max-width: 80%;
-            color: #333;
-        }
+    /* ── 手機框 ── */
+    .phone-frame { width:280px; background:#1a1a1a; border-radius:28px; padding:8px; box-shadow:0 8px 30px rgba(0,0,0,.15); }
+    .phone-inner { background:#fff; border-radius:22px; overflow:hidden; display:flex; flex-direction:column; height:480px; }
+    .line-top-bar { background:#fff; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; color:#333; border-bottom:1px solid #eee; }
+    .line-chat-area { flex:1; background:#7AADBA; display:flex; align-items:flex-end; padding:12px; }
+    .line-chat-bubble { background:#fff; border-radius:14px; padding:8px 12px; font-size:11px; color:#333; max-width:80%; }
 
-        /* Rich Menu 預覽 */
-        .rich-menu-preview {
-            background: #f5f0e8;
-            display: flex;
-            flex-direction: column;
-            min-height: 140px;
-        }
-        .preview-row {
-            display: grid;
-            flex: 1;
-        }
-        .preview-cell {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 2px;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.06);
-            transition: all 0.15s;
-            position: relative;
-        }
-        .preview-cell:hover { background: rgba(0,0,0,0.05); }
-        .preview-cell.active { outline: 2px solid #4e73df; outline-offset: -2px; z-index: 1; }
-        .preview-cell .cell-icon { font-size: 18px; }
-        .preview-cell .cell-label { font-size: 9px; text-align: center; color: #5C4033; font-weight: 600; margin-top: 2px; }
-        .preview-cell .cell-index {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 8px;
-            color: rgba(0,0,0,0.25);
-        }
+    /* ── RM 預覽 ── */
+    .rm-preview { display:flex; flex-direction:column; }
+    .rm-prev-row { display:grid; }
+    .rm-prev-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px 2px; border:1px solid rgba(0,0,0,.06); cursor:pointer; transition:.15s; position:relative; min-height:40px; }
+    .rm-prev-cell:hover { filter:brightness(.95); }
+    .rm-prev-cell.active { outline:2px solid #4e73df; outline-offset:-2px; z-index:1; }
+    .rm-prev-cell .ci { font-size:16px; }
+    .rm-prev-cell .cl { font-size:8px; text-align:center; font-weight:600; margin-top:1px; line-height:1.2; }
+    .rm-prev-cell .cn { position:absolute; top:1px; left:3px; font-size:7px; opacity:.3; }
+    /* 主題色 */
+    .rm-preview.t-BOUTIQUE { background:linear-gradient(135deg,#F7ECDF,#F0D8C8); }
+    .rm-preview.t-BOUTIQUE .cl { color:#5C4033; }
+    .rm-preview.t-GREEN { background:#06C755; }
+    .rm-preview.t-GREEN .cl,.rm-preview.t-BLUE .cl,.rm-preview.t-PURPLE .cl,.rm-preview.t-ORANGE .cl,.rm-preview.t-DARK .cl { color:#fff; }
+    .rm-preview.t-BLUE { background:#2196F3; }
+    .rm-preview.t-PURPLE { background:#9C27B0; }
+    .rm-preview.t-ORANGE { background:#FF9800; }
+    .rm-preview.t-DARK { background:#2C3E50; }
 
-        /* 精品風預覽 */
-        .rich-menu-preview.theme-BOUTIQUE { background: linear-gradient(135deg, #F7ECDF, #F0D8C8); }
-        .rich-menu-preview.theme-BOUTIQUE .preview-cell { border-color: rgba(200,155,110,0.15); }
-        .rich-menu-preview.theme-BOUTIQUE .cell-label { color: #5C4033; }
+    /* ── 格子設定表 ── */
+    #cellTable td,#cellTable th { vertical-align:middle; font-size:12px; padding:4px 8px; }
+    #cellTable .form-control,#cellTable .form-select { font-size:12px; padding:3px 6px; }
+    .cell-badge { display:inline-flex; width:22px; height:22px; align-items:center; justify-content:center; border-radius:5px; background:#f0f0f0; font-weight:700; font-size:11px; }
 
-        /* 其他主題色 */
-        .rich-menu-preview.theme-GREEN { background: #06C755; }
-        .rich-menu-preview.theme-GREEN .cell-label { color: #fff; }
-        .rich-menu-preview.theme-BLUE { background: #2196F3; }
-        .rich-menu-preview.theme-BLUE .cell-label { color: #fff; }
-        .rich-menu-preview.theme-PURPLE { background: #9C27B0; }
-        .rich-menu-preview.theme-PURPLE .cell-label { color: #fff; }
-        .rich-menu-preview.theme-ORANGE { background: #FF9800; }
-        .rich-menu-preview.theme-ORANGE .cell-label { color: #fff; }
-        .rich-menu-preview.theme-DARK { background: #2C3E50; }
-        .rich-menu-preview.theme-DARK .cell-label { color: #fff; }
+    /* ── Flex 主選單預覽 ── */
+    .fm-phone-frame { width:300px; }
+    .fm-bubble { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.1); }
+    .fm-header { padding:18px 16px 14px; color:#fff; }
+    .fm-header-title { font-size:16px; font-weight:700; }
+    .fm-header-sub { font-size:12px; opacity:.9; margin-top:4px; }
+    .fm-tip { background:#f0f8f0; padding:8px 14px; }
+    .fm-tip-title { font-size:11px; font-weight:700; color:#333; }
+    .fm-tip-text { font-size:10px; color:#666; }
+    .fm-buttons { padding:8px 12px 12px; display:flex; flex-direction:column; gap:6px; }
+    .fm-btn { border-radius:8px; color:#fff; padding:10px 14px; cursor:default; transition:.15s; }
+    .fm-btn-full { display:flex; justify-content:space-between; align-items:center; }
+    .fm-btn-title { font-size:13px; font-weight:600; }
+    .fm-btn-sub { font-size:10px; opacity:.85; }
+    .fm-btn-row { display:flex; gap:6px; }
+    .fm-btn-row .fm-btn { flex:1; text-align:center; padding:8px 6px; }
+    .fm-btn-row .fm-btn-title { font-size:12px; }
 
-        /* 格子動作設定表格 */
-        #cellConfigTable td, #cellConfigTable th {
-            vertical-align: middle;
-            font-size: 13px;
-        }
-        #cellConfigTable .form-control, #cellConfigTable .form-select {
-            font-size: 13px;
-            padding: 4px 8px;
-        }
-        .cell-index-badge {
-            display: inline-flex;
-            width: 24px;
-            height: 24px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            background: #f0f0f0;
-            font-weight: 600;
-            font-size: 12px;
-        }
-        .btn-flex-edit {
-            padding: 2px 8px;
-            font-size: 12px;
-        }
+    /* ── Flex 按鈕設定 ── */
+    .fm-btn-setting { border:1px solid #eee; border-radius:8px; padding:10px 12px; margin-bottom:8px; background:#fafafa; }
+    .fm-btn-setting .row { align-items:center; }
 
-        /* Flex 卡片編輯器 */
-        .flex-card-editor {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            background: #fafafa;
-            position: relative;
-        }
-        .flex-card-editor .card-number {
-            position: absolute;
-            top: 8px;
-            left: 12px;
-            font-size: 11px;
-            color: #999;
-            font-weight: 600;
-        }
-        .flex-card-editor .btn-delete-card {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-        }
+    /* ── 色點 ── */
+    .fm-color-dot { width:20px; height:20px; border-radius:50%; display:inline-block; cursor:pointer; border:2px solid transparent; transition:.15s; }
+    .fm-color-dot:hover { border-color:#333; transform:scale(1.15); }
 
-        /* 預覽小卡片 */
-        .flex-preview-mini {
-            background: #fff;
-            border-radius: 8px;
-            padding: 8px;
-            border: 1px solid #eee;
-            margin-top: 8px;
-        }
-        .flex-preview-mini img {
-            width: 100%;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-            background: #f0f0f0;
-        }
+    /* ── Flex 彈窗卡片 ── */
+    .fp-card { border:1px solid #dee2e6; border-radius:8px; padding:14px; margin-bottom:10px; background:#fafafa; position:relative; }
+    .fp-card-num { position:absolute; top:6px; left:10px; font-size:10px; color:#999; font-weight:600; }
+    .fp-card-del { position:absolute; top:6px; right:8px; }
+    .fp-card-preview { margin-top:8px; background:#fff; border-radius:8px; border:1px solid #eee; overflow:hidden; }
+    .fp-card-preview img { width:100%; height:80px; object-fit:cover; background:#f5f5f5; display:block; }
+    .fp-card-preview .fp-prev-body { padding:8px; }
+    .fp-card-preview .fp-prev-title { font-size:12px; font-weight:600; }
+    .fp-card-preview .fp-prev-desc { font-size:10px; color:#666; margin-top:2px; }
+
+    /* ── 步驟設定 ── */
+    .fm-step-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .fm-step-row .form-control-color { width:30px; height:26px; }
+    .fm-step-label { width:60px; font-size:12px; color:#666; }
     </style>
 
     <script>
-    // ========================================
-    // 狀態
-    // ========================================
-    let currentTheme = 'BOUTIQUE';
-    let currentLayout = '3+4+4';
-    let cellConfigs = [];
-    let flexPopupConfigs = {};
-    let editingCellIndex = -1;
+    // ================================================================
+    // Rich Menu 狀態
+    // ================================================================
+    let rmTheme = 'BOUTIQUE';
+    let rmLayout = '3+4+4';
+    let rmCells = [];
+    let fpConfigs = {}; // flex popup per cell
+    let fpEditingCell = -1;
+    let rmBgFile = null; // 背景圖 File
+    let cellIconFiles = {}; // { cellIndex: File }
 
-    // 動作選項
-    const ACTION_OPTIONS = [
-        { value: 'start_booking',    label: '開始預約',   icon: '📅' },
-        { value: 'view_bookings',    label: '查詢預約',   icon: '📋' },
-        { value: 'start_shopping',   label: '瀏覽商品',   icon: '🛍️' },
-        { value: 'view_coupons',     label: '領取票券',   icon: '🎁' },
-        { value: 'view_my_coupons',  label: '我的票券',   icon: '🎫' },
-        { value: 'view_member_info', label: '會員資訊',   icon: '👤' },
-        { value: 'contact_shop',     label: '聯絡店家',   icon: '📞' },
-        { value: 'show_menu',        label: '主選單',     icon: '🏠' },
-        { value: 'flex_popup',       label: 'Flex 彈窗',  icon: '🪟' }
+    const ACTIONS = [
+        { v:'start_booking',    l:'開始預約',   ic:'📅' },
+        { v:'view_bookings',    l:'查詢預約',   ic:'📋' },
+        { v:'start_shopping',   l:'瀏覽商品',   ic:'🛍️' },
+        { v:'view_coupons',     l:'領取票券',   ic:'🎁' },
+        { v:'view_my_coupons',  l:'我的票券',   ic:'🎫' },
+        { v:'view_member_info', l:'會員資訊',   ic:'👤' },
+        { v:'contact_shop',     l:'聯絡店家',   ic:'📞' },
+        { v:'show_menu',        l:'主選單',     ic:'🏠' },
+        { v:'flex_popup',       l:'Flex 彈窗',  ic:'🪟' }
     ];
-
-    // 佈局預設動作
+    const LAYOUT_ROWS = { '3+4':[3,4], '2x3':[3,3], '2x2':[2,2], '3+4+4':[3,4,4], '4+4':[4,4] };
     const LAYOUT_DEFAULTS = {
         '3+4+4': [
-            { label: '服務價目',   action: 'flex_popup',       icon: '➡' },
-            { label: '我的店家',   action: 'show_menu',        icon: '🏠' },
-            { label: '最新優惠',   action: 'flex_popup',       icon: '➡' },
-            { label: '開始預約',   action: 'start_booking',    icon: '📅' },
-            { label: '查詢預約',   action: 'view_bookings',    icon: '📋' },
-            { label: '我的票券',   action: 'view_my_coupons',  icon: '🎫' },
-            { label: '會員資訊',   action: 'view_member_info', icon: '👤' },
-            { label: '聯絡店家',   action: 'contact_shop',     icon: '📞' },
-            { label: '瀏覽商品',   action: 'start_shopping',   icon: '🛍️' },
-            { label: '領取票券',   action: 'view_coupons',     icon: '🎁' },
-            { label: '電子優惠券', action: 'view_coupons',     icon: '🎫' }
+            {l:'服務價目',a:'flex_popup'},{l:'我的店家',a:'show_menu'},{l:'最新優惠',a:'flex_popup'},
+            {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},
+            {l:'聯絡店家',a:'contact_shop'},{l:'瀏覽商品',a:'start_shopping'},{l:'領取票券',a:'view_coupons'},{l:'電子優惠券',a:'view_coupons'}
         ],
         '3+4': [
-            { label: '開始預約',   action: 'start_booking',    icon: '📅' },
-            { label: '我的預約',   action: 'view_bookings',    icon: '📋' },
-            { label: '瀏覽商品',   action: 'start_shopping',   icon: '🛍️' },
-            { label: '領取票券',   action: 'view_coupons',     icon: '🎁' },
-            { label: '我的票券',   action: 'view_my_coupons',  icon: '🎫' },
-            { label: '會員資訊',   action: 'view_member_info', icon: '👤' },
-            { label: '聯絡店家',   action: 'contact_shop',     icon: '📞' }
+            {l:'開始預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},
+            {l:'領取票券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
         ],
         '2x3': [
-            { label: '開始預約',   action: 'start_booking',    icon: '📅' },
-            { label: '我的預約',   action: 'view_bookings',    icon: '📋' },
-            { label: '瀏覽商品',   action: 'start_shopping',   icon: '🛍️' },
-            { label: '領取票券',   action: 'view_coupons',     icon: '🎁' },
-            { label: '會員資訊',   action: 'view_member_info', icon: '👤' },
-            { label: '聯絡店家',   action: 'contact_shop',     icon: '📞' }
+            {l:'開始預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},
+            {l:'領取票券',a:'view_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+        ],
+        '2x2': [
+            {l:'開始預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},
+            {l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+        ],
+        '4+4': [
+            {l:'開始預約',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'瀏覽商品',a:'start_shopping'},{l:'領取票券',a:'view_coupons'},
+            {l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'},{l:'主選單',a:'show_menu'}
         ]
     };
 
-    // 佈局行定義
-    const LAYOUT_ROWS = {
-        '3+4+4': [3, 4, 4],
-        '3+4':   [3, 4],
-        '2x3':   [3, 3]
+    // ================================================================
+    // Flex 主選單狀態
+    // ================================================================
+    const FM_DEFAULTS = [
+        { key:'start_booking',   color:'#1DB446', icon:'📅', title:'開始預約',  sub:'快速預約服務' },
+        { key:'view_bookings',   color:'#0066CC', icon:'📋', title:'我的預約',  sub:'查看或取消預約' },
+        { key:'start_shopping',  color:'#FF9800', icon:'🛍️', title:'瀏覽商品',  sub:'購買優惠商品' },
+        { key:'view_coupons',    color:'#E91E63', icon:'🎁', title:'領取票券',  sub:'' },
+        { key:'view_my_coupons', color:'#9C27B0', icon:'🎫', title:'我的票券',  sub:'' },
+        { key:'view_member_info',color:'#673AB7', icon:'👤', title:'會員資訊',  sub:'查看點數與等級' },
+        { key:'contact_shop',    color:'#5C6BC0', icon:'📞', title:'聯絡店家',  sub:'地址、電話、營業時間' }
+    ];
+    const FM_STEPS = [
+        { key:'service', label:'選擇服務', color:'#4A90D9', title:'' },
+        { key:'date',    label:'選擇日期', color:'#1DB446', title:'' },
+        { key:'staff',   label:'選擇員工', color:'#4A90D9', title:'' },
+        { key:'time',    label:'選擇時段', color:'#4A90D9', title:'' },
+        { key:'note',    label:'備註',     color:'#5C6BC0', title:'' },
+        { key:'confirm', label:'確認預約', color:'#1DB446', title:'' }
+    ];
+    let fmConfig = {
+        headerColor: '#1DB446',
+        headerTitle: '✨ {shopName}',
+        headerSubtitle: '歡迎光臨！請問需要什麼服務呢？',
+        showTip: true,
+        buttons: JSON.parse(JSON.stringify(FM_DEFAULTS)),
+        steps: {}
     };
 
-    // ========================================
+    // ================================================================
     // 初始化
-    // ========================================
+    // ================================================================
     document.addEventListener('DOMContentLoaded', () => {
-        loadExistingConfig();
-        initThemeSelector();
-        initLayoutSelector();
+        initRM();
+        initFM();
     });
 
-    async function loadExistingConfig() {
+    // ================================================================
+    // Rich Menu
+    // ================================================================
+    function initRM() {
+        // 主題點擊
+        document.querySelectorAll('#themeSelector .rm-theme').forEach(el => {
+            el.addEventListener('click', () => {
+                rmTheme = el.dataset.theme;
+                document.querySelectorAll('#themeSelector .rm-theme').forEach(e => e.classList.remove('selected'));
+                el.classList.add('selected');
+                updateRmPreview();
+            });
+        });
+        // 佈局點擊
+        document.querySelectorAll('#layoutSelector .rm-layout').forEach(el => {
+            el.addEventListener('click', () => {
+                rmLayout = el.dataset.layout;
+                document.querySelectorAll('#layoutSelector .rm-layout').forEach(e => e.classList.remove('selected'));
+                el.classList.add('selected');
+                applyLayout(rmLayout);
+            });
+        });
+        loadRmConfig();
+    }
+
+    async function loadRmConfig() {
         try {
-            // 載入現有 Rich Menu 資訊
-            const infoRes = await api.get('/api/settings/line/rich-menu');
-            if (infoRes.success && infoRes.data) {
-                const info = infoRes.data;
-                if (info.theme) {
-                    currentTheme = info.theme;
-                    selectTheme(currentTheme);
-                }
-                document.getElementById('currentMenuInfo').textContent =
-                    info.richMenuId ? `目前線上版本：${info.theme || '預設'}` : '尚未建立 Rich Menu';
+            const r = await api.get('/api/settings/line/rich-menu');
+            if (r.success && r.data) {
+                if (r.data.theme) { rmTheme = r.data.theme; selectEl('#themeSelector .rm-theme', rmTheme); }
+                document.getElementById('rmCurrentInfo').textContent = r.data.richMenuId ? `線上版本：${r.data.theme||'預設'}` : '尚未建立';
             }
-
-            // 載入進階配置草稿
-            const configRes = await api.get('/api/settings/line/rich-menu/advanced-config');
-            if (configRes.success && configRes.data && configRes.data.config) {
-                const config = typeof configRes.data.config === 'string'
-                    ? JSON.parse(configRes.data.config)
-                    : configRes.data.config;
-                if (config.layout) currentLayout = config.layout;
-                if (config.cells) {
-                    // 恢復 flex popup 配置
-                    config.cells.forEach(cell => {
-                        if (cell.flexPopup) {
-                            flexPopupConfigs[cell.index] = cell.flexPopup;
-                        }
-                    });
-                }
+            const c = await api.get('/api/settings/line/rich-menu/advanced-config');
+            if (c.success && c.data?.config) {
+                const cfg = typeof c.data.config === 'string' ? JSON.parse(c.data.config) : c.data.config;
+                if (cfg.layout) { rmLayout = cfg.layout; selectEl('#layoutSelector .rm-layout', rmLayout); }
+                if (cfg.cells) cfg.cells.forEach(cell => { if (cell.flexPopup) fpConfigs[cell.index] = cell.flexPopup; });
             }
-        } catch (e) {
-            console.debug('載入配置失敗（可能尚未設定）', e);
-        }
-        applyLayout(currentLayout);
+        } catch(e) { console.debug('載入 RM 配置失敗', e); }
+        applyLayout(rmLayout);
     }
 
-    // ========================================
-    // 主題選擇
-    // ========================================
-    function initThemeSelector() {
-        document.querySelectorAll('#themeSelector .theme-card').forEach(card => {
-            card.addEventListener('click', () => {
-                selectTheme(card.dataset.theme);
-            });
-        });
-    }
-
-    function selectTheme(theme) {
-        currentTheme = theme;
-        document.querySelectorAll('#themeSelector .theme-card').forEach(c => c.classList.remove('selected'));
-        const el = document.querySelector(`#themeSelector .theme-card[data-theme="${theme}"]`);
+    function selectEl(selector, val) {
+        document.querySelectorAll(selector).forEach(e => e.classList.remove('selected'));
+        const el = document.querySelector(`${selector}[data-${selector.includes('theme')?'theme':'layout'}="${val}"]`);
         if (el) el.classList.add('selected');
-
-        // 精品風顯示佈局選擇，其他固定 3+4
-        const layoutCard = document.getElementById('layoutCard');
-        if (theme === 'BOUTIQUE') {
-            layoutCard.style.display = '';
-        } else {
-            layoutCard.style.display = 'none';
-            currentLayout = '3+4';
-            applyLayout(currentLayout);
-        }
-        updatePreview();
-    }
-
-    // ========================================
-    // 佈局選擇
-    // ========================================
-    function initLayoutSelector() {
-        document.querySelectorAll('#layoutSelector .layout-card').forEach(card => {
-            card.addEventListener('click', () => {
-                currentLayout = card.dataset.layout;
-                document.querySelectorAll('#layoutSelector .layout-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                applyLayout(currentLayout);
-            });
-        });
     }
 
     function applyLayout(layout) {
-        const defaults = LAYOUT_DEFAULTS[layout] || LAYOUT_DEFAULTS['3+4'];
-        const totalCells = defaults.length;
-
-        // 建立格子設定
-        cellConfigs = defaults.map((d, i) => ({
+        const defs = LAYOUT_DEFAULTS[layout] || LAYOUT_DEFAULTS['3+4'];
+        rmCells = defs.map((d, i) => ({
             index: i,
-            label: cellConfigs[i]?.label || d.label,
-            action: cellConfigs[i]?.action || d.action,
-            icon: d.icon
+            label: rmCells[i]?.label || d.l,
+            action: rmCells[i]?.action || d.a,
+            icon: getIcon(rmCells[i]?.action || d.a)
         }));
-        // 截斷多餘或填充不足
-        cellConfigs.length = totalCells;
-
-        renderCellConfigTable();
-        updatePreview();
+        rmCells.length = defs.length;
+        renderCellTable();
+        updateRmPreview();
     }
 
-    // ========================================
-    // 格子設定表格
-    // ========================================
-    function renderCellConfigTable() {
-        const tbody = document.getElementById('cellConfigBody');
+    function getIcon(action) { return (ACTIONS.find(a => a.v === action) || {}).ic || '📌'; }
+
+    function renderCellTable() {
+        const tbody = document.getElementById('cellTableBody');
         tbody.innerHTML = '';
-
-        cellConfigs.forEach((cell, i) => {
+        rmCells.forEach((cell, i) => {
             const tr = document.createElement('tr');
-            tr.setAttribute('data-cell-index', i);
-
-            // 格子序號
-            const tdIndex = document.createElement('td');
-            tdIndex.innerHTML = `<span class="cell-index-badge">${i}</span>`;
-
-            // 標籤輸入
-            const tdLabel = document.createElement('td');
-            const labelInput = document.createElement('input');
-            labelInput.type = 'text';
-            labelInput.className = 'form-control form-control-sm';
-            labelInput.value = cell.label;
-            labelInput.addEventListener('input', (e) => {
-                cellConfigs[i].label = e.target.value;
-                updatePreview();
+            tr.dataset.i = i;
+            const hasIcon = !!cellIconFiles[i];
+            tr.innerHTML = `
+                <td><span class="cell-badge">${i}</span></td>
+                <td><input type="text" class="form-control" value="${esc(cell.label)}" data-f="label"></td>
+                <td><select class="form-select" data-f="action">
+                    ${ACTIONS.map(a => `<option value="${a.v}" ${a.v===cell.action?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
+                </select></td>
+                <td>
+                    <label class="btn btn-sm ${hasIcon?'btn-success':'btn-outline-secondary'} py-0 px-1" title="${hasIcon?'已上傳圖示（點擊更換）':'上傳格子圖示'}">
+                        <i class="bi ${hasIcon?'bi-check-lg':'bi-upload'}"></i>
+                        <input type="file" class="d-none" accept="image/png,image/jpeg" data-f="icon" data-ci="${i}">
+                    </label>
+                </td>
+                <td>${cell.action==='flex_popup'?`<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="openFpEditor(${i})" title="編輯彈窗"><i class="bi bi-pencil-square"></i></button>`:''}</td>
+            `;
+            tr.querySelector('[data-f="label"]').addEventListener('input', e => { rmCells[i].label = e.target.value; updateRmPreview(); });
+            tr.querySelector('[data-f="action"]').addEventListener('change', e => {
+                rmCells[i].action = e.target.value;
+                rmCells[i].icon = getIcon(e.target.value);
+                renderCellTable(); updateRmPreview();
             });
-            tdLabel.appendChild(labelInput);
-
-            // 動作選擇
-            const tdAction = document.createElement('td');
-            const actionSelect = document.createElement('select');
-            actionSelect.className = 'form-select form-select-sm';
-            ACTION_OPTIONS.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt.value;
-                option.textContent = `${opt.icon} ${opt.label}`;
-                if (opt.value === cell.action) option.selected = true;
-                actionSelect.appendChild(option);
+            tr.querySelector('[data-f="icon"]').addEventListener('change', e => {
+                if (e.target.files[0]) {
+                    cellIconFiles[i] = e.target.files[0];
+                    renderCellTable();
+                }
             });
-            actionSelect.addEventListener('change', (e) => {
-                cellConfigs[i].action = e.target.value;
-                cellConfigs[i].icon = ACTION_OPTIONS.find(o => o.value === e.target.value)?.icon || '📌';
-                renderCellConfigTable();
-                updatePreview();
-            });
-            tdAction.appendChild(actionSelect);
-
-            // Flex 彈窗按鈕
-            const tdFlex = document.createElement('td');
-            if (cell.action === 'flex_popup') {
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-outline-primary btn-flex-edit';
-                btn.innerHTML = '<i class="bi bi-pencil-square"></i>';
-                btn.title = '編輯 Flex 彈窗';
-                btn.addEventListener('click', () => openFlexEditor(i));
-                tdFlex.appendChild(btn);
-            }
-
-            tr.append(tdIndex, tdLabel, tdAction, tdFlex);
             tbody.appendChild(tr);
         });
     }
 
-    // ========================================
-    // 即時預覽
-    // ========================================
-    function updatePreview() {
-        const container = document.getElementById('richMenuPreview');
-        container.innerHTML = '';
-        container.className = `rich-menu-preview theme-${currentTheme}`;
-
-        const rows = LAYOUT_ROWS[currentLayout] || [3, 4];
-        let cellIndex = 0;
-
+    function updateRmPreview() {
+        const c = document.getElementById('rmPreview');
+        c.innerHTML = '';
+        c.className = `rm-preview t-${rmTheme}`;
+        const rows = LAYOUT_ROWS[rmLayout] || [3,4];
+        let ci = 0;
         rows.forEach(cols => {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'preview-row';
-            rowDiv.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-            for (let c = 0; c < cols; c++) {
-                const cell = cellConfigs[cellIndex] || { label: '—', icon: '❓', action: '' };
-                const cellDiv = document.createElement('div');
-                cellDiv.className = 'preview-cell';
-                cellDiv.setAttribute('data-cell', cellIndex);
-
-                cellDiv.innerHTML = `
-                    <span class="cell-index">${cellIndex}</span>
-                    <span class="cell-icon">${cell.icon || getActionIcon(cell.action)}</span>
-                    <span class="cell-label">${cell.label || ''}</span>
-                `;
-
-                const idx = cellIndex;
-                cellDiv.addEventListener('click', () => highlightCell(idx));
-                rowDiv.appendChild(cellDiv);
-                cellIndex++;
+            const row = document.createElement('div');
+            row.className = 'rm-prev-row';
+            row.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+            for (let j = 0; j < cols; j++) {
+                const cell = rmCells[ci] || { label:'—', icon:'❓' };
+                const d = document.createElement('div');
+                d.className = 'rm-prev-cell';
+                d.dataset.c = ci;
+                d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
+                const idx = ci;
+                d.addEventListener('click', () => {
+                    document.querySelectorAll('.rm-prev-cell').forEach(e => e.classList.remove('active'));
+                    d.classList.add('active');
+                    const row = document.querySelector(`#cellTableBody tr[data-i="${idx}"]`);
+                    if (row) { row.style.background='#fff3cd'; row.scrollIntoView({behavior:'smooth',block:'nearest'}); setTimeout(()=>row.style.background='',1200); }
+                });
+                row.appendChild(d);
+                ci++;
             }
-            container.appendChild(rowDiv);
+            c.appendChild(row);
         });
-
-        // 根據行數調整高度
-        const rowCount = rows.length;
-        container.style.minHeight = rowCount >= 3 ? '180px' : '120px';
+        c.style.minHeight = rows.length >= 3 ? '170px' : '110px';
     }
 
-    function getActionIcon(action) {
-        const opt = ACTION_OPTIONS.find(o => o.value === action);
-        return opt ? opt.icon : '📌';
-    }
-
-    function highlightCell(index) {
-        document.querySelectorAll('.preview-cell').forEach(c => c.classList.remove('active'));
-        const cell = document.querySelector(`.preview-cell[data-cell="${index}"]`);
-        if (cell) cell.classList.add('active');
-
-        // 滾動到對應設定行
-        const row = document.querySelector(`#cellConfigBody tr[data-cell-index="${index}"]`);
-        if (row) {
-            row.style.background = '#fff3cd';
-            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            setTimeout(() => { row.style.background = ''; }, 1500);
+    // ── 背景圖 ──
+    document.getElementById('rmBgImage').addEventListener('change', function(e) {
+        if (e.target.files[0]) {
+            rmBgFile = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = ev => {
+                document.getElementById('rmBgPreviewImg').src = ev.target.result;
+                document.getElementById('rmBgPreviewWrap').classList.remove('d-none');
+            };
+            reader.readAsDataURL(rmBgFile);
         }
+    });
+    function clearBgImage() {
+        rmBgFile = null;
+        document.getElementById('rmBgImage').value = '';
+        document.getElementById('rmBgPreviewWrap').classList.add('d-none');
     }
 
-    // ========================================
-    // Flex 彈窗編輯器
-    // ========================================
-    function openFlexEditor(cellIndex) {
-        editingCellIndex = cellIndex;
-        const config = flexPopupConfigs[cellIndex] || { type: 'carousel', bubbles: [createDefaultBubble()] };
-
-        // 設定類型
-        if (config.type === 'single') {
-            document.getElementById('flexTypeSingle').checked = true;
-        } else {
-            document.getElementById('flexTypeCarousel').checked = true;
-        }
-
-        // 渲染卡片列表
-        renderFlexCards(config.bubbles || [createDefaultBubble()]);
-
-        new bootstrap.Modal(document.getElementById('flexPopupModal')).show();
+    // ── 發布 RM ──
+    async function publishRichMenu() {
+        const btn = document.getElementById('btnPublish');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>發布中...';
+        try {
+            // 有背景圖、有自訂圖示、精品風、或 3 行以上 → 走進階 API
+            const useAdvanced = rmBgFile || Object.keys(cellIconFiles).length > 0 || rmTheme === 'BOUTIQUE' || LAYOUT_ROWS[rmLayout].length >= 3;
+            if (useAdvanced) {
+                const config = buildRmConfig();
+                const fd = new FormData();
+                fd.append('config', JSON.stringify(config));
+                if (rmBgFile) fd.append('backgroundImage', rmBgFile);
+                Object.entries(cellIconFiles).forEach(([idx, file]) => {
+                    fd.append('cellIcon_' + idx, file);
+                });
+                const r = await fetch('/api/settings/line/rich-menu/create-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
+                const d = await r.json();
+                if (d.success) { showSuccess('Rich Menu 已發布！'); document.getElementById('rmCurrentInfo').textContent = `線上版本：${rmTheme}`; }
+                else showError(d.message || '發布失敗');
+            } else {
+                const r = await api.post('/api/settings/line/rich-menu/create', { theme: rmTheme });
+                if (r.success) { showSuccess('Rich Menu 已發布！'); document.getElementById('rmCurrentInfo').textContent = `線上版本：${rmTheme}`; }
+                else showError(r.message || '發布失敗');
+            }
+        } catch(e) { showError('發布失敗：'+e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-2"></i>發布到 LINE'; }
     }
 
-    function createDefaultBubble() {
+    function buildRmConfig() {
         return {
-            heroImageUrl: '',
-            title: '卡片標題',
-            description: '卡片描述內容',
-            buttons: [{ label: '開始預約', action: { type: 'postback', data: 'action=start_booking' } }]
+            mode: rmTheme === 'BOUTIQUE' ? 'BOUTIQUE' : 'ADVANCED',
+            theme: rmTheme,
+            layout: rmLayout,
+            size: LAYOUT_ROWS[rmLayout].length >= 3 ? 'FULL' : 'HALF',
+            cells: rmCells.map((c, i) => {
+                const o = { index:i, label:c.label, action: c.action==='flex_popup'?`flex_popup&cellKey=${i}`:c.action };
+                if (c.action==='flex_popup' && fpConfigs[i]) o.flexPopup = fpConfigs[i];
+                return o;
+            })
         };
     }
 
-    function renderFlexCards(bubbles) {
-        const container = document.getElementById('flexCardList');
-        container.innerHTML = '';
+    async function saveDraft() {
+        try {
+            const r = await api.put('/api/settings/line/rich-menu/advanced-config', { config: buildRmConfig() });
+            if (r.success) showSuccess('草稿已儲存'); else showError(r.message||'儲存失敗');
+        } catch(e) { showError('儲存失敗'); }
+    }
 
-        bubbles.forEach((bubble, i) => {
-            const div = document.createElement('div');
-            div.className = 'flex-card-editor';
-            div.innerHTML = `
-                <span class="card-number">卡片 ${i + 1}</span>
-                ${bubbles.length > 1 ? `<button class="btn btn-sm btn-outline-danger btn-delete-card" onclick="deleteFlexCard(${i})"><i class="bi bi-trash"></i></button>` : ''}
+    // ================================================================
+    // Flex 彈窗 (popup)
+    // ================================================================
+    function openFpEditor(cellIndex) {
+        fpEditingCell = cellIndex;
+        const cfg = fpConfigs[cellIndex] || { type:'carousel', imageAspectRatio:'20:13', bubbles:[defaultBubble()] };
+        document.getElementById(cfg.type==='single'?'fpTypeSingle':'fpTypeCarousel').checked = true;
+        if (cfg.imageAspectRatio) document.getElementById('fpImageRatio').value = cfg.imageAspectRatio;
+        renderFpCards(cfg.bubbles || [defaultBubble()]);
+        toggleAddBtn();
+        new bootstrap.Modal(document.getElementById('flexPopupModal')).show();
+    }
+    function defaultBubble() { return { heroImageUrl:'', title:'卡片標題', description:'卡片說明文字', buttons:[{label:'開始預約',action:{type:'postback',data:'action=start_booking'}}] }; }
+    function renderFpCards(bubbles) {
+        const c = document.getElementById('fpCardList');
+        c.innerHTML = '';
+        bubbles.forEach((b, i) => {
+            const d = document.createElement('div');
+            d.className = 'fp-card';
+            d.innerHTML = `
+                <span class="fp-card-num">卡片 ${i+1}</span>
+                ${bubbles.length>1?`<button class="btn btn-sm btn-outline-danger py-0 px-1 fp-card-del" onclick="delFpCard(${i})"><i class="bi bi-x-lg"></i></button>`:''}
                 <div class="row g-2 mt-2">
-                    <div class="col-12">
-                        <label class="form-label small">主圖 URL</label>
-                        <input type="text" class="form-control form-control-sm" data-field="heroImageUrl" value="${bubble.heroImageUrl || ''}" placeholder="https://example.com/image.jpg">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small">標題</label>
-                        <input type="text" class="form-control form-control-sm" data-field="title" value="${escapeHtml(bubble.title || '')}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small">按鈕文字</label>
-                        <input type="text" class="form-control form-control-sm" data-field="buttonLabel" value="${escapeHtml(bubble.buttons?.[0]?.label || '查看更多')}">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small">描述</label>
-                        <textarea class="form-control form-control-sm" data-field="description" rows="2">${escapeHtml(bubble.description || '')}</textarea>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small">按鈕動作</label>
-                        <select class="form-select form-select-sm" data-field="buttonAction">
-                            ${ACTION_OPTIONS.filter(a => a.value !== 'flex_popup').map(a =>
-                                `<option value="${a.value}" ${a.value === (bubble.buttons?.[0]?.action?.data?.replace('action=','') || 'start_booking') ? 'selected' : ''}>${a.icon} ${a.label}</option>`
-                            ).join('')}
-                        </select>
+                    <div class="col-12"><label class="form-label small mb-0">主圖 URL</label><input type="text" class="form-control form-control-sm" data-f="img" value="${esc(b.heroImageUrl||'')}" placeholder="https://example.com/image.jpg"></div>
+                    <div class="col-6"><label class="form-label small mb-0">標題</label><input type="text" class="form-control form-control-sm" data-f="title" value="${esc(b.title||'')}"></div>
+                    <div class="col-6"><label class="form-label small mb-0">按鈕文字</label><input type="text" class="form-control form-control-sm" data-f="btn" value="${esc(b.buttons?.[0]?.label||'查看更多')}"></div>
+                    <div class="col-12"><label class="form-label small mb-0">描述</label><textarea class="form-control form-control-sm" data-f="desc" rows="2">${esc(b.description||'')}</textarea></div>
+                    <div class="col-12"><label class="form-label small mb-0">按鈕動作</label><select class="form-select form-select-sm" data-f="act">
+                        ${ACTIONS.filter(a=>a.v!=='flex_popup').map(a=>`<option value="${a.v}" ${a.v===(b.buttons?.[0]?.action?.data?.replace('action=','')||'start_booking')?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
+                    </select></div>
+                </div>
+                <div class="fp-card-preview mt-2">
+                    <img src="${b.heroImageUrl||'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22><rect fill=%22%23f0f0f0%22 width=%22400%22 height=%22260%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%23bbb%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2216%22>放入圖片 URL 即時預覽</text></svg>'}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22><rect fill=%22%23fce4ec%22 width=%22400%22 height=%22260%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%23e57373%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2214%22>圖片無法載入</text></svg>'">
+                    <div class="fp-prev-body">
+                        <div class="fp-prev-title">${esc(b.title||'')}</div>
+                        <div class="fp-prev-desc">${esc(b.description||'')}</div>
                     </div>
                 </div>
             `;
-            container.appendChild(div);
+            // 即時預覽更新
+            d.querySelector('[data-f="img"]').addEventListener('input', e => { d.querySelector('.fp-card-preview img').src = e.target.value || 'data:image/svg+xml,...'; });
+            d.querySelector('[data-f="title"]').addEventListener('input', e => { d.querySelector('.fp-prev-title').textContent = e.target.value; });
+            d.querySelector('[data-f="desc"]').addEventListener('input', e => { d.querySelector('.fp-prev-desc').textContent = e.target.value; });
+            c.appendChild(d);
         });
-
-        // 單一卡片時隱藏新增按鈕
-        const isSingle = document.getElementById('flexTypeSingle').checked;
-        document.getElementById('btnAddFlexCard').style.display = isSingle ? 'none' : '';
     }
-
-    function addFlexCard() {
-        const editors = document.querySelectorAll('#flexCardList .flex-card-editor');
-        if (editors.length >= 10) {
-            showWarning('最多 10 張卡片');
-            return;
-        }
-        const bubbles = collectFlexBubbles();
-        bubbles.push(createDefaultBubble());
-        renderFlexCards(bubbles);
+    function addFpCard() {
+        const bs = collectFpBubbles(); if (bs.length>=10) { showWarning('最多 10 張卡片'); return; }
+        bs.push(defaultBubble()); renderFpCards(bs);
     }
-
-    function deleteFlexCard(index) {
-        const bubbles = collectFlexBubbles();
-        bubbles.splice(index, 1);
-        renderFlexCards(bubbles);
-    }
-
-    function collectFlexBubbles() {
-        const editors = document.querySelectorAll('#flexCardList .flex-card-editor');
-        return Array.from(editors).map(editor => ({
-            heroImageUrl: editor.querySelector('[data-field="heroImageUrl"]').value,
-            title: editor.querySelector('[data-field="title"]').value,
-            description: editor.querySelector('[data-field="description"]').value,
-            buttons: [{
-                label: editor.querySelector('[data-field="buttonLabel"]').value || '查看更多',
-                action: {
-                    type: 'postback',
-                    data: 'action=' + editor.querySelector('[data-field="buttonAction"]').value
-                }
-            }]
+    function delFpCard(i) { const bs = collectFpBubbles(); bs.splice(i,1); renderFpCards(bs); }
+    function collectFpBubbles() {
+        return Array.from(document.querySelectorAll('#fpCardList .fp-card')).map(d => ({
+            heroImageUrl: d.querySelector('[data-f="img"]').value,
+            title: d.querySelector('[data-f="title"]').value,
+            description: d.querySelector('[data-f="desc"]').value,
+            buttons: [{ label: d.querySelector('[data-f="btn"]').value||'查看更多', action:{ type:'postback', data:'action='+d.querySelector('[data-f="act"]').value } }]
         }));
     }
-
-    function saveFlexPopupConfig() {
-        const type = document.querySelector('input[name="flexType"]:checked').value;
-        const bubbles = collectFlexBubbles();
-
-        flexPopupConfigs[editingCellIndex] = { type, bubbles };
+    function saveFpConfig() {
+        const type = document.querySelector('input[name="fpType"]:checked').value;
+        const ratio = document.getElementById('fpImageRatio').value;
+        fpConfigs[fpEditingCell] = { type, imageAspectRatio:ratio, bubbles:collectFpBubbles() };
         bootstrap.Modal.getInstance(document.getElementById('flexPopupModal')).hide();
-        showSuccess('Flex 彈窗設定已儲存');
+        showSuccess('Flex 彈窗已儲存');
+    }
+    function toggleAddBtn() {
+        document.getElementById('btnAddCard').style.display = document.getElementById('fpTypeSingle').checked ? 'none' : '';
+    }
+    document.querySelectorAll('input[name="fpType"]').forEach(r => r.addEventListener('change', () => {
+        if (document.getElementById('fpTypeSingle').checked) { const bs = collectFpBubbles(); if (bs.length>1) renderFpCards([bs[0]]); }
+        toggleAddBtn();
+    }));
+
+    // ================================================================
+    // Flex 主選單
+    // ================================================================
+    function initFM() {
+        loadFlexMenu();
+        renderFmButtons();
+        renderFmSteps();
+        bindFmEvents();
+        updateFmPreview();
     }
 
-    // 切換類型時的處理
-    document.querySelectorAll('input[name="flexType"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            const bubbles = collectFlexBubbles();
-            if (document.getElementById('flexTypeSingle').checked && bubbles.length > 1) {
-                renderFlexCards([bubbles[0]]);
-            }
-            document.getElementById('btnAddFlexCard').style.display =
-                document.getElementById('flexTypeSingle').checked ? 'none' : '';
-        });
-    });
-
-    // ========================================
-    // 發布
-    // ========================================
-    async function publishRichMenu() {
-        const btn = document.getElementById('btnPublish');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>發布中...';
-
+    async function loadFlexMenu() {
         try {
-            if (currentTheme === 'BOUTIQUE') {
-                // 精品風：使用進階 API，附帶每格動作和 Flex 配置
-                const config = buildAdvancedConfig();
-                const formData = new FormData();
-                formData.append('config', JSON.stringify(config));
-
-                const res = await fetch('/api/settings/line/rich-menu/create-advanced', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + getToken() },
-                    body: formData
+            const r = await api.get('/api/settings/line/flex-menu');
+            if (r.success && r.data) {
+                if (r.data.headerColor) fmConfig.headerColor = r.data.headerColor;
+                if (r.data.headerTitle) fmConfig.headerTitle = r.data.headerTitle;
+                if (r.data.headerSubtitle !== undefined) fmConfig.headerSubtitle = r.data.headerSubtitle;
+                if (r.data.showTip !== undefined) fmConfig.showTip = r.data.showTip;
+                if (r.data.buttons) r.data.buttons.forEach((b,i) => {
+                    if (i < fmConfig.buttons.length) {
+                        if (b.color) fmConfig.buttons[i].color = b.color;
+                        if (b.icon) fmConfig.buttons[i].icon = b.icon;
+                        if (b.title) fmConfig.buttons[i].title = b.title;
+                        if (b.subtitle !== undefined) fmConfig.buttons[i].sub = b.subtitle;
+                    }
                 });
-                const data = await res.json();
-                if (data.success) {
-                    showSuccess('Rich Menu 發布成功！');
-                    document.getElementById('currentMenuInfo').textContent = `目前線上版本：${currentTheme}`;
-                } else {
-                    showError(data.message || '發布失敗');
-                }
-            } else {
-                // 標準主題：使用基本 API
-                const res = await api.post('/api/settings/line/rich-menu/create', {
-                    theme: currentTheme
-                });
-                if (res.success) {
-                    showSuccess('Rich Menu 發布成功！');
-                    document.getElementById('currentMenuInfo').textContent = `目前線上版本：${currentTheme}`;
-                } else {
-                    showError(res.message || '發布失敗');
-                }
+                if (r.data.steps) fmConfig.steps = r.data.steps;
+                // 回填 UI
+                document.getElementById('fmHeaderColor').value = fmConfig.headerColor;
+                document.getElementById('fmHeaderColorText').value = fmConfig.headerColor;
+                document.getElementById('fmHeaderTitle').value = fmConfig.headerTitle;
+                document.getElementById('fmHeaderSubtitle').value = fmConfig.headerSubtitle;
+                document.getElementById('fmShowTip').checked = fmConfig.showTip;
+                renderFmButtons();
+                renderFmSteps();
+                updateFmPreview();
             }
-        } catch (e) {
-            showError('發布失敗：' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-send me-2"></i>發布到 LINE';
-        }
+        } catch(e) { console.debug('載入 Flex Menu 失敗', e); }
     }
 
-    function buildAdvancedConfig() {
-        const cells = cellConfigs.map((cell, i) => {
-            const cellConfig = {
-                index: i,
-                label: cell.label,
-                action: cell.action === 'flex_popup' ? `flex_popup&cellKey=${i}` : cell.action
-            };
-            if (cell.action === 'flex_popup' && flexPopupConfigs[i]) {
-                cellConfig.flexPopup = flexPopupConfigs[i];
-            }
-            return cellConfig;
+    function renderFmButtons() {
+        const c = document.getElementById('fmButtonList');
+        c.innerHTML = '';
+        fmConfig.buttons.forEach((btn, i) => {
+            const isCompact = (i===3 || i===4);
+            const d = document.createElement('div');
+            d.className = 'fm-btn-setting';
+            d.innerHTML = `
+                <div class="row g-2">
+                    <div class="col-auto"><input type="color" class="form-control-color" data-i="${i}" data-f="color" value="${btn.color}" style="width:32px;height:30px;"></div>
+                    <div class="col-auto"><input type="text" class="form-control form-control-sm" data-i="${i}" data-f="icon" value="${btn.icon}" style="width:42px;text-align:center" maxlength="4"></div>
+                    <div class="col"><input type="text" class="form-control form-control-sm" data-i="${i}" data-f="title" value="${esc(btn.title)}" maxlength="10"></div>
+                    ${!isCompact?`<div class="col"><input type="text" class="form-control form-control-sm" data-i="${i}" data-f="sub" value="${esc(btn.sub||'')}" placeholder="副標題（選填）" maxlength="20"></div>`:''}
+                </div>
+            `;
+            d.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('input', e => {
+                    const idx = parseInt(e.target.dataset.i);
+                    const field = e.target.dataset.f;
+                    if (field==='sub') fmConfig.buttons[idx].sub = e.target.value;
+                    else fmConfig.buttons[idx][field] = e.target.value;
+                    updateFmPreview();
+                });
+            });
+            c.appendChild(d);
         });
+    }
 
-        return {
-            mode: 'BOUTIQUE',
-            theme: 'BOUTIQUE',
-            layout: currentLayout,
-            size: LAYOUT_ROWS[currentLayout]?.length >= 3 ? 'FULL' : 'HALF',
-            cells: cells
+    function renderFmSteps() {
+        const c = document.getElementById('fmStepList');
+        c.innerHTML = '';
+        FM_STEPS.forEach(s => {
+            const saved = fmConfig.steps?.[s.key] || {};
+            const d = document.createElement('div');
+            d.className = 'fm-step-row';
+            d.innerHTML = `
+                <input type="color" class="form-control-color" data-step="${s.key}" data-f="color" value="${saved.color||s.color}" style="width:30px;height:26px;">
+                <span class="fm-step-label">${s.label}</span>
+                <input type="text" class="form-control form-control-sm" data-step="${s.key}" data-f="title" value="${esc(saved.title||'')}" placeholder="自訂標題（留空用預設）">
+            `;
+            c.appendChild(d);
+        });
+    }
+
+    function bindFmEvents() {
+        // Header 色
+        const hc = document.getElementById('fmHeaderColor');
+        const hct = document.getElementById('fmHeaderColorText');
+        hc.addEventListener('input', e => { fmConfig.headerColor=e.target.value; hct.value=e.target.value; updateFmPreview(); });
+        hct.addEventListener('input', e => { if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)){ fmConfig.headerColor=e.target.value; hc.value=e.target.value; updateFmPreview(); }});
+        // 色點
+        document.querySelectorAll('.fm-color-dot').forEach(d => d.addEventListener('click', () => {
+            fmConfig.headerColor = d.dataset.color; hc.value = d.dataset.color; hct.value = d.dataset.color; updateFmPreview();
+        }));
+        // Header 文字
+        document.getElementById('fmHeaderTitle').addEventListener('input', e => { fmConfig.headerTitle=e.target.value; updateFmPreview(); });
+        document.getElementById('fmHeaderSubtitle').addEventListener('input', e => { fmConfig.headerSubtitle=e.target.value; updateFmPreview(); });
+        document.getElementById('fmShowTip').addEventListener('change', e => { fmConfig.showTip=e.target.checked; updateFmPreview(); });
+    }
+
+    function updateFmPreview() {
+        const h = document.getElementById('fmPrevHeader');
+        h.style.backgroundColor = fmConfig.headerColor;
+        document.getElementById('fmPrevTitle').textContent = fmConfig.headerTitle.replace('{shopName}','我的店家');
+        document.getElementById('fmPrevSub').textContent = fmConfig.headerSubtitle;
+        document.getElementById('fmPrevTip').style.display = fmConfig.showTip ? '' : 'none';
+        // 按鈕
+        const bc = document.getElementById('fmPrevButtons');
+        bc.innerHTML = '';
+        fmConfig.buttons.forEach((btn, i) => {
+            if (i===3) { // 開始並排
+                const row = document.createElement('div'); row.className = 'fm-btn-row';
+                [3,4].forEach(j => {
+                    const b = fmConfig.buttons[j];
+                    const d = document.createElement('div');
+                    d.className = 'fm-btn';
+                    d.style.background = b.color;
+                    d.innerHTML = `<span class="fm-btn-title">${esc(b.icon)} ${esc(b.title)}</span>`;
+                    row.appendChild(d);
+                });
+                bc.appendChild(row);
+                return;
+            }
+            if (i===4) return; // 已在上面處理
+            const d = document.createElement('div');
+            d.className = 'fm-btn fm-btn-full';
+            d.style.background = btn.color;
+            d.innerHTML = `<div><span class="fm-btn-title">${esc(btn.icon)} ${esc(btn.title)}</span>${btn.sub?`<div class="fm-btn-sub">${esc(btn.sub)}</div>`:''}</div><i class="bi bi-chevron-right" style="opacity:.5;font-size:12px"></i>`;
+            bc.appendChild(d);
+        });
+    }
+
+    async function saveFlexMenu() {
+        // 收集步驟
+        const steps = {};
+        document.querySelectorAll('#fmStepList .fm-step-row').forEach(row => {
+            const key = row.querySelector('[data-f="color"]').dataset.step;
+            const color = row.querySelector('[data-f="color"]').value;
+            const title = row.querySelector('[data-f="title"]').value;
+            if (color || title) steps[key] = { color, title };
+        });
+        const payload = {
+            headerColor: fmConfig.headerColor,
+            headerTitle: fmConfig.headerTitle,
+            headerSubtitle: fmConfig.headerSubtitle,
+            showTip: fmConfig.showTip,
+            buttons: fmConfig.buttons.map(b => ({ color:b.color, icon:b.icon, title:b.title, subtitle:b.sub||'' })),
+            steps: Object.keys(steps).length > 0 ? steps : undefined
         };
-    }
-
-    // ========================================
-    // 儲存草稿
-    // ========================================
-    async function saveDraft() {
         try {
-            const config = buildAdvancedConfig();
-            const res = await api.put('/api/settings/line/rich-menu/advanced-config', { config });
-            if (res.success) {
-                showSuccess('草稿已儲存');
-            } else {
-                showError(res.message || '儲存失敗');
-            }
-        } catch (e) {
-            showError('儲存失敗：' + e.message);
-        }
+            const r = await api.put('/api/settings/line/flex-menu', payload);
+            if (r.success) showSuccess('主選單樣式已儲存！顧客下次開啟聊天時會看到新樣式');
+            else showError(r.message||'儲存失敗');
+        } catch(e) { showError('儲存失敗'); }
     }
 
-    // ========================================
-    // 工具
-    // ========================================
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+    function resetFlexMenu() {
+        fmConfig = { headerColor:'#1DB446', headerTitle:'✨ {shopName}', headerSubtitle:'歡迎光臨！請問需要什麼服務呢？', showTip:true, buttons:JSON.parse(JSON.stringify(FM_DEFAULTS)), steps:{} };
+        document.getElementById('fmHeaderColor').value = fmConfig.headerColor;
+        document.getElementById('fmHeaderColorText').value = fmConfig.headerColor;
+        document.getElementById('fmHeaderTitle').value = fmConfig.headerTitle;
+        document.getElementById('fmHeaderSubtitle').value = fmConfig.headerSubtitle;
+        document.getElementById('fmShowTip').checked = true;
+        renderFmButtons(); renderFmSteps(); updateFmPreview();
+        showSuccess('已恢復預設');
     }
+
+    // ================================================================
+    // 工具
+    // ================================================================
+    function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
     </script>
 </body>
 </html>
