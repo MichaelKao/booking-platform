@@ -566,7 +566,7 @@ public class LineWebhookService {
         conversationService.setSelectedTime(tenantId, userId, time);
 
         // 回覆備註輸入提示
-        JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
+        JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt(tenantId);
         messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
     }
 
@@ -581,7 +581,7 @@ public class LineWebhookService {
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
         // 回覆確認訊息
-        JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+        JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(tenantId, context);
         messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
     }
 
@@ -637,6 +637,7 @@ public class LineWebhookService {
 
             // 回覆成功訊息
             JsonNode successMessage = flexMessageBuilder.buildBookingSuccess(
+                    tenantId,
                     context,
                     booking.getId()
             );
@@ -738,11 +739,11 @@ public class LineWebhookService {
                     }
                 }
                 case INPUTTING_NOTE -> {
-                    JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt();
+                    JsonNode notePrompt = flexMessageBuilder.buildNoteInputPrompt(tenantId);
                     messageService.replyFlex(tenantId, replyToken, "請輸入備註或跳過", notePrompt);
                 }
                 case CONFIRMING_BOOKING -> {
-                    JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+                    JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(tenantId, context);
                     messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
                 }
                 default -> replyMainMenu(tenantId, userId, replyToken);
@@ -1386,7 +1387,7 @@ public class LineWebhookService {
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
         // 回覆確認訊息
-        JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(context);
+        JsonNode confirmMessage = flexMessageBuilder.buildBookingConfirmation(tenantId, context);
         messageService.replyFlex(tenantId, replyToken, "請確認預約資訊", confirmMessage);
     }
 
