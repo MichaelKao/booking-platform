@@ -2050,7 +2050,11 @@
             } catch (e) { return false; }
         }
 
+        let _advInitialized = false;
         async function initAdvancedMode() {
+            if (_advInitialized) return; // 避免重複初始化覆蓋本地變更
+            _advInitialized = true;
+
             // 檢查是否訂閱
             try {
                 const r = await api.get('/api/feature-store');
