@@ -223,6 +223,8 @@ PUT  /line/rich-menu/advanced-config  # 儲存進階設定草稿
 DELETE /line/rich-menu         # 刪除 Rich Menu
 GET  /line/flex-menu           # 取得 Flex Menu 主選單配置
 PUT  /line/flex-menu           # 更新 Flex Menu 主選單配置
+POST /line/flex-menu/upload-card-image  # 上傳 Flex 卡片/步驟圖片（回傳公開 URL）
+DELETE /line/flex-menu/card-image       # 刪除 Flex 卡片圖片
 ```
 
 ### 即時通知 (`/api/notifications`)

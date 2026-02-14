@@ -80,7 +80,7 @@ public XxxResponse create(...) { }
 | LineUserService | LINE 用戶管理 |
 | LineWebhookService | LINE Webhook 事件處理 |
 | LineMessageService | LINE 訊息發送 |
-| LineFlexMessageBuilder | Flex Message 構建（主選單自訂配置、服務選單、日期Carousel等） |
+| LineFlexMessageBuilder | Flex Message 構建（主選單自訂配置、服務選單、日期Carousel等、步驟Header統一建構含icon/subtitle/heroImage） |
 | LineConversationService | 對話狀態管理 |
 | LineNotificationService | LINE 通知發送 (預約提醒) |
 | LineRichMenuService | Rich Menu 管理（預設/自訂/進階三模式、9種佈局、大尺寸支援、Java2D圖片合成、自訂圖示+文字標籤） |

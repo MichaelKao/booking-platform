@@ -244,6 +244,7 @@ public class TenantLineConfig {
 
     // Flex Menu
     private String flexMenuConfig;       // Flex Message 主選單配置（JSON TEXT）
+    private String flexMenuCardImages;   // Flex 卡片/步驟圖片（JSON TEXT，key=index, value=Base64）
 }
 
 // LineUser - LINE 用戶與顧客關聯

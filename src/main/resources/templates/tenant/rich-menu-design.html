@@ -462,9 +462,18 @@
     .fp-card-preview .fp-prev-desc { font-size:10px; color:#666; margin-top:2px; }
 
     /* ── 步驟設定 ── */
-    .fm-step-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-    .fm-step-row .form-control-color { width:30px; height:26px; }
-    .fm-step-label { width:60px; font-size:12px; color:#666; }
+    .fm-step-editor { border:1px solid #dee2e6; border-radius:10px; margin-bottom:10px; background:#fff; overflow:hidden; }
+    .fm-step-editor-header { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#f8f9fa; border-bottom:1px solid #eee; cursor:pointer; }
+    .fm-step-editor-header:hover { background:#f0f1f3; }
+    .fm-step-editor-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; }
+    .fm-step-editor-title { font-size:13px; font-weight:600; flex:1; color:#333; }
+    .fm-step-editor-body { padding:14px; }
+    .fm-step-editor-body.collapsed { display:none; }
+    .fm-step-prev { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; color:#fff; margin-bottom:10px; }
+    .fm-step-prev-icon { font-size:18px; }
+    .fm-step-prev-text { flex:1; }
+    .fm-step-prev-title { font-weight:700; font-size:14px; }
+    .fm-step-prev-sub { font-size:11px; opacity:.8; margin-top:2px; }
 
     /* ── 範本庫 ── */
     .sample-cat-btn { padding:4px 12px; border-radius:16px; border:1px solid #dee2e6; background:#fff; font-size:12px; cursor:pointer; transition:.2s; white-space:nowrap; }
@@ -898,12 +907,12 @@
         { action:'contact_shop',    color:'#5C6BC0', icon:'📞', title:'聯絡店家',  subtitle:'地址、電話、營業時間',buttonLabel:'聯絡我們', imageUrl:'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=600&h=400&fit=crop', imageHeight:40 }
     ];
     const FM_STEPS = [
-        { key:'service', label:'選擇服務', color:'#4A90D9', title:'' },
-        { key:'date',    label:'選擇日期', color:'#1DB446', title:'' },
-        { key:'staff',   label:'選擇員工', color:'#4A90D9', title:'' },
-        { key:'time',    label:'選擇時段', color:'#4A90D9', title:'' },
-        { key:'note',    label:'備註',     color:'#5C6BC0', title:'' },
-        { key:'confirm', label:'確認預約', color:'#1DB446', title:'' }
+        { key:'service', label:'選擇服務', color:'#4A90D9', icon:'✂️', title:'選擇服務',       subtitle:'瀏覽所有服務項目', imageUrl:'' },
+        { key:'date',    label:'選擇日期', color:'#1DB446', icon:'📅', title:'選擇日期',       subtitle:'選擇您方便的日期', imageUrl:'' },
+        { key:'staff',   label:'選擇員工', color:'#4A90D9', icon:'👤', title:'選擇服務人員',   subtitle:'指定您喜歡的人員', imageUrl:'' },
+        { key:'time',    label:'選擇時段', color:'#4A90D9', icon:'⏰', title:'選擇時段',       subtitle:'查看可預約的時段', imageUrl:'' },
+        { key:'note',    label:'備註',     color:'#5C6BC0', icon:'📝', title:'是否需要備註？', subtitle:'輸入備註或跳過',   imageUrl:'' },
+        { key:'confirm', label:'確認預約', color:'#1DB446', icon:'✅', title:'請確認預約資訊', subtitle:'確認後即完成預約', imageUrl:'' }
     ];
     let fmCards = JSON.parse(JSON.stringify(FM_CARD_DEFAULTS));
     let fmSteps = {};
@@ -1642,27 +1651,165 @@
         const c = document.getElementById('fmStepList');
         if (!c) return;
         c.innerHTML = '';
-        FM_STEPS.forEach(s => {
+        FM_STEPS.forEach((s, i) => {
             const saved = fmSteps?.[s.key] || {};
+            const curColor = saved.color || s.color;
+            const curIcon  = saved.icon  || s.icon;
+            const curTitle = saved.title || '';
+            const curSub   = saved.subtitle || '';
+            const curImg   = saved.imageUrl || '';
             const d = document.createElement('div');
-            d.className = 'fm-step-row';
+            d.className = 'fm-step-editor';
             d.innerHTML = `
-                <input type="color" class="form-control-color" data-step="${s.key}" data-f="color" value="${saved.color||s.color}" style="width:30px;height:26px;">
-                <span class="fm-step-label">${s.label}</span>
-                <input type="text" class="form-control form-control-sm" data-step="${s.key}" data-f="title" value="${esc(saved.title||'')}" placeholder="自訂標題（留空用預設）">
+                <div class="fm-step-editor-header" onclick="toggleFmStep(this)">
+                    <div class="fm-step-editor-num" style="background:${curColor}">${i+1}</div>
+                    <span class="fm-step-editor-title">${curIcon} ${esc(curTitle || s.title)}</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="fm-step-editor-body${i>0?' collapsed':''}">
+                    <div class="fm-step-prev" style="background:${curColor}">
+                        <span class="fm-step-prev-icon">${curIcon}</span>
+                        <div class="fm-step-prev-text">
+                            <div class="fm-step-prev-title">${esc(curTitle || s.title)}</div>
+                            <div class="fm-step-prev-sub">${esc(curSub || s.subtitle)}</div>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-2">
+                            <label class="form-label small fw-bold mb-1">圖示</label>
+                            <input type="text" class="form-control form-control-sm text-center" data-step="${s.key}" data-f="icon" value="${curIcon}" maxlength="4">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label small fw-bold mb-1">Header 色</label>
+                            <input type="color" class="form-control form-control-color w-100" data-step="${s.key}" data-f="color" value="${curColor}" style="height:31px">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small fw-bold mb-1">標題</label>
+                            <input type="text" class="form-control form-control-sm" data-step="${s.key}" data-f="title" value="${esc(curTitle)}" placeholder="${esc(s.title)}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold mb-1">副標題</label>
+                            <input type="text" class="form-control form-control-sm" data-step="${s.key}" data-f="subtitle" value="${esc(curSub)}" placeholder="${esc(s.subtitle)}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold mb-1">Hero 圖片</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" class="form-control form-control-sm" data-step="${s.key}" data-f="imageUrl" value="${esc(curImg)}" placeholder="貼上圖片 URL 或上傳圖片...">
+                                <label class="btn btn-sm btn-outline-primary py-0 px-2 flex-shrink-0" title="上傳圖片" style="cursor:pointer">
+                                    <i class="bi bi-upload"></i>
+                                    <input type="file" class="d-none" accept="image/png,image/jpeg,image/webp" data-step="${s.key}" data-f="uploadStepImg">
+                                </label>
+                                ${curImg ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 flex-shrink-0" data-step="${s.key}" data-f="clearStepImg" title="清除圖片"><i class="bi bi-x-lg"></i></button>` : ''}
+                            </div>
+                            ${curImg ? `<div class="mt-1 border rounded overflow-hidden"><img src="${esc(curImg)}" style="width:100%;height:60px;object-fit:cover" onerror="this.parentElement.innerHTML='<div class=text-center style=padding:8px;color:#bbb;font-size:12px>圖片無法載入</div>'"></div>` : ''}
+                        </div>
+                    </div>
+                </div>
             `;
+            // 綁定即時更新
+            d.querySelectorAll('input:not([type=file])').forEach(inp => {
+                const ev = inp.type === 'color' ? 'input' : 'change';
+                inp.addEventListener('input', e => onFmStepFieldChange(e));
+                if (ev === 'change' && inp.type !== 'color') {
+                    inp.addEventListener('change', e => onFmStepFieldChange(e));
+                }
+            });
+            // 檔案上傳
+            const uploadInput = d.querySelector('[data-f="uploadStepImg"]');
+            if (uploadInput) uploadInput.addEventListener('change', e => uploadStepImage(e, s.key));
+            // 清除圖片
+            const clearBtn = d.querySelector('[data-f="clearStepImg"]');
+            if (clearBtn) clearBtn.addEventListener('click', () => {
+                if (!fmSteps[s.key]) fmSteps[s.key] = {};
+                fmSteps[s.key].imageUrl = '';
+                renderFmSteps();
+            });
             c.appendChild(d);
         });
     }
 
+    function toggleFmStep(headerEl) {
+        const body = headerEl.nextElementSibling;
+        body.classList.toggle('collapsed');
+        const icon = headerEl.querySelector('.bi');
+        icon.className = body.classList.contains('collapsed') ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+    }
+
+    function onFmStepFieldChange(e) {
+        const key = e.target.dataset.step;
+        const f = e.target.dataset.f;
+        if (!key || !f) return;
+        if (!fmSteps[key]) fmSteps[key] = {};
+        fmSteps[key][f] = e.target.value;
+
+        // 即時更新預覽
+        const editor = e.target.closest('.fm-step-editor');
+        if (editor) {
+            const step = FM_STEPS.find(s => s.key === key);
+            const curColor = fmSteps[key].color || step.color;
+            const curIcon  = fmSteps[key].icon  || step.icon;
+            const curTitle = fmSteps[key].title  || step.title;
+            const curSub   = fmSteps[key].subtitle || step.subtitle;
+            // 更新 header
+            const header = editor.querySelector('.fm-step-editor-title');
+            if (header) header.textContent = curIcon + ' ' + curTitle;
+            const num = editor.querySelector('.fm-step-editor-num');
+            if (num) num.style.background = curColor;
+            // 更新預覽條
+            const prev = editor.querySelector('.fm-step-prev');
+            if (prev) {
+                prev.style.background = curColor;
+                prev.querySelector('.fm-step-prev-icon').textContent = curIcon;
+                prev.querySelector('.fm-step-prev-title').textContent = curTitle;
+                prev.querySelector('.fm-step-prev-sub').textContent = curSub;
+            }
+        }
+    }
+
+    // 上傳 Step Hero 圖片（複用 flex card image 上傳端點，使用 step_ 前綴）
+    async function uploadStepImage(e, stepKey) {
+        const file = e.target.files[0];
+        if (!file) return;
+        // 步驟圖片用 cardIndex = 100+stepIndex 避免和卡片衝突
+        const stepIdx = FM_STEPS.findIndex(s => s.key === stepKey);
+        const cardIndex = 100 + stepIdx;
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('cardIndex', cardIndex);
+        try {
+            const r = await fetch('/api/settings/line/flex-menu/upload-card-image', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                body: fd
+            });
+            const d = await r.json();
+            if (d.success) {
+                if (!fmSteps[stepKey]) fmSteps[stepKey] = {};
+                fmSteps[stepKey].imageUrl = d.data.imageUrl + '?t=' + Date.now();
+                renderFmSteps();
+                showSuccess('步驟圖片上傳成功');
+            } else {
+                showError(d.message || '上傳失敗');
+            }
+        } catch (err) {
+            showError('上傳失敗：' + err.message);
+        }
+    }
+
     async function saveFlexMenu() {
-        // 收集步驟
+        // 收集步驟（從 fmSteps 物件，去除時間戳）
         const steps = {};
-        document.querySelectorAll('#fmStepList .fm-step-row').forEach(row => {
-            const key = row.querySelector('[data-f="color"]').dataset.step;
-            const color = row.querySelector('[data-f="color"]').value;
-            const title = row.querySelector('[data-f="title"]').value;
-            if (color || title) steps[key] = { color, title };
+        Object.keys(fmSteps).forEach(key => {
+            const s = fmSteps[key];
+            if (s && (s.color || s.title || s.icon || s.subtitle || s.imageUrl)) {
+                steps[key] = {
+                    color: s.color || '',
+                    icon: s.icon || '',
+                    title: s.title || '',
+                    subtitle: s.subtitle || '',
+                    imageUrl: (s.imageUrl || '').split('?')[0]
+                };
+            }
         });
         const payload = {
             menuType: 'carousel',

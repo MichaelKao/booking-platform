@@ -167,7 +167,7 @@ POST /api/auth/logout             # 登出
 | LINE 設定 | `GET/PUT /settings/line`, `POST /settings/line/activate\|deactivate\|test` |
 | Rich Menu | `GET/POST/DELETE /settings/line/rich-menu`, `POST /settings/line/rich-menu/create\|upload-image\|create-custom` |
 | 進階 Rich Menu | `POST /settings/line/rich-menu/create-advanced\|preview-advanced`, `GET/PUT /settings/line/rich-menu/advanced-config` |
-| Flex Menu | `GET/PUT /settings/line/flex-menu` |
+| Flex Menu | `GET/PUT /settings/line/flex-menu`, `POST /settings/line/flex-menu/upload-card-image`, `DELETE /settings/line/flex-menu/card-image` |
 | 點數 | `GET /points/balance`, `POST /points/topup`, `GET /points/topups\|transactions` |
 | 功能商店 | `GET /feature-store`, `GET /feature-store/{code}`, `POST /feature-store/{code}/apply\|cancel` |
 | 行銷推播 | `GET/POST /marketing/pushes`, `POST /marketing/pushes/{id}/send`, `DELETE /marketing/pushes/{id}` |
@@ -179,6 +179,12 @@ POST /api/auth/logout             # 登出
 
 ```
 POST /api/line/webhook/{tenantCode}
+```
+
+### 公開圖片存取（不需認證）
+
+```
+GET /api/public/flex-card-image/{tenantId}/{cardIndex}   # Flex 卡片/步驟圖片（供 LINE Flex Message 使用）
 ```
 
 ### 即時通知 (SSE)
@@ -391,13 +397,39 @@ scheduler:
 | `buttons[].icon` | 按鈕圖示 emoji | 📅📋🛍️🎁🎫👤📞 |
 | `buttons[].title` | 按鈕標題 | 各按鈕預設標題 |
 | `buttons[].subtitle` | 按鈕副標題 | 各按鈕預設副標題 |
+| `buttons[].imageUrl` | 輪播卡片圖片 URL | 無（可上傳圖片） |
+| `steps[].icon` | 步驟圖示 emoji | ✂️📅👤⏰📝✅ |
+| `steps[].color` | 步驟 Header 背景色 | 各步驟預設色 |
+| `steps[].title` | 步驟標題 | 各步驟預設標題 |
+| `steps[].subtitle` | 步驟副標題 | 各步驟預設副標題 |
+| `steps[].imageUrl` | 步驟 Hero 圖片 URL | 無（可上傳圖片） |
+
+**步驟（Steps）說明**：預約流程中每個步驟的 Flex Message Header 可自訂外觀：
+
+| 步驟 Key | 預設標題 | 預設圖示 | 預設色 |
+|---------|---------|---------|--------|
+| `service` | 選擇服務 | ✂️ | `#4A90D9` |
+| `date` | 選擇日期 | 📅 | `#1DB446` |
+| `staff` | 選擇服務人員 | 👤 | `#4A90D9` |
+| `time` | 選擇時段 | ⏰ | `#4A90D9` |
+| `note` | 是否需要備註？ | 📝 | `#5C6BC0` |
+| `confirm` | 請確認預約資訊 | ✅ | `#1DB446` |
+
+**圖片儲存**：`TenantLineConfig.flexMenuCardImages`（JSON TEXT 欄位，key=cardIndex 或 100+stepIndex，value=Base64 圖片）
 
 **儲存位置**：`TenantLineConfig.flexMenuConfig`（JSON TEXT 欄位）
 
 **API**：
 ```
-GET  /api/settings/line/flex-menu    # 取得配置
-PUT  /api/settings/line/flex-menu    # 更新配置
+GET  /api/settings/line/flex-menu                    # 取得配置
+PUT  /api/settings/line/flex-menu                    # 更新配置
+POST /api/settings/line/flex-menu/upload-card-image  # 上傳卡片/步驟圖片（回傳公開 URL）
+DELETE /api/settings/line/flex-menu/card-image       # 刪除卡片/步驟圖片
+```
+
+**公開圖片端點**：
+```
+GET /api/public/flex-card-image/{tenantId}/{cardIndex}  # 公開存取卡片/步驟圖片（無需認證）
 ```
 
 **注意**：LINE 聊天室背景是 LINE 平台功能，無法透過 API 控制。

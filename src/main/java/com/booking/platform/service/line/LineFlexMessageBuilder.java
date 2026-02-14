@@ -461,6 +461,91 @@ public class LineFlexMessageBuilder {
     }
 
     /**
+     * 建構步驟 Header（含 icon、副標題、Hero 圖片支援）
+     *
+     * @param stepColor 背景色
+     * @param stepTitle 標題（可含 icon）
+     * @param stepCounter 步驟計數文字（如 "步驟 1/4"），null 則不顯示
+     * @param tenantId 租戶 ID
+     * @param stepKey 步驟 Key
+     * @param bubble 要設定 header/hero 的 Bubble
+     */
+    private void applyStepHeader(ObjectNode bubble, String tenantId, String stepKey,
+                                  String stepColor, String stepTitle, String stepCounter) {
+        // 讀取自訂 icon 和副標題
+        String icon = getStepConfig(tenantId, stepKey, "icon", "");
+        String subtitle = getStepConfig(tenantId, stepKey, "subtitle", "");
+        String heroImageUrl = getStepConfig(tenantId, stepKey, "imageUrl", "");
+
+        // 如果有 icon 且標題不以 icon 開頭，加到標題前
+        if (!icon.isEmpty() && !stepTitle.startsWith(icon)) {
+            stepTitle = icon + " " + stepTitle;
+        }
+
+        // Hero 圖片
+        if (!heroImageUrl.isEmpty()) {
+            // 相對路徑轉絕對路徑
+            if (heroImageUrl.startsWith("/api/public/")) {
+                heroImageUrl = appBaseUrl + heroImageUrl;
+            }
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", heroImageUrl);
+            hero.put("size", "full");
+            hero.put("aspectRatio", "20:8");
+            hero.put("aspectMode", "cover");
+            bubble.set("hero", hero);
+        }
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", stepColor);
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        // 步驟計數
+        if (stepCounter != null && !stepCounter.isEmpty()) {
+            ObjectNode stepText = objectMapper.createObjectNode();
+            stepText.put("type", "text");
+            stepText.put("text", stepCounter);
+            stepText.put("size", "xs");
+            stepText.put("color", "#FFFFFF");
+            stepText.put("align", "center");
+            headerContents.add(stepText);
+        }
+
+        // 標題
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", stepTitle);
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        if (stepCounter != null) headerTitle.put("margin", "sm");
+        headerContents.add(headerTitle);
+
+        // 副標題
+        if (!subtitle.isEmpty()) {
+            ObjectNode subText = objectMapper.createObjectNode();
+            subText.put("type", "text");
+            subText.put("text", subtitle);
+            subText.put("size", "xs");
+            subText.put("color", "#FFFFFF");
+            subText.put("align", "center");
+            subText.put("margin", "sm");
+            subText.set("offsetTop", objectMapper.valueToTree("2px"));
+            headerContents.add(subText);
+        }
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+    }
+
+    /**
      * 從按鈕配置取得欄位值
      */
     private String getButtonField(JsonNode buttonsConfig, int index, String field, String defaultValue) {
@@ -600,7 +685,7 @@ public class LineFlexMessageBuilder {
         ArrayNode bubbles = objectMapper.createArrayNode();
 
         // 第一個 Bubble：指引說明
-        bubbles.add(buildServiceGuide(stepColor, stepTitle));
+        bubbles.add(buildServiceGuide(tenantId, stepColor, stepTitle));
 
         for (ServiceItem service : services) {
             bubbles.add(buildServiceBubble(service, stepColor));
@@ -613,40 +698,13 @@ public class LineFlexMessageBuilder {
     /**
      * 建構服務選單指引
      */
-    private ObjectNode buildServiceGuide(String stepColor, String stepTitle) {
+    private ObjectNode buildServiceGuide(String tenantId, String stepColor, String stepTitle) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", stepColor);
-        header.put("paddingAll", "15px");
-
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 1/4");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", stepTitle);
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "service", stepColor, stepTitle, "步驟 1/4");
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1218,7 +1276,7 @@ public class LineFlexMessageBuilder {
         ArrayNode bubbles = objectMapper.createArrayNode();
 
         // 指引 Bubble
-        bubbles.add(buildServiceGuide(stepColor, stepTitle));
+        bubbles.add(buildServiceGuide(tenantId, stepColor, stepTitle));
 
         // 每個分類一張卡片
         for (ServiceCategory category : filteredCategories) {
@@ -1394,35 +1452,8 @@ public class LineFlexMessageBuilder {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", staffStepColor);
-        header.put("paddingAll", "15px");
-
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 2/4");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", staffStepTitle);
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "staff", staffStepColor, staffStepTitle, "步驟 2/4");
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1537,34 +1568,10 @@ public class LineFlexMessageBuilder {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", staffStepColor);
-        header.put("paddingAll", "15px");
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "staff", staffStepColor, staffStepTitle, "步驟 3/4");
 
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 3/4");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", staffStepTitle);
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
-        // 顯示日期提示
+        // 在 header 中追加日期提示
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("M/d（E）", java.util.Locale.TAIWAN);
         ObjectNode dateHint = objectMapper.createObjectNode();
         dateHint.put("type", "text");
@@ -1573,10 +1580,7 @@ public class LineFlexMessageBuilder {
         dateHint.put("color", "#FFFFFF");
         dateHint.put("align", "center");
         dateHint.put("margin", "sm");
-        headerContents.add(dateHint);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        ((ArrayNode) bubble.get("header").get("contents")).add(dateHint);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1948,7 +1952,7 @@ public class LineFlexMessageBuilder {
 
         // 如果日期少於等於 10 個，使用單一 Bubble
         if (availableDates.size() <= 10) {
-            return buildSingleDateBubble(availableDates, today, displayFormatter, dataFormatter, dateStepColor, dateStepTitle);
+            return buildSingleDateBubble(tenantId, availableDates, today, displayFormatter, dataFormatter, dateStepColor, dateStepTitle);
         }
 
         // 日期多於 10 個，使用 Carousel（每個 Bubble 顯示 7 天）
@@ -1968,25 +1972,26 @@ public class LineFlexMessageBuilder {
             bubble.put("type", "bubble");
             bubble.put("size", "kilo");
 
-            // Header
-            ObjectNode header = objectMapper.createObjectNode();
-            header.put("type", "box");
-            header.put("layout", "vertical");
-            header.put("backgroundColor", dateStepColor);
-            header.put("paddingAll", "12px");
+            // 第一個 Bubble 使用統一步驟 Header；後續 Bubble 簡化
+            if (bubbleIndex == 0) {
+                applyStepHeader(bubble, tenantId, "date", dateStepColor, dateStepTitle, null);
+            } else {
+                ObjectNode header = objectMapper.createObjectNode();
+                header.put("type", "box");
+                header.put("layout", "vertical");
+                header.put("backgroundColor", dateStepColor);
+                header.put("paddingAll", "12px");
+                ArrayNode hc = objectMapper.createArrayNode();
+                ObjectNode ht = objectMapper.createObjectNode();
+                ht.put("type", "text"); ht.put("text", "📅 更多日期");
+                ht.put("size", "md"); ht.put("weight", "bold");
+                ht.put("color", "#FFFFFF"); ht.put("align", "center");
+                hc.add(ht);
+                header.set("contents", hc);
+                bubble.set("header", header);
+            }
 
-            ArrayNode headerContents = objectMapper.createArrayNode();
-
-            ObjectNode headerText = objectMapper.createObjectNode();
-            headerText.put("type", "text");
-            headerText.put("text", bubbleIndex == 0 ? dateStepTitle : "📅 更多日期");
-            headerText.put("size", "md");
-            headerText.put("weight", "bold");
-            headerText.put("color", "#FFFFFF");
-            headerText.put("align", "center");
-            headerContents.add(headerText);
-
-            // 顯示日期範圍
+            // 在 header 中追加日期範圍
             if (!bubbleDates.isEmpty()) {
                 LocalDate firstDate = bubbleDates.get(0);
                 LocalDate lastDate = bubbleDates.get(bubbleDates.size() - 1);
@@ -1996,11 +2001,8 @@ public class LineFlexMessageBuilder {
                 rangeText.put("size", "xs");
                 rangeText.put("color", "#FFFFFF");
                 rangeText.put("align", "center");
-                headerContents.add(rangeText);
+                ((ArrayNode) bubble.get("header").get("contents")).add(rangeText);
             }
-
-            header.set("contents", headerContents);
-            bubble.set("header", header);
 
             // Body
             ObjectNode body = objectMapper.createObjectNode();
@@ -2036,29 +2038,14 @@ public class LineFlexMessageBuilder {
     /**
      * 建構單一日期選擇 Bubble
      */
-    private JsonNode buildSingleDateBubble(List<LocalDate> dates, LocalDate today,
+    private JsonNode buildSingleDateBubble(String tenantId, List<LocalDate> dates, LocalDate today,
                                            DateTimeFormatter displayFormatter, DateTimeFormatter dataFormatter,
                                            String stepColor, String stepTitle) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", stepColor);
-        header.put("paddingAll", "15px");
-
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", stepTitle);
-        headerText.put("size", "lg");
-        headerText.put("weight", "bold");
-        headerText.put("color", "#FFFFFF");
-        headerText.put("align", "center");
-
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
-        bubble.set("header", header);
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "date", stepColor, stepTitle, null);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -2186,33 +2173,10 @@ public class LineFlexMessageBuilder {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", timeStepColor);
-        header.put("paddingAll", "15px");
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "time", timeStepColor, timeStepTitle, "步驟 4/4 - 最後一步！");
 
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 4/4 - 最後一步！");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", timeStepTitle);
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
+        // 在 header 中追加日期提示
         ObjectNode dateText = objectMapper.createObjectNode();
         dateText.put("type", "text");
         dateText.put("text", "📅 " + date.format(DateTimeFormatter.ofPattern("M月d日 (E)", java.util.Locale.TAIWAN)));
@@ -2220,10 +2184,7 @@ public class LineFlexMessageBuilder {
         dateText.put("color", "#FFFFFF");
         dateText.put("align", "center");
         dateText.put("margin", "sm");
-        headerContents.add(dateText);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        ((ArrayNode) bubble.get("header").get("contents")).add(dateText);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -2537,22 +2498,8 @@ public class LineFlexMessageBuilder {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", confirmColor);
-        header.put("paddingAll", "15px");
-
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", confirmTitle);
-        headerText.put("color", "#FFFFFF");
-        headerText.put("size", "lg");
-        headerText.put("weight", "bold");
-
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
-        bubble.set("header", header);
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "confirm", confirmColor, confirmTitle, null);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -2778,23 +2725,8 @@ public class LineFlexMessageBuilder {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", noteColor);
-        header.put("paddingAll", "15px");
-
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", noteTitle);
-        headerText.put("color", "#FFFFFF");
-        headerText.put("size", "lg");
-        headerText.put("weight", "bold");
-        headerText.put("align", "center");
-
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
-        bubble.set("header", header);
+        // 使用統一的步驟 Header 建構
+        applyStepHeader(bubble, tenantId, "note", noteColor, noteTitle, null);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
