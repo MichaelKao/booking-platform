@@ -282,6 +282,7 @@ scheduler:
 | /tenant/membership-levels | 會員等級 |
 | /tenant/settings | 店家設定 |
 | /tenant/line-settings | LINE 設定 |
+| /tenant/rich-menu-design | 選單設計（需訂閱 CUSTOM_RICH_MENU） |
 | /tenant/feature-store | 功能商店 |
 | /tenant/points | 點數管理 |
 
@@ -1373,7 +1374,7 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | DTO | 76+ |
 | Enum | 28 |
 | Scheduler | 5 |
-| HTML 頁面 | 51 |
+| HTML 頁面 | 52 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |

@@ -177,6 +177,15 @@
             </a>
         </li>
 
+        <!-- 選單設計（需訂閱 CUSTOM_RICH_MENU 功能） -->
+        <li class="nav-item" data-feature="CUSTOM_RICH_MENU">
+            <a class="nav-link" href="/tenant/rich-menu-design"
+               th:classappend="${#strings.equals(currentPage, 'rich-menu-design')} ? 'active' : ''">
+                <i class="bi bi-palette-fill"></i>
+                <span>選單設計</span>
+            </a>
+        </li>
+
         <!-- 功能商店 -->
         <li class="nav-item">
             <a class="nav-link" href="/tenant/feature-store"

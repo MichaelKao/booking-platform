@@ -257,19 +257,19 @@ public class LineRichMenuService {
             if ("BOUTIQUE".equalsIgnoreCase(theme)) {
                 // 精品風使用全尺寸 3+4+4 佈局（11 格）
                 // 上排：服務價目（flex彈窗）、店名Logo（主選單）、最新優惠（flex彈窗）
-                // 中排：紅利點數、查詢預約、計次券、儲值餘額
-                // 下排：1對1諮詢、消費紀錄、線上預約、電子優惠券
+                // 中排：開始預約、查詢預約、我的票券、會員資訊
+                // 下排：聯絡店家、瀏覽商品、領取票券、電子優惠券
                 String[][] boutiqueItems = {
                         {"服務價目", "flex_popup&cellKey=0"},
                         {shopName, "show_menu"},
                         {"最新優惠", "flex_popup&cellKey=2"},
-                        {"紅利點數", "view_member_info"},
+                        {"開始預約", "start_booking"},
                         {"查詢預約", "view_bookings"},
-                        {"計次券", "view_my_coupons"},
-                        {"儲值餘額", "view_member_info"},
-                        {"1對1諮詢", "contact_shop"},
-                        {"消費紀錄", "view_member_info"},
-                        {"線上預約", "start_booking"},
+                        {"我的票券", "view_my_coupons"},
+                        {"會員資訊", "view_member_info"},
+                        {"聯絡店家", "contact_shop"},
+                        {"瀏覽商品", "start_shopping"},
+                        {"領取票券", "view_coupons"},
                         {"電子優惠券", "view_coupons"}
                 };
                 richMenuId = createRichMenuWithLayout(tenantId, shopName, "3+4+4", boutiqueItems);
@@ -1501,11 +1501,11 @@ public class LineRichMenuService {
         // ================================================================
         // 中排 4 格 + 下排 4 格：圓形圖示 + 文字標籤
         // ================================================================
-        String[] midLabels = {"紅利點數", "查詢預約", "計次券", "儲值餘額"};
-        IconType[] midIcons = {IconType.COIN, IconType.CLIPBOARD, IconType.TICKET, IconType.HOURGLASS};
+        String[] midLabels = {"開始預約", "查詢預約", "我的票券", "會員資訊"};
+        IconType[] midIcons = {IconType.HEART, IconType.CLIPBOARD, IconType.TICKET, IconType.COIN};
 
-        String[] botLabels = {"1對1諮詢", "消費紀錄", "線上預約", "電子優惠券"};
-        IconType[] botIcons = {IconType.FLOWER, IconType.RECEIPT, IconType.HEART, IconType.COUPON_STAR};
+        String[] botLabels = {"聯絡店家", "瀏覽商品", "領取票券", "電子優惠券"};
+        IconType[] botIcons = {IconType.FLOWER, IconType.RECEIPT, IconType.COUPON_STAR, IconType.COUPON_STAR};
 
         Font labelFont = loadChineseFont(Font.BOLD, 48);
 

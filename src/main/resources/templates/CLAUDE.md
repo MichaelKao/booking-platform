@@ -13,7 +13,7 @@
 
 ---
 
-## 頁面結構 (51 個 HTML 檔案)
+## 頁面結構 (52 個 HTML 檔案)
 
 ### 超級管理後台 (`admin/`)
 
@@ -52,6 +52,7 @@
 | marketing.html | 行銷推播 | /tenant/marketing |
 | settings.html | 店家設定 | /tenant/settings |
 | line-settings.html | LINE 設定 | /tenant/line-settings |
+| rich-menu-design.html | 選單設計 | /tenant/rich-menu-design |
 | feature-store.html | 功能商店 | /tenant/feature-store |
 | points.html | 點數管理 | /tenant/points |
 | membership-levels.html | 會員等級 | /tenant/membership-levels |

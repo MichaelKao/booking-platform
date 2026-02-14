@@ -241,6 +241,16 @@ public class TenantPageController {
     }
 
     /**
+     * 選單設計頁面（Rich Menu 設計工具）
+     */
+    @GetMapping("/rich-menu-design")
+    public String richMenuDesign(Model model) {
+        model.addAttribute("currentPage", "rich-menu-design");
+        model.addAttribute("pageTitle", "選單設計");
+        return "tenant/rich-menu-design";
+    }
+
+    /**
      * 功能商店頁面
      */
     @GetMapping("/feature-store")
