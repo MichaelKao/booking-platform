@@ -659,40 +659,6 @@
                                     </button>
                                 </div>
 
-                                <!-- Flex 彈窗編輯 Modal -->
-                                <div class="modal fade" id="flexPopupModal" tabindex="-1">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h6 class="modal-title"><i class="bi bi-chat-square-dots me-2"></i>自訂 Flex 彈窗設定</h6>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="hidden" id="flexPopupCellIndex">
-                                                <!-- 類型選擇 -->
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-bold">彈窗類型</label>
-                                                    <div class="btn-group btn-group-sm w-100" role="group">
-                                                        <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupSingle" value="single" checked>
-                                                        <label class="btn btn-outline-secondary" for="flexPopupSingle">單一卡片</label>
-                                                        <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupCarousel" value="carousel">
-                                                        <label class="btn btn-outline-secondary" for="flexPopupCarousel">輪播卡片（多張）</label>
-                                                    </div>
-                                                </div>
-                                                <!-- 卡片列表 -->
-                                                <div id="flexPopupBubbles"></div>
-                                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addFlexPopupBubble()">
-                                                    <i class="bi bi-plus-lg me-1"></i>新增卡片
-                                                </button>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="saveFlexPopup()">確定</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- 刪除按鈕 -->
                                 <button type="button" class="btn btn-outline-danger btn-sm w-100 d-none" onclick="deleteRichMenu()" id="deleteRichMenuBtn">
                                     <span class="btn-text"><i class="bi bi-trash me-1"></i>刪除 Rich Menu</span>
@@ -804,6 +770,63 @@
                                     </div>
                                 </div>
 
+                                <!-- 預約流程步驟自訂 -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label class="form-label small fw-bold mb-0">預約流程步驟自訂</label>
+                                        <button class="btn btn-sm btn-outline-secondary py-0 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#stepSettings">
+                                            <i class="bi bi-chevron-down"></i> 展開
+                                        </button>
+                                    </div>
+                                    <div class="collapse" id="stepSettings">
+                                        <p class="small text-muted mb-2">自訂預約流程中每個步驟的 Header 顏色和標題</p>
+                                        <div class="border rounded p-2">
+                                            <!-- 選擇服務 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepServiceColor" value="#4A90D9" style="width:32px;height:28px;" data-step="service">
+                                                <span class="small text-muted" style="width:70px;">選擇服務</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepServiceTitle" placeholder="✂️ 選擇您的服務" data-step="service">
+                                            </div>
+                                            <!-- 選擇日期 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepDateColor" value="#1DB446" style="width:32px;height:28px;" data-step="date">
+                                                <span class="small text-muted" style="width:70px;">選擇日期</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepDateTitle" placeholder="📅 選擇預約日期" data-step="date">
+                                            </div>
+                                            <!-- 選擇員工 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepStaffColor" value="#4A90D9" style="width:32px;height:28px;" data-step="staff">
+                                                <span class="small text-muted" style="width:70px;">選擇員工</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepStaffTitle" placeholder="👤 選擇服務人員" data-step="staff">
+                                            </div>
+                                            <!-- 選擇時段 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepTimeColor" value="#4A90D9" style="width:32px;height:28px;" data-step="time">
+                                                <span class="small text-muted" style="width:70px;">選擇時段</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepTimeTitle" placeholder="⏰ 選擇時段" data-step="time">
+                                            </div>
+                                            <!-- 備註 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepNoteColor" value="#5C6BC0" style="width:32px;height:28px;" data-step="note">
+                                                <span class="small text-muted" style="width:70px;">備註</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepNoteTitle" placeholder="📝 備註事項" data-step="note">
+                                            </div>
+                                            <!-- 確認預約 -->
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepConfirmColor" value="#1DB446" style="width:32px;height:28px;" data-step="confirm">
+                                                <span class="small text-muted" style="width:70px;">確認預約</span>
+                                                <input type="text" class="form-control form-control-sm flex-step-title" id="stepConfirmTitle" placeholder="📋 確認預約資訊" data-step="confirm">
+                                            </div>
+                                            <!-- 預約成功 -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="color" class="form-control form-control-color flex-step-color" id="stepSuccessColor" value="#1DB446" style="width:32px;height:28px;" data-step="success">
+                                                <span class="small text-muted" style="width:70px;">預約成功</span>
+                                                <input type="text" class="form-control form-control-sm" disabled value="（使用系統預設標題）" style="opacity:0.6;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- 儲存按鈕 -->
                                 <button type="button" class="btn btn-primary btn-sm w-100 mb-3" onclick="saveFlexMenuConfig()" id="saveFlexMenuBtn">
                                     <span class="btn-text"><i class="bi bi-check-lg me-1"></i>儲存主選單樣式</span>
@@ -854,6 +877,40 @@
             <footer th:replace="~{tenant/layout :: footer}"></footer>
         </div>
     </div>
+    <!-- Flex 彈窗編輯 Modal（放在 body 層級避免 stacking context 遮擋）-->
+    <div class="modal fade" id="flexPopupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title"><i class="bi bi-chat-square-dots me-2"></i>自訂 Flex 彈窗設定</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="flexPopupCellIndex">
+                    <!-- 類型選擇 -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">彈窗類型</label>
+                        <div class="btn-group btn-group-sm w-100" role="group">
+                            <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupSingle" value="single" checked>
+                            <label class="btn btn-outline-secondary" for="flexPopupSingle">單一卡片</label>
+                            <input type="radio" class="btn-check" name="flexPopupType" id="flexPopupCarousel" value="carousel">
+                            <label class="btn btn-outline-secondary" for="flexPopupCarousel">輪播卡片（多張）</label>
+                        </div>
+                    </div>
+                    <!-- 卡片列表 -->
+                    <div id="flexPopupBubbles"></div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addFlexPopupBubble()">
+                        <i class="bi bi-plus-lg me-1"></i>新增卡片
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="saveFlexPopup()">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar-overlay"></div>
     <div class="toast-container"></div>
     <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
@@ -1923,12 +1980,31 @@
                         });
                     }
 
+                    // 載入步驟自訂
+                    if (r.data.steps) {
+                        flexMenuConfig.steps = r.data.steps;
+                    }
+
                     // 同步到表單
                     document.getElementById('flexHeaderColor').value = flexMenuConfig.headerColor;
                     document.getElementById('flexHeaderColorText').value = flexMenuConfig.headerColor;
                     document.getElementById('flexHeaderTitle').value = flexMenuConfig.headerTitle;
                     document.getElementById('flexHeaderSubtitle').value = flexMenuConfig.headerSubtitle;
                     document.getElementById('flexShowTip').checked = flexMenuConfig.showTip;
+
+                    // 同步步驟設定到表單
+                    if (flexMenuConfig.steps) {
+                        const stepKeys = ['service', 'date', 'staff', 'time', 'note', 'confirm', 'success'];
+                        stepKeys.forEach(key => {
+                            const step = flexMenuConfig.steps[key];
+                            if (step) {
+                                const colorEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Color');
+                                const titleEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Title');
+                                if (colorEl && step.headerColor) colorEl.value = step.headerColor;
+                                if (titleEl && step.headerTitle) titleEl.value = step.headerTitle;
+                            }
+                        });
+                    }
 
                     renderFlexButtonSettings();
                     updateFlexMenuPreview();
@@ -1942,6 +2018,19 @@
         async function saveFlexMenuConfig() {
             const btn = document.getElementById('saveFlexMenuBtn');
             setButtonLoading(btn, true);
+
+            // 收集步驟自訂設定
+            const steps = {};
+            const stepKeys = ['service', 'date', 'staff', 'time', 'note', 'confirm', 'success'];
+            stepKeys.forEach(key => {
+                const colorEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Color');
+                const titleEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Title');
+                const stepObj = {};
+                if (colorEl) stepObj.headerColor = colorEl.value;
+                if (titleEl && titleEl.value) stepObj.headerTitle = titleEl.value;
+                if (Object.keys(stepObj).length > 0) steps[key] = stepObj;
+            });
+            if (Object.keys(steps).length > 0) flexMenuConfig.steps = steps;
 
             try {
                 const r = await api.put('/api/settings/line/flex-menu', flexMenuConfig);
@@ -1971,6 +2060,17 @@
             document.getElementById('flexHeaderTitle').value = '✨ {shopName}';
             document.getElementById('flexHeaderSubtitle').value = '歡迎光臨！請問需要什麼服務呢？';
             document.getElementById('flexShowTip').checked = true;
+
+            // 重置步驟設定
+            const defaultStepColors = {service:'#4A90D9',date:'#1DB446',staff:'#4A90D9',time:'#4A90D9',note:'#5C6BC0',confirm:'#1DB446',success:'#1DB446'};
+            Object.keys(defaultStepColors).forEach(key => {
+                const colorEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Color');
+                const titleEl = document.getElementById('step' + key.charAt(0).toUpperCase() + key.slice(1) + 'Title');
+                if (colorEl) colorEl.value = defaultStepColors[key];
+                if (titleEl) titleEl.value = '';
+            });
+            delete flexMenuConfig.steps;
+
             renderFlexButtonSettings();
             updateFlexMenuPreview();
             showSuccess('已恢復預設樣式（尚未儲存）');
