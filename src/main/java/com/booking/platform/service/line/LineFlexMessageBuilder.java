@@ -72,6 +72,9 @@ public class LineFlexMessageBuilder {
     // 依賴注入
     // ========================================
 
+    @org.springframework.beans.factory.annotation.Value("${app.base-url:https://booking-platform-production-1e08.up.railway.app}")
+    private String appBaseUrl;
+
     private final ObjectMapper objectMapper;
     private final TenantRepository tenantRepository;
     private final TenantLineConfigRepository lineConfigRepository;
@@ -298,6 +301,10 @@ public class LineFlexMessageBuilder {
      */
     private ObjectNode buildCardBubble(JsonNode card, String shopName) {
         String imageUrl = card.path("imageUrl").asText("");
+        // 相對路徑轉絕對路徑（供 LINE 存取）
+        if (imageUrl.startsWith("/api/public/")) {
+            imageUrl = appBaseUrl + imageUrl;
+        }
         int imageHeight = card.path("imageHeight").asInt(50);
         String title = card.path("title").asText("功能").replace("{shopName}", shopName);
         String subtitle = card.path("subtitle").asText("").replace("{shopName}", shopName);

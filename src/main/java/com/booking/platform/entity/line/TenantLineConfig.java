@@ -192,6 +192,12 @@ public class TenantLineConfig {
     @Column(name = "flex_menu_config", columnDefinition = "TEXT")
     private String flexMenuConfig;
 
+    /**
+     * Flex Menu 卡片圖片（JSON，key=cardIndex, value=Base64 圖片）
+     */
+    @Column(name = "flex_menu_card_images", columnDefinition = "TEXT")
+    private String flexMenuCardImages;
+
     // ========================================
     // 額度管理
     // ========================================

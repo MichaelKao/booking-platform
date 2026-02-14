@@ -514,6 +514,125 @@ public class LineConfigController {
         return ResponseEntity.ok(ApiResponse.ok("主選單樣式已儲存", configMap));
     }
 
+    // ========================================
+    // Flex Menu 卡片圖片上傳
+    // ========================================
+
+    /**
+     * 上傳 Flex Menu 卡片圖片
+     *
+     * <p>圖片會儲存在資料庫，並回傳可公開存取的 URL（供 LINE Flex Message 使用）
+     *
+     * @param file 圖片檔案（PNG/JPG，建議 < 1MB）
+     * @param cardIndex 卡片索引（0-6）
+     * @return 圖片公開 URL
+     */
+    @PostMapping("/flex-menu/upload-card-image")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> uploadFlexCardImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("cardIndex") int cardIndex
+    ) {
+        log.debug("上傳 Flex 卡片圖片，索引：{}", cardIndex);
+
+        try {
+            String tenantId = TenantContext.getTenantId();
+
+            // 驗證索引範圍
+            if (cardIndex < 0 || cardIndex > 11) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("INVALID_INDEX", "卡片索引必須在 0-11 之間"));
+            }
+
+            // 驗證檔案大小（最大 2MB）
+            if (file.getSize() > 2 * 1024 * 1024) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("FILE_TOO_LARGE", "圖片大小不能超過 2MB"));
+            }
+
+            // 讀取圖片並壓縮
+            byte[] imageBytes = file.getBytes();
+            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+            if (img == null) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("INVALID_IMAGE", "無效的圖片檔案"));
+            }
+
+            // 壓縮至最大寬度 800px
+            if (img.getWidth() > 800) {
+                int newH = (int) ((double) img.getHeight() / img.getWidth() * 800);
+                java.awt.image.BufferedImage resized = new java.awt.image.BufferedImage(800, newH, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                java.awt.Graphics2D g2 = resized.createGraphics();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(img, 0, 0, 800, newH, null);
+                g2.dispose();
+                img = resized;
+            }
+
+            // 轉為 JPEG Base64
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(img, "jpg", baos);
+            String base64 = java.util.Base64.getEncoder().encodeToString(baos.toByteArray());
+
+            // 儲存到資料庫
+            lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    java.util.Map<String, String> images = new java.util.HashMap<>();
+                    if (config.getFlexMenuCardImages() != null && !config.getFlexMenuCardImages().isBlank()) {
+                        images = mapper.readValue(config.getFlexMenuCardImages(),
+                                new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, String>>() {});
+                    }
+                    images.put(String.valueOf(cardIndex), base64);
+                    config.setFlexMenuCardImages(mapper.writeValueAsString(images));
+                    lineConfigRepository.save(config);
+                } catch (Exception e) {
+                    log.error("儲存卡片圖片失敗，租戶：{}", tenantId, e);
+                }
+            });
+
+            // 回傳公開 URL
+            String publicUrl = "/api/public/flex-card-image/" + tenantId + "/" + cardIndex;
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            result.put("imageUrl", publicUrl);
+
+            return ResponseEntity.ok(ApiResponse.ok("圖片上傳成功", result));
+        } catch (java.io.IOException e) {
+            log.error("讀取上傳檔案失敗", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
+        }
+    }
+
+    /**
+     * 刪除 Flex Menu 卡片圖片
+     *
+     * @param cardIndex 卡片索引
+     * @return 操作結果
+     */
+    @DeleteMapping("/flex-menu/card-image")
+    public ResponseEntity<ApiResponse<Void>> deleteFlexCardImage(@RequestParam("cardIndex") int cardIndex) {
+        log.debug("刪除 Flex 卡片圖片，索引：{}", cardIndex);
+
+        String tenantId = TenantContext.getTenantId();
+        lineConfigRepository.findByTenantId(tenantId).ifPresent(config -> {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                java.util.Map<String, String> images = new java.util.HashMap<>();
+                if (config.getFlexMenuCardImages() != null && !config.getFlexMenuCardImages().isBlank()) {
+                    images = mapper.readValue(config.getFlexMenuCardImages(),
+                            new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, String>>() {});
+                }
+                images.remove(String.valueOf(cardIndex));
+                config.setFlexMenuCardImages(mapper.writeValueAsString(images));
+                lineConfigRepository.save(config);
+            } catch (Exception e) {
+                log.error("刪除卡片圖片失敗，租戶：{}", tenantId, e);
+            }
+        });
+
+        return ResponseEntity.ok(ApiResponse.ok("圖片已刪除", null));
+    }
+
     /**
      * 刪除 Rich Menu
      *

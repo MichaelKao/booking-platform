@@ -427,8 +427,8 @@
     .fm-carousel-scroll::-webkit-scrollbar { display:none; }
     .fm-card-prev { flex:0 0 220px; scroll-snap-align:start; background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.1); display:flex; flex-direction:column; }
     .fm-card-prev-hero { width:100%; object-fit:cover; background:#f0f0f0; display:block; }
-    .fm-card-prev-body { padding:12px 14px 8px; flex:1; }
-    .fm-card-prev-title { font-size:14px; font-weight:700; line-height:1.3; }
+    .fm-card-prev-body { padding:12px 14px 8px; flex:1; color:#333; }
+    .fm-card-prev-title { font-size:14px; font-weight:700; line-height:1.3; color:#333; }
     .fm-card-prev-sub { font-size:11px; color:#666; margin-top:4px; line-height:1.3; }
     .fm-card-prev-footer { padding:8px 14px 12px; }
     .fm-card-prev-btn { display:block; width:100%; text-align:center; padding:8px; border-radius:8px; color:#fff; font-size:13px; font-weight:600; }
@@ -1156,7 +1156,7 @@
                     d.style.backgroundImage = `url('${cell.imageUrl}')`;
                     d.style.backgroundSize = 'cover';
                     d.style.backgroundPosition = 'center';
-                    d.innerHTML = `<span class="cn">${ci}</span>`;
+                    d.innerHTML = `<span class="cn">${ci}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
                 } else {
                     if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
                     d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
@@ -1426,10 +1426,17 @@
                 <div class="fm-card-editor-body${i>0?' collapsed':''}">
                     <div class="row g-2">
                         <div class="col-12">
-                            <label class="form-label small fw-bold mb-1">背景圖片 URL</label>
-                            <input type="text" class="form-control form-control-sm" data-ci="${i}" data-f="imageUrl" value="${esc(card.imageUrl||'')}" placeholder="https://images.unsplash.com/...">
+                            <label class="form-label small fw-bold mb-1">背景圖片</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" class="form-control form-control-sm" data-ci="${i}" data-f="imageUrl" value="${esc(card.imageUrl||'')}" placeholder="貼上圖片 URL 或上傳圖片...">
+                                <label class="btn btn-sm btn-outline-primary py-0 px-2 flex-shrink-0" title="上傳圖片" style="cursor:pointer">
+                                    <i class="bi bi-upload"></i>
+                                    <input type="file" class="d-none" accept="image/png,image/jpeg,image/webp" data-ci="${i}" data-f="uploadCardImg">
+                                </label>
+                                ${card.imageUrl ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 flex-shrink-0" data-ci="${i}" data-f="clearCardImg" title="清除圖片"><i class="bi bi-x-lg"></i></button>` : ''}
+                            </div>
                             <div class="fm-img-preview-wrap" data-ci="${i}">
-                                ${card.imageUrl ? `<img src="${esc(card.imageUrl)}" style="height:${Math.max(40, card.imageHeight)}px" onerror="this.parentElement.innerHTML='<div class=fm-img-placeholder>圖片無法載入</div>'">` : '<div class="fm-img-placeholder">貼上圖片 URL 即時預覽</div>'}
+                                ${card.imageUrl ? `<img src="${esc(card.imageUrl)}" style="height:${Math.max(40, card.imageHeight)}px" onerror="this.parentElement.innerHTML='<div class=fm-img-placeholder>圖片無法載入</div>'">` : '<div class="fm-img-placeholder">貼上圖片 URL 或上傳圖片</div>'}
                             </div>
                         </div>
                         <div class="col-6">
@@ -1478,12 +1485,23 @@
             `;
             // 綁定所有 input/select 的即時更新
             d.querySelectorAll('input,select').forEach(inp => {
+                if (inp.dataset.f === 'uploadCardImg') return; // 檔案上傳另外處理
                 const ev = inp.type === 'range' || inp.type === 'color' ? 'input' : 'change';
                 inp.addEventListener('input', e => onFmCardFieldChange(e));
                 if (ev === 'change' && inp.type !== 'range' && inp.type !== 'color') {
                     inp.addEventListener('change', e => onFmCardFieldChange(e));
                 }
             });
+            // 綁定檔案上傳
+            const uploadInput = d.querySelector('[data-f="uploadCardImg"]');
+            if (uploadInput) {
+                uploadInput.addEventListener('change', e => uploadFlexCardImage(e, i));
+            }
+            // 綁定清除圖片
+            const clearBtn = d.querySelector('[data-f="clearCardImg"]');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => { fmCards[i].imageUrl = ''; renderFmCardEditors(); updateFmCarouselPreview(); });
+            }
             c.appendChild(d);
         });
     }
@@ -1517,6 +1535,47 @@
         }
 
         updateFmCarouselPreview();
+    }
+
+    // 上傳 Flex 卡片圖片
+    async function uploadFlexCardImage(e, cardIndex) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 先用 FileReader 本地預覽
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const wrap = document.querySelector(`.fm-img-preview-wrap[data-ci="${cardIndex}"]`);
+            if (wrap) wrap.innerHTML = `<img src="${ev.target.result}" style="height:${Math.max(40, fmCards[cardIndex].imageHeight||50)}px">`;
+        };
+        reader.readAsDataURL(file);
+
+        // 上傳到伺服器
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('cardIndex', cardIndex);
+        try {
+            const r = await fetch('/api/settings/line/flex-menu/upload-card-image', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                body: fd
+            });
+            const d = await r.json();
+            if (d.success) {
+                // 加上時間戳避免快取
+                fmCards[cardIndex].imageUrl = d.data.imageUrl + '?t=' + Date.now();
+                // 更新 URL 輸入框
+                const urlInput = document.querySelector(`input[data-ci="${cardIndex}"][data-f="imageUrl"]`);
+                if (urlInput) urlInput.value = fmCards[cardIndex].imageUrl;
+                updateFmCarouselPreview();
+                renderFmCardEditors();
+                showSuccess('圖片上傳成功');
+            } else {
+                showError(d.message || '上傳失敗');
+            }
+        } catch (err) {
+            showError('上傳失敗：' + err.message);
+        }
     }
 
     function toggleFmCard(headerEl) {
@@ -1608,7 +1667,7 @@
         const payload = {
             menuType: 'carousel',
             cards: fmCards.map(c => ({
-                imageUrl: c.imageUrl || '',
+                imageUrl: (c.imageUrl || '').split('?')[0],
                 imageHeight: c.imageHeight || 50,
                 title: c.title,
                 subtitle: c.subtitle || '',
