@@ -111,6 +111,16 @@ public class LineFlexMessageBuilder {
         // ========================================
         JsonNode menuConfig = loadFlexMenuConfig(tenantId);
 
+        // ========================================
+        // 檢查是否使用輪播卡片模式
+        // ========================================
+        if (menuConfig != null && "carousel".equals(getConfigText(menuConfig, "menuType", ""))) {
+            JsonNode cardsConfig = menuConfig.get("cards");
+            if (cardsConfig != null && cardsConfig.isArray() && cardsConfig.size() > 0) {
+                return buildCarouselMainMenu(shopName, menuConfig, cardsConfig);
+            }
+        }
+
         // Header 設定
         String headerColor = getConfigText(menuConfig, "headerColor", PRIMARY_COLOR);
         String headerTitle = getConfigText(menuConfig, "headerTitle", "✨ " + shopName)
@@ -249,6 +259,135 @@ public class LineFlexMessageBuilder {
             String subtitle = getButtonField(buttonsConfig, i, "subtitle", defaultButtons[i][4]);
             footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[i][0], color));
         }
+
+        footer.set("contents", footerContents);
+        bubble.set("footer", footer);
+
+        return bubble;
+    }
+
+    // ========================================
+    // 1-B. 輪播卡片主選單
+    // ========================================
+
+    /**
+     * 建構輪播卡片主選單（每個功能一張卡片，可左右滑動）
+     *
+     * @param shopName    店家名稱
+     * @param menuConfig  完整配置
+     * @param cardsConfig 卡片陣列
+     * @return Carousel Flex Message
+     */
+    private JsonNode buildCarouselMainMenu(String shopName, JsonNode menuConfig, JsonNode cardsConfig) {
+        ObjectNode carousel = objectMapper.createObjectNode();
+        carousel.put("type", "carousel");
+
+        ArrayNode contents = objectMapper.createArrayNode();
+
+        for (JsonNode card : cardsConfig) {
+            ObjectNode bubble = buildCardBubble(card, shopName);
+            contents.add(bubble);
+        }
+
+        carousel.set("contents", contents);
+        return carousel;
+    }
+
+    /**
+     * 建構單張卡片 Bubble
+     */
+    private ObjectNode buildCardBubble(JsonNode card, String shopName) {
+        String imageUrl = card.path("imageUrl").asText("");
+        int imageHeight = card.path("imageHeight").asInt(50);
+        String title = card.path("title").asText("功能").replace("{shopName}", shopName);
+        String subtitle = card.path("subtitle").asText("").replace("{shopName}", shopName);
+        String icon = card.path("icon").asText("");
+        String color = card.path("color").asText(PRIMARY_COLOR);
+        String action = card.path("action").asText("show_menu");
+        String buttonLabel = card.path("buttonLabel").asText("前往");
+        String cardSize = card.path("cardSize").asText("");
+
+        ObjectNode bubble = objectMapper.createObjectNode();
+        bubble.put("type", "bubble");
+        if (!cardSize.isEmpty() && !"auto".equals(cardSize)) {
+            bubble.put("size", cardSize);
+        }
+
+        // ── Hero 圖片 ──
+        if (!imageUrl.isEmpty() && imageHeight > 0) {
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", imageUrl);
+            hero.put("size", "full");
+
+            // 將百分比轉為 aspectRatio（0~100 → 20:4~20:30）
+            int h = Math.max(4, Math.round(imageHeight * 0.3f));
+            hero.put("aspectRatio", "20:" + h);
+            hero.put("aspectMode", "cover");
+
+            // 圖片可點擊
+            ObjectNode heroAction = objectMapper.createObjectNode();
+            heroAction.put("type", "postback");
+            heroAction.put("label", title.length() > 20 ? title.substring(0, 20) : title);
+            heroAction.put("data", "action=" + action);
+            hero.set("action", heroAction);
+
+            bubble.set("hero", hero);
+        }
+
+        // ── Body ──
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("type", "box");
+        body.put("layout", "vertical");
+        body.put("spacing", "sm");
+        body.put("paddingAll", "16px");
+
+        ArrayNode bodyContents = objectMapper.createArrayNode();
+
+        // 標題（含圖示）
+        ObjectNode titleText = objectMapper.createObjectNode();
+        titleText.put("type", "text");
+        titleText.put("text", (icon.isEmpty() ? "" : icon + " ") + title);
+        titleText.put("weight", "bold");
+        titleText.put("size", "lg");
+        titleText.put("wrap", true);
+        bodyContents.add(titleText);
+
+        // 副標題
+        if (!subtitle.isEmpty()) {
+            ObjectNode subText = objectMapper.createObjectNode();
+            subText.put("type", "text");
+            subText.put("text", subtitle);
+            subText.put("size", "sm");
+            subText.put("color", SECONDARY_COLOR);
+            subText.put("wrap", true);
+            subText.put("margin", "sm");
+            bodyContents.add(subText);
+        }
+
+        body.set("contents", bodyContents);
+        bubble.set("body", body);
+
+        // ── Footer 按鈕 ──
+        ObjectNode footer = objectMapper.createObjectNode();
+        footer.put("type", "box");
+        footer.put("layout", "vertical");
+        footer.put("spacing", "sm");
+
+        ArrayNode footerContents = objectMapper.createArrayNode();
+
+        ObjectNode button = objectMapper.createObjectNode();
+        button.put("type", "button");
+        button.put("style", "primary");
+        button.put("color", color);
+        button.put("height", "sm");
+
+        ObjectNode btnAction = objectMapper.createObjectNode();
+        btnAction.put("type", "postback");
+        btnAction.put("label", buttonLabel.length() > 20 ? buttonLabel.substring(0, 20) : buttonLabel);
+        btnAction.put("data", "action=" + action);
+        button.set("action", btnAction);
+        footerContents.add(button);
 
         footer.set("contents", footerContents);
         bubble.set("footer", footer);

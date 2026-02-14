@@ -324,10 +324,18 @@ public class LineConfigController {
 
             return ResponseEntity.ok(ApiResponse.ok("進階自訂選單建立成功", result));
 
+        } catch (com.booking.platform.common.exception.BusinessException e) {
+            log.warn("建立進階 Rich Menu 業務錯誤：{}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getErrorCode() != null ? e.getErrorCode().getCode() : "BUSINESS_ERROR", e.getMessage()));
         } catch (java.io.IOException e) {
             log.error("讀取上傳檔案失敗", e);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("FILE_READ_ERROR", "讀取上傳檔案失敗"));
+        } catch (Exception e) {
+            log.error("建立進階 Rich Menu 失敗", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("CREATE_FAILED", "建立選單失敗：" + e.getMessage()));
         }
     }
 
