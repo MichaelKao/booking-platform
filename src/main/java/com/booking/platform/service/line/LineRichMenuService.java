@@ -189,7 +189,16 @@ public class LineRichMenuService {
         TICKET,      // 領取票券 - 票券
         GIFT,        // 我的票券 - 禮物
         PERSON,      // 會員資訊 - 人像
-        PHONE        // 聯絡店家 - 電話
+        PHONE,       // 聯絡店家 - 電話
+        COIN,        // 紅利點數 - 錢幣
+        HOURGLASS,   // 儲值餘額 - 沙漏
+        HEART,       // 線上預約 - 愛心
+        FLOWER,      // 1對1諮詢 - 花朵
+        RECEIPT,     // 消費紀錄 - 收據
+        COUPON_STAR, // 電子優惠券 - 星章
+        SCISSORS,    // 美容預約 - 剪刀
+        HOUSE,       // 住宿預約 - 房屋
+        ENVELOPE     // 會員優惠 - 信封
     }
 
     private static final IconType[] MENU_ICON_TYPES = {
@@ -246,13 +255,27 @@ public class LineRichMenuService {
             // ========================================
             String richMenuId;
             if ("BOUTIQUE".equalsIgnoreCase(theme)) {
-                // 精品風使用 2x3 佈局（6 格）
+                // 精品風使用全尺寸 3+4+4 佈局（11 格）
+                // 上排：服務價目（flex彈窗）、店名Logo（主選單）、最新優惠（flex彈窗）
+                // 中排：紅利點數、查詢預約、計次券、儲值餘額
+                // 下排：1對1諮詢、消費紀錄、線上預約、電子優惠券
                 String[][] boutiqueItems = {
-                        {"開始預約", "start_booking"}, {"我的預約", "view_bookings"},
-                        {"瀏覽商品", "start_shopping"}, {"領取票券", "view_coupons"},
-                        {"會員資訊", "view_member_info"}, {"聯絡店家", "contact_shop"}
+                        {"服務價目", "flex_popup&cellKey=0"},
+                        {shopName, "show_menu"},
+                        {"最新優惠", "flex_popup&cellKey=2"},
+                        {"紅利點數", "view_member_info"},
+                        {"查詢預約", "view_bookings"},
+                        {"計次券", "view_my_coupons"},
+                        {"儲值餘額", "view_member_info"},
+                        {"1對1諮詢", "contact_shop"},
+                        {"消費紀錄", "view_member_info"},
+                        {"線上預約", "start_booking"},
+                        {"電子優惠券", "view_coupons"}
                 };
-                richMenuId = createRichMenuWithLayout(tenantId, shopName, "2x3", boutiqueItems);
+                richMenuId = createRichMenuWithLayout(tenantId, shopName, "3+4+4", boutiqueItems);
+
+                // 儲存 flex popup 配置到 richMenuCustomConfig
+                saveBoutiqueFlexPopupConfig(tenantId, richMenuId, shopName);
             } else {
                 richMenuId = createRichMenu(tenantId, shopName);
             }
@@ -1302,12 +1325,20 @@ public class LineRichMenuService {
     }
 
     /**
-     * 產生精品風 Rich Menu 圖片（暖色系 2x3 佈局）
+     * 產生精品風 Rich Menu 圖片（全尺寸 3+4+4 佈局，2500x1686）
      *
-     * <p>設計風格：暖米色漸層背景、裝飾性圓形圖示框、金色邊框、角落裝飾
+     * <p>設計風格參考「和煦蒔光」＋「萌寵狗Ray咪」：
+     * <ul>
+     *   <li>暖米色漸層背景 + 細圓點底紋</li>
+     *   <li>上排 3 格：左右藥丸按鈕 + 中間店名 Logo 區</li>
+     *   <li>中排 4 格 + 下排 4 格：圓形圖示 + 虛線外環 + 文字標籤</li>
+     *   <li>金色邊框 + 角落裝飾</li>
+     * </ul>
      */
     private byte[] generateBoutiqueRichMenuImage(String shopName) throws IOException {
-        BufferedImage image = new BufferedImage(MENU_WIDTH, MENU_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        int imgW = MENU_WIDTH;          // 2500
+        int imgH = MENU_HEIGHT_FULL;    // 1686
+        BufferedImage image = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
 
         // 高品質渲染
@@ -1315,126 +1346,197 @@ public class LineRichMenuService {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-        // 色彩定義
-        Color bgLight = new Color(0xF7, 0xEC, 0xDF);     // 暖米色
-        Color bgDark = new Color(0xF0, 0xD8, 0xC8);      // 淡粉色
-        Color goldAccent = new Color(0xC8, 0x9B, 0x6E);   // 金色裝飾
-        Color goldLight = new Color(0xD4, 0xAF, 0x7F);    // 淺金色
-        Color circleBgLight = new Color(0xFB, 0xF5, 0xED);// 圓圈淺色
+        // ── 色彩定義 ──
+        Color bgLight = new Color(0xF7, 0xEC, 0xDF);      // 暖米色
+        Color bgDark = new Color(0xF0, 0xD8, 0xC8);       // 淡粉色
+        Color goldAccent = new Color(0xC8, 0x9B, 0x6E);    // 金色裝飾
+        Color goldLight = new Color(0xD4, 0xAF, 0x7F);     // 淺金色
+        Color circleBgLight = new Color(0xFB, 0xF5, 0xED); // 圓圈淺色
         Color circleBgDark = new Color(0xF5, 0xEB, 0xDE);  // 圓圈深色
-        Color iconBrown = new Color(0x7A, 0x5C, 0x3E);    // 圖示棕色
-        Color textBrown = new Color(0x5C, 0x40, 0x33);    // 文字深棕
+        Color iconBrown = new Color(0x7A, 0x5C, 0x3E);     // 圖示棕色
+        Color textBrown = new Color(0x5C, 0x40, 0x33);     // 文字深棕
+        Color pillBg = new Color(0x8B, 0x73, 0x55);        // 藥丸按鈕底色（暗金）
+        Color pillText = Color.WHITE;                       // 藥丸按鈕文字
         Color shadowColor = new Color(0, 0, 0, 20);
 
         // ── 1. 漸層背景 ──
-        GradientPaint bgGradient = new GradientPaint(
-                0, 0, bgLight, MENU_WIDTH, MENU_HEIGHT, bgDark
-        );
+        GradientPaint bgGradient = new GradientPaint(0, 0, bgLight, imgW, imgH, bgDark);
         g2d.setPaint(bgGradient);
-        g2d.fillRect(0, 0, MENU_WIDTH, MENU_HEIGHT);
+        g2d.fillRect(0, 0, imgW, imgH);
 
         // ── 2. 裝飾性圓點底紋 ──
-        g2d.setColor(new Color(0xD4, 0xAF, 0x7F, 30));
-        for (int x = 0; x < MENU_WIDTH; x += 38) {
-            for (int y = 0; y < MENU_HEIGHT; y += 38) {
-                g2d.fillOval(x, y, 3, 3);
+        g2d.setColor(new Color(0xD4, 0xAF, 0x7F, 25));
+        for (int px = 0; px < imgW; px += 40) {
+            for (int py = 0; py < imgH; py += 40) {
+                g2d.fillOval(px, py, 3, 3);
             }
         }
 
-        // ── 3. 外框裝飾（雙層邊框）──
+        // ── 3. 雙層外框 ──
         g2d.setColor(goldAccent);
         g2d.setStroke(new BasicStroke(5));
-        g2d.drawRoundRect(15, 15, MENU_WIDTH - 30, MENU_HEIGHT - 30, 20, 20);
+        g2d.drawRoundRect(15, 15, imgW - 30, imgH - 30, 20, 20);
         g2d.setColor(goldLight);
         g2d.setStroke(new BasicStroke(2));
-        g2d.drawRoundRect(28, 28, MENU_WIDTH - 56, MENU_HEIGHT - 56, 15, 15);
+        g2d.drawRoundRect(28, 28, imgW - 56, imgH - 56, 15, 15);
 
-        // ── 4. 角落裝飾 ──
-        drawBoutiqueCorners(g2d, goldAccent);
+        // ── 4. 角落裝飾（L 形 + 圓點）──
+        drawBoutiqueCorners(g2d, goldAccent, imgH);
 
-        // ── 5. 繪製 2x3 格線 ──
-        int cols = 3, rows = 2;
-        int cellW = MENU_WIDTH / cols;
-        int cellH = MENU_HEIGHT / rows;
+        // ── 行列定義（3+4+4 佈局）──
+        int rowH = imgH / 3;                // 每行高度 562
+        int topRow3W = imgW / 3;            // 上排每格 833
+        int midBottomW = imgW / 4;          // 中下排每格 625
 
-        // 淡色分隔線
-        g2d.setColor(new Color(0xD4, 0xAF, 0x7F, 45));
+        // ── 5. 淡色分隔線 ──
+        g2d.setColor(new Color(0xD4, 0xAF, 0x7F, 40));
         g2d.setStroke(new BasicStroke(1.5f));
-        for (int c = 1; c < cols; c++) {
-            g2d.drawLine(c * cellW, 45, c * cellW, MENU_HEIGHT - 45);
+        // 水平分隔線
+        g2d.drawLine(50, rowH, imgW - 50, rowH);
+        g2d.drawLine(50, rowH * 2, imgW - 50, rowH * 2);
+        // 上排垂直分隔線
+        for (int c = 1; c < 3; c++) {
+            g2d.drawLine(c * topRow3W, 50, c * topRow3W, rowH - 20);
         }
-        g2d.drawLine(45, cellH, MENU_WIDTH - 45, cellH);
+        // 中排、下排垂直分隔線
+        for (int c = 1; c < 4; c++) {
+            g2d.drawLine(c * midBottomW, rowH + 20, c * midBottomW, rowH * 2 - 20);
+            g2d.drawLine(c * midBottomW, rowH * 2 + 20, c * midBottomW, imgH - 50);
+        }
 
-        // ── 6. 繪製每個選單項目 ──
-        String[] labels = {"開始預約", "我的預約", "瀏覽商品", "領取票券", "會員資訊", "聯絡店家"};
-        IconType[] icons = {
-                IconType.CALENDAR, IconType.CLIPBOARD, IconType.CART,
-                IconType.TICKET, IconType.PERSON, IconType.PHONE
-        };
+        // ================================================================
+        // 上排 3 格：[藥丸按鈕：服務價目] [店名 Logo] [藥丸按鈕：最新優惠]
+        // ================================================================
+        Font pillFont = loadChineseFont(Font.BOLD, 48);
+        Font shopNameFont = loadChineseFont(Font.BOLD, 72);
+        Font shopSubFont = loadChineseFont(Font.PLAIN, 36);
 
-        Font labelFont = loadChineseFont(Font.BOLD, 52);
+        // --- 左邊藥丸按鈕「服務價目」---
+        {
+            int cx = topRow3W / 2;
+            int cy = rowH / 2;
+            int pillW = 360;
+            int pillH = 80;
+            int px = cx - pillW / 2;
+            int py = cy - pillH / 2;
 
-        for (int i = 0; i < 6; i++) {
-            int row = i / cols;
-            int col = i % cols;
-            int x = col * cellW;
-            int y = row * cellH;
-            int centerX = x + cellW / 2;
-            int centerY = y + cellH / 2 - 18;
-            int radius = 105;
-
-            // 裝飾外環（虛線）
-            g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 110));
-            float[] dash = {10f, 6f};
-            g2d.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f, dash, 0));
-            g2d.drawOval(centerX - radius - 16, centerY - radius - 16,
-                    (radius + 16) * 2, (radius + 16) * 2);
-
-            // 圓圈陰影
-            g2d.setColor(new Color(0, 0, 0, 12));
-            g2d.fillOval(centerX - radius + 5, centerY - radius + 5, radius * 2, radius * 2);
-
-            // 圓圈填色（漸層）
-            GradientPaint circleGrad = new GradientPaint(
-                    centerX - radius, centerY - radius, circleBgLight,
-                    centerX + radius, centerY + radius, circleBgDark
-            );
-            g2d.setPaint(circleGrad);
-            g2d.fillOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
-
-            // 圓圈邊框
+            // 藥丸陰影
+            g2d.setColor(new Color(0, 0, 0, 25));
+            g2d.fillRoundRect(px + 3, py + 3, pillW, pillH, pillH, pillH);
+            // 藥丸底色
+            g2d.setColor(pillBg);
+            g2d.fillRoundRect(px, py, pillW, pillH, pillH, pillH);
+            // 藥丸邊框
             g2d.setColor(goldAccent);
+            g2d.setStroke(new BasicStroke(2f));
+            g2d.drawRoundRect(px, py, pillW, pillH, pillH, pillH);
+            // 文字
+            g2d.setFont(pillFont);
+            g2d.setColor(pillText);
+            FontMetrics pfm = g2d.getFontMetrics();
+            String pillLabel = "\u27A1 服務價目";
+            int tw = pfm.stringWidth(pillLabel);
+            g2d.drawString(pillLabel, cx - tw / 2, cy + pfm.getAscent() / 2 - 2);
+        }
+
+        // --- 中間店名 Logo ---
+        {
+            int cx = topRow3W + topRow3W / 2;
+            int cy = rowH / 2;
+
+            // 裝飾性大圓環（Logo 背景）
+            int logoR = 160;
+            g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 40));
             g2d.setStroke(new BasicStroke(3f));
-            g2d.drawOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
+            g2d.drawOval(cx - logoR, cy - logoR, logoR * 2, logoR * 2);
 
-            // 內圈裝飾線
-            g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 60));
-            g2d.setStroke(new BasicStroke(1f));
-            g2d.drawOval(centerX - radius + 8, centerY - radius + 8,
-                    (radius - 8) * 2, (radius - 8) * 2);
+            // 內圈
+            g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 25));
+            g2d.fillOval(cx - logoR + 15, cy - logoR + 15, (logoR - 15) * 2, (logoR - 15) * 2);
 
-            // 繪製圖示
-            int iconSize = 75;
-            g2d.setColor(iconBrown);
-            g2d.setStroke(new BasicStroke(Math.max(5, iconSize / 10),
-                    BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            drawIcon(g2d, icons[i], centerX, centerY, iconSize);
-
-            // 文字標籤
-            g2d.setFont(labelFont);
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(labels[i]);
-            int textX = centerX - textWidth / 2;
-            int textY = centerY + radius + 48;
-
-            // 文字陰影
-            g2d.setColor(shadowColor);
-            g2d.drawString(labels[i], textX + 1, textY + 1);
-
-            // 文字主體
+            // 店名（大字）
+            g2d.setFont(shopNameFont);
             g2d.setColor(textBrown);
-            g2d.drawString(labels[i], textX, textY);
+            FontMetrics sfm = g2d.getFontMetrics();
+            // 截取前 4 個字，避免過長
+            String displayName = shopName.length() > 5 ? shopName.substring(0, 5) : shopName;
+            int snw = sfm.stringWidth(displayName);
+            g2d.drawString(displayName, cx - snw / 2, cy + sfm.getAscent() / 3);
+
+            // 副標題
+            g2d.setFont(shopSubFont);
+            g2d.setColor(goldAccent);
+            FontMetrics subfm = g2d.getFontMetrics();
+            String sub = "BOOKING";
+            int subW = subfm.stringWidth(sub);
+            g2d.drawString(sub, cx - subW / 2, cy + sfm.getAscent() / 3 + 40);
+        }
+
+        // --- 右邊藥丸按鈕「最新優惠」---
+        {
+            int cx = topRow3W * 2 + topRow3W / 2;
+            int cy = rowH / 2;
+            int pillW = 360;
+            int pillH = 80;
+            int px = cx - pillW / 2;
+            int py = cy - pillH / 2;
+
+            g2d.setColor(new Color(0, 0, 0, 25));
+            g2d.fillRoundRect(px + 3, py + 3, pillW, pillH, pillH, pillH);
+            g2d.setColor(pillBg);
+            g2d.fillRoundRect(px, py, pillW, pillH, pillH, pillH);
+            g2d.setColor(goldAccent);
+            g2d.setStroke(new BasicStroke(2f));
+            g2d.drawRoundRect(px, py, pillW, pillH, pillH, pillH);
+            g2d.setFont(pillFont);
+            g2d.setColor(pillText);
+            FontMetrics pfm = g2d.getFontMetrics();
+            String pillLabel = "\u27A1 最新優惠";
+            int tw = pfm.stringWidth(pillLabel);
+            g2d.drawString(pillLabel, cx - tw / 2, cy + pfm.getAscent() / 2 - 2);
+        }
+
+        // ================================================================
+        // 中排 4 格 + 下排 4 格：圓形圖示 + 文字標籤
+        // ================================================================
+        String[] midLabels = {"紅利點數", "查詢預約", "計次券", "儲值餘額"};
+        IconType[] midIcons = {IconType.COIN, IconType.CLIPBOARD, IconType.TICKET, IconType.HOURGLASS};
+
+        String[] botLabels = {"1對1諮詢", "消費紀錄", "線上預約", "電子優惠券"};
+        IconType[] botIcons = {IconType.FLOWER, IconType.RECEIPT, IconType.HEART, IconType.COUPON_STAR};
+
+        Font labelFont = loadChineseFont(Font.BOLD, 48);
+
+        // 中排（row = 1）
+        for (int i = 0; i < 4; i++) {
+            int cellX = i * midBottomW;
+            int cellY = rowH;
+            drawBoutiqueCell(g2d, cellX, cellY, midBottomW, rowH,
+                    midLabels[i], midIcons[i], labelFont,
+                    goldAccent, circleBgLight, circleBgDark, iconBrown, textBrown, shadowColor);
+        }
+
+        // 下排（row = 2）
+        for (int i = 0; i < 4; i++) {
+            int cellX = i * midBottomW;
+            int cellY = rowH * 2;
+            int cellH = imgH - rowH * 2;
+            drawBoutiqueCell(g2d, cellX, cellY, midBottomW, cellH,
+                    botLabels[i], botIcons[i], labelFont,
+                    goldAccent, circleBgLight, circleBgDark, iconBrown, textBrown, shadowColor);
+        }
+
+        // ── 上排與中排之間的裝飾點 ──
+        g2d.setColor(goldAccent);
+        int dotY = rowH;
+        for (int dx = 80; dx < imgW - 60; dx += 50) {
+            g2d.fillOval(dx, dotY - 2, 4, 4);
+        }
+        int dotY2 = rowH * 2;
+        for (int dx = 80; dx < imgW - 60; dx += 50) {
+            g2d.fillOval(dx, dotY2 - 2, 4, 4);
         }
 
         g2d.dispose();
@@ -1447,7 +1549,14 @@ public class LineRichMenuService {
         // 超過 1MB 轉 JPEG
         if (result.length > MAX_IMAGE_SIZE) {
             baos.reset();
-            ImageIO.write(image, "jpg", baos);
+            // 轉為 RGB（JPEG 不支援 ARGB）
+            BufferedImage rgbImage = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_RGB);
+            Graphics2D rg = rgbImage.createGraphics();
+            rg.setColor(bgLight);
+            rg.fillRect(0, 0, imgW, imgH);
+            rg.drawImage(image, 0, 0, null);
+            rg.dispose();
+            ImageIO.write(rgbImage, "jpg", baos);
             result = baos.toByteArray();
         }
 
@@ -1455,9 +1564,74 @@ public class LineRichMenuService {
     }
 
     /**
-     * 繪製精品風角落裝飾
+     * 繪製精品風圓形圖示格（中排/下排通用）
      */
-    private void drawBoutiqueCorners(Graphics2D g2d, Color color) {
+    private void drawBoutiqueCell(Graphics2D g2d, int cellX, int cellY, int cellW, int cellH,
+                                   String label, IconType iconType, Font labelFont,
+                                   Color goldAccent, Color circleBgLight, Color circleBgDark,
+                                   Color iconBrown, Color textBrown, Color shadowColor) {
+        int centerX = cellX + cellW / 2;
+        int centerY = cellY + cellH / 2 - 25;
+        int radius = Math.min(cellW, cellH) / 2 - 65;
+        radius = Math.min(radius, 120);
+
+        // 裝飾外環（虛線）
+        g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 90));
+        float[] dash = {10f, 6f};
+        g2d.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f, dash, 0));
+        g2d.drawOval(centerX - radius - 18, centerY - radius - 18,
+                (radius + 18) * 2, (radius + 18) * 2);
+
+        // 圓圈陰影
+        g2d.setColor(new Color(0, 0, 0, 12));
+        g2d.fillOval(centerX - radius + 4, centerY - radius + 4, radius * 2, radius * 2);
+
+        // 圓圈填色（漸層）
+        GradientPaint circleGrad = new GradientPaint(
+                centerX - radius, centerY - radius, circleBgLight,
+                centerX + radius, centerY + radius, circleBgDark
+        );
+        g2d.setPaint(circleGrad);
+        g2d.fillOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
+
+        // 圓圈邊框
+        g2d.setColor(goldAccent);
+        g2d.setStroke(new BasicStroke(3f));
+        g2d.drawOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
+
+        // 內圈裝飾線
+        g2d.setColor(new Color(0xC8, 0x9B, 0x6E, 50));
+        g2d.setStroke(new BasicStroke(1f));
+        g2d.drawOval(centerX - radius + 8, centerY - radius + 8,
+                (radius - 8) * 2, (radius - 8) * 2);
+
+        // 繪製圖示
+        int iconSize = Math.min(70, radius * 2 / 3);
+        g2d.setColor(iconBrown);
+        g2d.setStroke(new BasicStroke(Math.max(5, iconSize / 10),
+                BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        drawIcon(g2d, iconType, centerX, centerY, iconSize);
+
+        // 文字標籤
+        g2d.setFont(labelFont);
+        FontMetrics fm = g2d.getFontMetrics();
+        int textWidth = fm.stringWidth(label);
+        int textX = centerX - textWidth / 2;
+        int textY = centerY + radius + 50;
+
+        // 文字陰影
+        g2d.setColor(shadowColor);
+        g2d.drawString(label, textX + 1, textY + 1);
+
+        // 文字主體
+        g2d.setColor(textBrown);
+        g2d.drawString(label, textX, textY);
+    }
+
+    /**
+     * 繪製精品風角落裝飾（支援不同高度）
+     */
+    private void drawBoutiqueCorners(Graphics2D g2d, Color color, int height) {
         g2d.setColor(color);
         g2d.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
@@ -1475,14 +1649,14 @@ public class LineRichMenuService {
         g2d.fillOval(MENU_WIDTH - inset - 4, inset - 4, 8, 8);
 
         // 左下角
-        g2d.drawLine(inset, MENU_HEIGHT - inset - len, inset, MENU_HEIGHT - inset);
-        g2d.drawLine(inset, MENU_HEIGHT - inset, inset + len, MENU_HEIGHT - inset);
-        g2d.fillOval(inset - 4, MENU_HEIGHT - inset - 4, 8, 8);
+        g2d.drawLine(inset, height - inset - len, inset, height - inset);
+        g2d.drawLine(inset, height - inset, inset + len, height - inset);
+        g2d.fillOval(inset - 4, height - inset - 4, 8, 8);
 
         // 右下角
-        g2d.drawLine(MENU_WIDTH - inset - len, MENU_HEIGHT - inset, MENU_WIDTH - inset, MENU_HEIGHT - inset);
-        g2d.drawLine(MENU_WIDTH - inset, MENU_HEIGHT - inset - len, MENU_WIDTH - inset, MENU_HEIGHT - inset);
-        g2d.fillOval(MENU_WIDTH - inset - 4, MENU_HEIGHT - inset - 4, 8, 8);
+        g2d.drawLine(MENU_WIDTH - inset - len, height - inset, MENU_WIDTH - inset, height - inset);
+        g2d.drawLine(MENU_WIDTH - inset, height - inset - len, MENU_WIDTH - inset, height - inset);
+        g2d.fillOval(MENU_WIDTH - inset - 4, height - inset - 4, 8, 8);
     }
 
     // ========================================
@@ -1529,9 +1703,125 @@ public class LineRichMenuService {
             config.setRichMenuId(richMenuId);
             config.setRichMenuTheme(theme);
             config.setRichMenuMode("CUSTOM".equals(theme) ? "CUSTOM" : "DEFAULT");
-            config.setRichMenuCustomConfig(null);
+            // BOUTIQUE 主題不清除自訂配置（含 flex popup）
+            if (!"BOUTIQUE".equalsIgnoreCase(theme)) {
+                config.setRichMenuCustomConfig(null);
+            }
             lineConfigRepository.save(config);
         });
+    }
+
+    /**
+     * 儲存精品風 Flex 彈窗配置
+     *
+     * <p>為上排的「服務價目」（cell 0）和「最新優惠」（cell 2）設定 Flex Message 彈窗
+     */
+    private void saveBoutiqueFlexPopupConfig(String tenantId, String richMenuId, String shopName) {
+        try {
+            ObjectNode config = objectMapper.createObjectNode();
+            config.put("mode", "BOUTIQUE");
+            config.put("size", "FULL");
+            config.put("layout", "3+4+4");
+
+            ArrayNode cells = objectMapper.createArrayNode();
+
+            // ── cell 0：服務價目（Carousel 彈窗）──
+            ObjectNode cell0 = objectMapper.createObjectNode();
+            cell0.put("index", 0);
+            cell0.put("label", "服務價目");
+            ObjectNode flexPopup0 = objectMapper.createObjectNode();
+            flexPopup0.put("type", "carousel");
+            ArrayNode bubbles0 = objectMapper.createArrayNode();
+
+            ObjectNode bubble0_1 = objectMapper.createObjectNode();
+            bubble0_1.put("heroImageUrl", "https://via.placeholder.com/800x600/F5F0E8/8B7355?text=" + shopName);
+            bubble0_1.put("title", "服務價目表");
+            bubble0_1.put("description", "查看我們提供的所有服務項目與價格");
+            ArrayNode buttons0_1 = objectMapper.createArrayNode();
+            ObjectNode btn0_1 = objectMapper.createObjectNode();
+            btn0_1.put("label", "開始預約");
+            ObjectNode btnAction0_1 = objectMapper.createObjectNode();
+            btnAction0_1.put("type", "postback");
+            btnAction0_1.put("data", "action=start_booking");
+            btn0_1.set("action", btnAction0_1);
+            buttons0_1.add(btn0_1);
+            bubble0_1.set("buttons", buttons0_1);
+            bubbles0.add(bubble0_1);
+
+            ObjectNode bubble0_2 = objectMapper.createObjectNode();
+            bubble0_2.put("heroImageUrl", "https://via.placeholder.com/800x600/E8D5C4/8B7355?text=Services");
+            bubble0_2.put("title", "人氣推薦");
+            bubble0_2.put("description", "最受歡迎的服務項目");
+            ArrayNode buttons0_2 = objectMapper.createArrayNode();
+            ObjectNode btn0_2 = objectMapper.createObjectNode();
+            btn0_2.put("label", "查看詳情");
+            ObjectNode btnAction0_2 = objectMapper.createObjectNode();
+            btnAction0_2.put("type", "postback");
+            btnAction0_2.put("data", "action=start_booking");
+            btn0_2.set("action", btnAction0_2);
+            buttons0_2.add(btn0_2);
+            bubble0_2.set("buttons", buttons0_2);
+            bubbles0.add(bubble0_2);
+
+            flexPopup0.set("bubbles", bubbles0);
+            cell0.set("flexPopup", flexPopup0);
+            cells.add(cell0);
+
+            // ── cell 2：最新優惠（Carousel 彈窗）──
+            ObjectNode cell2 = objectMapper.createObjectNode();
+            cell2.put("index", 2);
+            cell2.put("label", "最新優惠");
+            ObjectNode flexPopup2 = objectMapper.createObjectNode();
+            flexPopup2.put("type", "carousel");
+            ArrayNode bubbles2 = objectMapper.createArrayNode();
+
+            ObjectNode bubble2_1 = objectMapper.createObjectNode();
+            bubble2_1.put("heroImageUrl", "https://via.placeholder.com/800x600/FFE4C4/8B7355?text=Coupon");
+            bubble2_1.put("title", "最新優惠活動");
+            bubble2_1.put("description", "查看目前進行中的優惠活動");
+            ArrayNode buttons2_1 = objectMapper.createArrayNode();
+            ObjectNode btn2_1 = objectMapper.createObjectNode();
+            btn2_1.put("label", "領取票券");
+            ObjectNode btnAction2_1 = objectMapper.createObjectNode();
+            btnAction2_1.put("type", "postback");
+            btnAction2_1.put("data", "action=view_coupons");
+            btn2_1.set("action", btnAction2_1);
+            buttons2_1.add(btn2_1);
+            bubble2_1.set("buttons", buttons2_1);
+            bubbles2.add(bubble2_1);
+
+            ObjectNode bubble2_2 = objectMapper.createObjectNode();
+            bubble2_2.put("heroImageUrl", "https://via.placeholder.com/800x600/D4C4B0/8B7355?text=Member");
+            bubble2_2.put("title", "會員專屬優惠");
+            bubble2_2.put("description", "加入會員享更多折扣");
+            ArrayNode buttons2_2 = objectMapper.createArrayNode();
+            ObjectNode btn2_2 = objectMapper.createObjectNode();
+            btn2_2.put("label", "會員資訊");
+            ObjectNode btnAction2_2 = objectMapper.createObjectNode();
+            btnAction2_2.put("type", "postback");
+            btnAction2_2.put("data", "action=view_member_info");
+            btn2_2.set("action", btnAction2_2);
+            buttons2_2.add(btn2_2);
+            bubble2_2.set("buttons", buttons2_2);
+            bubbles2.add(bubble2_2);
+
+            flexPopup2.set("bubbles", bubbles2);
+            cell2.set("flexPopup", flexPopup2);
+            cells.add(cell2);
+
+            config.set("cells", cells);
+
+            // 儲存到 DB
+            lineConfigRepository.findByTenantId(tenantId).ifPresent(lineConfig -> {
+                lineConfig.setRichMenuCustomConfig(config.toString());
+                lineConfigRepository.save(lineConfig);
+            });
+
+            log.info("精品風 Flex 彈窗配置已儲存，租戶：{}", tenantId);
+
+        } catch (Exception e) {
+            log.warn("儲存精品風 Flex 彈窗配置失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage());
+        }
     }
 
     /**
@@ -1576,6 +1866,42 @@ public class LineRichMenuService {
             case PHONE:
                 // 電話圖示
                 drawPhoneIcon(g2d, centerX, centerY, size);
+                break;
+            case COIN:
+                // 錢幣圖示（紅利點數）
+                drawCoinIcon(g2d, centerX, centerY, size);
+                break;
+            case HOURGLASS:
+                // 沙漏圖示（儲值餘額）
+                drawHourglassIcon(g2d, centerX, centerY, size);
+                break;
+            case HEART:
+                // 愛心圖示（線上預約）
+                drawHeartIcon(g2d, centerX, centerY, size);
+                break;
+            case FLOWER:
+                // 花朵圖示（1對1諮詢）
+                drawFlowerIcon(g2d, centerX, centerY, size);
+                break;
+            case RECEIPT:
+                // 收據圖示（消費紀錄）
+                drawReceiptIcon(g2d, centerX, centerY, size);
+                break;
+            case COUPON_STAR:
+                // 星章圖示（電子優惠券）
+                drawCouponStarIcon(g2d, centerX, centerY, size);
+                break;
+            case SCISSORS:
+                // 剪刀圖示（美容預約）
+                drawScissorsIcon(g2d, centerX, centerY, size);
+                break;
+            case HOUSE:
+                // 房屋圖示（住宿預約）
+                drawHouseIcon(g2d, centerX, centerY, size);
+                break;
+            case ENVELOPE:
+                // 信封圖示（會員優惠）
+                drawEnvelopeIcon(g2d, centerX, centerY, size);
                 break;
         }
     }
@@ -1736,6 +2062,173 @@ public class LineRichMenuService {
 
         // 底部圓形按鈕
         g2d.drawOval(cx - 4, y + h - 10, 8, 8);
+    }
+
+    /**
+     * 繪製錢幣圖示（紅利點數）
+     */
+    private void drawCoinIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int r = size / 2;
+        // 外圈
+        g2d.drawOval(cx - r, cy - r, r * 2, r * 2);
+        // 內圈
+        g2d.drawOval(cx - r + 8, cy - r + 8, (r - 8) * 2, (r - 8) * 2);
+        // $ 符號
+        int sw = Math.max(4, size / 12);
+        g2d.setStroke(new BasicStroke(sw, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.drawLine(cx, cy - r / 2, cx, cy + r / 2);
+        g2d.drawArc(cx - r / 3, cy - r / 3, r * 2 / 3, r / 3, 0, 180);
+        g2d.drawArc(cx - r / 3, cy, r * 2 / 3, r / 3, 180, 180);
+    }
+
+    /**
+     * 繪製沙漏圖示（儲值餘額）
+     */
+    private void drawHourglassIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = (int)(size * 0.6);
+        int h = size;
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+        // 上下兩條橫線
+        g2d.drawLine(x, y, x + w, y);
+        g2d.drawLine(x, y + h, x + w, y + h);
+        // 交叉線（沙漏形狀）
+        g2d.drawLine(x + 4, y + 4, cx + w / 2 - 4, cy);
+        g2d.drawLine(cx + w / 2 - 4, cy, x + 4, y + h - 4);
+        g2d.drawLine(x + w - 4, y + 4, cx - w / 2 + 4, cy);
+        g2d.drawLine(cx - w / 2 + 4, cy, x + w - 4, y + h - 4);
+        // 中間沙粒
+        g2d.fillOval(cx - 3, cy - 3, 6, 6);
+    }
+
+    /**
+     * 繪製愛心圖示（線上預約）
+     */
+    private void drawHeartIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 0.9);
+        // 使用兩個圓弧和底部尖角構成愛心
+        int topY = cy - h / 3;
+        int r = w / 4;
+        g2d.drawOval(cx - w / 2, topY - r, r * 2, r * 2);
+        g2d.drawOval(cx, topY - r, r * 2, r * 2);
+        // 下半部三角形
+        int[] xPts = {cx - w / 2, cx + w / 2, cx};
+        int[] yPts = {topY + r / 2, topY + r / 2, cy + h / 2};
+        g2d.drawPolyline(xPts, yPts, 3);
+    }
+
+    /**
+     * 繪製花朵圖示（1對1諮詢）
+     */
+    private void drawFlowerIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int r = size / 5;
+        int dist = (int)(size * 0.32);
+        // 花瓣（5 片）
+        for (int i = 0; i < 5; i++) {
+            double angle = Math.PI * 2 * i / 5 - Math.PI / 2;
+            int px = cx + (int)(dist * Math.cos(angle));
+            int py = cy + (int)(dist * Math.sin(angle));
+            g2d.drawOval(px - r, py - r, r * 2, r * 2);
+        }
+        // 花心
+        g2d.fillOval(cx - r / 2, cy - r / 2, r, r);
+        // 花莖
+        g2d.drawLine(cx, cy + dist, cx, cy + size / 2 + 5);
+        // 葉子
+        g2d.drawArc(cx, cy + dist + 5, size / 4, size / 6, 90, 180);
+    }
+
+    /**
+     * 繪製收據圖示（消費紀錄）
+     */
+    private void drawReceiptIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = (int)(size * 0.75);
+        int h = size;
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+        // 收據主體（矩形，底部鋸齒）
+        g2d.drawLine(x, y, x, y + h);
+        g2d.drawLine(x + w, y, x + w, y + h);
+        g2d.drawLine(x, y, x + w, y);
+        // 底部鋸齒
+        int teeth = 4;
+        int tw = w / teeth;
+        for (int i = 0; i < teeth; i++) {
+            int tx = x + i * tw;
+            g2d.drawLine(tx, y + h, tx + tw / 2, y + h - 8);
+            g2d.drawLine(tx + tw / 2, y + h - 8, tx + tw, y + h);
+        }
+        // 文字線條
+        g2d.drawLine(x + 8, y + h / 4, x + w - 8, y + h / 4);
+        g2d.drawLine(x + 8, y + h / 4 + 12, x + w - 8, y + h / 4 + 12);
+        g2d.drawLine(x + 8, y + h / 4 + 24, x + w / 2, y + h / 4 + 24);
+    }
+
+    /**
+     * 繪製星章圖示（電子優惠券）
+     */
+    private void drawCouponStarIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int r = size / 2;
+        // 五角星
+        int[] xPts = new int[10];
+        int[] yPts = new int[10];
+        for (int i = 0; i < 10; i++) {
+            double angle = Math.PI * 2 * i / 10 - Math.PI / 2;
+            int rad = (i % 2 == 0) ? r : (int)(r * 0.45);
+            xPts[i] = cx + (int)(rad * Math.cos(angle));
+            yPts[i] = cy + (int)(rad * Math.sin(angle));
+        }
+        g2d.drawPolygon(xPts, yPts, 10);
+        // 中心圓
+        g2d.drawOval(cx - 6, cy - 6, 12, 12);
+    }
+
+    /**
+     * 繪製剪刀圖示（美容預約）
+     */
+    private void drawScissorsIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int r = size / 4;
+        // 兩個圓圈（手柄）
+        g2d.drawOval(cx - size / 2, cy + 2, r * 2, r * 2);
+        g2d.drawOval(cx + size / 2 - r * 2, cy + 2, r * 2, r * 2);
+        // 兩條交叉刀片
+        g2d.drawLine(cx - size / 2 + r, cy + r, cx + 4, cy - size / 2 + 4);
+        g2d.drawLine(cx + size / 2 - r, cy + r, cx - 4, cy - size / 2 + 4);
+    }
+
+    /**
+     * 繪製房屋圖示（住宿預約）
+     */
+    private void drawHouseIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 0.7);
+        int x = cx - w / 2;
+        int y = cy;
+        // 屋頂（三角形）
+        g2d.drawLine(cx, cy - size / 2, x, y);
+        g2d.drawLine(cx, cy - size / 2, x + w, y);
+        // 牆壁
+        g2d.drawRect(x + 6, y, w - 12, h);
+        // 門
+        g2d.drawRect(cx - 8, y + h / 3, 16, h - h / 3);
+        // 門把
+        g2d.fillOval(cx + 4, y + h / 3 + h / 3, 4, 4);
+    }
+
+    /**
+     * 繪製信封圖示（會員優惠）
+     */
+    private void drawEnvelopeIcon(Graphics2D g2d, int cx, int cy, int size) {
+        int w = size;
+        int h = (int)(size * 0.7);
+        int x = cx - w / 2;
+        int y = cy - h / 2;
+        // 信封主體
+        g2d.drawRect(x, y, w, h);
+        // 信封翻蓋（V 形）
+        g2d.drawLine(x, y, cx, cy);
+        g2d.drawLine(cx, cy, x + w, y);
     }
 
     /**
