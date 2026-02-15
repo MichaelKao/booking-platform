@@ -1175,6 +1175,66 @@
         }
     };
 
+    // 每業種的預約步驟 Hero 圖片（6 張，對應 service/date/staff/time/note/confirm）
+    const FM_STEP_IMAGES = {
+        pet: {
+            service: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1581888227599-779811939961?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=600&h=200&fit=crop'
+        },
+        beauty: {
+            service: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=600&h=200&fit=crop'
+        },
+        hair: {
+            service: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1522337094846-8a818192de1f?w=600&h=200&fit=crop'
+        },
+        clinic: {
+            service: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&h=200&fit=crop'
+        },
+        fitness: {
+            service: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=600&h=200&fit=crop'
+        },
+        restaurant: {
+            service: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&h=200&fit=crop'
+        },
+        spa: {
+            service: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=200&fit=crop',
+            date:    'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600&h=200&fit=crop',
+            staff:   'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600&h=200&fit=crop',
+            time:    'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&h=200&fit=crop',
+            note:    'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&h=200&fit=crop',
+            confirm: 'https://images.unsplash.com/photo-1531299204812-e6d44d9a185c?w=600&h=200&fit=crop'
+        }
+    };
+
     const ACTIONS = [
         { v:'start_booking',    l:'開始預約',   ic:'📅' },
         { v:'view_bookings',    l:'查詢預約',   ic:'📋' },
@@ -1355,13 +1415,26 @@
             renderFmCardEditors();
             updateFmCarouselPreview();
         }
-        // 套用功能頁面樣式
+        // 套用功能頁面樣式（自動帶入業種圖片）
         if (s.fmFunctions) { fmFunctions = JSON.parse(JSON.stringify(s.fmFunctions)); }
         else { fmFunctions = {}; }
+        const funcImgMap = { bookingList:'view_bookings', productMenu:'start_shopping', couponList:'view_coupons', myCoupons:'view_my_coupons', memberInfo:'view_member_info', contactShop:'contact_shop', bookingFlow:'start_booking' };
+        const cellImgs = RM_CELL_IMAGES[catKey] || {};
+        Object.entries(funcImgMap).forEach(([funcKey, actionKey]) => {
+            if (cellImgs[actionKey]) {
+                if (!fmFunctions[funcKey]) fmFunctions[funcKey] = {};
+                if (!fmFunctions[funcKey].imageUrl) fmFunctions[funcKey].imageUrl = cellImgs[actionKey];
+            }
+        });
         renderFmFunctions();
-        // 套用預約步驟樣式
+        // 套用預約步驟樣式（自動帶入業種圖片）
         if (s.fmSteps) { fmSteps = JSON.parse(JSON.stringify(s.fmSteps)); }
         else { fmSteps = {}; }
+        const stepImages = FM_STEP_IMAGES[catKey] || {};
+        Object.keys(stepImages).forEach(stepKey => {
+            if (!fmSteps[stepKey]) fmSteps[stepKey] = {};
+            if (!fmSteps[stepKey].imageUrl) fmSteps[stepKey].imageUrl = stepImages[stepKey];
+        });
         renderFmSteps();
         showSuccess(`已套用「${s.name}」範本！Rich Menu + Flex 主選單皆已更新，點「精確預覽」查看實際效果`);
         // 滾動到預覽區
