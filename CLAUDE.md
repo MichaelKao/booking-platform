@@ -933,45 +933,48 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (976 tests)：**
+**測試套件 (1206 tests in 41 files)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
 | `00-setup.spec.ts` | 環境檢查 | 5 |
 | `01-auth.spec.ts` | 認證功能 | 11 |
 | `02-admin.spec.ts` | 超管後台基本測試 | 12 |
-| `03-tenant-dashboard.spec.ts` | 店家後台基本測試 | 8 |
-| `04-tenant-features.spec.ts` | API 測試 | 17 |
-| `05-feature-store.spec.ts` | 功能商店 | 10 |
-| `06-sse-notifications.spec.ts` | SSE 即時通知 | 15 |
-| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 29 |
-| `08-tenant-booking.spec.ts` | 預約管理完整測試 | 32 |
+| `03-tenant-dashboard.spec.ts` | 店家後台基本測試 | 7 |
+| `04-tenant-features.spec.ts` | API 測試 | 16 |
+| `05-feature-store.spec.ts` | 功能商店 | 11 |
+| `06-sse-notifications.spec.ts` | SSE 即時通知 | 13 |
+| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 33 |
+| `08-tenant-booking.spec.ts` | 預約管理完整測試 | 28 |
 | `09-tenant-pages.spec.ts` | 店家後台所有頁面測試 | 33 |
-| `09-tenant-customer.spec.ts` | 顧客管理測試 | 35 |
+| `09-tenant-customer.spec.ts` | 顧客管理測試 | 32 |
 | `10-admin-pages.spec.ts` | 超管後台所有頁面測試 | 13 |
-| `10-tenant-staff-service.spec.ts` | 員工&服務管理測試 | - |
+| `10-tenant-staff-service.spec.ts` | 員工&服務管理測試 | 25 |
 | `11-public-pages.spec.ts` | 公開頁面測試 | 24 |
-| `11-tenant-product-coupon.spec.ts` | 商品&票券管理測試 | - |
-| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 26 |
-| `13-tenant-settings.spec.ts` | 設定頁面測試 | 28 |
-| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 32 |
+| `11-tenant-product-coupon.spec.ts` | 商品&票券管理測試 | 29 |
+| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 24 |
+| `13-tenant-settings.spec.ts` | 設定頁面測試 | 41 |
+| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 38 |
 | `15-line-bot.spec.ts` | LINE Bot 測試 | 19 |
 | `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
 | `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
-| `18-feature-store-details.spec.ts` | 功能商店詳情測試 | - |
-| `19-seo-pages.spec.ts` | SEO 頁面測試 | - |
+| `18-feature-store-details.spec.ts` | 功能商店詳情測試 | 23 |
+| `19-seo-pages.spec.ts` | SEO 頁面測試 | 45 |
 | `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
 | `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 40 |
 | `21-notification-system.spec.ts` | 通知系統補齊+顧客刪除按鈕測試 | 25 |
 | `22-full-coverage-ui.spec.ts` | 全覆蓋 UI 測試 | 94 |
 | `23-deep-interaction-test.spec.ts` | 深度互動測試 | 33 |
-| `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 50 |
+| `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 46 |
+| `24-rwd-responsive.spec.ts` | RWD 響應式設計測試 | 90 |
 | `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
-| `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 22 |
-| `27-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 | 67 |
+| `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 23 |
+| `27-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 | 132 |
 | `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 12 |
 | `29-time-validation.spec.ts` | 時間/日期驗證（開始<結束）+ 前端防呆 | 16 |
-| `30-rich-menu-custom.spec.ts` | Rich Menu 7 格預覽 + 自訂模式 + 佈局選擇 + API 契約 | - |
+| `30-rich-menu-custom.spec.ts` | Rich Menu 自訂模式 + 佈局選擇 + API 契約 | 52 |
+| `31-advanced-rich-menu.spec.ts` | 進階自訂 Rich Menu + 功能訂閱 + API | 19 |
+| `31-flex-menu-step-editor.spec.ts` | Flex Menu 步驟編輯器 + 卡片圖片上傳 | 36 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -1410,4 +1413,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 1001 |
+| E2E 測試 | 1206 |
