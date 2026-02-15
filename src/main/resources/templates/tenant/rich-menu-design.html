@@ -1436,7 +1436,10 @@
             if (!fmSteps[stepKey].imageUrl) fmSteps[stepKey].imageUrl = stepImages[stepKey];
         });
         renderFmSteps();
-        showSuccess(`已套用「${s.name}」範本！Rich Menu + Flex 主選單皆已更新，點「精確預覽」查看實際效果`);
+        // 自動儲存 Flex 主選單（讓 LINE Bot 立即生效）
+        saveFlexMenu(true).then(() => {
+            showSuccess(`已套用並儲存「${s.name}」範本！LINE Bot 主選單與預約步驟皆已更新`);
+        });
         // 滾動到預覽區
         document.getElementById('rmPreview').scrollIntoView({ behavior:'smooth', block:'center' });
     }
@@ -2361,7 +2364,7 @@
         }
     }
 
-    async function saveFlexMenu() {
+    async function saveFlexMenu(silent) {
         // 收集步驟（從 fmSteps 物件，去除時間戳）
         const steps = {};
         Object.keys(fmSteps).forEach(key => {
@@ -2408,7 +2411,7 @@
         };
         try {
             const r = await api.put('/api/settings/line/flex-menu', payload);
-            if (r.success) showSuccess('輪播卡片主選單已儲存！顧客下次開啟聊天時會看到新樣式');
+            if (r.success) { if (!silent) showSuccess('輪播卡片主選單已儲存！顧客下次開啟聊天時會看到新樣式'); }
             else showError(r.message||'儲存失敗');
         } catch(e) { showError('儲存失敗'); }
     }
