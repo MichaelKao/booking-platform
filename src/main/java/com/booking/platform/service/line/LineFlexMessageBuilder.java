@@ -125,8 +125,8 @@ public class LineFlexMessageBuilder {
         }
 
         // Header 設定
-        String headerColor = getConfigText(menuConfig, "headerColor", PRIMARY_COLOR);
-        String headerTitle = getConfigText(menuConfig, "headerTitle", "✨ " + shopName)
+        String headerColor = getConfigText(menuConfig, "color", PRIMARY_COLOR);
+        String headerTitle = getConfigText(menuConfig, "title", "✨ " + shopName)
                 .replace("{shopName}", shopName);
         String headerSubtitle = getConfigText(menuConfig, "headerSubtitle", "歡迎光臨！請問需要什麼服務呢？");
         boolean showTip = menuConfig != null && menuConfig.has("showTip") ? menuConfig.get("showTip").asBoolean(true) : true;
@@ -441,7 +441,7 @@ public class LineFlexMessageBuilder {
      *
      * @param tenantId 租戶 ID
      * @param stepKey  步驟 Key（service, date, staff, time, confirm, success, note）
-     * @param field    欄位名稱（headerColor, headerTitle, headerIcon 等）
+     * @param field    欄位名稱（color, title, icon, subtitle, imageUrl）
      * @param defaultValue 預設值
      * @return 自訂值或預設值
      */
@@ -772,8 +772,8 @@ public class LineFlexMessageBuilder {
         }
 
         // 讀取步驟自訂配置
-        String stepColor = getStepConfig(tenantId, "service", "headerColor", "#4A90D9");
-        String stepTitle = getStepConfig(tenantId, "service", "headerTitle", "✂️ 選擇服務");
+        String stepColor = getStepConfig(tenantId, "service", "color", "#4A90D9");
+        String stepTitle = getStepConfig(tenantId, "service", "title", "✂️ 選擇服務");
 
         ObjectNode carousel = objectMapper.createObjectNode();
         carousel.put("type", "carousel");
@@ -784,7 +784,7 @@ public class LineFlexMessageBuilder {
         bubbles.add(buildServiceGuide(tenantId, stepColor, stepTitle));
 
         for (ServiceItem service : services) {
-            bubbles.add(buildServiceBubble(service, stepColor));
+            bubbles.add(buildServiceBubble(service, stepColor, tenantId));
         }
 
         carousel.set("contents", bubbles);
@@ -855,29 +855,13 @@ public class LineFlexMessageBuilder {
     /**
      * 建構單一服務 Bubble
      */
-    private ObjectNode buildServiceBubble(ServiceItem service, String stepColor) {
+    private ObjectNode buildServiceBubble(ServiceItem service, String stepColor, String tenantId) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header - 服務名稱
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", stepColor);
-        header.put("paddingAll", "12px");
-
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", service.getName());
-        headerText.put("size", "md");
-        headerText.put("weight", "bold");
-        headerText.put("color", "#FFFFFF");
-        headerText.put("align", "center");
-        headerText.put("wrap", true);
-
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
-        bubble.set("header", header);
+        // 套用統一步驟 Header（含 Hero 圖片）
+        applyStepHeader(bubble, tenantId, "service", stepColor, service.getName(), null);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1043,11 +1027,15 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bubbles = objectMapper.createArrayNode();
 
+        // 讀取步驟自訂配置
+        String stepColor = getStepConfig(tenantId, "service", "color", "#4A90D9");
+        String stepTitle = getStepConfig(tenantId, "service", "title", "📂 選擇分類");
+
         // 第一個 Bubble：指引說明
-        bubbles.add(buildCategoryGuide());
+        bubbles.add(buildCategoryGuide(tenantId, stepColor));
 
         for (ServiceCategory category : filteredCategories) {
-            bubbles.add(buildCategoryBubble(category));
+            bubbles.add(buildCategoryBubble(category, tenantId, stepColor));
         }
 
         carousel.set("contents", bubbles);
@@ -1057,40 +1045,13 @@ public class LineFlexMessageBuilder {
     /**
      * 建構分類選單指引
      */
-    private ObjectNode buildCategoryGuide() {
+    private ObjectNode buildCategoryGuide(String tenantId, String stepColor) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", "#4A90D9");
-        header.put("paddingAll", "15px");
-
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 1/5");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", "\uD83D\uDCC2 選擇分類");
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        // 使用統一步驟 Header（含 Hero 圖片）
+        applyStepHeader(bubble, tenantId, "service", stepColor, "📂 選擇分類", "步驟 1/5");
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1145,29 +1106,13 @@ public class LineFlexMessageBuilder {
     /**
      * 建構單一分類 Bubble
      */
-    private ObjectNode buildCategoryBubble(ServiceCategory category) {
+    private ObjectNode buildCategoryBubble(ServiceCategory category, String tenantId, String stepColor) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header - 分類名稱
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", PRIMARY_COLOR);
-        header.put("paddingAll", "12px");
-
-        ObjectNode headerText = objectMapper.createObjectNode();
-        headerText.put("type", "text");
-        headerText.put("text", category.getName());
-        headerText.put("size", "md");
-        headerText.put("weight", "bold");
-        headerText.put("color", "#FFFFFF");
-        headerText.put("align", "center");
-        headerText.put("wrap", true);
-
-        header.set("contents", objectMapper.createArrayNode().add(headerText));
-        bubble.set("header", header);
+        // 套用統一步驟 Header（含 Hero 圖片）
+        applyStepHeader(bubble, tenantId, "service", stepColor, category.getName(), null);
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1237,8 +1182,8 @@ public class LineFlexMessageBuilder {
         }
 
         // 讀取步驟自訂配置
-        String stepColor = getStepConfig(tenantId, "service", "headerColor", "#4A90D9");
-        String stepTitle = getStepConfig(tenantId, "service", "headerTitle", "✂️ 選擇服務");
+        String stepColor = getStepConfig(tenantId, "service", "color", "#4A90D9");
+        String stepTitle = getStepConfig(tenantId, "service", "title", "✂️ 選擇服務");
 
         ObjectNode carousel = objectMapper.createObjectNode();
         carousel.put("type", "carousel");
@@ -1246,10 +1191,10 @@ public class LineFlexMessageBuilder {
         ArrayNode bubbles = objectMapper.createArrayNode();
 
         // 第一個 Bubble：指引說明（分類流程用 5 步版本）
-        bubbles.add(buildServiceGuideWithCategory(stepColor, stepTitle));
+        bubbles.add(buildServiceGuideWithCategory(tenantId, stepColor, stepTitle));
 
         for (ServiceItem service : services) {
-            bubbles.add(buildServiceBubble(service, stepColor));
+            bubbles.add(buildServiceBubble(service, stepColor, tenantId));
         }
 
         carousel.set("contents", bubbles);
@@ -1259,40 +1204,13 @@ public class LineFlexMessageBuilder {
     /**
      * 建構服務選單指引（分類流程版，步驟 2/5）
      */
-    private ObjectNode buildServiceGuideWithCategory(String stepColor, String stepTitle) {
+    private ObjectNode buildServiceGuideWithCategory(String tenantId, String stepColor, String stepTitle) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", stepColor);
-        header.put("paddingAll", "15px");
-
-        ArrayNode headerContents = objectMapper.createArrayNode();
-
-        ObjectNode stepText = objectMapper.createObjectNode();
-        stepText.put("type", "text");
-        stepText.put("text", "步驟 2/5");
-        stepText.put("size", "xs");
-        stepText.put("color", "#FFFFFF");
-        stepText.put("align", "center");
-        headerContents.add(stepText);
-
-        ObjectNode headerTitle = objectMapper.createObjectNode();
-        headerTitle.put("type", "text");
-        headerTitle.put("text", stepTitle);
-        headerTitle.put("size", "lg");
-        headerTitle.put("weight", "bold");
-        headerTitle.put("color", "#FFFFFF");
-        headerTitle.put("align", "center");
-        headerTitle.put("margin", "sm");
-        headerContents.add(headerTitle);
-
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+        // 使用統一步驟 Header（含 Hero 圖片）
+        applyStepHeader(bubble, tenantId, "service", stepColor, stepTitle, "步驟 2/5");
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -1363,8 +1281,8 @@ public class LineFlexMessageBuilder {
                 .toList();
 
         // 讀取步驟自訂配置
-        String stepColor = getStepConfig(tenantId, "service", "headerColor", "#4A90D9");
-        String stepTitle = getStepConfig(tenantId, "service", "headerTitle", "✂️ 選擇服務");
+        String stepColor = getStepConfig(tenantId, "service", "color", "#4A90D9");
+        String stepTitle = getStepConfig(tenantId, "service", "title", "✂️ 選擇服務");
 
         ObjectNode carousel = objectMapper.createObjectNode();
         carousel.put("type", "carousel");
@@ -1379,7 +1297,7 @@ public class LineFlexMessageBuilder {
             List<ServiceItem> services = serviceItemRepository
                     .findBookableServicesByCategory(tenantId, category.getId());
             if (!services.isEmpty()) {
-                bubbles.add(buildCategoryBubbleWithServices(category, services));
+                bubbles.add(buildCategoryBubbleWithServices(category, services, tenantId, stepColor));
             }
         }
 
@@ -1390,7 +1308,7 @@ public class LineFlexMessageBuilder {
                 .filter(s -> s.getCategoryId() == null || s.getCategoryId().isEmpty())
                 .toList();
         for (ServiceItem service : uncategorized) {
-            bubbles.add(buildServiceBubble(service, stepColor));
+            bubbles.add(buildServiceBubble(service, stepColor, tenantId));
         }
 
         if (bubbles.size() <= 1) {
@@ -1404,28 +1322,14 @@ public class LineFlexMessageBuilder {
     /**
      * 建構分類卡片（包含該分類下所有服務，每個服務為一個可點擊區塊）
      */
-    private ObjectNode buildCategoryBubbleWithServices(ServiceCategory category, List<ServiceItem> services) {
+    private ObjectNode buildCategoryBubbleWithServices(ServiceCategory category, List<ServiceItem> services,
+                                                        String tenantId, String stepColor) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header - 分類名稱
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", PRIMARY_COLOR);
-        header.put("paddingAll", "12px");
-
-        ObjectNode categoryText = objectMapper.createObjectNode();
-        categoryText.put("type", "text");
-        categoryText.put("text", "📂 " + category.getName());
-        categoryText.put("size", "md");
-        categoryText.put("weight", "bold");
-        categoryText.put("color", "#FFFFFF");
-        categoryText.put("align", "center");
-
-        header.set("contents", objectMapper.createArrayNode().add(categoryText));
-        bubble.set("header", header);
+        // 套用統一步驟 Header（含 Hero 圖片）
+        applyStepHeader(bubble, tenantId, "service", stepColor, "📂 " + category.getName(), null);
 
         // Body - 每個服務一個可點擊的 box
         ObjectNode body = objectMapper.createObjectNode();
@@ -1542,8 +1446,8 @@ public class LineFlexMessageBuilder {
                 .findByTenantIdAndStatusAndDeletedAtIsNull(tenantId, StaffStatus.ACTIVE);
 
         // 讀取步驟自訂配置
-        String staffStepColor = getStepConfig(tenantId, "staff", "headerColor", "#4A90D9");
-        String staffStepTitle = getStepConfig(tenantId, "staff", "headerTitle", "👤 選擇服務人員");
+        String staffStepColor = getStepConfig(tenantId, "staff", "color", "#4A90D9");
+        String staffStepTitle = getStepConfig(tenantId, "staff", "title", "👤 選擇服務人員");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -1658,8 +1562,8 @@ public class LineFlexMessageBuilder {
         }
 
         // 讀取步驟自訂配置
-        String staffStepColor = getStepConfig(tenantId, "staff", "headerColor", "#4A90D9");
-        String staffStepTitle = getStepConfig(tenantId, "staff", "headerTitle", "👤 選擇服務人員");
+        String staffStepColor = getStepConfig(tenantId, "staff", "color", "#4A90D9");
+        String staffStepTitle = getStepConfig(tenantId, "staff", "title", "👤 選擇服務人員");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -2043,8 +1947,8 @@ public class LineFlexMessageBuilder {
         }
 
         // 讀取步驟自訂配置
-        String dateStepColor = getStepConfig(tenantId, "date", "headerColor", PRIMARY_COLOR);
-        String dateStepTitle = getStepConfig(tenantId, "date", "headerTitle", "📅 選擇日期");
+        String dateStepColor = getStepConfig(tenantId, "date", "color", PRIMARY_COLOR);
+        String dateStepTitle = getStepConfig(tenantId, "date", "title", "📅 選擇日期");
 
         // 如果日期少於等於 10 個，使用單一 Bubble
         if (availableDates.size() <= 10) {
@@ -2068,24 +1972,9 @@ public class LineFlexMessageBuilder {
             bubble.put("type", "bubble");
             bubble.put("size", "kilo");
 
-            // 第一個 Bubble 使用統一步驟 Header；後續 Bubble 簡化
-            if (bubbleIndex == 0) {
-                applyStepHeader(bubble, tenantId, "date", dateStepColor, dateStepTitle, null);
-            } else {
-                ObjectNode header = objectMapper.createObjectNode();
-                header.put("type", "box");
-                header.put("layout", "vertical");
-                header.put("backgroundColor", dateStepColor);
-                header.put("paddingAll", "12px");
-                ArrayNode hc = objectMapper.createArrayNode();
-                ObjectNode ht = objectMapper.createObjectNode();
-                ht.put("type", "text"); ht.put("text", "📅 更多日期");
-                ht.put("size", "md"); ht.put("weight", "bold");
-                ht.put("color", "#FFFFFF"); ht.put("align", "center");
-                hc.add(ht);
-                header.set("contents", hc);
-                bubble.set("header", header);
-            }
+            // 所有 Bubble 統一套用步驟 Header（含 Hero 圖片）
+            String bubbleTitle = (bubbleIndex == 0) ? dateStepTitle : "📅 更多日期";
+            applyStepHeader(bubble, tenantId, "date", dateStepColor, bubbleTitle, null);
 
             // 在 header 中追加日期範圍
             if (!bubbleDates.isEmpty()) {
@@ -2263,8 +2152,8 @@ public class LineFlexMessageBuilder {
         List<LocalTime> availableSlots = generateAvailableSlots(tenantId, staffId, date, duration);
 
         // 讀取步驟自訂配置
-        String timeStepColor = getStepConfig(tenantId, "time", "headerColor", "#4A90D9");
-        String timeStepTitle = getStepConfig(tenantId, "time", "headerTitle", "⏰ 選擇時段");
+        String timeStepColor = getStepConfig(tenantId, "time", "color", "#4A90D9");
+        String timeStepTitle = getStepConfig(tenantId, "time", "title", "⏰ 選擇時段");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -2588,8 +2477,8 @@ public class LineFlexMessageBuilder {
      */
     public JsonNode buildBookingConfirmation(String tenantId, ConversationContext context) {
         // 讀取步驟自訂配置
-        String confirmColor = getStepConfig(tenantId, "confirm", "headerColor", PRIMARY_COLOR);
-        String confirmTitle = getStepConfig(tenantId, "confirm", "headerTitle", "請確認預約資訊");
+        String confirmColor = getStepConfig(tenantId, "confirm", "color", PRIMARY_COLOR);
+        String confirmTitle = getStepConfig(tenantId, "confirm", "title", "請確認預約資訊");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -2705,7 +2594,7 @@ public class LineFlexMessageBuilder {
      */
     public JsonNode buildBookingSuccess(String tenantId, ConversationContext context, String bookingNo) {
         // 讀取步驟自訂配置
-        String successColor = getStepConfig(tenantId, "success", "headerColor", PRIMARY_COLOR);
+        String successColor = getStepConfig(tenantId, "success", "color", PRIMARY_COLOR);
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
@@ -2815,8 +2704,8 @@ public class LineFlexMessageBuilder {
      */
     public JsonNode buildNoteInputPrompt(String tenantId) {
         // 讀取步驟自訂配置
-        String noteColor = getStepConfig(tenantId, "note", "headerColor", "#5C6BC0");
-        String noteTitle = getStepConfig(tenantId, "note", "headerTitle", "是否需要備註？");
+        String noteColor = getStepConfig(tenantId, "note", "color", "#5C6BC0");
+        String noteTitle = getStepConfig(tenantId, "note", "title", "是否需要備註？");
 
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
