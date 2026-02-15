@@ -11,8 +11,8 @@ export const TEST_ACCOUNTS = {
     password: 'admin123'
   },
   tenant: {
-    username: 'g0909095118@gmail.com',
-    password: 'gaojunting11'
+    username: 'e2etest@example.com',
+    password: 'Test12345'
   }
 };
 
@@ -34,11 +34,14 @@ export async function tenantLogin(page: Page, username?: string, password?: stri
   await page.goto('/tenant/login');
   await page.waitForLoadState('domcontentloaded');
 
-  // 清除可能存在的舊 token
+  // 清除可能存在的舊 token（同時清除兩種 key 格式）
   await page.evaluate(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('booking_platform_token');
+    localStorage.removeItem('booking_platform_refresh_token');
+    localStorage.removeItem('booking_platform_user');
   });
 
   await page.fill('#username', user);
@@ -340,7 +343,7 @@ export async function safeClick(page: Page, selector: string): Promise<void> {
  * 取得 localStorage 中的 token
  */
 export async function getToken(page: Page): Promise<string | null> {
-  return await page.evaluate(() => localStorage.getItem('token'));
+  return await page.evaluate(() => localStorage.getItem('booking_platform_token') || localStorage.getItem('token'));
 }
 
 /**
