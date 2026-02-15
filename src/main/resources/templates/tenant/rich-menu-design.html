@@ -560,205 +560,381 @@
     const SAMPLES = {
         pet: [
             {
-                name: '溫馨寵物店', desc: '精品風，適合寵物美容/旅館', theme:'BOUTIQUE', layout:'3+4',
+                name: '毛孩天堂', desc: '精品風暖色調，寵物美容/旅館首選', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約美容',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'寵物商品',a:'start_shopping'},
-                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'預約美容',a:'start_booking'},{l:'查看預約',a:'view_bookings'},{l:'寵物好物',a:'start_shopping'},
+                    {l:'獨家好康',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員專區',a:'view_member_info'},{l:'與我們聊聊',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#8D6E63', headerTitle:'🐾 {shopName}', headerSubtitle:'歡迎帶毛寶貝來找我們！' }
+                fmConfig: { headerColor:'#8D6E63', headerTitle:'🐾 {shopName}', headerSubtitle:'歡迎帶毛寶貝來找我們！' },
+                fmFunctions: {
+                    bookingList:{ color:'#8D6E63', icon:'🐾', title:'毛孩的預約', subtitle:'查看寶貝的美容預約' },
+                    productMenu:{ color:'#FF8A65', icon:'🦴', title:'寵物好物', subtitle:'精選零食、玩具、用品' },
+                    couponList:{ color:'#EF5350', icon:'🎁', title:'毛孩優惠', subtitle:'限定折扣等你拿' },
+                    myCoupons:{ color:'#AB47BC', icon:'🎫', title:'我的優惠券', subtitle:'查看已領取的好康' },
+                    memberInfo:{ color:'#6D4C41', icon:'🏠', title:'毛孩家長資訊', subtitle:'會員等級與點數' },
+                    contactShop:{ color:'#5D4037', icon:'📱', title:'聯絡毛孩天堂', subtitle:'' }
+                },
+                fmSteps: {
+                    service:{ color:'#8D6E63', icon:'✂️', title:'選擇美容項目', subtitle:'洗澡、剪毛、SPA...' },
+                    date:{ color:'#A1887F', icon:'📅', title:'選個好日子', subtitle:'查看可預約日期' },
+                    staff:{ color:'#8D6E63', icon:'🧑‍⚕️', title:'指定美容師', subtitle:'選擇毛孩最喜歡的人' },
+                    confirm:{ color:'#6D4C41', icon:'✅', title:'確認預約', subtitle:'檢查一下再送出' }
+                }
             },
             {
-                name: '活力寵物', desc: 'LINE 綠清新風格，適合寵物診所', theme:'GREEN', layout:'3+4',
+                name: '快樂毛孩', desc: 'LINE 綠清新風，寵物診所/獸醫院', theme:'GREEN', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約看診',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'寵物用品',a:'start_shopping'},
-                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
+                    {l:'預約看診',a:'start_booking'},{l:'看診紀錄',a:'view_bookings'},{l:'保健用品',a:'start_shopping'},
+                    {l:'新客優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'毛孩檔案',a:'view_member_info'},{l:'緊急聯絡',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#4CAF50', headerTitle:'🏥 {shopName}', headerSubtitle:'您好！需要為毛孩掛號嗎？' }
+                fmConfig: { headerColor:'#2E7D32', headerTitle:'🏥 {shopName}', headerSubtitle:'用愛守護每一個毛小孩 💚' },
+                fmFunctions: {
+                    bookingList:{ color:'#2E7D32', icon:'📋', title:'看診紀錄', subtitle:'查看預約與就診記錄' },
+                    productMenu:{ color:'#43A047', icon:'💊', title:'保健用品', subtitle:'獸醫推薦的營養品' },
+                    memberInfo:{ color:'#1B5E20', icon:'🐱', title:'毛孩健康檔案', subtitle:'疫苗、體重、病歷' },
+                    contactShop:{ color:'#388E3C', icon:'🚨', title:'緊急聯絡', subtitle:'24 小時急診專線' }
+                }
             },
             {
-                name: '時尚寵物', desc: '暗黑風格，適合高端寵物SPA', theme:'DARK', layout:'2x3',
+                name: '尊寵殿堂', desc: '暗黑奢華風，高端寵物 SPA 會館', theme:'DARK', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約 SPA',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'精品商城',a:'start_shopping'},
-                    {l:'VIP 優惠',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'私訊客服',a:'contact_shop'}
+                    {l:'VIP 預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'精品選物',a:'start_shopping'},
+                    {l:'尊榮禮遇',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'專屬管家',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#37474F', headerTitle:'✨ {shopName}', headerSubtitle:'為您的毛孩打造最尊榮的體驗' }
+                fmConfig: { headerColor:'#263238', headerTitle:'👑 {shopName}', headerSubtitle:'為您的毛孩打造最尊榮的體驗' },
+                fmFunctions: {
+                    bookingList:{ color:'#37474F', icon:'📋', title:'尊榮預約', subtitle:'查看 VIP 預約記錄' },
+                    productMenu:{ color:'#455A64', icon:'💎', title:'精品選物', subtitle:'頂級進口寵物用品' },
+                    memberInfo:{ color:'#263238', icon:'👑', title:'VIP 會員中心', subtitle:'專屬等級與尊榮點數' },
+                    contactShop:{ color:'#37474F', icon:'🎩', title:'專屬管家', subtitle:'一對一服務諮詢' }
+                }
             }
         ],
         beauty: [
             {
-                name: '粉嫩美甲', desc: '精品風，適合美甲/美睫工作室', theme:'BOUTIQUE', layout:'3+4',
+                name: '指尖藝術', desc: '精品風溫柔色，美甲 / 美睫工作室', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'美甲商品',a:'start_shopping'},
-                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+                    {l:'立即預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'美甲小物',a:'start_shopping'},
+                    {l:'本月優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員專區',a:'view_member_info'},{l:'私訊小編',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#E91E63', headerTitle:'💅 {shopName}', headerSubtitle:'讓指尖綻放美麗光芒 ✨' }
+                fmConfig: { headerColor:'#D81B60', headerTitle:'💅 {shopName}', headerSubtitle:'讓指尖綻放獨一無二的光芒 ✨' },
+                fmFunctions: {
+                    bookingList:{ color:'#C2185B', icon:'💅', title:'我的美甲預約', subtitle:'查看預約時間與款式' },
+                    productMenu:{ color:'#E91E63', icon:'💄', title:'美甲小物', subtitle:'指甲油、飾品、護理油' },
+                    couponList:{ color:'#F06292', icon:'🌸', title:'本月限定', subtitle:'閨蜜同行享優惠' },
+                    myCoupons:{ color:'#CE93D8', icon:'🎫', title:'我的優惠', subtitle:'' },
+                    memberInfo:{ color:'#AD1457', icon:'💖', title:'美甲會員', subtitle:'累積點數換免費款式' },
+                    contactShop:{ color:'#880E4F', icon:'💬', title:'私訊小編', subtitle:'款式諮詢、檔期確認' }
+                },
+                fmSteps: {
+                    service:{ color:'#D81B60', icon:'💅', title:'選擇款式', subtitle:'凝膠、光療、手足保養...' },
+                    staff:{ color:'#C2185B', icon:'👩‍🎨', title:'指定美甲師', subtitle:'' },
+                    confirm:{ color:'#AD1457', icon:'✅', title:'確認預約', subtitle:'期待為您打造美麗指尖' }
+                }
             },
             {
-                name: '優雅美容', desc: '紫色主題，適合臉部保養/美體', theme:'PURPLE', layout:'3+4',
+                name: '紫夢美學', desc: '皇家紫優雅風，臉部保養 / 美體中心', theme:'PURPLE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約美容',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'美容商品',a:'start_shopping'},
-                    {l:'限時優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'線上諮詢',a:'contact_shop'}
+                    {l:'預約護理',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'保養精選',a:'start_shopping'},
+                    {l:'限時優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'美麗檔案',a:'view_member_info'},{l:'專業諮詢',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#9C27B0', headerTitle:'💜 {shopName}', headerSubtitle:'專業美容，呵護每一吋肌膚' }
+                fmConfig: { headerColor:'#7B1FA2', headerTitle:'✨ {shopName}', headerSubtitle:'專業美容，呵護每一吋肌膚' },
+                fmFunctions: {
+                    bookingList:{ color:'#7B1FA2', icon:'🌙', title:'護理預約', subtitle:'查看臉部/身體療程預約' },
+                    productMenu:{ color:'#9C27B0', icon:'🧴', title:'保養精選', subtitle:'精華液、面膜、護理霜' },
+                    couponList:{ color:'#BA68C8', icon:'💜', title:'美麗特惠', subtitle:'首次體驗享折扣' },
+                    memberInfo:{ color:'#6A1B9A', icon:'👸', title:'我的美麗檔案', subtitle:'膚質紀錄與護理歷程' },
+                    contactShop:{ color:'#4A148C', icon:'💁‍♀️', title:'專業諮詢', subtitle:'免費膚質檢測預約' }
+                }
             },
             {
-                name: '自然美學', desc: '海洋藍清爽風，適合護膚中心', theme:'BLUE', layout:'2x3',
+                name: '海洋之心', desc: '海洋藍清爽風，護膚中心 / 保養品牌', theme:'BLUE', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約護膚',a:'start_booking'},{l:'查詢預約',a:'view_bookings'},{l:'保養品',a:'start_shopping'},
-                    {l:'體驗優惠',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'諮詢客服',a:'contact_shop'}
+                    {l:'體驗優惠',a:'view_coupons'},{l:'我的帳戶',a:'view_member_info'},{l:'線上諮詢',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#1976D2', headerTitle:'🌊 {shopName}', headerSubtitle:'讓肌膚回歸自然光澤' }
+                fmConfig: { headerColor:'#1565C0', headerTitle:'💎 {shopName}', headerSubtitle:'讓肌膚重拾水潤透亮光澤' },
+                fmFunctions: {
+                    bookingList:{ color:'#1565C0', icon:'🌊', title:'護膚預約', subtitle:'' },
+                    productMenu:{ color:'#1976D2', icon:'💧', title:'保養品牌', subtitle:'醫美級保養品' },
+                    memberInfo:{ color:'#0D47A1', icon:'💎', title:'會員中心', subtitle:'消費積點兌好禮' }
+                }
             }
         ],
         hair: [
             {
-                name: '潮流髮廊', desc: '精品風，適合設計師工作室', theme:'BOUTIQUE', layout:'3+4',
+                name: '質感髮廊', desc: '精品風奶茶色，設計師工作室 / 沙龍', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約剪髮',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'髮品商城',a:'start_shopping'},
-                    {l:'領取優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'線上預約',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'髮品推薦',a:'start_shopping'},
+                    {l:'本月活動',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員專頁',a:'view_member_info'},{l:'聯繫設計師',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#795548', headerTitle:'✂️ {shopName}', headerSubtitle:'打造屬於你的獨特風格' }
+                fmConfig: { headerColor:'#6D4C41', headerTitle:'✂️ {shopName}', headerSubtitle:'打造屬於你的質感風格' },
+                fmFunctions: {
+                    bookingList:{ color:'#6D4C41', icon:'💇', title:'我的預約', subtitle:'查看剪染燙預約' },
+                    productMenu:{ color:'#8D6E63', icon:'🧴', title:'設計師推薦', subtitle:'洗護、造型、頭皮養護' },
+                    couponList:{ color:'#A1887F', icon:'🎁', title:'本月活動', subtitle:'染髮折扣、護髮加購' },
+                    memberInfo:{ color:'#5D4037', icon:'💈', title:'我的髮型紀錄', subtitle:'累積消費享升等' },
+                    contactShop:{ color:'#4E342E', icon:'✂️', title:'聯繫設計師', subtitle:'髮型諮詢、作品集' }
+                },
+                fmSteps: {
+                    service:{ color:'#6D4C41', icon:'✂️', title:'選擇服務', subtitle:'剪髮、染髮、燙髮、護髮...' },
+                    staff:{ color:'#795548', icon:'💇‍♀️', title:'指定設計師', subtitle:'查看設計師作品與空檔' },
+                    confirm:{ color:'#5D4037', icon:'✅', title:'確認預約', subtitle:'期待為您打造新造型' }
+                }
             },
             {
-                name: '街頭理髮', desc: '暗黑酷炫風格，適合男士理容', theme:'DARK', layout:'2x3',
+                name: '紳士理容', desc: '暗黑俐落風，男士理髮 / Barber Shop', theme:'DARK', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約剪髮',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'造型品',a:'start_shopping'},
-                    {l:'優惠券',a:'view_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+                    {l:'優惠券',a:'view_coupons'},{l:'會員資料',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#263238', headerTitle:'💈 {shopName}', headerSubtitle:'Gentlemen\'s Barber' }
+                fmConfig: { headerColor:'#1B1B1B', headerTitle:'💈 {shopName}', headerSubtitle:'Gentlemen\'s Grooming Since Day One' },
+                fmFunctions: {
+                    bookingList:{ color:'#212121', icon:'💈', title:'My Appointments', subtitle:'' },
+                    productMenu:{ color:'#37474F', icon:'🪒', title:'Grooming Products', subtitle:'髮蠟、鬍後水、養護油' },
+                    memberInfo:{ color:'#1B1B1B', icon:'🎩', title:'紳士會員', subtitle:'集點兌換理容服務' },
+                    contactShop:{ color:'#263238', icon:'📞', title:'CONTACT US', subtitle:'' }
+                }
             },
             {
-                name: '清新髮藝', desc: 'LINE 綠自然風，適合社區髮廊', theme:'GREEN', layout:'3+4',
-                img: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=300&fit=crop',
+                name: '森林髮藝', desc: 'LINE 綠自然風，社區髮廊 / 親子沙龍', theme:'GREEN', layout:'3+4',
+                img: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約剪髮',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'髮品推薦',a:'start_shopping'},
-                    {l:'優惠活動',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'預約剪髮',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'天然髮品',a:'start_shopping'},
+                    {l:'好友優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#43A047', headerTitle:'🌿 {shopName}', headerSubtitle:'用心為您打理每一根髮絲' }
+                fmConfig: { headerColor:'#2E7D32', headerTitle:'🌿 {shopName}', headerSubtitle:'用心為您打理每一根髮絲' },
+                fmFunctions: {
+                    bookingList:{ color:'#2E7D32', icon:'📋', title:'我的預約', subtitle:'' },
+                    productMenu:{ color:'#43A047', icon:'🌱', title:'天然髮品', subtitle:'無矽靈、有機成分' },
+                    memberInfo:{ color:'#1B5E20', icon:'🌿', title:'會員中心', subtitle:'每月剪髮享回饋' }
+                }
             }
         ],
         clinic: [
             {
-                name: '醫美中心', desc: '海洋藍專業感，適合醫美/皮膚科', theme:'BLUE', layout:'3+4',
+                name: '安心醫美', desc: '海洋藍專業感，醫美 / 皮膚科診所', theme:'BLUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約諮詢',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'保養品',a:'start_shopping'},
-                    {l:'限時優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
+                    {l:'預約諮詢',a:'start_booking'},{l:'療程紀錄',a:'view_bookings'},{l:'醫美保養',a:'start_shopping'},
+                    {l:'新客體驗',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'美麗檔案',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#1565C0', headerTitle:'🏥 {shopName}', headerSubtitle:'專業醫師團隊，安心變美' }
+                fmConfig: { headerColor:'#1565C0', headerTitle:'🏥 {shopName}', headerSubtitle:'專業醫師團隊，讓美麗更安心' },
+                fmFunctions: {
+                    bookingList:{ color:'#1565C0', icon:'📋', title:'療程紀錄', subtitle:'查看諮詢與療程預約' },
+                    productMenu:{ color:'#1976D2', icon:'💉', title:'醫美保養', subtitle:'術後修護、居家保養' },
+                    couponList:{ color:'#42A5F5', icon:'🎁', title:'新客體驗', subtitle:'首次諮詢享優惠' },
+                    memberInfo:{ color:'#0D47A1', icon:'📊', title:'美麗檔案', subtitle:'膚質追蹤、療程記錄' },
+                    contactShop:{ color:'#0D47A1', icon:'🩺', title:'諮詢專線', subtitle:'專業護理師為您解答' }
+                },
+                fmSteps: {
+                    service:{ color:'#1565C0', icon:'💉', title:'選擇療程', subtitle:'雷射、注射、保養...' },
+                    staff:{ color:'#1976D2', icon:'👨‍⚕️', title:'指定醫師', subtitle:'查看醫師專長與資歷' },
+                    confirm:{ color:'#0D47A1', icon:'✅', title:'確認預約', subtitle:'我們會在諮詢前再次確認' }
+                }
             },
             {
-                name: '溫馨牙科', desc: 'LINE 綠親切感，適合牙科/診所', theme:'GREEN', layout:'3+4',
+                name: '微笑牙醫', desc: 'LINE 綠親切感，牙科 / 家庭診所', theme:'GREEN', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約掛號',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'口腔保健',a:'start_shopping'},
-                    {l:'優惠活動',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'看診紀錄',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
+                    {l:'預約掛號',a:'start_booking'},{l:'看診紀錄',a:'view_bookings'},{l:'口腔用品',a:'start_shopping'},
+                    {l:'洗牙優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'牙齒檔案',a:'view_member_info'},{l:'聯絡診所',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#2E7D32', headerTitle:'🦷 {shopName}', headerSubtitle:'守護您的每一顆牙齒' }
+                fmConfig: { headerColor:'#00897B', headerTitle:'🦷 {shopName}', headerSubtitle:'溫柔守護全家人的微笑 😊' },
+                fmFunctions: {
+                    bookingList:{ color:'#00897B', icon:'🦷', title:'看診紀錄', subtitle:'掛號與就診記錄' },
+                    productMenu:{ color:'#26A69A', icon:'🪥', title:'口腔保健', subtitle:'牙膏、牙線、漱口水' },
+                    memberInfo:{ color:'#00695C', icon:'😁', title:'牙齒健康檔案', subtitle:'定期檢查提醒' },
+                    contactShop:{ color:'#004D40', icon:'📞', title:'聯絡診所', subtitle:'掛號、急診、問診' }
+                }
             },
             {
-                name: '時尚醫美', desc: '皇家紫高端感，適合高端醫美', theme:'PURPLE', layout:'2x3',
+                name: '璀璨醫美', desc: '皇家紫奢華感，頂級醫美中心', theme:'PURPLE', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'線上諮詢',a:'start_booking'},{l:'我的療程',a:'view_bookings'},{l:'保養商品',a:'start_shopping'},
-                    {l:'VIP 專屬',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'VIP 諮詢',a:'start_booking'},{l:'我的療程',a:'view_bookings'},{l:'頂級保養',a:'start_shopping'},
+                    {l:'尊榮禮遇',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'專屬顧問',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#6A1B9A', headerTitle:'👑 {shopName}', headerSubtitle:'頂級醫美，尊榮體驗' }
+                fmConfig: { headerColor:'#6A1B9A', headerTitle:'👑 {shopName}', headerSubtitle:'頂級醫美，尊榮蛻變之旅' },
+                fmFunctions: {
+                    bookingList:{ color:'#6A1B9A', icon:'📋', title:'尊榮預約', subtitle:'' },
+                    productMenu:{ color:'#8E24AA', icon:'✨', title:'頂級保養品', subtitle:'醫師獨家調配' },
+                    memberInfo:{ color:'#4A148C', icon:'👑', title:'VIP 會員中心', subtitle:'專屬折扣與禮遇' },
+                    contactShop:{ color:'#4A148C', icon:'💎', title:'專屬美容顧問', subtitle:'一對一客製化諮詢' }
+                }
             }
         ],
         fitness: [
             {
-                name: '活力健身', desc: 'LINE 綠運動風，適合健身房', theme:'GREEN', layout:'3+4',
+                name: '爆汗工廠', desc: 'LINE 綠活力風，健身房 / 運動中心', theme:'GREEN', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約課程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'營養補充',a:'start_shopping'},
-                    {l:'體驗券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡教練',a:'contact_shop'}
+                    {l:'預約課程',a:'start_booking'},{l:'我的課表',a:'view_bookings'},{l:'營養補給',a:'start_shopping'},
+                    {l:'體驗券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'訓練紀錄',a:'view_member_info'},{l:'聯絡教練',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#2E7D32', headerTitle:'💪 {shopName}', headerSubtitle:'突破極限，成就更好的自己！' }
+                fmConfig: { headerColor:'#2E7D32', headerTitle:'💪 {shopName}', headerSubtitle:'突破極限，成就更強的自己！' },
+                fmFunctions: {
+                    bookingList:{ color:'#2E7D32', icon:'🏋️', title:'我的課表', subtitle:'團課、私教預約記錄' },
+                    productMenu:{ color:'#43A047', icon:'🥤', title:'營養補給站', subtitle:'高蛋白、BCAA、能量棒' },
+                    couponList:{ color:'#66BB6A', icon:'🎟️', title:'體驗券', subtitle:'免費體驗課程' },
+                    memberInfo:{ color:'#1B5E20', icon:'📊', title:'我的訓練紀錄', subtitle:'出席率、體態變化' },
+                    contactShop:{ color:'#1B5E20', icon:'💬', title:'聯絡教練', subtitle:'課程諮詢、體態評估' }
+                },
+                fmSteps: {
+                    service:{ color:'#2E7D32', icon:'🏋️', title:'選擇課程', subtitle:'有氧、重訓、瑜珈、拳擊...' },
+                    staff:{ color:'#388E3C', icon:'💪', title:'選擇教練', subtitle:'查看教練專長與時段' }
+                }
             },
             {
-                name: '極簡運動', desc: '暗黑風格，適合重訓工作室', theme:'DARK', layout:'2x3',
+                name: '鐵人殿堂', desc: '暗黑硬派風，重訓工作室 / CrossFit', theme:'DARK', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約訓練',a:'start_booking'},{l:'我的課表',a:'view_bookings'},{l:'營養品',a:'start_shopping'},
-                    {l:'體驗優惠',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡教練',a:'contact_shop'}
+                    {l:'預約訓練',a:'start_booking'},{l:'訓練日誌',a:'view_bookings'},{l:'補給品',a:'start_shopping'},
+                    {l:'挑戰券',a:'view_coupons'},{l:'鐵人檔案',a:'view_member_info'},{l:'找教練',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#212121', headerTitle:'🔥 {shopName}', headerSubtitle:'No Pain, No Gain' }
+                fmConfig: { headerColor:'#1B1B1B', headerTitle:'🔥 {shopName}', headerSubtitle:'NO EXCUSES. JUST RESULTS.' },
+                fmFunctions: {
+                    bookingList:{ color:'#212121', icon:'📓', title:'Training Log', subtitle:'' },
+                    productMenu:{ color:'#424242', icon:'💊', title:'Supplements', subtitle:'蛋白粉、肌酸、BCAA' },
+                    memberInfo:{ color:'#1B1B1B', icon:'🔥', title:'鐵人檔案', subtitle:'PR 紀錄、訓練數據' },
+                    contactShop:{ color:'#263238', icon:'🤝', title:'找教練', subtitle:'免費體能評估' }
+                }
             },
             {
-                name: '陽光運動', desc: '日落橘活力風，適合瑜珈教室', theme:'ORANGE', layout:'3+4',
+                name: '日光瑜珈', desc: '日落橘溫暖風，瑜珈教室 / 身心靈', theme:'ORANGE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約課程',a:'start_booking'},{l:'我的課程',a:'view_bookings'},{l:'瑜珈用品',a:'start_shopping'},
-                    {l:'體驗券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡教室',a:'contact_shop'}
+                    {l:'預約課程',a:'start_booking'},{l:'我的課表',a:'view_bookings'},{l:'瑜珈用品',a:'start_shopping'},
+                    {l:'新生體驗',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'練習紀錄',a:'view_member_info'},{l:'聯絡教室',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#E65100', headerTitle:'🧘 {shopName}', headerSubtitle:'身心合一，感受內在力量' }
+                fmConfig: { headerColor:'#E65100', headerTitle:'🧘 {shopName}', headerSubtitle:'身心合一，感受每一次呼吸的力量' },
+                fmFunctions: {
+                    bookingList:{ color:'#E65100', icon:'🧘', title:'我的練習', subtitle:'瑜珈課程預約紀錄' },
+                    productMenu:{ color:'#F57C00', icon:'🧘‍♀️', title:'練習好物', subtitle:'瑜珈墊、瑜珈磚、精油' },
+                    couponList:{ color:'#FF9800', icon:'🌅', title:'新生體驗', subtitle:'第一堂課免費' },
+                    memberInfo:{ color:'#BF360C', icon:'☀️', title:'練習紀錄', subtitle:'累積時數、等級進度' },
+                    contactShop:{ color:'#BF360C', icon:'🙏', title:'聯絡教室', subtitle:'Namaste' }
+                },
+                fmSteps: {
+                    service:{ color:'#E65100', icon:'🧘', title:'選擇課程', subtitle:'哈達、流動、陰瑜珈...' },
+                    staff:{ color:'#F57C00', icon:'🙏', title:'選擇老師', subtitle:'' }
+                }
             }
         ],
         restaurant: [
             {
-                name: '質感餐廳', desc: '精品風，適合餐廳/咖啡廳', theme:'BOUTIQUE', layout:'3+4',
+                name: '品味食光', desc: '精品風奶茶色，質感餐廳 / 私廚', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'外帶菜單',a:'start_shopping'},
-                    {l:'優惠券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+                    {l:'線上訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'外帶菜單',a:'start_shopping'},
+                    {l:'本月優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'美食護照',a:'view_member_info'},{l:'聯絡餐廳',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#A1887F', headerTitle:'🍽️ {shopName}', headerSubtitle:'為您呈獻最精緻的美食體驗' }
+                fmConfig: { headerColor:'#795548', headerTitle:'🍽️ {shopName}', headerSubtitle:'用心烹調，為每一餐注入溫度' },
+                fmFunctions: {
+                    bookingList:{ color:'#795548', icon:'🍽️', title:'訂位紀錄', subtitle:'查看用餐預約' },
+                    productMenu:{ color:'#8D6E63', icon:'📜', title:'外帶菜單', subtitle:'主廚推薦、季節限定' },
+                    couponList:{ color:'#A1887F', icon:'🎁', title:'美味優惠', subtitle:'壽星禮、揪團折扣' },
+                    memberInfo:{ color:'#5D4037', icon:'🏅', title:'美食護照', subtitle:'集點換招待菜' },
+                    contactShop:{ color:'#4E342E', icon:'📍', title:'餐廳資訊', subtitle:'地址、營業時間、停車' }
+                },
+                fmSteps: {
+                    service:{ color:'#795548', icon:'🍽️', title:'選擇用餐方式', subtitle:'內用、包廂、戶外區' },
+                    date:{ color:'#6D4C41', icon:'📅', title:'選擇日期', subtitle:'查看可訂位時段' }
+                }
             },
             {
-                name: '文青咖啡', desc: '海洋藍文青風，適合咖啡廳', theme:'BLUE', layout:'3+4',
+                name: '靈魂咖啡', desc: '海洋藍文青風，咖啡廳 / 輕食店', theme:'BLUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約座位',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'線上菜單',a:'start_shopping'},
-                    {l:'限定優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'咖啡券',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'集點卡',a:'view_member_info'},{l:'找到我們',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#1565C0', headerTitle:'☕ {shopName}', headerSubtitle:'在這裡，每一杯都是故事' }
+                fmConfig: { headerColor:'#1565C0', headerTitle:'☕ {shopName}', headerSubtitle:'在這裡，每一杯都是一段故事' },
+                fmFunctions: {
+                    bookingList:{ color:'#1565C0', icon:'☕', title:'座位預約', subtitle:'' },
+                    productMenu:{ color:'#42A5F5', icon:'📋', title:'今日菜單', subtitle:'手沖、拿鐵、甜點' },
+                    couponList:{ color:'#1E88E5', icon:'🎫', title:'咖啡券', subtitle:'買10送1、寄杯優惠' },
+                    memberInfo:{ color:'#0D47A1', icon:'☕', title:'咖啡集點卡', subtitle:'每杯集1點，10點換飲品' },
+                    contactShop:{ color:'#0D47A1', icon:'📍', title:'找到我們', subtitle:'地圖、Wi-Fi 密碼' }
+                }
             },
             {
-                name: '日式居酒屋', desc: '日落橘溫暖風，適合居酒屋/小吃', theme:'ORANGE', layout:'2x3',
+                name: '熱鬧居酒屋', desc: '日落橘溫暖風，居酒屋 / 燒烤店', theme:'ORANGE', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'外帶點餐',a:'start_shopping'},
-                    {l:'優惠活動',a:'view_coupons'},{l:'會員集點',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
+                    {l:'預約訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},{l:'外帶菜單',a:'start_shopping'},
+                    {l:'乾杯優惠',a:'view_coupons'},{l:'常客集點',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#E65100', headerTitle:'🏮 {shopName}', headerSubtitle:'乾杯！今晚來點好料的吧' }
+                fmConfig: { headerColor:'#E65100', headerTitle:'🏮 {shopName}', headerSubtitle:'乾杯！今晚就來這裡放鬆一下吧 🍻' },
+                fmFunctions: {
+                    bookingList:{ color:'#E65100', icon:'🍺', title:'訂位紀錄', subtitle:'' },
+                    productMenu:{ color:'#F57C00', icon:'🏮', title:'居酒屋菜單', subtitle:'串燒、刺身、炸物' },
+                    couponList:{ color:'#FF9800', icon:'🍻', title:'乾杯優惠', subtitle:'啤酒買三送一' },
+                    memberInfo:{ color:'#BF360C', icon:'🏮', title:'常客集點', subtitle:'累積消費享VIP折扣' }
+                }
             }
         ],
         spa: [
             {
-                name: '頂級 SPA', desc: '精品風奢華感，適合 SPA 會館', theme:'BOUTIQUE', layout:'3+4',
+                name: '馥蘭朵 SPA', desc: '精品風奢華暖色，頂級 SPA 會館', theme:'BOUTIQUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'保養商品',a:'start_shopping'},
-                    {l:'好康優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資訊',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'頂級保養',a:'start_shopping'},
+                    {l:'寵愛優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'尊榮會員',a:'view_member_info'},{l:'專屬管家',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#8D6E63', headerTitle:'🌿 {shopName}', headerSubtitle:'沉浸在極致放鬆的感官之旅' }
+                fmConfig: { headerColor:'#6D4C41', headerTitle:'🌿 {shopName}', headerSubtitle:'沉浸在極致放鬆的感官之旅' },
+                fmFunctions: {
+                    bookingList:{ color:'#6D4C41', icon:'🌸', title:'療程預約', subtitle:'查看芳療與按摩預約' },
+                    productMenu:{ color:'#8D6E63', icon:'🧴', title:'頂級保養品', subtitle:'精油、身體乳、香氛' },
+                    couponList:{ color:'#A1887F', icon:'🌺', title:'寵愛優惠', subtitle:'閨蜜同行、生日禮遇' },
+                    myCoupons:{ color:'#BCAAA4', icon:'🎫', title:'我的禮券', subtitle:'' },
+                    memberInfo:{ color:'#5D4037', icon:'👑', title:'尊榮會員', subtitle:'專屬等級與回饋' },
+                    contactShop:{ color:'#4E342E', icon:'🛎️', title:'專屬管家', subtitle:'療程規劃、送禮諮詢' }
+                },
+                fmSteps: {
+                    service:{ color:'#6D4C41', icon:'🌿', title:'選擇療程', subtitle:'精油按摩、熱石、臉部護理...' },
+                    staff:{ color:'#795548', icon:'💆', title:'指定芳療師', subtitle:'查看芳療師擅長項目' },
+                    confirm:{ color:'#5D4037', icon:'✅', title:'確認預約', subtitle:'期待為您帶來放鬆時光' }
+                }
             },
             {
-                name: '禪風按摩', desc: '暗黑禪意風，適合按摩工作室', theme:'DARK', layout:'2x3',
+                name: '禪境按摩', desc: '暗黑禪意風，按摩工作室 / 足體養生', theme:'DARK', layout:'2x3',
                 img: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約按摩',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'養生商品',a:'start_shopping'},
+                    {l:'預約按摩',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'養生用品',a:'start_shopping'},
                     {l:'首次優惠',a:'view_coupons'},{l:'會員中心',a:'view_member_info'},{l:'線上諮詢',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#37474F', headerTitle:'🧘 {shopName}', headerSubtitle:'靜心．養身．重拾平衡' }
+                fmConfig: { headerColor:'#263238', headerTitle:'🧘 {shopName}', headerSubtitle:'靜心 · 養身 · 重拾平衡' },
+                fmFunctions: {
+                    bookingList:{ color:'#37474F', icon:'🙌', title:'按摩紀錄', subtitle:'' },
+                    productMenu:{ color:'#455A64', icon:'🍵', title:'養生選物', subtitle:'漢方精油、艾草包' },
+                    memberInfo:{ color:'#263238', icon:'☯️', title:'養生檔案', subtitle:'身體狀態追蹤' },
+                    contactShop:{ color:'#37474F', icon:'🧘', title:'預約諮詢', subtitle:'客製化療程建議' }
+                }
             },
             {
-                name: '水漾 SPA', desc: '海洋藍清透風，適合水療中心', theme:'BLUE', layout:'3+4',
+                name: '碧波水療', desc: '海洋藍清透風，水療中心 / 溫泉會館', theme:'BLUE', layout:'3+4',
                 img: 'https://images.unsplash.com/photo-1531299204812-e6d44d9a185c?w=600&h=300&fit=crop',
                 cells: [
-                    {l:'預約水療',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'SPA 商品',a:'start_shopping'},
-                    {l:'體驗優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員中心',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
+                    {l:'預約水療',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'SPA 好物',a:'start_shopping'},
+                    {l:'體驗價',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'悠活會員',a:'view_member_info'},{l:'聯絡我們',a:'contact_shop'}
                 ],
-                fmConfig: { headerColor:'#0288D1', headerTitle:'💧 {shopName}', headerSubtitle:'讓身心隨水波輕輕流動' }
+                fmConfig: { headerColor:'#0277BD', headerTitle:'💧 {shopName}', headerSubtitle:'讓身心隨水波輕輕流動，釋放一切壓力' },
+                fmFunctions: {
+                    bookingList:{ color:'#0277BD', icon:'🌊', title:'水療紀錄', subtitle:'查看療程預約' },
+                    productMenu:{ color:'#0288D1', icon:'💧', title:'SPA 好物', subtitle:'浴鹽、精油、面膜' },
+                    couponList:{ color:'#039BE5', icon:'🎁', title:'首次體驗價', subtitle:'半價體驗水療課程' },
+                    memberInfo:{ color:'#01579B', icon:'🐳', title:'悠活會員', subtitle:'儲值享更多優惠' },
+                    contactShop:{ color:'#01579B', icon:'📍', title:'交通資訊', subtitle:'地址、停車、接駁' }
+                }
             }
         ]
     };
@@ -1077,6 +1253,14 @@
             renderFmCardEditors();
             updateFmCarouselPreview();
         }
+        // 套用功能頁面樣式
+        if (s.fmFunctions) { fmFunctions = JSON.parse(JSON.stringify(s.fmFunctions)); }
+        else { fmFunctions = {}; }
+        renderFmFunctions();
+        // 套用預約步驟樣式
+        if (s.fmSteps) { fmSteps = JSON.parse(JSON.stringify(s.fmSteps)); }
+        else { fmSteps = {}; }
+        renderFmSteps();
         showSuccess(`已套用「${s.name}」範本！Rich Menu + Flex 主選單皆已更新，點「精確預覽」查看實際效果`);
         // 滾動到預覽區
         document.getElementById('rmPreview').scrollIntoView({ behavior:'smooth', block:'center' });
