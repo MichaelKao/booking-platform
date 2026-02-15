@@ -1477,7 +1477,11 @@
             if (c.success && c.data?.config) {
                 const cfg = typeof c.data.config === 'string' ? JSON.parse(c.data.config) : c.data.config;
                 if (cfg.layout) { rmLayout = cfg.layout; selectEl('#layoutSelector .rm-layout', rmLayout); }
-                if (cfg.cells) cfg.cells.forEach(cell => { if (cell.flexPopup) fpConfigs[cell.index] = cell.flexPopup; });
+                if (cfg.cells) cfg.cells.forEach(cell => {
+                    if (cell.flexPopup) fpConfigs[cell.index] = cell.flexPopup;
+                    if (cell.iconShape && rmCells[cell.index]) rmCells[cell.index].iconShape = cell.iconShape;
+                    if (cell.iconScale && rmCells[cell.index]) rmCells[cell.index].iconScale = cell.iconScale;
+                });
             }
         } catch(e) { console.debug('載入 RM 配置失敗', e); }
         if (!rmConfigLoaded) { applyLayout(rmLayout); }
@@ -1496,7 +1500,9 @@
             index: i,
             label: rmCells[i]?.label || d.l,
             action: rmCells[i]?.action || d.a,
-            icon: getIcon(rmCells[i]?.action || d.a)
+            icon: getIcon(rmCells[i]?.action || d.a),
+            iconShape: rmCells[i]?.iconShape,
+            iconScale: rmCells[i]?.iconScale
         }));
         rmCells.length = defs.length;
         renderCellTable();
@@ -1513,19 +1519,30 @@
             tr.dataset.i = i;
             const hasIcon = !!cellIconFiles[i];
             const hasImg = !!cell.imageUrl;
+            const curShape = cell.iconShape || 'circle';
+            const curScale = cell.iconScale || 'small';
             tr.innerHTML = `
                 <td><span class="cell-badge">${i}</span></td>
                 <td><input type="text" class="form-control" value="${esc(cell.label)}" data-f="label"></td>
                 <td><select class="form-select" data-f="action">
                     ${ACTIONS.map(a => `<option value="${a.v}" ${a.v===cell.action?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
                 </select></td>
-                <td style="min-width:110px">
+                <td style="min-width:180px">
                     ${hasImg?`<img src="${cell.imageUrl}" style="width:32px;height:24px;object-fit:cover;border-radius:3px;vertical-align:middle" title="範本圖片"><button class="btn btn-sm btn-outline-danger py-0 px-1 ms-1" data-f="clearImg" title="移除範本圖片"><i class="bi bi-x"></i></button>`:''}
-                    <label class="btn btn-sm ${hasIcon?'btn-success':(hasImg?'btn-info':'btn-outline-secondary')} py-0 px-1" title="${hasIcon?'已上傳圖示（點右方 ✕ 可移除）':'上傳格子圖示'}">
+                    <label class="btn btn-sm ${hasIcon?'btn-success':(hasImg?'btn-info':'btn-outline-secondary')} py-0 px-1" title="${hasIcon?'已上傳圖示（點右方 ✕ 可移除）\n支援透明 PNG！':'上傳格子圖示（支援透明 PNG）'}">
                         <i class="bi ${hasIcon?'bi-check-lg':'bi-upload'}"></i>
                         <input type="file" class="d-none" accept="image/png,image/jpeg" data-f="icon" data-ci="${i}">
                     </label>
                     ${hasIcon?`<button class="btn btn-sm btn-outline-danger py-0 px-1 ms-1" data-f="clearIcon" title="移除已上傳圖示"><i class="bi bi-x"></i></button>`:''}
+                    ${hasIcon?`<select class="form-select form-select-sm d-inline-block mt-1" style="width:auto;font-size:.75rem" data-f="iconShape">
+                        <option value="circle" ${curShape==='circle'?'selected':''}>⭕ 圓形</option>
+                        <option value="original" ${curShape==='original'?'selected':''}>🖼️ 原始</option>
+                    </select>
+                    <select class="form-select form-select-sm d-inline-block mt-1" style="width:auto;font-size:.75rem" data-f="iconScale">
+                        <option value="small" ${curScale==='small'?'selected':''}>小</option>
+                        <option value="medium" ${curScale==='medium'?'selected':''}>中</option>
+                        <option value="large" ${curScale==='large'?'selected':''}>大</option>
+                    </select>`:''}
                 </td>
                 <td>${cell.action==='flex_popup'?`<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="openFpEditor(${i})" title="編輯彈窗"><i class="bi bi-pencil-square"></i></button>`:''}</td>
             `;
@@ -1547,6 +1564,11 @@
             // 移除已上傳圖示
             const clearIconBtn = tr.querySelector('[data-f="clearIcon"]');
             if (clearIconBtn) clearIconBtn.addEventListener('click', () => { delete cellIconFiles[i]; renderCellTable(); updateRmPreview(); });
+            // 圖示形狀與大小
+            const shapeSelect = tr.querySelector('[data-f="iconShape"]');
+            if (shapeSelect) shapeSelect.addEventListener('change', e => { rmCells[i].iconShape = e.target.value; updateRmPreview(); });
+            const scaleSelect = tr.querySelector('[data-f="iconScale"]');
+            if (scaleSelect) scaleSelect.addEventListener('change', e => { rmCells[i].iconScale = e.target.value; updateRmPreview(); });
             tbody.appendChild(tr);
         });
     }
@@ -1582,6 +1604,17 @@
                     d.style.backgroundSize = 'cover';
                     d.style.backgroundPosition = 'center';
                     d.innerHTML = `<span class="cn">${ci}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
+                } else if (cellIconFiles[ci]) {
+                    // 有已上傳圖示：顯示圖片預覽
+                    if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.15)';
+                    const isOriginal = (cell.iconShape === 'original');
+                    const scaleClass = cell.iconScale === 'large' ? '70%' : (cell.iconScale === 'medium' ? '50%' : '33%');
+                    d.innerHTML = `<span class="cn">${ci}</span><img class="ci-img" data-ci="${ci}" style="max-width:${scaleClass};max-height:${scaleClass};object-fit:contain;${isOriginal?'':'border-radius:50%;'}" alt="icon"><span class="cl">${esc(cell.label)}</span>`;
+                    // 讀取本地圖片並顯示
+                    const reader = new FileReader();
+                    const imgEl = d.querySelector(`img[data-ci="${ci}"]`);
+                    reader.onload = ev => { if (imgEl) imgEl.src = ev.target.result; };
+                    reader.readAsDataURL(cellIconFiles[ci]);
                 } else {
                     if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.25)';
                     d.innerHTML = `<span class="cn">${ci}</span><span class="ci">${cell.icon||getIcon(cell.action)}</span><span class="cl">${esc(cell.label)}</span>`;
@@ -1700,6 +1733,8 @@
                 const o = { index:i, label:c.label, action: c.action==='flex_popup'?`flex_popup&cellKey=${i}`:c.action };
                 if (c.action==='flex_popup' && fpConfigs[i]) o.flexPopup = fpConfigs[i];
                 if (c.imageUrl) o.imageUrl = c.imageUrl;
+                if (c.iconShape && c.iconShape !== 'circle') o.iconShape = c.iconShape;
+                if (c.iconScale && c.iconScale !== 'small') o.iconScale = c.iconScale;
                 return o;
             })
         };

@@ -2844,30 +2844,55 @@ public class LineRichMenuService {
                     }
                 }
 
-                // ── 繪製圓形圖示（無 cell 背景圖時才顯示）──
+                // ── 繪製圖示（無 cell 背景圖時才顯示）──
                 if (!hasCellImage && cellIcons != null && cellIcons.containsKey(i)) {
                     byte[] iconBytes = cellIcons.get(i);
                     if (iconBytes != null && iconBytes.length > 0) {
                         try {
                             BufferedImage iconImg = ImageIO.read(new java.io.ByteArrayInputStream(iconBytes));
                             if (iconImg != null) {
-                                int iconSize = Math.min(cellW, cellH) / 3;
                                 String iconShape = cellConfig != null ? cellConfig.path("iconShape").asText("circle") : "circle";
+                                String iconScale = cellConfig != null ? cellConfig.path("iconScale").asText("small") : "small";
 
-                                BufferedImage scaledIcon = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB);
+                                // 根據 iconScale 決定圖示大小比例
+                                double scaleRatio;
+                                switch (iconScale) {
+                                    case "large": scaleRatio = 0.70; break;
+                                    case "medium": scaleRatio = 0.50; break;
+                                    default: scaleRatio = 0.33; break;
+                                }
+                                int iconSize = (int) (Math.min(cellW, cellH) * scaleRatio);
+
+                                // 原始形狀：保持原圖比例，不強制正方形
+                                int drawW, drawH;
+                                if ("original".equals(iconShape)) {
+                                    double imgRatio = (double) iconImg.getWidth() / iconImg.getHeight();
+                                    if (imgRatio >= 1.0) {
+                                        drawW = iconSize;
+                                        drawH = (int) (iconSize / imgRatio);
+                                    } else {
+                                        drawH = iconSize;
+                                        drawW = (int) (iconSize * imgRatio);
+                                    }
+                                } else {
+                                    drawW = iconSize;
+                                    drawH = iconSize;
+                                }
+
+                                BufferedImage scaledIcon = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
                                 Graphics2D iconG = scaledIcon.createGraphics();
                                 try {
                                     iconG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                                     iconG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                                     if ("circle".equals(iconShape)) {
-                                        iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, iconSize, iconSize));
+                                        iconG.setClip(new java.awt.geom.Ellipse2D.Float(0, 0, drawW, drawH));
                                     }
-                                    iconG.drawImage(iconImg, 0, 0, iconSize, iconSize, null);
+                                    iconG.drawImage(iconImg, 0, 0, drawW, drawH, null);
                                 } finally {
                                     iconG.dispose();
                                 }
-                                int iconX = centerX - iconSize / 2;
-                                int iconY = centerY - iconSize / 2 - cellH / 8;
+                                int iconX = centerX - drawW / 2;
+                                int iconY = centerY - drawH / 2 - cellH / 8;
                                 g2d.drawImage(scaledIcon, iconX, iconY, null);
                             }
                         } catch (IOException e) {
@@ -2907,8 +2932,16 @@ public class LineRichMenuService {
                         // 放在格子底部（漸層區域內）
                         textY = cellY + cellH - fm.getDescent() - 15;
                     } else if (hasIcon) {
-                        int iconSize = Math.min(cellW, cellH) / 3;
-                        textY = centerY + iconSize / 2 + fm.getAscent() / 2;
+                        // 根據 iconScale 計算圖示實際高度
+                        String iconScaleForText = cellConfig != null ? cellConfig.path("iconScale").asText("small") : "small";
+                        double scaleForText;
+                        switch (iconScaleForText) {
+                            case "large": scaleForText = 0.70; break;
+                            case "medium": scaleForText = 0.50; break;
+                            default: scaleForText = 0.33; break;
+                        }
+                        int iconSizeForText = (int) (Math.min(cellW, cellH) * scaleForText);
+                        textY = centerY + iconSizeForText / 2 + fm.getAscent() / 2 - cellH / 8;
                     } else {
                         textY = centerY + fm.getAscent() / 4;
                     }
