@@ -4405,8 +4405,11 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildMemberInfo(Customer customer, long bookingCount, String membershipLevelName, String tenantId) {
-        // 讀取自訂配色
+        // 讀取自訂配色與樣式
         String memberColor = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "color", PRIMARY_COLOR) : PRIMARY_COLOR;
+        String memberIcon = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "icon", "👤") : "👤";
+        String memberSubtitle = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "subtitle", "") : "";
+        String heroImageUrl = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "imageUrl", "") : "";
 
         ObjectNode carousel = objectMapper.createObjectNode();
         carousel.put("type", "carousel");
@@ -4419,6 +4422,20 @@ public class LineFlexMessageBuilder {
         ObjectNode infoBubble = objectMapper.createObjectNode();
         infoBubble.put("type", "bubble");
 
+        // Hero 圖片
+        if (!heroImageUrl.isEmpty()) {
+            if (heroImageUrl.startsWith("/api/public/")) {
+                heroImageUrl = appBaseUrl + heroImageUrl;
+            }
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", heroImageUrl);
+            hero.put("size", "full");
+            hero.put("aspectRatio", "20:8");
+            hero.put("aspectMode", "cover");
+            infoBubble.set("hero", hero);
+        }
+
         // Header
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
@@ -4430,7 +4447,7 @@ public class LineFlexMessageBuilder {
 
         ObjectNode icon = objectMapper.createObjectNode();
         icon.put("type", "text");
-        icon.put("text", "👤");
+        icon.put("text", memberIcon.isEmpty() ? "👤" : memberIcon);
         icon.put("size", "3xl");
         icon.put("align", "center");
         headerContents.add(icon);
@@ -4445,6 +4462,18 @@ public class LineFlexMessageBuilder {
         nameText.put("color", "#FFFFFF");
         nameText.put("align", "center");
         headerContents.add(nameText);
+
+        // 自訂副標題
+        if (!memberSubtitle.isEmpty()) {
+            ObjectNode subText = objectMapper.createObjectNode();
+            subText.put("type", "text");
+            subText.put("text", memberSubtitle);
+            subText.put("size", "xs");
+            subText.put("color", "#FFFFFF");
+            subText.put("align", "center");
+            subText.put("margin", "sm");
+            headerContents.add(subText);
+        }
 
         // 會員等級（帶標籤樣式）
         if (membershipLevelName != null) {
