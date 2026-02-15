@@ -53,7 +53,7 @@
                 </div>
 
                 <!-- ================ Tab 切換 ================ -->
-                <ul class="nav nav-tabs mb-4" role="tablist">
+                <ul class="nav nav-tabs mb-4 rm-design-tabs" role="tablist">
                     <li class="nav-item">
                         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabRichMenu" type="button">
                             <i class="bi bi-grid-3x2 me-1"></i>Rich Menu（底部選單）
@@ -241,6 +241,7 @@
                                 </div>
                                 <div class="text-center mt-2">
                                     <small class="text-muted" id="rmCurrentInfo">載入中...</small>
+                                    <br><small class="text-muted fst-italic">此為示意預覽，實際效果請點「精確預覽」</small>
                                 </div>
                             </div>
                         </div>
@@ -275,6 +276,19 @@
                                 <div class="card-body">
                                     <p class="small text-muted mb-2">自訂預約過程中每步的 Header 顏色與標題文字</p>
                                     <div id="fmStepList"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 功能頁面樣式自訂（收合） -->
+                        <div class="card mb-3">
+                            <div class="card-header py-2" data-bs-toggle="collapse" data-bs-target="#funcPanel" style="cursor:pointer">
+                                <h6 class="m-0"><i class="bi bi-brush me-2"></i>功能頁面樣式自訂 <i class="bi bi-chevron-down float-end"></i></h6>
+                            </div>
+                            <div class="collapse" id="funcPanel">
+                                <div class="card-body">
+                                    <p class="small text-muted mb-2">自訂各功能 Flex Message 的 Header 顏色、圖示與標題（例如我的預約、瀏覽商品等頁面）</p>
+                                    <div id="fmFuncList"></div>
                                 </div>
                             </div>
                         </div>
@@ -406,8 +420,6 @@
     .rm-prev-cell .cl { font-size:8px; text-align:center; font-weight:600; margin-top:1px; line-height:1.2; }
     .rm-prev-cell .cn { position:absolute; top:1px; left:3px; font-size:7px; opacity:.3; }
     /* 主題色 */
-    .rm-preview.t-BOUTIQUE { background:linear-gradient(135deg,#F7ECDF,#F0D8C8); }
-    .rm-preview.t-BOUTIQUE .cl { color:#5C4033; }
     .rm-preview.t-GREEN { background:#06C755; }
     .rm-preview.t-GREEN .cl,.rm-preview.t-BLUE .cl,.rm-preview.t-PURPLE .cl,.rm-preview.t-ORANGE .cl,.rm-preview.t-DARK .cl { color:#fff; }
     .rm-preview.t-BLUE { background:#2196F3; }
@@ -490,6 +502,31 @@
     .sample-card-layout { position:absolute; bottom:6px; left:8px; color:#fff; font-size:10px; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,.5); }
     .sample-card-apply { text-align:center; padding:6px; border-top:1px solid #f0f0f0; }
     .sample-card-apply .btn { font-size:11px; padding:2px 16px; }
+
+    /* ── Tab 樣式加強 ── */
+    .rm-design-tabs .nav-link { font-size:14px; font-weight:600; color:#666; border:2px solid transparent; border-bottom:none; padding:10px 20px; transition:.2s; }
+    .rm-design-tabs .nav-link:hover { color:#333; background:#f8f9fa; }
+    .rm-design-tabs .nav-link.active { background:var(--primary-color,#4e73df); color:#fff !important; border-color:var(--primary-color,#4e73df); border-radius:8px 8px 0 0; border-bottom:2px solid #fff; }
+
+    /* ── BOUTIQUE 預覽加強 ── */
+    .rm-preview.t-BOUTIQUE { background:linear-gradient(135deg,#F7ECDF,#F0D8C8); border:2px solid #C89B6E; }
+    .rm-preview.t-BOUTIQUE .rm-prev-cell { border-color:rgba(200,155,110,.25); }
+    .rm-preview.t-BOUTIQUE .cl { color:#5C4033; font-family:serif; letter-spacing:1px; }
+    .rm-preview.t-BOUTIQUE .ci { filter:drop-shadow(0 1px 1px rgba(92,64,51,.3)); }
+
+    /* ── 功能樣式編輯器 ── */
+    .fm-func-editor { border:1px solid #dee2e6; border-radius:10px; margin-bottom:10px; background:#fff; overflow:hidden; }
+    .fm-func-editor-header { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#f8f9fa; border-bottom:1px solid #eee; cursor:pointer; }
+    .fm-func-editor-header:hover { background:#f0f1f3; }
+    .fm-func-editor-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; }
+    .fm-func-editor-title { font-size:13px; font-weight:600; flex:1; color:#333; }
+    .fm-func-editor-body { padding:14px; }
+    .fm-func-editor-body.collapsed { display:none; }
+    .fm-func-prev { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; color:#fff; margin-bottom:10px; }
+    .fm-func-prev-icon { font-size:18px; }
+    .fm-func-prev-text { flex:1; }
+    .fm-func-prev-title { font-weight:700; font-size:14px; }
+    .fm-func-prev-sub { font-size:11px; opacity:.8; margin-top:2px; }
     </style>
 
     <script>
@@ -917,6 +954,18 @@
     let fmCards = JSON.parse(JSON.stringify(FM_CARD_DEFAULTS));
     let fmSteps = {};
 
+    // 功能頁面樣式預設值
+    const FM_FUNCTIONS = [
+        { key:'bookingList',  label:'我的預約',  color:'#0066CC', icon:'📋', title:'我的預約',  subtitle:'' },
+        { key:'productMenu',  label:'瀏覽商品',  color:'#FF9800', icon:'🛍️', title:'瀏覽商品',  subtitle:'' },
+        { key:'couponList',   label:'領取票券',  color:'#E91E63', icon:'🎁', title:'領取票券',  subtitle:'' },
+        { key:'myCoupons',    label:'我的票券',  color:'#9C27B0', icon:'🎫', title:'我的票券',  subtitle:'' },
+        { key:'memberInfo',   label:'會員資訊',  color:'#673AB7', icon:'👤', title:'會員資訊',  subtitle:'' },
+        { key:'contactShop',  label:'聯絡店家',  color:'#5C6BC0', icon:'📞', title:'聯絡店家',  subtitle:'' },
+        { key:'bookingFlow',  label:'預約流程',  color:'#1DB446', icon:'📅', title:'預約流程',  subtitle:'' }
+    ];
+    let fmFunctions = {};
+
     // ================================================================
     // 初始化
     // ================================================================
@@ -1108,12 +1157,13 @@
                 <td><select class="form-select" data-f="action">
                     ${ACTIONS.map(a => `<option value="${a.v}" ${a.v===cell.action?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
                 </select></td>
-                <td style="min-width:80px">
-                    ${hasImg?`<img src="${cell.imageUrl}" style="width:32px;height:24px;object-fit:cover;border-radius:3px;vertical-align:middle;cursor:pointer" title="點擊清除圖片" data-f="clearImg">`:''}
-                    <label class="btn btn-sm ${hasIcon?'btn-success':(hasImg?'btn-info':'btn-outline-secondary')} py-0 px-1" title="${hasIcon?'已上傳圖示':'上傳格子圖示'}">
+                <td style="min-width:110px">
+                    ${hasImg?`<img src="${cell.imageUrl}" style="width:32px;height:24px;object-fit:cover;border-radius:3px;vertical-align:middle" title="範本圖片"><button class="btn btn-sm btn-outline-danger py-0 px-1 ms-1" data-f="clearImg" title="移除範本圖片"><i class="bi bi-x"></i></button>`:''}
+                    <label class="btn btn-sm ${hasIcon?'btn-success':(hasImg?'btn-info':'btn-outline-secondary')} py-0 px-1" title="${hasIcon?'已上傳圖示（點右方 ✕ 可移除）':'上傳格子圖示'}">
                         <i class="bi ${hasIcon?'bi-check-lg':'bi-upload'}"></i>
                         <input type="file" class="d-none" accept="image/png,image/jpeg" data-f="icon" data-ci="${i}">
                     </label>
+                    ${hasIcon?`<button class="btn btn-sm btn-outline-danger py-0 px-1 ms-1" data-f="clearIcon" title="移除已上傳圖示"><i class="bi bi-x"></i></button>`:''}
                 </td>
                 <td>${cell.action==='flex_popup'?`<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="openFpEditor(${i})" title="編輯彈窗"><i class="bi bi-pencil-square"></i></button>`:''}</td>
             `;
@@ -1126,11 +1176,15 @@
             tr.querySelector('[data-f="icon"]').addEventListener('change', e => {
                 if (e.target.files[0]) {
                     cellIconFiles[i] = e.target.files[0];
-                    renderCellTable();
+                    renderCellTable(); updateRmPreview();
                 }
             });
-            const clearBtn = tr.querySelector('[data-f="clearImg"]');
-            if (clearBtn) clearBtn.addEventListener('click', () => { rmCells[i].imageUrl = ''; renderCellTable(); updateRmPreview(); });
+            // 移除範本圖片
+            const clearImgBtn = tr.querySelector('[data-f="clearImg"]');
+            if (clearImgBtn) clearImgBtn.addEventListener('click', () => { rmCells[i].imageUrl = ''; renderCellTable(); updateRmPreview(); });
+            // 移除已上傳圖示
+            const clearIconBtn = tr.querySelector('[data-f="clearIcon"]');
+            if (clearIconBtn) clearIconBtn.addEventListener('click', () => { delete cellIconFiles[i]; renderCellTable(); updateRmPreview(); });
             tbody.appendChild(tr);
         });
     }
@@ -1377,6 +1431,7 @@
         loadFlexMenu();
         renderFmCardEditors();
         renderFmSteps();
+        renderFmFunctions();
         updateFmCarouselPreview();
     }
 
@@ -1412,8 +1467,10 @@
                     });
                 }
                 if (r.data.steps) fmSteps = r.data.steps;
+                if (r.data.functions) fmFunctions = r.data.functions;
                 renderFmCardEditors();
                 renderFmSteps();
+                renderFmFunctions();
                 updateFmCarouselPreview();
             }
         } catch(e) { console.debug('載入 Flex Menu 失敗', e); }
@@ -1796,6 +1853,155 @@
         }
     }
 
+    // ================================================================
+    // 功能頁面樣式自訂
+    // ================================================================
+    function renderFmFunctions() {
+        const c = document.getElementById('fmFuncList');
+        if (!c) return;
+        c.innerHTML = '';
+        FM_FUNCTIONS.forEach((fn, i) => {
+            const saved = fmFunctions?.[fn.key] || {};
+            const curColor = saved.color || fn.color;
+            const curIcon  = saved.icon  || fn.icon;
+            const curTitle = saved.title || '';
+            const curSub   = saved.subtitle || '';
+            const curImg   = saved.imageUrl || '';
+            const d = document.createElement('div');
+            d.className = 'fm-func-editor';
+            d.innerHTML = `
+                <div class="fm-func-editor-header" onclick="toggleFmFunc(this)">
+                    <div class="fm-func-editor-num" style="background:${curColor}">${i+1}</div>
+                    <span class="fm-func-editor-title">${curIcon} ${esc(curTitle || fn.title)}</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="fm-func-editor-body${i>0?' collapsed':''}">
+                    <div class="fm-func-prev" style="background:${curColor}">
+                        <span class="fm-func-prev-icon">${curIcon}</span>
+                        <div class="fm-func-prev-text">
+                            <div class="fm-func-prev-title">${esc(curTitle || fn.title)}</div>
+                            <div class="fm-func-prev-sub">${esc(curSub || fn.subtitle)}</div>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-2">
+                            <label class="form-label small fw-bold mb-1">圖示</label>
+                            <input type="text" class="form-control form-control-sm text-center" data-func="${fn.key}" data-f="icon" value="${curIcon}" maxlength="4">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label small fw-bold mb-1">Header 色</label>
+                            <input type="color" class="form-control form-control-color w-100" data-func="${fn.key}" data-f="color" value="${curColor}" style="height:31px">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small fw-bold mb-1">標題</label>
+                            <input type="text" class="form-control form-control-sm" data-func="${fn.key}" data-f="title" value="${esc(curTitle)}" placeholder="${esc(fn.title)}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold mb-1">副標題</label>
+                            <input type="text" class="form-control form-control-sm" data-func="${fn.key}" data-f="subtitle" value="${esc(curSub)}" placeholder="選填">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold mb-1">Hero 圖片</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" class="form-control form-control-sm" data-func="${fn.key}" data-f="imageUrl" value="${esc(curImg)}" placeholder="貼上圖片 URL 或上傳圖片...">
+                                <label class="btn btn-sm btn-outline-primary py-0 px-2 flex-shrink-0" title="上傳圖片" style="cursor:pointer">
+                                    <i class="bi bi-upload"></i>
+                                    <input type="file" class="d-none" accept="image/png,image/jpeg,image/webp" data-func="${fn.key}" data-f="uploadFuncImg">
+                                </label>
+                                ${curImg ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 flex-shrink-0" data-func="${fn.key}" data-f="clearFuncImg" title="清除圖片"><i class="bi bi-x-lg"></i></button>` : ''}
+                            </div>
+                            ${curImg ? `<div class="mt-1 border rounded overflow-hidden"><img src="${esc(curImg)}" style="width:100%;height:60px;object-fit:cover" onerror="this.parentElement.innerHTML='<div class=text-center style=padding:8px;color:#bbb;font-size:12px>圖片無法載入</div>'"></div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            // 綁定即時更新
+            d.querySelectorAll('input:not([type=file])').forEach(inp => {
+                const ev = inp.type === 'color' ? 'input' : 'change';
+                inp.addEventListener('input', e => onFmFuncFieldChange(e));
+                if (ev === 'change' && inp.type !== 'color') {
+                    inp.addEventListener('change', e => onFmFuncFieldChange(e));
+                }
+            });
+            // 檔案上傳
+            const uploadInput = d.querySelector('[data-f="uploadFuncImg"]');
+            if (uploadInput) uploadInput.addEventListener('change', e => uploadFuncImage(e, fn.key));
+            // 清除圖片
+            const clearBtn = d.querySelector('[data-f="clearFuncImg"]');
+            if (clearBtn) clearBtn.addEventListener('click', () => {
+                if (!fmFunctions[fn.key]) fmFunctions[fn.key] = {};
+                fmFunctions[fn.key].imageUrl = '';
+                renderFmFunctions();
+            });
+            c.appendChild(d);
+        });
+    }
+
+    function toggleFmFunc(headerEl) {
+        const body = headerEl.nextElementSibling;
+        body.classList.toggle('collapsed');
+        const icon = headerEl.querySelector('.bi');
+        icon.className = body.classList.contains('collapsed') ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+    }
+
+    function onFmFuncFieldChange(e) {
+        const key = e.target.dataset.func;
+        const f = e.target.dataset.f;
+        if (!key || !f) return;
+        if (!fmFunctions[key]) fmFunctions[key] = {};
+        fmFunctions[key][f] = e.target.value;
+
+        // 即時更新預覽
+        const editor = e.target.closest('.fm-func-editor');
+        if (editor) {
+            const fn = FM_FUNCTIONS.find(s => s.key === key);
+            const curColor = fmFunctions[key].color || fn.color;
+            const curIcon  = fmFunctions[key].icon  || fn.icon;
+            const curTitle = fmFunctions[key].title  || fn.title;
+            const curSub   = fmFunctions[key].subtitle || fn.subtitle;
+            const header = editor.querySelector('.fm-func-editor-title');
+            if (header) header.textContent = curIcon + ' ' + curTitle;
+            const num = editor.querySelector('.fm-func-editor-num');
+            if (num) num.style.background = curColor;
+            const prev = editor.querySelector('.fm-func-prev');
+            if (prev) {
+                prev.style.background = curColor;
+                prev.querySelector('.fm-func-prev-icon').textContent = curIcon;
+                prev.querySelector('.fm-func-prev-title').textContent = curTitle;
+                prev.querySelector('.fm-func-prev-sub').textContent = curSub;
+            }
+        }
+    }
+
+    // 上傳功能頁面 Hero 圖片（使用 cardIndex = 200+funcIndex）
+    async function uploadFuncImage(e, funcKey) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const funcIdx = FM_FUNCTIONS.findIndex(s => s.key === funcKey);
+        const cardIndex = 200 + funcIdx;
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('cardIndex', cardIndex);
+        try {
+            const r = await fetch('/api/settings/line/flex-menu/upload-card-image', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                body: fd
+            });
+            const d = await r.json();
+            if (d.success) {
+                if (!fmFunctions[funcKey]) fmFunctions[funcKey] = {};
+                fmFunctions[funcKey].imageUrl = d.data.imageUrl + '?t=' + Date.now();
+                renderFmFunctions();
+                showSuccess('功能圖片上傳成功');
+            } else {
+                showError(d.message || '上傳失敗');
+            }
+        } catch (err) {
+            showError('上傳失敗：' + err.message);
+        }
+    }
+
     async function saveFlexMenu() {
         // 收集步驟（從 fmSteps 物件，去除時間戳）
         const steps = {};
@@ -1808,6 +2014,20 @@
                     title: s.title || '',
                     subtitle: s.subtitle || '',
                     imageUrl: (s.imageUrl || '').split('?')[0]
+                };
+            }
+        });
+        // 收集功能頁面樣式
+        const functions = {};
+        Object.keys(fmFunctions).forEach(key => {
+            const f = fmFunctions[key];
+            if (f && (f.color || f.title || f.icon || f.subtitle || f.imageUrl)) {
+                functions[key] = {
+                    color: f.color || '',
+                    icon: f.icon || '',
+                    title: f.title || '',
+                    subtitle: f.subtitle || '',
+                    imageUrl: (f.imageUrl || '').split('?')[0]
                 };
             }
         });
@@ -1824,7 +2044,8 @@
                 buttonLabel: c.buttonLabel || '前往',
                 cardSize: c.cardSize || 'auto'
             })),
-            steps: Object.keys(steps).length > 0 ? steps : undefined
+            steps: Object.keys(steps).length > 0 ? steps : undefined,
+            functions: Object.keys(functions).length > 0 ? functions : undefined
         };
         try {
             const r = await api.put('/api/settings/line/flex-menu', payload);
@@ -1836,8 +2057,10 @@
     function resetFlexMenu() {
         fmCards = JSON.parse(JSON.stringify(FM_CARD_DEFAULTS));
         fmSteps = {};
+        fmFunctions = {};
         renderFmCardEditors();
         renderFmSteps();
+        renderFmFunctions();
         updateFmCarouselPreview();
         showSuccess('已恢復預設的輪播卡片');
     }

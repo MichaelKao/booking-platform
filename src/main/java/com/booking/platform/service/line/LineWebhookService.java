@@ -148,7 +148,7 @@ public class LineWebhookService {
             // 5. 嘗試建構 Flex Message
             try {
                 JsonNode memberInfo = flexMessageBuilder.buildMemberInfo(customer, bookingCount,
-                        (String) result.get("membershipLevelName"));
+                        (String) result.get("membershipLevelName"), tenantId);
                 result.put("flexMessageBuilt", true);
                 result.put("flexMessagePreview", memberInfo.toString().substring(0, Math.min(500, memberInfo.toString().length())) + "...");
             } catch (Exception e) {
@@ -800,7 +800,7 @@ public class LineWebhookService {
             );
 
             // 建構預約列表訊息（帶取消按鈕）
-            JsonNode bookingList = flexMessageBuilder.buildBookingListWithCancel(bookings);
+            JsonNode bookingList = flexMessageBuilder.buildBookingListWithCancel(bookings, tenantId);
             messageService.replyFlex(tenantId, replyToken, "我的預約", bookingList);
 
         } catch (Exception e) {
@@ -909,7 +909,7 @@ public class LineWebhookService {
             }
 
             // 建構票券列表訊息
-            JsonNode couponList = flexMessageBuilder.buildAvailableCouponList(coupons);
+            JsonNode couponList = flexMessageBuilder.buildAvailableCouponList(coupons, tenantId);
             messageService.replyFlex(tenantId, replyToken, "可領取票券", couponList);
 
         } catch (Exception e) {
@@ -1025,7 +1025,7 @@ public class LineWebhookService {
             }
 
             // 建構已領取票券列表
-            JsonNode myCouponList = flexMessageBuilder.buildMyCouponList(instances, couponNames);
+            JsonNode myCouponList = flexMessageBuilder.buildMyCouponList(instances, couponNames, tenantId);
             messageService.replyFlex(tenantId, replyToken, "我的票券", myCouponList);
 
         } catch (Exception e) {
@@ -1090,7 +1090,7 @@ public class LineWebhookService {
 
             // 使用簡化版 Flex Message（單一 Bubble，更穩定）
             log.info("準備建構會員資訊 Flex Message...");
-            JsonNode memberInfoFlex = flexMessageBuilder.buildSimpleMemberInfo(customer, bookingCount, membershipLevelName);
+            JsonNode memberInfoFlex = flexMessageBuilder.buildSimpleMemberInfo(customer, bookingCount, membershipLevelName, tenantId);
             log.info("Flex Message 建構完成，準備發送...");
 
             messageService.replyFlex(tenantId, replyToken, "會員資訊", memberInfoFlex);
@@ -1147,7 +1147,7 @@ public class LineWebhookService {
             conversationService.saveContext(context);
 
             // 建構商品列表訊息
-            JsonNode productList = flexMessageBuilder.buildProductMenu(products);
+            JsonNode productList = flexMessageBuilder.buildProductMenu(products, tenantId);
             messageService.replyFlex(tenantId, replyToken, "商品列表", productList);
 
         } catch (Exception e) {

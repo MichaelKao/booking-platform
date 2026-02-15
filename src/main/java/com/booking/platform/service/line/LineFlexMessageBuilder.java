@@ -461,6 +461,102 @@ public class LineFlexMessageBuilder {
     }
 
     /**
+     * 讀取功能頁面的自訂配置（functions 區塊）
+     *
+     * @param tenantId 租戶 ID
+     * @param functionKey 功能 Key（bookingList, productMenu, couponList, myCoupons, memberInfo, contactShop, bookingFlow）
+     * @param field 欄位名稱（color, icon, title, subtitle, imageUrl）
+     * @param defaultValue 預設值
+     * @return 自訂值或預設值
+     */
+    private String getFunctionConfig(String tenantId, String functionKey, String field, String defaultValue) {
+        JsonNode config = loadFlexMenuConfig(tenantId);
+        if (config != null && config.has("functions")) {
+            JsonNode functions = config.get("functions");
+            if (functions.has(functionKey)) {
+                JsonNode func = functions.get(functionKey);
+                if (func.has(field) && !func.get(field).isNull()) {
+                    String value = func.get(field).asText();
+                    if (!value.isEmpty()) return value;
+                }
+            }
+        }
+        return defaultValue;
+    }
+
+    /**
+     * 套用功能頁面的自訂 Header（含 icon、副標題、Hero 圖片支援）
+     *
+     * @param bubble 要設定 header/hero 的 Bubble
+     * @param tenantId 租戶 ID
+     * @param functionKey 功能 Key
+     * @param defaultColor 預設背景色
+     * @param defaultIcon 預設圖示
+     * @param defaultTitle 預設標題
+     */
+    private void applyFunctionHeader(ObjectNode bubble, String tenantId, String functionKey,
+                                      String defaultColor, String defaultIcon, String defaultTitle) {
+        String color = getFunctionConfig(tenantId, functionKey, "color", defaultColor);
+        String icon = getFunctionConfig(tenantId, functionKey, "icon", defaultIcon);
+        String title = getFunctionConfig(tenantId, functionKey, "title", defaultTitle);
+        String subtitle = getFunctionConfig(tenantId, functionKey, "subtitle", "");
+        String heroImageUrl = getFunctionConfig(tenantId, functionKey, "imageUrl", "");
+
+        // 組合標題
+        if (!icon.isEmpty() && !title.startsWith(icon)) {
+            title = icon + " " + title;
+        }
+
+        // Hero 圖片
+        if (!heroImageUrl.isEmpty()) {
+            if (heroImageUrl.startsWith("/api/public/")) {
+                heroImageUrl = appBaseUrl + heroImageUrl;
+            }
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", heroImageUrl);
+            hero.put("size", "full");
+            hero.put("aspectRatio", "20:8");
+            hero.put("aspectMode", "cover");
+            bubble.set("hero", hero);
+        }
+
+        // Header
+        ObjectNode header = objectMapper.createObjectNode();
+        header.put("type", "box");
+        header.put("layout", "vertical");
+        header.put("backgroundColor", color);
+        header.put("paddingAll", "15px");
+
+        ArrayNode headerContents = objectMapper.createArrayNode();
+
+        // 標題
+        ObjectNode headerTitle = objectMapper.createObjectNode();
+        headerTitle.put("type", "text");
+        headerTitle.put("text", title);
+        headerTitle.put("size", "lg");
+        headerTitle.put("weight", "bold");
+        headerTitle.put("color", "#FFFFFF");
+        headerTitle.put("align", "center");
+        headerContents.add(headerTitle);
+
+        // 副標題
+        if (!subtitle.isEmpty()) {
+            ObjectNode subText = objectMapper.createObjectNode();
+            subText.put("type", "text");
+            subText.put("text", subtitle);
+            subText.put("size", "xs");
+            subText.put("color", "#FFFFFF");
+            subText.put("align", "center");
+            subText.put("margin", "sm");
+            headerContents.add(subText);
+        }
+
+        header.set("contents", headerContents);
+        bubble.set("header", header);
+    }
+
+    /**
      * 建構步驟 Header（含 icon、副標題、Hero 圖片支援）
      *
      * @param stepColor 背景色
@@ -2842,13 +2938,19 @@ public class LineFlexMessageBuilder {
      * 建構預約列表訊息
      *
      * @param bookings 預約列表
+     * @param tenantId 租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildBookingList(List<Booking> bookings) {
+    public JsonNode buildBookingList(List<Booking> bookings, String tenantId) {
         if (bookings == null || bookings.isEmpty()) {
             // 無預約時顯示空狀態
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
+
+            // 套用自訂 Header
+            if (tenantId != null) {
+                applyFunctionHeader(bubble, tenantId, "bookingList", "#0066CC", "📋", "我的預約");
+            }
 
             ObjectNode body = objectMapper.createObjectNode();
             body.put("type", "box");
@@ -3252,19 +3354,44 @@ public class LineFlexMessageBuilder {
             }
         }).orElse(null);
 
+        // 讀取自訂配色
+        String contactColor = getFunctionConfig(tenantId, "contactShop", "color", "#5C6BC0");
+        String contactIcon = getFunctionConfig(tenantId, "contactShop", "icon", "📞");
+        String contactTitle = getFunctionConfig(tenantId, "contactShop", "title", "");
+        String heroImageUrl = getFunctionConfig(tenantId, "contactShop", "imageUrl", "");
+
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
 
+        // Hero 圖片
+        if (!heroImageUrl.isEmpty()) {
+            if (heroImageUrl.startsWith("/api/public/")) {
+                heroImageUrl = appBaseUrl + heroImageUrl;
+            }
+            ObjectNode hero = objectMapper.createObjectNode();
+            hero.put("type", "image");
+            hero.put("url", heroImageUrl);
+            hero.put("size", "full");
+            hero.put("aspectRatio", "20:8");
+            hero.put("aspectMode", "cover");
+            bubble.set("hero", hero);
+        }
+
         // Header
+        String headerTitle = contactTitle.isEmpty() ? "聯絡 " + shopName : contactTitle;
+        if (!contactIcon.isEmpty() && !headerTitle.startsWith(contactIcon)) {
+            headerTitle = contactIcon + " " + headerTitle;
+        }
+
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
-        header.put("backgroundColor", "#5C6BC0");
+        header.put("backgroundColor", contactColor);
         header.put("paddingAll", "15px");
 
         ObjectNode headerText = objectMapper.createObjectNode();
         headerText.put("type", "text");
-        headerText.put("text", "聯絡 " + shopName);
+        headerText.put("text", headerTitle);
         headerText.put("color", "#FFFFFF");
         headerText.put("size", "lg");
         headerText.put("weight", "bold");
@@ -3530,11 +3657,12 @@ public class LineFlexMessageBuilder {
      * 建構預約列表訊息（含取消按鈕）
      *
      * @param bookings 預約列表
+     * @param tenantId 租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildBookingListWithCancel(List<Booking> bookings) {
+    public JsonNode buildBookingListWithCancel(List<Booking> bookings, String tenantId) {
         if (bookings == null || bookings.isEmpty()) {
-            return buildBookingList(bookings);
+            return buildBookingList(bookings, tenantId);
         }
 
         ObjectNode carousel = objectMapper.createObjectNode();
@@ -3731,12 +3859,21 @@ public class LineFlexMessageBuilder {
      * 建構可領取票券列表
      *
      * @param coupons 票券列表
+     * @param tenantId 租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildAvailableCouponList(List<Coupon> coupons) {
+    public JsonNode buildAvailableCouponList(List<Coupon> coupons, String tenantId) {
+        // 讀取自訂配色
+        String couponColor = tenantId != null ? getFunctionConfig(tenantId, "couponList", "color", "#E91E63") : "#E91E63";
+
         if (coupons == null || coupons.isEmpty()) {
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
+
+            // 套用自訂 Header
+            if (tenantId != null) {
+                applyFunctionHeader(bubble, tenantId, "couponList", "#E91E63", "🎁", "領取票券");
+            }
 
             ObjectNode body = objectMapper.createObjectNode();
             body.put("type", "box");
@@ -3765,11 +3902,11 @@ public class LineFlexMessageBuilder {
             bubble.put("type", "bubble");
             bubble.put("size", "kilo");
 
-            // Header
+            // Header（使用自訂配色）
             ObjectNode header = objectMapper.createObjectNode();
             header.put("type", "box");
             header.put("layout", "vertical");
-            header.put("backgroundColor", "#FF6B6B");
+            header.put("backgroundColor", couponColor);
             header.put("paddingAll", "10px");
 
             ObjectNode headerText = objectMapper.createObjectNode();
@@ -3850,12 +3987,18 @@ public class LineFlexMessageBuilder {
      *
      * @param instances   票券實例列表
      * @param couponNames 票券 ID 對應名稱
+     * @param tenantId    租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildMyCouponList(List<CouponInstance> instances, Map<String, String> couponNames) {
+    public JsonNode buildMyCouponList(List<CouponInstance> instances, Map<String, String> couponNames, String tenantId) {
         if (instances == null || instances.isEmpty()) {
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
+
+            // 套用自訂 Header
+            if (tenantId != null) {
+                applyFunctionHeader(bubble, tenantId, "myCoupons", "#9C27B0", "🎫", "我的票券");
+            }
 
             ObjectNode body = objectMapper.createObjectNode();
             body.put("type", "box");
@@ -4369,9 +4512,13 @@ public class LineFlexMessageBuilder {
      * @param customer            顧客
      * @param bookingCount        預約次數
      * @param membershipLevelName 會員等級名稱（可為 null）
+     * @param tenantId            租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildMemberInfo(Customer customer, long bookingCount, String membershipLevelName) {
+    public JsonNode buildMemberInfo(Customer customer, long bookingCount, String membershipLevelName, String tenantId) {
+        // 讀取自訂配色
+        String memberColor = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "color", PRIMARY_COLOR) : PRIMARY_COLOR;
+
         ObjectNode carousel = objectMapper.createObjectNode();
         carousel.put("type", "carousel");
 
@@ -4387,7 +4534,7 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
-        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("backgroundColor", memberColor);
         header.put("paddingAll", "20px");
 
         ArrayNode headerContents = objectMapper.createArrayNode();
@@ -4649,11 +4796,33 @@ public class LineFlexMessageBuilder {
      * @param customer            顧客
      * @param bookingCount        預約次數
      * @param membershipLevelName 會員等級名稱（可為 null）
+     * @param tenantId            租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容（單一 Bubble）
      */
-    public JsonNode buildSimpleMemberInfo(Customer customer, long bookingCount, String membershipLevelName) {
+    public JsonNode buildSimpleMemberInfo(Customer customer, long bookingCount, String membershipLevelName, String tenantId) {
+        // 讀取自訂配色和圖示
+        String memberColor = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "color", PRIMARY_COLOR) : PRIMARY_COLOR;
+        String memberIcon = tenantId != null ? getFunctionConfig(tenantId, "memberInfo", "icon", "👤") : "👤";
+
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
+
+        // Hero 圖片（如有自訂）
+        if (tenantId != null) {
+            String heroImageUrl = getFunctionConfig(tenantId, "memberInfo", "imageUrl", "");
+            if (!heroImageUrl.isEmpty()) {
+                if (heroImageUrl.startsWith("/api/public/")) {
+                    heroImageUrl = appBaseUrl + heroImageUrl;
+                }
+                ObjectNode hero = objectMapper.createObjectNode();
+                hero.put("type", "image");
+                hero.put("url", heroImageUrl);
+                hero.put("size", "full");
+                hero.put("aspectRatio", "20:8");
+                hero.put("aspectMode", "cover");
+                bubble.set("hero", hero);
+            }
+        }
 
         // ========================================
         // Header - 會員頭像與名稱
@@ -4661,7 +4830,7 @@ public class LineFlexMessageBuilder {
         ObjectNode header = objectMapper.createObjectNode();
         header.put("type", "box");
         header.put("layout", "vertical");
-        header.put("backgroundColor", PRIMARY_COLOR);
+        header.put("backgroundColor", memberColor);
         header.put("paddingAll", "20px");
 
         ArrayNode headerContents = objectMapper.createArrayNode();
@@ -4669,7 +4838,7 @@ public class LineFlexMessageBuilder {
         // 頭像 icon
         ObjectNode icon = objectMapper.createObjectNode();
         icon.put("type", "text");
-        icon.put("text", "👤");
+        icon.put("text", memberIcon);
         icon.put("size", "3xl");
         icon.put("align", "center");
         headerContents.add(icon);
@@ -4874,12 +5043,18 @@ public class LineFlexMessageBuilder {
      * 建構商品選單（Carousel）
      *
      * @param products 商品列表
+     * @param tenantId 租戶 ID（用於讀取自訂樣式）
      * @return Flex Message 內容
      */
-    public JsonNode buildProductMenu(List<Product> products) {
+    public JsonNode buildProductMenu(List<Product> products, String tenantId) {
         if (products == null || products.isEmpty()) {
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
+
+            // 套用自訂 Header
+            if (tenantId != null) {
+                applyFunctionHeader(bubble, tenantId, "productMenu", "#FF9800", "🛍️", "瀏覽商品");
+            }
 
             ObjectNode body = objectMapper.createObjectNode();
             body.put("type", "box");
