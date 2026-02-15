@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { TEST_ACCOUNTS } from './utils/test-helpers';
 
 const BASE_URL = process.env.BASE_URL || 'https://booking-platform-production-1e08.up.railway.app';
 
@@ -258,8 +259,8 @@ test.describe('登入流程測試', () => {
       localStorage.removeItem('refreshToken');
     });
 
-    await page.fill('#username', 'g0909095118@gmail.com');
-    await page.fill('#password', 'gaojunting11');
+    await page.fill('#username', TEST_ACCOUNTS.tenant.username);
+    await page.fill('#password', TEST_ACCOUNTS.tenant.password);
     await page.click('button[type="submit"]');
 
     // 等待跳轉到儀表板

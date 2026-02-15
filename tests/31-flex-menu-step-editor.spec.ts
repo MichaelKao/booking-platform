@@ -441,13 +441,22 @@ test.describe('選單設計頁面 — 步驟編輯器', () => {
   test('步驟標題包含預期關鍵字', async ({ page }) => {
     const ok = await navigateToStepEditor(page);
     if (!ok) return;
-    const headers = page.locator('#fmStepList .fm-step-editor-title');
-    const keywords = ['服務', '日期', '服務人員', '時段', '備註', '確認'];
+    const editors = page.locator('#fmStepList .fm-step-editor');
+    const count = await editors.count();
+    expect(count).toBe(6);
+    // 步驟標題可能被自訂（套用範本後），改為檢查 data-step 屬性和標題非空
+    const expectedSteps = ['service', 'date', 'staff', 'time', 'note', 'confirm'];
     for (let i = 0; i < 6; i++) {
-      const text = await headers.nth(i).textContent();
-      expect(text).toContain(keywords[i]);
+      const editor = editors.nth(i);
+      const title = await editor.locator('.fm-step-editor-title').textContent();
+      // 標題不為空
+      expect(title?.trim().length).toBeGreaterThan(0);
+      // 檢查輸入框的 data-step 屬性確認步驟順序
+      const stepInput = editor.locator('input[data-step]').first();
+      const stepKey = await stepInput.getAttribute('data-step');
+      expect(stepKey).toBe(expectedSteps[i]);
     }
-    console.log('步驟標題正確');
+    console.log('步驟標題正確（6 個步驟，順序正確）');
   });
 
   test('步驟可展開/收合', async ({ page }) => {

@@ -39,20 +39,29 @@ test.describe('進階自訂 Rich Menu UI 測試', () => {
   });
 
   test.describe('進階自訂 Tab 存在性', () => {
-    test('模式切換區有 3 個 Tab（含隱藏的進階 Tab）', async ({ page }) => {
-      const allTabs = page.locator('#richMenuModeTabs .rich-menu-mode-tab');
-      // 應有 3 個 Tab（預設、自訂、進階）
-      await expect(allTabs).toHaveCount(3);
-      console.log('找到 3 個模式 Tab');
+    test('模式切換區有 2 個 Tab（Rich Menu + Flex 主選單）', async ({ page }) => {
+      // 選單設計已移至 rich-menu-design 頁面
+      await page.goto('/tenant/rich-menu-design');
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const allTabs = page.locator('.rm-design-tabs .nav-link');
+      // 應有 2 個 Tab（Rich Menu、Flex 主選單）
+      await expect(allTabs).toHaveCount(2);
+      console.log('找到 2 個模式 Tab');
     });
 
     test('進階 Tab 元素存在', async ({ page }) => {
-      const advTab = page.locator('#advancedMenuTab');
-      // 元素存在（可能隱藏）
-      await expect(advTab).toHaveCount(1);
-      const text = await advTab.textContent();
-      expect(text).toContain('進階自訂');
-      console.log('進階 Tab 元素存在，文字：' + text?.trim());
+      // 選單設計頁面的 Flex 主選單 Tab
+      await page.goto('/tenant/rich-menu-design');
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(WAIT_TIME.api);
+
+      const flexTab = page.locator('.rm-design-tabs .nav-link').nth(1);
+      await expect(flexTab).toHaveCount(1);
+      const text = await flexTab.textContent();
+      expect(text).toContain('Flex');
+      console.log('Flex 主選單 Tab 元素存在，文字：' + text?.trim());
     });
 
     test('進階面板元素存在', async ({ page }) => {
@@ -80,23 +89,25 @@ test.describe('進階自訂 Rich Menu UI 測試', () => {
   });
 
   test.describe('功能訂閱控制', () => {
-    test('未訂閱時顯示鎖定提示', async ({ page }) => {
-      // 自訂/進階 Tab 的可見性取決於訂閱狀態
-      // 如果未訂閱，customMenuLocked 提示應該可見（或 Tab 隱藏）
-      const lockedAlert = page.locator('#customMenuLocked');
-      const isLockedVisible = await lockedAlert.isVisible();
-      const customTab = page.locator('#customMenuTab');
-      const isCustomHidden = await customTab.evaluate(el => el.classList.contains('d-none'));
+    test('選單設計頁面正常載入（需訂閱 CUSTOM_RICH_MENU）', async ({ page }) => {
+      // 選單設計頁面整頁需要訂閱 CUSTOM_RICH_MENU 功能
+      await page.goto('/tenant/rich-menu-design');
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(WAIT_TIME.api);
 
-      // 兩者之一應為 true：鎖定提示可見 OR 自訂 Tab 隱藏
-      // 如果訂閱了，兩者都不成立，Tab 可見且提示隱藏
-      if (isLockedVisible) {
-        console.log('未訂閱狀態：鎖定提示可見');
-        // 應有「前往功能商店」連結
-        await expect(lockedAlert.locator('a[href="/tenant/feature-store"]')).toBeVisible();
-      } else if (!isCustomHidden) {
-        console.log('已訂閱狀態：自訂/進階 Tab 可見');
-        await expect(customTab).toBeVisible();
+      // 如果重定向到其他頁面或顯示錯誤，說明未訂閱
+      const url = page.url();
+      if (!url.includes('rich-menu-design')) {
+        console.log('未訂閱 CUSTOM_RICH_MENU，已重導向');
+        return;
+      }
+
+      // 頁面正常載入 — 檢查基本結構
+      const tabs = page.locator('.rm-design-tabs .nav-link');
+      const tabCount = await tabs.count();
+      if (tabCount >= 2) {
+        console.log('已訂閱狀態：選單設計頁面正常顯示 Tab');
+        await expect(tabs.first()).toBeVisible();
       } else {
         console.log('自訂 Tab 隱藏中');
       }
