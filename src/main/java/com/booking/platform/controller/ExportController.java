@@ -1,5 +1,6 @@
 package com.booking.platform.controller;
 
+import com.booking.platform.common.exception.BusinessException;
 import com.booking.platform.common.exception.ResourceNotFoundException;
 import com.booking.platform.common.exception.ErrorCode;
 import com.booking.platform.common.tenant.TenantContext;
@@ -62,6 +63,10 @@ public class ExportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) BookingStatus status
     ) throws IOException {
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "開始日期不能晚於結束日期");
+        }
+
         String tenantId = TenantContext.getTenantId();
         String tenantName = getTenantName(tenantId);
 
@@ -86,6 +91,10 @@ public class ExportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) BookingStatus status
     ) throws IOException {
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "開始日期不能晚於結束日期");
+        }
+
         String tenantId = TenantContext.getTenantId();
         String tenantName = getTenantName(tenantId);
 

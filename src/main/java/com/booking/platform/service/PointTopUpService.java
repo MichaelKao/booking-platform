@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,9 +107,11 @@ public class PointTopUpService {
         long approvedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.APPROVED);
         long rejectedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.REJECTED);
 
-        // 計算總金額（已通過的）
+        // 計算本月總金額（已通過的）
+        LocalDateTime monthStart = java.time.LocalDate.now().withDayOfMonth(1).atStartOfDay();
         BigDecimal totalAmount = pointTopUpRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtAsc(TopUpStatus.APPROVED)
                 .stream()
+                .filter(p -> p.getReviewedAt() != null && !p.getReviewedAt().isBefore(monthStart))
                 .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
