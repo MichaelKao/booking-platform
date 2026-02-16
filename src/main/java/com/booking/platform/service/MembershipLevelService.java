@@ -244,10 +244,11 @@ public class MembershipLevelService {
         log.info("更新會員等級排序，租戶：{}", tenantId);
 
         for (int i = 0; i < ids.size(); i++) {
+            final int sortOrder = i + 1;
             String id = ids.get(i);
             membershipLevelRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
                     .ifPresent(entity -> {
-                        entity.setSortOrder(ids.indexOf(id) + 1);
+                        entity.setSortOrder(sortOrder);
                         membershipLevelRepository.save(entity);
                     });
         }
