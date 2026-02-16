@@ -939,7 +939,7 @@
             document.getElementById('editBookingStaff').value = booking.staffId || '';
             document.getElementById('editBookingDate').value = booking.bookingDate;
             document.getElementById('editBookingTime').value = booking.startTime?.substring(0, 5) || '';
-            document.getElementById('editBookingNoteToCustomer').value = '';
+            document.getElementById('editBookingNoteToCustomer').value = booking.storeNoteToCustomer || '';
 
             // 設定服務時長（從預約資料）
             document.getElementById('editBookingDuration').value = booking.duration || 60;
