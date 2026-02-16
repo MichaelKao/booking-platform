@@ -432,7 +432,7 @@
 
         async function loadWeeklyChart() {
             try {
-                const r = await api.get('/api/reports/daily', { days: 7 });
+                const r = await api.get('/api/reports/daily', { range: 'week' });
                 if (r.success && r.data) {
                     renderWeeklyChart(r.data);
                 }

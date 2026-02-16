@@ -573,7 +573,7 @@ public class CouponService {
 
         List<CouponInstanceResponse> content = page.getContent().stream()
                 .map(ci -> {
-                    Coupon coupon = couponRepository.findById(ci.getCouponId()).orElse(null);
+                    Coupon coupon = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(ci.getCouponId(), tenantId).orElse(null);
                     String customerName = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(ci.getCustomerId(), tenantId)
                             .map(Customer::getDisplayName)
                             .orElse(null);
@@ -598,7 +598,7 @@ public class CouponService {
         return couponInstanceRepository.findUsableByCustomer(tenantId, customerId, LocalDateTime.now())
                 .stream()
                 .map(ci -> {
-                    Coupon coupon = couponRepository.findById(ci.getCouponId()).orElse(null);
+                    Coupon coupon = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(ci.getCouponId(), tenantId).orElse(null);
                     return couponMapper.toInstanceResponse(ci, coupon, null);
                 })
                 .collect(Collectors.toList());

@@ -592,10 +592,6 @@ public class StaffService {
         // 取得員工列表
         List<Staff> staffList;
         if (staffId != null && !staffId.isEmpty()) {
-            staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(staffId, tenantId)
-                    .ifPresent(staff -> {
-                        // 單一員工
-                    });
             staffList = staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(staffId, tenantId)
                     .map(List::of)
                     .orElse(List.of());
