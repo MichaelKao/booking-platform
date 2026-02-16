@@ -95,6 +95,9 @@ test.describe('SEO 頁面測試', () => {
             { path: '/fitness', title: '健身教練', keyword: '健身' },
             { path: '/restaurant', title: '餐廳訂位', keyword: '餐廳' },
             { path: '/clinic', title: '診所預約', keyword: '診所' },
+            { path: '/tutoring', title: '補習家教', keyword: '補習' },
+            { path: '/photography', title: '攝影工作室', keyword: '攝影' },
+            { path: '/pet-care', title: '寵物美容', keyword: '寵物' },
         ];
 
         for (const industry of industryPages) {
@@ -190,6 +193,9 @@ test.describe('SEO 頁面測試', () => {
             expect(text).toContain('/fitness');
             expect(text).toContain('/restaurant');
             expect(text).toContain('/clinic');
+            expect(text).toContain('/tutoring');
+            expect(text).toContain('/photography');
+            expect(text).toContain('/pet-care');
         });
 
         test('OG 圖片可存取', async ({ request }) => {

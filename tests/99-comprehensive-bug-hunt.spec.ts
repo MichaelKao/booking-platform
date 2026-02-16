@@ -70,6 +70,7 @@ test.describe('全面 BUG 搜尋測試', () => {
       { name: '功能商店', url: '/tenant/feature-store' },
       { name: '點數管理', url: '/tenant/points' },
       { name: '會員等級', url: '/tenant/membership-levels' },
+      { name: '推薦好友', url: '/tenant/referrals' },
     ];
 
     for (const p of pages) {

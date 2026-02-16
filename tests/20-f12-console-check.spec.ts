@@ -118,6 +118,7 @@ test.describe('F12 檢查 - 店家後台', () => {
     { name: '功能商店', url: '/tenant/feature-store' },
     { name: '點數管理', url: '/tenant/points' },
     { name: '會員等級', url: '/tenant/membership-levels' },
+    { name: '推薦好友', url: '/tenant/referrals' },
   ];
 
   for (const p of tenantPages) {
@@ -225,6 +226,9 @@ test.describe('F12 檢查 - 公開頁面', () => {
     { name: '健身預約系統', url: '/fitness' },
     { name: '餐廳預約系統', url: '/restaurant' },
     { name: '診所預約系統', url: '/clinic' },
+    { name: '補習家教預約系統', url: '/tutoring' },
+    { name: '攝影工作室預約系統', url: '/photography' },
+    { name: '寵物美容預約系統', url: '/pet-care' },
     // 法律頁面
     { name: '隱私政策', url: '/privacy' },
     { name: '服務條款', url: '/terms' },
@@ -290,11 +294,11 @@ test.describe('F12 檢查 - 總結', () => {
   test('輸出檢查範圍', () => {
     console.log('\n========================================');
     console.log('F12 Console 全面檢查範圍：');
-    console.log('  - 店家後台：18 個頁面');
+    console.log('  - 店家後台：19 個頁面');
     console.log('  - 超管後台：4 個頁面');
-    console.log('  - 公開頁面：15 個頁面（含 7 城市頁面）');
+    console.log('  - 公開頁面：19 個頁面（含 9 行業頁面）');
     console.log('  - 顧客詳情頁：1 個頁面');
-    console.log('  - 總計：38 個頁面');
+    console.log('  - 總計：43 個頁面');
     console.log('');
     console.log('檢查項目：');
     console.log('  1. JavaScript 執行錯誤 (pageerror)');
