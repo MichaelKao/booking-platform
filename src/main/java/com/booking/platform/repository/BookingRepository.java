@@ -43,6 +43,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             AND (CAST(:startDate AS DATE) IS NULL OR b.booking_date >= CAST(:startDate AS DATE))
             AND (CAST(:endDate AS DATE) IS NULL OR b.booking_date <= CAST(:endDate AS DATE))
             AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
+            AND (CAST(:customerId AS VARCHAR) IS NULL OR b.customer_id = CAST(:customerId AS VARCHAR))
             ORDER BY b.booking_date DESC, b.start_time ASC
             """,
             countQuery = """
@@ -53,6 +54,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             AND (CAST(:startDate AS DATE) IS NULL OR b.booking_date >= CAST(:startDate AS DATE))
             AND (CAST(:endDate AS DATE) IS NULL OR b.booking_date <= CAST(:endDate AS DATE))
             AND (CAST(:staffId AS VARCHAR) IS NULL OR b.staff_id = CAST(:staffId AS VARCHAR))
+            AND (CAST(:customerId AS VARCHAR) IS NULL OR b.customer_id = CAST(:customerId AS VARCHAR))
             """,
             nativeQuery = true)
     Page<Booking> findByTenantIdAndFilters(
@@ -61,6 +63,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("staffId") String staffId,
+            @Param("customerId") String customerId,
             Pageable pageable
     );
 

@@ -361,8 +361,10 @@
          * 渲染表格資訊
          */
         function renderTableInfo(pageData) {
-            const start = pageData.number * pageData.size + 1;
-            const end = Math.min(start + pageData.numberOfElements - 1, pageData.totalElements);
+            const pageNum = pageData.page != null ? pageData.page : (pageData.number || 0);
+            const numElements = pageData.content ? pageData.content.length : (pageData.numberOfElements || 0);
+            const start = pageNum * pageData.size + 1;
+            const end = Math.min(start + numElements - 1, pageData.totalElements);
             document.getElementById('tableInfo').textContent =
                 `顯示 ${start} - ${end} 筆，共 ${pageData.totalElements} 筆`;
         }

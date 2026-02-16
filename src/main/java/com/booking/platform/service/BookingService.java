@@ -82,6 +82,7 @@ public class BookingService {
             LocalDate startDate,
             LocalDate endDate,
             String staffId,
+            String customerId,
             Pageable pageable
     ) {
         String tenantId = TenantContext.getTenantId();
@@ -104,7 +105,7 @@ public class BookingService {
         String statusStr = status != null ? status.name() : null;
 
         Page<Booking> page = bookingRepository.findByTenantIdAndFilters(
-                tenantId, statusStr, startDate, endDate, staffId, pageable
+                tenantId, statusStr, startDate, endDate, staffId, customerId, pageable
         );
 
         List<BookingResponse> content = page.getContent().stream()

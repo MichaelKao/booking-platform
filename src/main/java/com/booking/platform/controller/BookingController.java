@@ -48,6 +48,7 @@ public class BookingController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String staffId,
+            @RequestParam(required = false) String customerId,
             @RequestParam(required = false) String sort
     ) {
         size = Math.min(size, 100);
@@ -59,7 +60,7 @@ public class BookingController {
             endDate = date;
         }
 
-        return ApiResponse.ok(bookingService.getList(status, startDate, endDate, staffId, pageable));
+        return ApiResponse.ok(bookingService.getList(status, startDate, endDate, staffId, customerId, pageable));
     }
 
     @GetMapping("/{id}")
