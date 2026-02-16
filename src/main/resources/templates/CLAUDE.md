@@ -56,11 +56,13 @@
 | feature-store.html | 功能商店 | /tenant/feature-store |
 | points.html | 點數管理 | /tenant/points |
 | membership-levels.html | 會員等級 | /tenant/membership-levels |
+| referrals.html | 推薦好友 | /tenant/referrals |
 
 ### 共用片段 (`fragments/`)
 
 | 檔案 | 功能 |
 |------|------|
+| tracking.html | GA4 + FB Pixel 追蹤碼片段 |
 | sidebar-admin.html | 超管側邊欄 |
 | sidebar-tenant.html | 店家側邊欄 |
 | header.html | 共用頁頭 |
@@ -123,6 +125,9 @@ JavaScript 會在頁面載入時檢查訂閱狀態，自動隱藏未訂閱功能
 | hair-salon.html | 髮廊解決方案 | /industry/hair-salon |
 | restaurant.html | 餐廳解決方案 | /industry/restaurant |
 | spa.html | SPA 解決方案 | /industry/spa |
+| tutoring.html | 補習家教解決方案 | /tutoring |
+| photography.html | 攝影工作室解決方案 | /photography |
+| pet-care.html | 寵物美容解決方案 | /pet-care |
 
 ---
 

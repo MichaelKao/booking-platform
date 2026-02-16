@@ -11,7 +11,7 @@
 @Slf4j
 ```
 
-## 目錄結構 (33 個 Controller)
+## 目錄結構 (34 個 Controller)
 
 | 目錄 | Controller | 用途 |
 |------|------------|------|
@@ -47,6 +47,7 @@
 | / | PaymentController | 金流支付 |
 | / | PublicBookingController | 公開預約頁面 (自助取消) |
 | / | HealthController | 健康檢查 |
+| / | ReferralController | 推薦好友 |
 | / | FaviconController | Favicon |
 
 ---

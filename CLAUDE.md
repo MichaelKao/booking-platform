@@ -52,34 +52,34 @@
 ```
 com.booking.platform
 ├── common/                    # 共用元件
-│   ├── config/               # 設定 (Security, Redis, Jackson, Async, Locale, Sms, Ecpay)
+│   ├── config/               # 設定 (Security, Redis, Jackson, Async, Locale, Sms, Ecpay, Tracking)
 │   ├── exception/            # 例外 (BusinessException, ErrorCode)
 │   ├── response/             # 統一回應 (ApiResponse, PageResponse)
 │   ├── security/             # JWT (JwtTokenProvider, JwtAuthenticationFilter)
 │   └── tenant/               # 多租戶 (TenantContext, TenantFilter)
-├── controller/                # 控制器 (33 個)
+├── controller/                # 控制器 (34 個)
 │   ├── admin/                # 超管 API (4 個)
 │   ├── auth/                 # 認證 API (1 個)
 │   ├── line/                 # LINE Webhook + 診斷 (2 個)
 │   ├── page/                 # 頁面路由 (3 個)
 │   └── tenant/               # 店家 API (23 個)
-├── service/                   # 服務層 (38 個)
+├── service/                   # 服務層 (39 個)
 │   ├── admin/                # 超管服務
 │   ├── line/                 # LINE 相關
 │   ├── notification/         # 通知服務 (Email, SSE, SMS)
 │   ├── payment/              # 金流服務 (ECPay)
 │   └── export/               # 匯出服務 (Excel, PDF)
 ├── scheduler/                 # 排程任務 (5 個)
-├── repository/                # 資料存取層 (25 個)
-├── entity/                    # 資料庫實體 (25 個)
+├── repository/                # 資料存取層 (26 個)
+├── entity/                    # 資料庫實體 (26 個)
 │   ├── system/               # 系統實體 (含 Payment, SmsLog)
 │   ├── staff/                # 員工實體
 │   ├── marketing/            # 行銷實體 (含 MarketingPush)
 │   └── tenant/               # 租戶實體
-├── dto/                       # 資料傳輸物件 (76+ 個)
+├── dto/                       # 資料傳輸物件 (78+ 個)
 │   ├── request/              # 請求 DTO
 │   └── response/             # 回應 DTO
-├── enums/                     # 列舉 (28 個)
+├── enums/                     # 列舉 (29 個)
 └── mapper/                    # 轉換器
 ```
 
@@ -174,6 +174,7 @@ POST /api/auth/logout             # 登出
 | 報表匯出 | `GET /export/bookings/excel\|pdf`, `GET /export/reports/excel\|pdf`, `GET /export/customers/excel` |
 | 員工行事曆 | `GET /staff/calendar` |
 | 支付 | `GET/POST /payments`, `GET /payments/{id}`, `GET /payments/order/{merchantTradeNo}` |
+| 推薦 | `GET /referrals/dashboard`, `GET /referrals/code` |
 
 ### LINE Webhook
 
@@ -291,6 +292,7 @@ scheduler:
 | /tenant/rich-menu-design | 選單設計（需訂閱 CUSTOM_RICH_MENU） |
 | /tenant/feature-store | 功能商店 |
 | /tenant/points | 點數管理 |
+| /tenant/referrals | 推薦好友 |
 
 ---
 
@@ -304,7 +306,7 @@ scheduler:
 | 預約 | `bookings`, `booking_histories` |
 | 顧客 | `customers`, `membership_levels`, `point_transactions` |
 | 商品 | `products`, `product_orders`, `inventory_logs` |
-| 行銷 | `coupons`, `coupon_instances`, `campaigns`, `marketing_pushes` |
+| 行銷 | `coupons`, `coupon_instances`, `campaigns`, `marketing_pushes`, `tenant_referrals` |
 | 系統 | `features`, `tenant_features`, `point_topups`, `payments`, `sms_logs` |
 | LINE | `tenant_line_configs`, `line_users` |
 
@@ -1402,14 +1404,14 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 
 | 項目 | 數量 |
 |------|------|
-| Controller | 33 |
-| Service | 38 |
-| Entity | 25 |
-| Repository | 25 |
-| DTO | 76+ |
-| Enum | 28 |
+| Controller | 34 |
+| Service | 39 |
+| Entity | 26 |
+| Repository | 26 |
+| DTO | 78+ |
+| Enum | 29 |
 | Scheduler | 5 |
-| HTML 頁面 | 52 |
+| HTML 頁面 | 56 |
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
