@@ -36,6 +36,11 @@ public interface TenantRepository extends JpaRepository<Tenant, String> {
      */
     Optional<Tenant> findByCodeAndDeletedAtIsNull(String code);
 
+    /**
+     * 依推薦碼查詢（排除已刪除）
+     */
+    Optional<Tenant> findByReferralCodeAndDeletedAtIsNull(String referralCode);
+
     // ========================================
     // 存在性檢查
     // ========================================
