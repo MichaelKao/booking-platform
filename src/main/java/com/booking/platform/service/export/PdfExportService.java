@@ -59,9 +59,9 @@ public class PdfExportService {
             document.add(title);
 
             // 建立表格
-            PdfPTable table = new PdfPTable(8);
+            PdfPTable table = new PdfPTable(7);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{2f, 1.5f, 1.5f, 2f, 1.5f, 1.5f, 1.5f, 1f});
+            table.setWidths(new float[]{2f, 1.5f, 1.5f, 2f, 1.5f, 1.5f, 1f});
 
             // 表頭
             String[] headers = {"顧客姓名", "電話", "服務項目", "員工", "日期", "時間", "狀態"};

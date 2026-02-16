@@ -731,6 +731,11 @@ public class BookingService {
                         ErrorCode.BOOKING_NOT_FOUND, "找不到指定的預約"
                 ));
 
+        // 只有已確認的預約可以標記為完成
+        if (!BookingStatus.CONFIRMED.equals(entity.getStatus())) {
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只有已確認的預約可以標記為完成");
+        }
+
         entity.complete();
         entity = bookingRepository.save(entity);
 
@@ -840,6 +845,11 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.BOOKING_NOT_FOUND, "找不到指定的預約"
                 ));
+
+        // 只有已確認的預約可以標記為爽約
+        if (!BookingStatus.CONFIRMED.equals(entity.getStatus())) {
+            throw new BusinessException(ErrorCode.BOOKING_STATUS_ERROR, "只有已確認的預約可以標記為爽約");
+        }
 
         entity.markNoShow();
         entity = bookingRepository.save(entity);

@@ -106,7 +106,7 @@ public class AdminDashboardService {
                 todayStart.toLocalDate(), todayEnd.toLocalDate()
         );
         long monthlyBookings = bookingRepository.countByBookingDateBetween(
-                monthStart.toLocalDate(), monthEnd.toLocalDate()
+                monthStart.toLocalDate(), monthEnd.toLocalDate().minusDays(1)
         );
 
         // ========================================

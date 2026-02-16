@@ -433,6 +433,7 @@
                         ${b.status === 'CONFIRMED' ? `
                             <button class="btn btn-primary" onclick="completeBooking('${b.id}')" title="完成"><i class="bi bi-check-circle"></i></button>
                             <button class="btn btn-outline-primary d-none d-sm-inline-block" onclick="openEditBookingModal('${b.id}')" title="編輯"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-warning d-none d-sm-inline-block" onclick="markNoShow('${b.id}')" title="標記爽約"><i class="bi bi-exclamation-circle"></i></button>
                             <button class="btn btn-danger" onclick="cancelBooking('${b.id}')" title="取消"><i class="bi bi-x"></i></button>
                         ` : ''}
                         <button class="btn btn-outline-secondary" onclick="openDetailModal('${b.id}')" title="詳情"><i class="bi bi-eye"></i></button>
@@ -636,6 +637,7 @@
                     if (b.status === 'CONFIRMED') {
                         actionButtons += `<button class="btn btn-outline-primary" onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();openEditBookingModal('${b.id}');">編輯預約</button>`;
                         actionButtons += `<button class="btn btn-primary" onclick="completeBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">標記完成</button>`;
+                        actionButtons += `<button class="btn btn-warning" onclick="markNoShow('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">標記爽約</button>`;
                         actionButtons += `<button class="btn btn-danger" onclick="cancelBooking('${b.id}');bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();">取消預約</button>`;
                     }
                     actions.innerHTML = actionButtons;
@@ -723,6 +725,14 @@
                 const r = await api.post(`/api/bookings/${id}/complete`);
                 if (r.success) { showSuccess('預約已完成'); loadBookings(currentPageNum); }
             } catch (e) { showError('完成預約失敗：' + (e.message || '')); }
+        }
+
+        async function markNoShow(id) {
+            if (!await showConfirm('確定要將此預約標記為爽約嗎？')) return;
+            try {
+                const r = await api.post(`/api/bookings/${id}/no-show`);
+                if (r.success) { showSuccess('已標記為爽約'); loadBookings(currentPageNum); }
+            } catch (e) { showError('標記爽約失敗：' + (e.message || '')); }
         }
 
         function escapeHtml(t) {

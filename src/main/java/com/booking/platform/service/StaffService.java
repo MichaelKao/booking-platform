@@ -301,6 +301,11 @@ public class StaffService {
                     throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
                             DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的上班開始時間必須早於結束時間");
                 }
+                // 休息時間必須成對設定
+                if ((daySchedule.getBreakStartTime() != null) != (daySchedule.getBreakEndTime() != null)) {
+                    throw new BusinessException(ErrorCode.SYS_PARAM_ERROR,
+                            DAY_OF_WEEK_NAMES[daySchedule.getDayOfWeek()] + " 的休息時間必須同時設定開始和結束時間");
+                }
                 // 休息時間驗證：開始時間不能晚於結束時間
                 if (daySchedule.getBreakStartTime() != null && daySchedule.getBreakEndTime() != null
                         && !daySchedule.getBreakStartTime().isBefore(daySchedule.getBreakEndTime())) {

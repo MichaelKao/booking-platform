@@ -212,7 +212,8 @@ public class FeatureStoreService {
         if (!isFree) {
             // 檢查點數餘額
             BigDecimal costDecimal = BigDecimal.valueOf(totalCost);
-            if (tenant.getPointBalance().compareTo(costDecimal) < 0) {
+            BigDecimal balance = tenant.getPointBalance() != null ? tenant.getPointBalance() : BigDecimal.ZERO;
+            if (balance.compareTo(costDecimal) < 0) {
                 throw new BusinessException(ErrorCode.POINT_INSUFFICIENT,
                         "點數不足，需要 " + totalCost + " 點，目前餘額 " + tenant.getPointBalance() + " 點");
             }

@@ -261,7 +261,7 @@ public class EcpayService {
         params.put("MerchantTradeNo", payment.getMerchantTradeNo());
         params.put("MerchantTradeDate", LocalDateTime.now().format(DATE_FORMAT));
         params.put("PaymentType", "aio");
-        params.put("TotalAmount", payment.getAmount().intValue() + "");
+        params.put("TotalAmount", String.valueOf(payment.getAmount().setScale(0, java.math.RoundingMode.HALF_UP).intValue()));
         params.put("TradeDesc", urlEncode(payment.getDescription() != null ? payment.getDescription() : "線上付款"));
         params.put("ItemName", urlEncode(payment.getDescription() != null ? payment.getDescription() : "商品"));
         params.put("ReturnURL", request.getNotifyUrl() != null ? request.getNotifyUrl() : "");

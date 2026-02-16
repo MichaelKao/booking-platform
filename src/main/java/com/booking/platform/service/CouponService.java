@@ -296,6 +296,11 @@ public class CouponService {
             throw new BusinessException(ErrorCode.COUPON_CANNOT_ISSUE, "此票券無法發放");
         }
 
+        // 檢查票券是否已過期
+        if (coupon.getValidEndAt() != null && coupon.getValidEndAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.COUPON_CANNOT_ISSUE, "此票券已過期，無法發放");
+        }
+
         // 取得顧客
         Customer customer = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(request.getCustomerId(), tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -369,6 +374,11 @@ public class CouponService {
         // 檢查是否可發放
         if (!coupon.canIssue()) {
             throw new BusinessException(ErrorCode.COUPON_CANNOT_ISSUE, "此票券無法發放");
+        }
+
+        // 檢查票券是否已過期
+        if (coupon.getValidEndAt() != null && coupon.getValidEndAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.COUPON_CANNOT_ISSUE, "此票券已過期，無法發放");
         }
 
         // 檢查每人限領數量
