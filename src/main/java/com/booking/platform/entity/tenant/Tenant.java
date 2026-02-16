@@ -100,6 +100,22 @@ public class Tenant extends BaseEntity {
     private String address;
 
     // ========================================
+    // 推薦機制
+    // ========================================
+
+    /**
+     * 推薦碼（唯一，8 字元）
+     */
+    @Column(name = "referral_code", length = 20, unique = true)
+    private String referralCode;
+
+    /**
+     * 由哪個推薦碼推薦來的
+     */
+    @Column(name = "referred_by_code", length = 20)
+    private String referredByCode;
+
+    // ========================================
     // 認證欄位
     // ========================================
 

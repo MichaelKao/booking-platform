@@ -10,11 +10,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- SEO Meta Tags -->
     <title>店家登入 | 預約平台管理系統</title>
-    <meta name="description" content="登入預約平台店家後台，管理您的預約、顧客、員工和營運報表。免費線上預約系統，整合 LINE 預約機器人。">
+    <meta name="description" content="登入預約平台店家後台，管理您的預約、顧客、員工和營運報表。免費線上預約系統，整合 LINE 預約機器人。立即免費試用！">
     <meta name="keywords" content="預約系統登入,店家後台,預約管理,LINE預約">
     <meta name="robots" content="index, follow">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/tenant/login" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/tenant/login?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/tenant/login?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/tenant/login" />
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/tenant/login">
 
     <!-- Open Graph -->

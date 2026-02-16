@@ -100,6 +100,30 @@ public class PublicPageController {
         return "public/industry/clinic";
     }
 
+    /**
+     * 補習家教預約系統
+     */
+    @GetMapping("/tutoring")
+    public String tutoring() {
+        return "public/industry/tutoring";
+    }
+
+    /**
+     * 攝影工作室預約系統
+     */
+    @GetMapping("/photography")
+    public String photography() {
+        return "public/industry/photography";
+    }
+
+    /**
+     * 寵物美容預約系統
+     */
+    @GetMapping("/pet-care")
+    public String petCare() {
+        return "public/industry/pet-care";
+    }
+
     // ========================================
     // 法律頁面
     // ========================================

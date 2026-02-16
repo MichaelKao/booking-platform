@@ -775,6 +775,64 @@ function exportToCsv(data, filename, headers) {
 }
 
 // ========================================
+// 追蹤分析
+// ========================================
+
+/**
+ * 追蹤事件物件
+ */
+const tracking = {
+    /**
+     * 發送自訂事件
+     */
+    event(eventName, params = {}) {
+        if (typeof gtag === 'function') {
+            gtag('event', eventName, params);
+        }
+        if (typeof fbq === 'function') {
+            fbq('trackCustom', eventName, params);
+        }
+    },
+
+    /**
+     * 追蹤註冊完成
+     */
+    registration() {
+        if (typeof gtag === 'function') {
+            gtag('event', 'sign_up', { method: 'tenant_register' });
+        }
+        if (typeof fbq === 'function') {
+            fbq('track', 'CompleteRegistration');
+        }
+    },
+
+    /**
+     * 追蹤登入
+     */
+    login() {
+        if (typeof gtag === 'function') {
+            gtag('event', 'login', { method: 'tenant_login' });
+        }
+    },
+
+    /**
+     * 追蹤功能訂閱
+     */
+    featurePurchase(featureCode, featureName, points) {
+        if (typeof gtag === 'function') {
+            gtag('event', 'purchase', {
+                currency: 'TWD',
+                value: points,
+                items: [{ item_id: featureCode, item_name: featureName }]
+            });
+        }
+        if (typeof fbq === 'function') {
+            fbq('track', 'Subscribe', { currency: 'TWD', value: points });
+        }
+    }
+};
+
+// ========================================
 // 初始化
 // ========================================
 

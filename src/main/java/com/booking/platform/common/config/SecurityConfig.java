@@ -104,6 +104,9 @@ public class SecurityConfig {
             "/fitness",
             "/restaurant",
             "/clinic",
+            "/tutoring",
+            "/photography",
+            "/pet-care",
 
             // 錯誤頁面
             "/error/**"

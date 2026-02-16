@@ -13,6 +13,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- GA4 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: ga4}" />
+
     <title th:text="${pageTitle} ? ${pageTitle} + ' - 店家後台' : '店家後台'">店家後台</title>
 
     <!-- Bootstrap 5 CSS -->

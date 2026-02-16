@@ -9,10 +9,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- SEO Meta Tags -->
     <title>美髮預約系統 | 髮廊 LINE 預約機器人 | 預約平台</title>
-    <meta name="description" content="專為美髮沙龍打造的免費預約系統。整合 LINE 預約機器人，顧客可線上預約剪髮、染髮、燙髮。設計師排班管理、自動提醒、顧客管理一站搞定。">
-    <meta name="keywords" content="美髮預約系統,髮廊預約系統,美髮店預約,LINE美髮預約,髮型師預約系統,沙龍預約管理,美髮管理軟體">
+    <meta name="description" content="專為美髮沙龍打造的免費預約系統，立即免費試用！整合 LINE 預約機器人，顧客可線上預約剪髮、染髮、燙髮。設計師排班管理、自動提醒、顧客管理一站搞定。超過 150+ 店家使用。">
+    <meta name="keywords" content="美髮預約系統,髮廊預約系統,美髮店預約,LINE美髮預約,髮型師預約系統,沙龍預約管理,美髮管理軟體,髮廊線上預約,設計師指名預約,髮型師排班">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/hair-salon" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/hair-salon?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/hair-salon?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/hair-salon" />
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/hair-salon">
 

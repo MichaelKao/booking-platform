@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- SEO Meta Tags -->
     <title>服務條款 | 預約平台 - 線上預約系統</title>
     <meta name="description" content="預約平台服務條款。了解使用本平台的權利與義務、服務範圍、用戶責任、隱私保護等重要條款。">
     <meta name="keywords" content="預約平台服務條款,使用條款,用戶協議,服務協議">
     <meta name="author" content="Booking Platform">
     <meta name="robots" content="index, follow">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/terms" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/terms?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/terms?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/terms" />
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/terms">
 
     <!-- Open Graph / Facebook -->

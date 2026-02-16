@@ -74,4 +74,10 @@ public class TenantRegisterRequest {
      */
     @Size(max = 200, message = "地址不能超過 200 字元")
     private String address;
+
+    /**
+     * 推薦碼（選填）
+     */
+    @Size(max = 20, message = "推薦碼不能超過 20 字元")
+    private String referralCode;
 }

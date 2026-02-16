@@ -10,11 +10,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- SEO Meta Tags -->
     <title>免費註冊 | 預約平台 - 線上預約系統</title>
-    <meta name="description" content="免費註冊預約平台，5分鐘快速開通。整合 LINE 預約機器人，自動提醒、顧客管理、營運報表。適合美容美髮、按摩SPA、健身教練等服務業。">
+    <meta name="description" content="立即免費註冊預約平台，5分鐘快速開通。整合 LINE 預約機器人，自動提醒、顧客管理、營運報表。適合美容美髮、按摩SPA、健身教練等服務業。超過 150+ 店家使用。">
     <meta name="keywords" content="預約系統註冊,免費預約系統,LINE預約機器人,美容預約系統,美髮預約系統">
     <meta name="robots" content="index, follow">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/tenant/register" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/tenant/register?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/tenant/register?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/tenant/register" />
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/tenant/register">
 
     <!-- Open Graph -->
@@ -188,6 +197,25 @@
                     </div>
                 </div>
 
+                <!-- 推薦碼（選填） -->
+                <div class="mb-3" id="referralCodeSection">
+                    <label for="referralCode" class="form-label">推薦碼 <small class="text-muted">（選填）</small></label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-gift"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control"
+                               id="referralCode"
+                               name="referralCode"
+                               placeholder="輸入推薦碼"
+                               maxlength="20">
+                    </div>
+                    <div class="form-text text-success d-none" id="referralHint">
+                        <i class="bi bi-check-circle me-1"></i>您收到好友推薦！註冊後雙方各獲得 500 點
+                    </div>
+                </div>
+
                 <!-- 註冊按鈕 -->
                 <div class="d-grid mb-3">
                     <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
@@ -287,9 +315,11 @@
             btn.disabled = true;
 
             try {
-                const result = await api.post('/api/auth/tenant/register', {
-                    code, name, email, phone, password, confirmPassword
-                });
+                const referralCode = document.getElementById('referralCode').value.trim();
+                const payload = { code, name, email, phone, password, confirmPassword };
+                if (referralCode) payload.referralCode = referralCode;
+
+                const result = await api.post('/api/auth/tenant/register', payload);
 
                 if (result && result.success && result.data) {
                     setToken(result.data.accessToken);
@@ -306,6 +336,7 @@
                     });
 
                     showSuccess('註冊成功！正在跳轉...');
+                    if (typeof tracking !== 'undefined') tracking.registration();
                     setTimeout(() => {
                         window.location.href = '/tenant/dashboard';
                     }, 1000);
@@ -325,6 +356,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (isLoggedIn()) {
                 window.location.href = '/tenant/dashboard';
+                return;
+            }
+
+            // 讀取 URL ?ref= 參數自動填入推薦碼
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                document.getElementById('referralCode').value = ref;
+                document.getElementById('referralHint').classList.remove('d-none');
             }
         });
     </script>

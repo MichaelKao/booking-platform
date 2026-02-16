@@ -227,6 +227,7 @@ async function tenantLogin(event) {
             });
 
             showSuccess('登入成功');
+            if (typeof tracking !== 'undefined') tracking.login();
             setTimeout(() => {
                 window.location.href = '/tenant/dashboard';
             }, 500);

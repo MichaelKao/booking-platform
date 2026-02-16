@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head th:replace="~{tenant/layout :: head}"><title>推薦好友 - 店家後台</title></head>
+<body>
+    <div id="wrapper">
+        <nav th:replace="~{fragments/sidebar-tenant :: sidebar}"></nav>
+        <div id="content-wrapper">
+            <header th:replace="~{tenant/layout :: topbar}"></header>
+            <main id="content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">推薦好友</h1>
+                        <p class="page-subtitle">邀請其他店家加入，雙方各獲得 500 點獎勵</p>
+                    </div>
+                </div>
+
+                <!-- 推薦碼區塊 -->
+                <div class="card mb-4">
+                    <div class="card-body text-center py-4">
+                        <h5 class="mb-3">您的推薦碼</h5>
+                        <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+                            <span class="fs-1 fw-bold text-primary font-monospace" id="referralCode">
+                                <span class="spinner-border spinner-border-sm"></span>
+                            </span>
+                            <button class="btn btn-outline-primary" onclick="copyReferralCode()" title="複製推薦碼">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">推薦連結</label>
+                            <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                                <input type="text" class="form-control text-center" id="referralLink" readonly>
+                                <button class="btn btn-outline-primary" onclick="copyReferralLink()" title="複製連結">
+                                    <i class="bi bi-link-45deg"></i> 複製
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-success" onclick="shareViaLine()">
+                                <i class="bi bi-chat-dots me-1"></i>LINE 分享
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card stat-card border-primary h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-primary">總推薦數</div>
+                                <div class="stat-value" id="totalReferrals">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card stat-card border-success h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-success">已完成</div>
+                                <div class="stat-value" id="completedReferrals">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card stat-card border-warning h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-warning">待完成</div>
+                                <div class="stat-value" id="pendingReferrals">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card stat-card border-info h-100">
+                            <div class="card-body">
+                                <div class="stat-label text-info">累計獲得點數</div>
+                                <div class="stat-value" id="totalBonusPoints">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 推薦說明 -->
+                <div class="alert alert-light mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>推薦機制說明：</strong>將推薦碼或推薦連結分享給其他店家，對方註冊成功後，雙方各獲得 500 點獎勵。點數可用於訂閱付費功能。
+                </div>
+
+                <!-- 推薦歷史 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0">推薦歷史</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>被推薦店家</th>
+                                        <th>店家代碼</th>
+                                        <th>狀態</th>
+                                        <th class="text-end">獎勵點數</th>
+                                        <th>推薦時間</th>
+                                        <th>完成時間</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="referralTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <span class="spinner-border spinner-border-sm me-2"></span>載入中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <th:block th:replace="~{tenant/layout :: scripts}"></th:block>
+
+    <script>
+        /**
+         * 頁面載入
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReferralDashboard();
+        });
+
+        /**
+         * 載入推薦儀表板
+         */
+        async function loadReferralDashboard() {
+            try {
+                const result = await api.get('/api/referrals/dashboard');
+                if (result && result.success) {
+                    const data = result.data;
+
+                    // 推薦碼
+                    document.getElementById('referralCode').textContent = data.referralCode || '-';
+                    document.getElementById('referralLink').value = data.referralLink || '';
+
+                    // 統計
+                    document.getElementById('totalReferrals').textContent = formatNumber(data.totalReferrals || 0);
+                    document.getElementById('completedReferrals').textContent = formatNumber(data.completedReferrals || 0);
+                    document.getElementById('pendingReferrals').textContent = formatNumber(data.pendingReferrals || 0);
+                    document.getElementById('totalBonusPoints').textContent = formatNumber(data.totalBonusPoints || 0);
+
+                    // 推薦歷史
+                    renderReferralHistory(data.referralHistory || []);
+                }
+            } catch (error) {
+                console.error('載入推薦資料失敗:', error);
+                document.getElementById('referralCode').textContent = '-';
+                document.getElementById('totalReferrals').textContent = '0';
+                document.getElementById('completedReferrals').textContent = '0';
+                document.getElementById('pendingReferrals').textContent = '0';
+                document.getElementById('totalBonusPoints').textContent = '0';
+                renderReferralHistory([]);
+            }
+        }
+
+        /**
+         * 渲染推薦歷史表格
+         */
+        function renderReferralHistory(history) {
+            const tbody = document.getElementById('referralTableBody');
+
+            if (!history || history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-people me-2"></i>尚無推薦記錄，快分享推薦碼給朋友吧！
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = history.map(item => `
+                <tr>
+                    <td>${item.refereeTenantName || '-'}</td>
+                    <td><code>${item.refereeTenantCode || '-'}</code></td>
+                    <td>${getReferralStatusBadge(item.status)}</td>
+                    <td class="text-end">${item.status === 'COMPLETED' ? '+' + item.referrerBonusPoints : '-'}</td>
+                    <td>${item.createdAt ? formatDateTime(item.createdAt) : '-'}</td>
+                    <td>${item.rewardedAt ? formatDateTime(item.rewardedAt) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 取得推薦狀態徽章
+         */
+        function getReferralStatusBadge(status) {
+            const map = {
+                'PENDING': '<span class="badge bg-warning">待完成</span>',
+                'COMPLETED': '<span class="badge bg-success">已完成</span>',
+                'EXPIRED': '<span class="badge bg-secondary">已過期</span>'
+            };
+            return map[status] || `<span class="badge bg-secondary">${status}</span>`;
+        }
+
+        /**
+         * 複製推薦碼
+         */
+        function copyReferralCode() {
+            const code = document.getElementById('referralCode').textContent;
+            if (code && code !== '-') {
+                navigator.clipboard.writeText(code).then(() => {
+                    showSuccess('推薦碼已複製');
+                }).catch(() => {
+                    showError('複製失敗，請手動複製');
+                });
+            }
+        }
+
+        /**
+         * 複製推薦連結
+         */
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').value;
+            if (link) {
+                navigator.clipboard.writeText(link).then(() => {
+                    showSuccess('推薦連結已複製');
+                }).catch(() => {
+                    showError('複製失敗，請手動複製');
+                });
+            }
+        }
+
+        /**
+         * LINE 分享
+         */
+        function shareViaLine() {
+            const link = document.getElementById('referralLink').value;
+            if (link) {
+                const text = encodeURIComponent('我正在使用預約平台管理店家預約，推薦你也來試試！註冊後雙方各獲得 500 點。\n' + link);
+                window.open('https://line.me/R/share?text=' + text, '_blank');
+            }
+        }
+    </script>
+</body>
+</html>

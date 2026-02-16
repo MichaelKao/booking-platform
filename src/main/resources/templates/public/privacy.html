@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- SEO Meta Tags -->
     <title>隱私權政策 | 預約平台 - 線上預約系統</title>
     <meta name="description" content="預約平台隱私權政策。了解我們如何收集、使用、保護您的個人資料，以及您的隱私權利。">
     <meta name="keywords" content="預約平台隱私權政策,個人資料保護,隱私政策,資料安全">
     <meta name="author" content="Booking Platform">
     <meta name="robots" content="index, follow">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/privacy" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/privacy?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/privacy?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/privacy" />
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/privacy">
 
     <!-- Open Graph / Facebook -->

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    追蹤程式碼片段（GA4 + Facebook Pixel）
+
+    使用方式：
+    <th:block th:replace="~{fragments/tracking :: ga4}" />
+    <th:block th:replace="~{fragments/tracking :: fb-pixel}" />
+    <th:block th:replace="~{fragments/tracking :: all}" />
+-->
+
+<!-- Google Analytics 4 -->
+<th:block th:fragment="ga4">
+    <script th:if="${gaMeasurementId != null and !gaMeasurementId.isEmpty()}"
+            th:src="'https://www.googletagmanager.com/gtag/js?id=' + ${gaMeasurementId}" async></script>
+    <script th:if="${gaMeasurementId != null and !gaMeasurementId.isEmpty()}"
+            th:inline="javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', /*[[${gaMeasurementId}]]*/ '');
+    </script>
+</th:block>
+
+<!-- Facebook Pixel -->
+<th:block th:fragment="fb-pixel">
+    <script th:if="${fbPixelId != null and !fbPixelId.isEmpty()}" th:inline="javascript">
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', /*[[${fbPixelId}]]*/ '');
+        fbq('track', 'PageView');
+    </script>
+    <noscript th:if="${fbPixelId != null and !fbPixelId.isEmpty()}">
+        <img height="1" width="1" style="display:none"
+             th:src="'https://www.facebook.com/tr?id=' + ${fbPixelId} + '&ev=PageView&noscript=1'" />
+    </noscript>
+</th:block>
+
+<!-- GA4 + Facebook Pixel 合併 -->
+<th:block th:fragment="all">
+    <th:block th:replace="~{fragments/tracking :: ga4}" />
+    <th:block th:replace="~{fragments/tracking :: fb-pixel}" />
+</th:block>
+
+</html>

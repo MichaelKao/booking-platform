@@ -7,9 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
+    <!-- SEO Meta Tags -->
     <title>SPA 按摩預約系統 | 免費 LINE 預約機器人 | 預約平台</title>
-    <meta name="description" content="專為 SPA、按摩、養生館打造的免費預約系統。整合 LINE 預約機器人，顧客可線上預約按摩療程、指定按摩師。自動提醒、會員管理、營運報表。">
-    <meta name="keywords" content="SPA預約系統,按摩預約系統,養生館預約,LINE按摩預約,按摩師排班,SPA管理系統">
+    <meta name="description" content="專為 SPA、按摩、養生館打造的免費預約系統，立即免費試用！整合 LINE 預約機器人，顧客可線上預約按摩療程、指定按摩師。自動提醒、會員管理、營運報表。超過 150+ 店家使用。">
+    <meta name="keywords" content="SPA預約系統,按摩預約系統,養生館預約,LINE按摩預約,按摩師排班,SPA管理系統,SPA線上預約,按摩預約APP,按摩師排班系統">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/spa" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/spa?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/spa?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/spa" />
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/spa">
 

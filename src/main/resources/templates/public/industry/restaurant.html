@@ -7,9 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
+    <!-- SEO Meta Tags -->
     <title>餐廳訂位系統 | 免費 LINE 訂位機器人 | 預約平台</title>
-    <meta name="description" content="專為餐廳、咖啡廳、小吃店打造的免費訂位系統。整合 LINE 訂位機器人，顧客可線上訂位、選擇用餐時段。自動提醒、候位管理、營運報表。">
-    <meta name="keywords" content="餐廳訂位系統,LINE訂位,餐廳預約系統,訂位管理,餐廳管理系統,免費訂位系統">
+    <meta name="description" content="專為餐廳、咖啡廳、小吃店打造的免費訂位系統，立即免費試用！整合 LINE 訂位機器人，顧客可線上訂位、選擇用餐時段。自動提醒、候位管理、營運報表。超過 150+ 店家使用。">
+    <meta name="keywords" content="餐廳訂位系統,LINE訂位,餐廳預約系統,訂位管理,餐廳管理系統,免費訂位系統,餐廳線上訂位,餐廳預約APP,訂位管理系統">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/restaurant" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/restaurant?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/restaurant?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/restaurant" />
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/restaurant">
 

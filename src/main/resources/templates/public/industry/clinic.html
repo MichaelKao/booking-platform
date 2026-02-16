@@ -7,9 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
+    <!-- SEO Meta Tags -->
     <title>診所預約系統 | 免費 LINE 掛號系統 | 預約平台</title>
-    <meta name="description" content="專為診所、牙醫、中醫、醫美打造的免費預約系統。整合 LINE 預約機器人，病患可線上掛號、選擇醫師。自動看診提醒、病患管理、營運報表。">
-    <meta name="keywords" content="診所預約系統,診所掛號系統,LINE掛號,牙醫預約系統,中醫預約,醫美預約系統">
+    <meta name="description" content="專為診所、牙醫、中醫、醫美打造的免費預約系統，立即免費試用！整合 LINE 預約機器人，病患可線上掛號、選擇醫師。自動看診提醒、病患管理、營運報表。超過 150+ 店家使用。">
+    <meta name="keywords" content="診所預約系統,診所掛號系統,LINE掛號,牙醫預約系統,中醫預約,醫美預約系統,診所線上預約,醫美預約APP,診所掛號系統">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/clinic" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/clinic?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/clinic?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/clinic" />
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/clinic">
 

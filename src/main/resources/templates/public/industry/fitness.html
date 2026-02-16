@@ -7,9 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
+    <!-- SEO Meta Tags -->
     <title>健身教練預約系統 | 私人教練 LINE 預約 | 預約平台</title>
-    <meta name="description" content="專為健身教練、私人教練、瑜珈老師打造的免費預約系統。整合 LINE 預約機器人，學員可線上預約課程、查看教練空檔。自動提醒、學員管理。">
-    <meta name="keywords" content="健身教練預約系統,私人教練預約,瑜珈預約系統,LINE健身預約,教練排課系統,健身房預約">
+    <meta name="description" content="專為健身教練、私人教練、瑜珈老師打造的免費預約系統，立即免費試用！整合 LINE 預約機器人，學員可線上預約課程、查看教練空檔。自動提醒、學員管理。超過 150+ 店家使用。">
+    <meta name="keywords" content="健身教練預約系統,私人教練預約,瑜珈預約系統,LINE健身預約,教練排課系統,健身房預約,健身房線上預約,私人教練預約APP,健身教練排班">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/fitness" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/fitness?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/fitness?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/fitness" />
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/fitness">
 

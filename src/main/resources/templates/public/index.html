@@ -12,15 +12,24 @@
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
+    <!-- GA4 + FB Pixel 追蹤 -->
+    <th:block th:replace="~{fragments/tracking :: all}" />
+
     <!-- Google Search Console 驗證 -->
     <meta name="google-site-verification" content="p9mQ8nl7XiKhqFdRdj6vPzptTJD0YeohMor18mHeoPM" />
 
     <!-- SEO Meta Tags -->
     <title>預約平台 | 免費線上預約系統 | LINE 預約機器人</title>
-    <meta name="description" content="免費預約管理系統，整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練、診所、餐廳等服務業。自動提醒、顧客管理、營運報表一站搞定！">
+    <meta name="description" content="免費預約管理系統，立即免費試用！整合 LINE 預約機器人。適合美容美髮、按摩SPA、健身教練、診所、餐廳等服務業。自動提醒、顧客管理、營運報表一站搞定！超過 150+ 店家使用。">
     <meta name="keywords" content="預約系統,線上預約,預約管理,LINE預約,預約機器人,美容預約,美髮預約,SPA預約,餐廳訂位,免費預約系統">
     <meta name="author" content="Booking Platform">
     <meta name="robots" content="index, follow">
+
+    <!-- hreflang 多語系標記 -->
+    <link rel="alternate" hreflang="zh-TW" href="https://booking-platform-production-1e08.up.railway.app/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://booking-platform-production-1e08.up.railway.app/?lang=zh_CN" />
+    <link rel="alternate" hreflang="en" href="https://booking-platform-production-1e08.up.railway.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://booking-platform-production-1e08.up.railway.app/" />
     <link rel="canonical" href="https://booking-platform-production-1e08.up.railway.app/">
 
     <!-- Open Graph / Facebook -->
@@ -1499,60 +1508,76 @@
 
             <div class="row g-3 fade-up">
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x2702;&#xFE0F;</span>
-                        <h5>美容美髮</h5>
-                        <p>剪髮染燙、美甲美睫</p>
-                    </div>
+                    <a href="/beauty" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x2702;&#xFE0F;</span>
+                            <h5>美容美髮</h5>
+                            <p>剪髮染燙、美甲美睫</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F9D6;</span>
-                        <h5>按摩 SPA</h5>
-                        <p>精油按摩、身體放鬆</p>
-                    </div>
+                    <a href="/spa" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F9D6;</span>
+                            <h5>按摩 SPA</h5>
+                            <p>精油按摩、身體放鬆</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F3CB;&#xFE0F;</span>
-                        <h5>健身教練</h5>
-                        <p>私人教練、團體課程</p>
-                    </div>
+                    <a href="/fitness" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F3CB;&#xFE0F;</span>
+                            <h5>健身教練</h5>
+                            <p>私人教練、團體課程</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F3E5;</span>
-                        <h5>診所醫療</h5>
-                        <p>門診預約、醫美諮詢</p>
-                    </div>
+                    <a href="/clinic" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F3E5;</span>
+                            <h5>診所醫療</h5>
+                            <p>門診預約、醫美諮詢</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F37D;&#xFE0F;</span>
-                        <h5>餐廳訂位</h5>
-                        <p>座位預約、包廂預訂</p>
-                    </div>
+                    <a href="/restaurant" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F37D;&#xFE0F;</span>
+                            <h5>餐廳訂位</h5>
+                            <p>座位預約、包廂預訂</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F393;</span>
-                        <h5>補習家教</h5>
-                        <p>課程預約、學員管理</p>
-                    </div>
+                    <a href="/tutoring" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F393;</span>
+                            <h5>補習家教</h5>
+                            <p>課程預約、學員管理</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F4F7;</span>
-                        <h5>攝影工作室</h5>
-                        <p>攝影預約、檔期管理</p>
-                    </div>
+                    <a href="/photography" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F4F7;</span>
+                            <h5>攝影工作室</h5>
+                            <p>攝影預約、檔期管理</p>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="industry-card">
-                        <span class="industry-emoji">&#x1F43E;</span>
-                        <h5>寵物美容</h5>
-                        <p>洗澡美容、寵物照護</p>
-                    </div>
+                    <a href="/pet-care" class="text-decoration-none text-dark">
+                        <div class="industry-card">
+                            <span class="industry-emoji">&#x1F43E;</span>
+                            <h5>寵物美容</h5>
+                            <p>洗澡美容、寵物照護</p>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>

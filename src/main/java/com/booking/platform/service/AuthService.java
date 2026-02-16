@@ -51,6 +51,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final FeatureService featureService;
+    private final ReferralService referralService;
 
     // ========================================
     // 設定值
@@ -468,13 +469,22 @@ public class AuthService {
         featureService.initializeTenantFreeFeatures(tenantId);
 
         // ========================================
-        // 6. 發送歡迎郵件
+        // 6. 處理推薦機制
+        // ========================================
+
+        if (request.getReferralCode() != null && !request.getReferralCode().trim().isEmpty()) {
+            referralService.processReferral(request.getReferralCode().trim(), tenantId);
+            referralService.completeReferral(tenantId);
+        }
+
+        // ========================================
+        // 7. 發送歡迎郵件
         // ========================================
 
         emailService.sendWelcomeEmail(tenant.getEmail(), tenant.getName(), tenant.getCode());
 
         // ========================================
-        // 7. 產生 Token 並返回
+        // 8. 產生 Token 並返回
         // ========================================
 
         String accessToken = jwtTokenProvider.generateAccessToken(

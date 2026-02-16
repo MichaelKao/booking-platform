@@ -185,6 +185,11 @@ app:
     max-file-size: 10485760  # 10MB
     allowed-types: image/jpeg,image/png,image/gif
 
+  # 追蹤分析設定
+  tracking:
+    ga-measurement-id: ${GA_MEASUREMENT_ID:}
+    fb-pixel-id: ${FB_PIXEL_ID:}
+
 # ========================================
 # Actuator 設定
 # ========================================

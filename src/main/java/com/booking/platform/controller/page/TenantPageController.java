@@ -216,6 +216,16 @@ public class TenantPageController {
         return "tenant/marketing";
     }
 
+    /**
+     * 推薦好友頁面
+     */
+    @GetMapping("/referrals")
+    public String referrals(Model model) {
+        model.addAttribute("currentPage", "referrals");
+        model.addAttribute("pageTitle", "推薦好友");
+        return "tenant/referrals";
+    }
+
     // ========================================
     // 系統設定
     // ========================================
