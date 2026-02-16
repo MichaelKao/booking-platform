@@ -364,7 +364,7 @@ function renderDashboardStats(data) {
         pendingTopupEl.textContent = formatNumber(data.pendingTopUps || 0);
     }
 
-    // 本月營收
+    // 本月儲值金額
     const revenueEl = document.getElementById('monthlyRevenue');
     if (revenueEl) {
         revenueEl.textContent = formatMoney(data.monthlyApprovedAmount || 0);
