@@ -171,279 +171,852 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --line-color: #06C755;
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #06C755;
+            --line-green: #06C755;
+            --line-dark: #00B900;
+            --dark: #1a1a2e;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            color: #333;
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #334155;
+            overflow-x: hidden;
         }
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 80px 0 100px;
+        /* ===== Scroll Animation ===== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== Navbar ===== */
+        .navbar {
+            transition: background 0.3s, box-shadow 0.3s;
+            padding: 12px 0;
+        }
+        .navbar.scrolled {
+            background: rgba(255,255,255,0.98) !important;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        .navbar-brand { font-size: 1.4rem; }
+
+        /* ===== Section Common ===== */
+        .section-padding { padding: 100px 0; }
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.75rem;
+            color: var(--gray-800);
+        }
+        .section-subtitle {
+            text-align: center;
+            color: var(--gray-500);
+            margin-bottom: 3.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: #fff;
+            padding: 140px 0 100px;
             position: relative;
             overflow: hidden;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
         }
-
-        .hero-section::before {
+        .hero::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            width: 600px; height: 600px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+            top: -200px; right: -100px;
         }
-
-        .hero-title {
-            font-size: 2.8rem;
-            font-weight: 700;
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+            bottom: -100px; left: -50px;
+        }
+        .hero .container { position: relative; z-index: 2; }
+        .hero-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
             margin-bottom: 1.5rem;
         }
-
-        .hero-subtitle {
-            font-size: 1.3rem;
-            opacity: 0.9;
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(90deg, #ffd700, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p.lead {
+            font-size: 1.25rem;
+            opacity: 0.92;
             margin-bottom: 2rem;
+            line-height: 1.8;
         }
-
-        .hero-cta {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-cta {
-            padding: 12px 32px;
+        .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn-hero {
+            padding: 14px 36px;
             font-size: 1.1rem;
             font-weight: 600;
             border-radius: 50px;
-        }
-
-        .btn-cta-primary {
-            background: white;
-            color: #667eea;
             border: none;
+            transition: all 0.3s;
         }
-
-        .btn-cta-primary:hover {
-            background: #f0f0f0;
-            color: #667eea;
+        .btn-hero-primary {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
-
-        .btn-cta-outline {
+        .btn-hero-primary:hover {
+            background: #f0f0ff;
+            color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .btn-hero-outline {
             background: transparent;
-            color: white;
-            border: 2px solid white;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+        .btn-hero-outline:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border-color: #fff;
         }
 
-        .btn-cta-outline:hover {
-            background: white;
-            color: #667eea;
+        /* ===== Phone Mockup ===== */
+        .phone-mockup {
+            width: 300px;
+            background: #fff;
+            border-radius: 36px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.1);
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
         }
-
-        /* Features Section */
-        .features-section {
-            padding: 80px 0;
-            background: #f8f9fa;
+        .phone-notch {
+            background: #000;
+            height: 28px;
+            border-radius: 0 0 16px 16px;
+            width: 140px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 3;
         }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
+        .phone-header {
+            background: var(--line-green);
+            color: #fff;
+            padding: 8px 16px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: -2px;
+        }
+        .phone-header .avatar {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+        }
+        .phone-header .name { font-weight: 600; font-size: 0.95rem; }
+        .phone-chat {
+            background: #7ecbdb;
+            background: linear-gradient(180deg, #7ecbdb 0%, #a8d8ea 100%);
+            padding: 16px 12px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            opacity: 0;
+            animation: bubbleIn 0.4s ease forwards;
+            color: #333;
+        }
+        .chat-bot {
+            background: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+        .chat-user {
+            background: var(--line-green);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble:nth-child(1) { animation-delay: 0.5s; }
+        .chat-bubble:nth-child(2) { animation-delay: 1.2s; }
+        .chat-bubble:nth-child(3) { animation-delay: 2s; }
+        .chat-bubble:nth-child(4) { animation-delay: 2.8s; }
+        .chat-bubble:nth-child(5) { animation-delay: 3.5s; }
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .chat-flex-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            align-self: flex-start;
+            max-width: 85%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            animation: bubbleIn 0.4s ease forwards;
+            animation-delay: 3.5s;
+        }
+        .chat-flex-header {
+            background: var(--line-green);
+            color: #fff;
+            padding: 10px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .chat-flex-body {
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            color: #333;
+        }
+        .chat-flex-body div { padding: 3px 0; }
+        .chat-flex-btn {
+            display: block;
             text-align: center;
-            margin-bottom: 1rem;
+            padding: 10px;
+            color: var(--line-green);
+            font-weight: 600;
+            font-size: 0.82rem;
+            border-top: 1px solid #eee;
         }
-
-        .section-subtitle {
+        .phone-rich-menu {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+        }
+        .phone-rich-menu .rm-row2 {
+            display: contents;
+        }
+        .rm-item {
+            padding: 10px 4px;
             text-align: center;
-            color: #6c757d;
-            margin-bottom: 3rem;
+            font-size: 0.65rem;
+            color: #555;
+            border-right: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
         }
+        .rm-item:nth-child(3), .rm-item:nth-child(7) { border-right: none; }
+        .rm-item i { display: block; font-size: 1.1rem; margin-bottom: 2px; color: var(--line-green); }
+        .phone-rich-menu-bottom {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+        }
+        .phone-rich-menu-bottom .rm-item { border-bottom: none; }
+        .phone-rich-menu-bottom .rm-item:nth-child(4) { border-right: none; }
 
-        .feature-card {
-            background: white;
+        /* ===== Pain Points ===== */
+        .pain-section {
+            background: var(--gray-50);
+        }
+        .pain-card {
+            background: #fff;
             border-radius: 16px;
             padding: 2rem;
             height: 100%;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: 1px solid var(--gray-200);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .pain-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .pain-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1.2rem;
+        }
+        .pain-card h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .pain-card p { color: var(--gray-500); font-size: 0.95rem; line-height: 1.6; margin: 0; }
+        .pain-arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+            margin-top: 2.5rem;
+            font-weight: 600;
         }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        /* ===== Browser Mockup (Dashboard) ===== */
+        .dashboard-section { background: #fff; }
+        .browser-mockup {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            max-width: 900px;
+            margin: 0 auto;
         }
-
-        .feature-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
+        .browser-bar {
+            background: var(--gray-100);
+            padding: 10px 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: white;
-            margin-bottom: 1.5rem;
+            gap: 8px;
+            border-bottom: 1px solid var(--gray-200);
         }
-
-        .feature-title {
-            font-size: 1.3rem;
+        .browser-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+        .browser-dot.red { background: #ff5f57; }
+        .browser-dot.yellow { background: #ffbd2e; }
+        .browser-dot.green { background: #28c840; }
+        .browser-url {
+            background: #fff;
+            border-radius: 6px;
+            padding: 4px 14px;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            flex: 1;
+            margin-left: 8px;
+            border: 1px solid var(--gray-200);
+        }
+        .browser-body {
+            display: flex;
+            min-height: 340px;
+        }
+        .mock-sidebar {
+            width: 200px;
+            background: var(--gray-800);
+            color: #fff;
+            padding: 16px 0;
+            flex-shrink: 0;
+        }
+        .mock-sidebar-brand {
+            padding: 0 16px 16px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 8px;
+        }
+        .mock-sidebar-item {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.6);
+            transition: all 0.2s;
+        }
+        .mock-sidebar-item.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .mock-sidebar-item i { width: 18px; text-align: center; }
+        .mock-main {
+            flex: 1;
+            padding: 20px;
+            background: var(--gray-50);
+        }
+        .mock-main h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 16px;
+        }
+        .mock-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .mock-stat-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .mock-stat-label {
+            font-size: 0.65rem;
+            color: var(--gray-400);
+            margin-bottom: 4px;
+        }
+        .mock-stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+        .mock-stat-change {
+            font-size: 0.6rem;
+            color: var(--success);
+            margin-top: 2px;
+        }
+        .mock-chart {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .mock-chart-title {
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+        }
+        .mock-chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 100px;
+        }
+        .mock-chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--primary), #a78bfa);
+            border-radius: 4px 4px 0 0;
+            min-height: 10px;
+            transition: height 0.6s ease;
         }
 
-        .feature-desc {
-            color: #6c757d;
-            line-height: 1.6;
+        .dashboard-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
         }
-
-        /* LINE Section */
-        .line-section {
-            padding: 80px 0;
-            background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
-            color: white;
-        }
-
-        .line-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Pricing Section */
-        .pricing-section {
-            padding: 80px 0;
-        }
-
-        .pricing-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
+        .dash-feat {
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border: 2px solid transparent;
+            padding: 1.5rem;
         }
-
-        .pricing-card.featured {
-            border-color: var(--primary-color);
-            transform: scale(1.05);
+        .dash-feat i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+            display: block;
         }
+        .dash-feat h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .dash-feat p { font-size: 0.9rem; color: var(--gray-500); margin: 0; }
 
-        .pricing-badge {
-            background: var(--primary-color);
-            color: white;
-            padding: 4px 16px;
-            border-radius: 50px;
+        /* ===== LINE Bot Section ===== */
+        .linebot-section {
+            background: linear-gradient(135deg, #e8fbe8 0%, #f0fff0 50%, #e8f5e9 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .linebot-section::before {
+            content: '';
+            position: absolute;
+            width: 500px; height: 500px;
+            background: rgba(6,199,85,0.05);
+            border-radius: 50%;
+            top: -200px; right: -100px;
+        }
+        .line-feat-list { list-style: none; padding: 0; }
+        .line-feat-list li {
+            padding: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 1.05rem;
+        }
+        .line-feat-list .feat-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--line-green);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .line-feat-list .feat-text strong { display: block; margin-bottom: 2px; }
+        .line-feat-list .feat-text span { font-size: 0.9rem; color: var(--gray-500); }
+
+        /* Rich Menu Mockup */
+        .richmenu-mockup {
+            width: 280px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(6,199,85,0.15);
+        }
+        .richmenu-mockup .rm-header {
+            background: var(--line-green);
+            color: #fff;
+            padding: 10px 14px;
             font-size: 0.85rem;
-            display: inline-block;
+            font-weight: 600;
+            text-align: center;
+        }
+        .richmenu-grid {
+            display: grid;
+            gap: 0;
+        }
+        .richmenu-grid.top { grid-template-columns: repeat(3, 1fr); }
+        .richmenu-grid.bottom { grid-template-columns: repeat(4, 1fr); }
+        .rm-cell {
+            padding: 16px 8px;
+            text-align: center;
+            border-right: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        .rm-cell:hover { background: #f0fdf4; }
+        .richmenu-grid.top .rm-cell:nth-child(3) { border-right: none; }
+        .richmenu-grid.bottom .rm-cell:nth-child(4) { border-right: none; }
+        .richmenu-grid.bottom .rm-cell { border-bottom: none; }
+        .rm-cell-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .rm-cell-label { font-size: 0.7rem; color: #555; font-weight: 500; }
+
+        /* ===== Features Grid ===== */
+        .features-section { background: #fff; }
+        .feature-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid var(--gray-200);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+        }
+        .feature-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1.2rem;
+        }
+        .feature-card h4 { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .feature-card p { color: var(--gray-500); font-size: 0.93rem; line-height: 1.6; margin: 0; }
+
+        /* ===== Setup Steps ===== */
+        .setup-section { background: var(--gray-50); }
+        .setup-steps {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            position: relative;
+        }
+        .setup-step {
+            text-align: center;
+            flex: 1;
+            max-width: 280px;
+            position: relative;
+        }
+        .setup-number {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1.2rem;
+            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+        }
+        .setup-step h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .setup-step p { font-size: 0.93rem; color: var(--gray-500); line-height: 1.6; }
+        .setup-connector {
+            position: absolute;
+            top: 32px;
+            left: calc(50% + 40px);
+            width: calc(100% - 40px);
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0.3;
+        }
+        .setup-step:last-child .setup-connector { display: none; }
+
+        /* ===== Industries ===== */
+        .industries-section { background: #fff; }
+        .industry-card {
+            background: var(--gray-50);
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .industry-card:hover {
+            background: #fff;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transform: translateY(-3px);
+        }
+        .industry-emoji { font-size: 2.2rem; margin-bottom: 0.6rem; display: block; }
+        .industry-card h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .industry-card p { font-size: 0.85rem; color: var(--gray-500); margin: 0; }
+
+        /* ===== Stats Counter ===== */
+        .stats-section {
+            background: linear-gradient(135deg, var(--gray-800), var(--gray-900));
+            color: #fff;
+        }
+        .stat-item { text-align: center; padding: 1rem; }
+        .stat-number {
+            font-size: 3.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 1rem;
+            color: var(--gray-400);
+            margin-top: 0.3rem;
+        }
+
+        /* ===== Testimonials ===== */
+        .testimonials-section { background: var(--gray-50); }
+        .testimonial-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid var(--gray-200);
+            position: relative;
+        }
+        .testimonial-card::before {
+            content: '\201C';
+            font-size: 4rem;
+            color: var(--primary);
+            opacity: 0.15;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .testimonial-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .testimonial-avatar {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+            font-weight: 700;
+        }
+        .testimonial-name { font-weight: 600; font-size: 0.95rem; }
+        .testimonial-role { font-size: 0.85rem; color: var(--gray-400); }
+        .testimonial-stars {
+            color: #fbbf24;
+            font-size: 0.85rem;
             margin-bottom: 1rem;
         }
 
-        .pricing-title {
-            font-size: 1.5rem;
+        /* ===== Pricing ===== */
+        .pricing-section { background: #fff; }
+        .pricing-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .pricing-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 8px 40px rgba(102,126,234,0.2);
+            transform: scale(1.04);
+            position: relative;
+        }
+        .pricing-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 5px 24px;
+            border-radius: 50px;
+            font-size: 0.85rem;
             font-weight: 600;
+            white-space: nowrap;
+        }
+        .pricing-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--gray-700);
             margin-bottom: 0.5rem;
         }
-
         .pricing-price {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--primary-color);
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin: 0.5rem 0;
         }
-
-        .pricing-price span {
+        .pricing-price .unit {
             font-size: 1rem;
-            color: #6c757d;
+            font-weight: 400;
+            color: var(--gray-400);
         }
-
         .pricing-features {
             list-style: none;
             padding: 0;
             margin: 1.5rem 0;
             text-align: left;
         }
-
         .pricing-features li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-
         .pricing-features li i {
-            color: var(--success-color);
-            margin-right: 0.5rem;
+            color: var(--success);
+            font-size: 1rem;
         }
-
-        /* Industries Section */
-        .industries-section {
-            padding: 80px 0;
-            background: #f8f9fa;
-        }
-
-        .industry-item {
+        .pricing-faq-link {
             text-align: center;
-            padding: 1.5rem;
+            margin-top: 3rem;
+            font-size: 1rem;
         }
+        .pricing-faq-link a { color: var(--primary); font-weight: 500; }
 
-        .industry-icon {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        /* CTA Section */
+        /* ===== CTA ===== */
         .cta-section {
-            padding: 80px 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: #fff;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            top: -200px; right: -100px;
+        }
+        .cta-section h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+        .cta-section p { font-size: 1.15rem; opacity: 0.9; margin-bottom: 2rem; }
+        .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
-        /* Footer */
+        /* ===== Footer ===== */
         .footer {
-            background: #212529;
-            color: #adb5bd;
-            padding: 40px 0 20px;
+            background: var(--gray-900);
+            color: var(--gray-400);
+            padding: 50px 0 24px;
         }
+        .footer h5 { color: #fff; margin-bottom: 1rem; }
+        .footer h6 { color: #fff; margin-bottom: 0.8rem; }
+        .footer a { color: var(--gray-400); text-decoration: none; transition: color 0.2s; }
+        .footer a:hover { color: #fff; }
+        .footer ul { list-style: none; padding: 0; }
+        .footer ul li { padding: 3px 0; }
+        .footer hr { border-color: rgba(255,255,255,0.08); }
 
-        .footer a {
-            color: #adb5bd;
-            text-decoration: none;
+        /* ===== RWD ===== */
+        @media (max-width: 991px) {
+            .hero h1 { font-size: 2.2rem; }
+            .phone-mockup { width: 260px; margin-top: 3rem; }
+            .mock-sidebar { display: none; }
+            .mock-stats { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-features { grid-template-columns: 1fr; gap: 1rem; }
+            .setup-steps { flex-direction: column; align-items: center; }
+            .setup-connector { display: none !important; }
+            .pricing-card.featured { transform: scale(1); }
+            .section-padding { padding: 70px 0; }
         }
-
-        .footer a:hover {
-            color: white;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-
-            .pricing-card.featured {
-                transform: scale(1);
-            }
+        @media (max-width: 575px) {
+            .hero { padding: 120px 0 60px; min-height: auto; }
+            .hero h1 { font-size: 1.8rem; }
+            .hero p.lead { font-size: 1.05rem; }
+            .section-title { font-size: 1.7rem; }
+            .phone-mockup { width: 240px; }
+            .stat-number { font-size: 2.4rem; }
+            .browser-mockup { margin: 0 -12px; border-radius: 8px; }
+            .mock-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .mock-stat-value { font-size: 1rem; }
         }
     </style>
 </head>
 
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top" id="mainNav">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-calendar-check text-primary me-2"></i>預約平台
@@ -471,245 +1044,702 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section" style="padding-top: 120px;">
+    <!-- ==================== 1. Hero Section ==================== -->
+    <section class="hero">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="hero-title">
-                        讓預約管理<br>變得超簡單
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <div class="hero-tag">LINE 智慧預約系統</div>
+                    <h1>
+                        別再接電話了<br>
+                        讓 <span class="highlight">LINE</span> 幫你管預約
                     </h1>
-                    <p class="hero-subtitle">
-                        免費線上預約系統，整合 LINE 預約機器人<br>
-                        顧客用 LINE 就能預約，您用手機就能管理
+                    <p class="lead">
+                        顧客用 LINE 就能預約、查詢、取消<br>
+                        你用手機就能管理所有預約和顧客<br>
+                        <strong>免費開始，5 分鐘完成設定</strong>
                     </p>
-                    <div class="hero-cta">
-                        <a href="/tenant/register" class="btn btn-cta btn-cta-primary">
+                    <div class="hero-buttons">
+                        <a href="/tenant/register" class="btn btn-hero btn-hero-primary">
                             <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
                         </a>
-                        <a href="#features" class="btn btn-cta btn-cta-outline">
-                            <i class="bi bi-play-circle me-2"></i>了解更多
+                        <a href="#demo-dashboard" class="btn btn-hero btn-hero-outline">
+                            <i class="bi bi-play-circle me-2"></i>看產品展示
                         </a>
                     </div>
                 </div>
-                <div class="col-lg-6 d-none d-lg-block text-center">
-                    <i class="bi bi-phone" style="font-size: 15rem; opacity: 0.3;"></i>
+                <div class="col-lg-6 d-flex justify-content-center">
+                    <!-- LINE 聊天室模擬 -->
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-header">
+                            <div class="avatar"><i class="bi bi-shop"></i></div>
+                            <div>
+                                <div class="name">美好髮廊</div>
+                                <div style="font-size:0.7rem;opacity:0.8;">LINE 官方帳號</div>
+                            </div>
+                        </div>
+                        <div class="phone-chat">
+                            <div class="chat-bubble chat-user">我想預約剪髮</div>
+                            <div class="chat-bubble chat-bot">好的！請選擇您要的服務 :</div>
+                            <div class="chat-bubble chat-user">女生剪髮 NT$500</div>
+                            <div class="chat-bubble chat-bot">請選擇預約日期和時段</div>
+                            <div class="chat-flex-card">
+                                <div class="chat-flex-header">
+                                    <i class="bi bi-check-circle me-1"></i> 預約成功！
+                                </div>
+                                <div class="chat-flex-body">
+                                    <div><strong>女生剪髮</strong></div>
+                                    <div>3/20（四）14:00</div>
+                                    <div>設計師：Mia</div>
+                                </div>
+                                <div class="chat-flex-btn">查看我的預約</div>
+                            </div>
+                        </div>
+                        <div class="phone-rich-menu">
+                            <div class="rm-item"><i class="bi bi-calendar-plus"></i>開始預約</div>
+                            <div class="rm-item"><i class="bi bi-calendar-check"></i>我的預約</div>
+                            <div class="rm-item"><i class="bi bi-bag"></i>瀏覽商品</div>
+                        </div>
+                        <div class="phone-rich-menu-bottom">
+                            <div class="rm-item"><i class="bi bi-gift"></i>領取票券</div>
+                            <div class="rm-item"><i class="bi bi-ticket-perforated"></i>我的票券</div>
+                            <div class="rm-item"><i class="bi bi-person-circle"></i>會員資訊</div>
+                            <div class="rm-item"><i class="bi bi-telephone"></i>聯絡店家</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section" id="features">
+    <!-- ==================== 2. Pain Points ==================== -->
+    <section class="pain-section section-padding">
         <div class="container">
-            <h2 class="section-title">為什麼選擇我們？</h2>
-            <p class="section-subtitle">強大功能，簡單操作，讓您專注於服務顧客</p>
+            <h2 class="section-title fade-up">這些問題，是不是你的日常？</h2>
+            <p class="section-subtitle fade-up">90% 的服務業老闆都遇過這些痛點</p>
 
             <div class="row g-4">
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-4 fade-up">
+                    <div class="pain-card">
+                        <div class="pain-icon" style="background: #fff0f0; color: #ef4444;">
+                            <i class="bi bi-telephone-x"></i>
+                        </div>
+                        <h4>電話接不完</h4>
+                        <p>服務到一半被電話打斷，漏接電話就漏掉客人，忙的時候根本無法好好做事</p>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-up">
+                    <div class="pain-card">
+                        <div class="pain-icon" style="background: #fef3c7; color: #f59e0b;">
+                            <i class="bi bi-journal-x"></i>
+                        </div>
+                        <h4>手寫容易出錯</h4>
+                        <p>預約簿撞單、字跡看不清、找紀錄翻半天，客人多了根本管不過來</p>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-up">
+                    <div class="pain-card">
+                        <div class="pain-icon" style="background: #ede9fe; color: #7c3aed;">
+                            <i class="bi bi-person-slash"></i>
+                        </div>
+                        <h4>顧客愛放鴿子</h4>
+                        <p>no-show 浪費寶貴時段卻無法追蹤，沒有提醒機制，只能被動等客人來</p>
+                    </div>
+                </div>
+            </div>
+            <div class="pain-arrow fade-up">
+                <i class="bi bi-arrow-down-circle"></i><br>
+                我們幫你解決
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. Dashboard Demo ==================== -->
+    <section class="dashboard-section section-padding" id="demo-dashboard">
+        <div class="container">
+            <h2 class="section-title fade-up">直覺好用的管理後台</h2>
+            <p class="section-subtitle fade-up">打開瀏覽器就能管理，不需安裝任何軟體</p>
+
+            <div class="fade-up">
+                <div class="browser-mockup">
+                    <div class="browser-bar">
+                        <div class="browser-dot red"></div>
+                        <div class="browser-dot yellow"></div>
+                        <div class="browser-dot green"></div>
+                        <div class="browser-url">
+                            <i class="bi bi-lock-fill me-1" style="font-size:0.7rem;"></i>
+                            booking-platform.app/tenant/dashboard
+                        </div>
+                    </div>
+                    <div class="browser-body">
+                        <div class="mock-sidebar d-none d-md-block">
+                            <div class="mock-sidebar-brand">
+                                <i class="bi bi-calendar-check me-1"></i> 預約平台
+                            </div>
+                            <div class="mock-sidebar-item active">
+                                <i class="bi bi-speedometer2"></i> 儀表板
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-calendar-event"></i> 預約管理
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-calendar3"></i> 行事曆
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-people"></i> 顧客管理
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-person-badge"></i> 員工管理
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-list-check"></i> 服務管理
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-graph-up"></i> 營運報表
+                            </div>
+                            <div class="mock-sidebar-item">
+                                <i class="bi bi-gear"></i> 設定
+                            </div>
+                        </div>
+                        <div class="mock-main">
+                            <h3><i class="bi bi-speedometer2 me-2"></i>儀表板</h3>
+                            <div class="mock-stats">
+                                <div class="mock-stat-card">
+                                    <div class="mock-stat-label">今日預約</div>
+                                    <div class="mock-stat-value" style="color:#667eea;">12</div>
+                                    <div class="mock-stat-change"><i class="bi bi-arrow-up"></i> +3</div>
+                                </div>
+                                <div class="mock-stat-card">
+                                    <div class="mock-stat-label">本月營收</div>
+                                    <div class="mock-stat-value" style="color:#06C755;">$85K</div>
+                                    <div class="mock-stat-change"><i class="bi bi-arrow-up"></i> +12%</div>
+                                </div>
+                                <div class="mock-stat-card">
+                                    <div class="mock-stat-label">完成率</div>
+                                    <div class="mock-stat-value" style="color:#f59e0b;">95%</div>
+                                    <div class="mock-stat-change"><i class="bi bi-arrow-up"></i> +2%</div>
+                                </div>
+                                <div class="mock-stat-card">
+                                    <div class="mock-stat-label">新客戶</div>
+                                    <div class="mock-stat-value" style="color:#ec4899;">28</div>
+                                    <div class="mock-stat-change"><i class="bi bi-arrow-up"></i> +8</div>
+                                </div>
+                            </div>
+                            <div class="mock-chart">
+                                <div class="mock-chart-title">
+                                    <i class="bi bi-bar-chart me-1"></i> 本月營收趨勢
+                                </div>
+                                <div class="mock-chart-bars" id="mockChartBars">
+                                    <div class="mock-chart-bar" style="height:45%"></div>
+                                    <div class="mock-chart-bar" style="height:62%"></div>
+                                    <div class="mock-chart-bar" style="height:38%"></div>
+                                    <div class="mock-chart-bar" style="height:75%"></div>
+                                    <div class="mock-chart-bar" style="height:55%"></div>
+                                    <div class="mock-chart-bar" style="height:88%"></div>
+                                    <div class="mock-chart-bar" style="height:70%"></div>
+                                    <div class="mock-chart-bar" style="height:95%"></div>
+                                    <div class="mock-chart-bar" style="height:60%"></div>
+                                    <div class="mock-chart-bar" style="height:82%"></div>
+                                    <div class="mock-chart-bar" style="height:50%"></div>
+                                    <div class="mock-chart-bar" style="height:73%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-features fade-up">
+                <div class="dash-feat">
+                    <i class="bi bi-calendar3"></i>
+                    <h5>行事曆檢視</h5>
+                    <p>一眼看到所有預約排程</p>
+                </div>
+                <div class="dash-feat">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <h5>營運報表</h5>
+                    <p>數據分析助你經營決策</p>
+                </div>
+                <div class="dash-feat">
+                    <i class="bi bi-people"></i>
+                    <h5>顧客管理</h5>
+                    <p>會員資料、消費紀錄一覽</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. LINE Bot Showcase ==================== -->
+    <section class="linebot-section section-padding">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0 fade-up">
+                    <div style="display:inline-block;background:var(--line-green);color:#fff;padding:4px 16px;border-radius:50px;font-size:0.85rem;margin-bottom:1rem;">
+                        <i class="bi bi-line me-1"></i>LINE Bot
+                    </div>
+                    <h2 style="font-size:2rem;font-weight:700;margin-bottom:1rem;">顧客用 LINE 就能預約</h2>
+                    <p style="color:var(--gray-500);margin-bottom:2rem;font-size:1.05rem;">
+                        不需要下載新 APP，用最熟悉的 LINE 就能完成所有操作
+                    </p>
+                    <ul class="line-feat-list">
+                        <li>
+                            <div class="feat-icon"><i class="bi bi-grid-3x3-gap"></i></div>
+                            <div class="feat-text">
+                                <strong>Rich Menu 快捷選單</strong>
+                                <span>7 格客製化底部選單，一鍵直達功能</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feat-icon"><i class="bi bi-chat-square-text"></i></div>
+                            <div class="feat-text">
+                                <strong>Flex Message 精美介面</strong>
+                                <span>卡片式服務選單，比文字回覆更直觀</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feat-icon"><i class="bi bi-bell"></i></div>
+                            <div class="feat-text">
+                                <strong>自動提醒通知</strong>
+                                <span>預約前自動推送提醒，降低爽約率</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feat-icon"><i class="bi bi-robot"></i></div>
+                            <div class="feat-text">
+                                <strong>AI 智慧客服</strong>
+                                <span>24 小時自動回答常見問題</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 d-flex justify-content-center fade-up">
+                    <!-- Rich Menu 模擬 -->
+                    <div class="richmenu-mockup">
+                        <div class="rm-header">
+                            <i class="bi bi-grid-3x3-gap me-1"></i> LINE 快捷選單
+                        </div>
+                        <div class="richmenu-grid top">
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#06C755,#00B900);">
+                                    <i class="bi bi-calendar-plus"></i>
+                                </div>
+                                <div class="rm-cell-label">開始預約</div>
+                            </div>
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+                                <div class="rm-cell-label">我的預約</div>
+                            </div>
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+                                    <i class="bi bi-bag"></i>
+                                </div>
+                                <div class="rm-cell-label">瀏覽商品</div>
+                            </div>
+                        </div>
+                        <div class="richmenu-grid bottom">
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#fa709a,#fee140);">
+                                    <i class="bi bi-gift"></i>
+                                </div>
+                                <div class="rm-cell-label">領取票券</div>
+                            </div>
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">
+                                    <i class="bi bi-ticket-perforated"></i>
+                                </div>
+                                <div class="rm-cell-label">我的票券</div>
+                            </div>
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <div class="rm-cell-label">會員資訊</div>
+                            </div>
+                            <div class="rm-cell">
+                                <div class="rm-cell-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div class="rm-cell-label">聯絡店家</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 5. Features Grid ==================== -->
+    <section class="features-section section-padding" id="features">
+        <div class="container">
+            <h2 class="section-title fade-up">你需要的功能，我們都有</h2>
+            <p class="section-subtitle fade-up">強大功能，簡單操作，讓您專注於服務顧客</p>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #06C755, #00B900);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#06C755,#00B900);">
                             <i class="bi bi-chat-dots"></i>
                         </div>
-                        <h3 class="feature-title">LINE 預約機器人</h3>
-                        <p class="feature-desc">顧客用 LINE 就能完成預約，不需要下載 APP，操作直覺簡單。24 小時接受預約不漏單。</p>
+                        <h4>LINE 預約機器人</h4>
+                        <p>顧客用 LINE 就能完成預約，不需要下載 APP。24 小時自動接單不漏單。</p>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
                             <i class="bi bi-calendar-check"></i>
                         </div>
-                        <h3 class="feature-title">智慧排班管理</h3>
-                        <p class="feature-desc">員工排班、請假一目了然。系統自動檢查時段衝突，避免重複預約的困擾。</p>
+                        <h4>智慧排班管理</h4>
+                        <p>員工排班、請假一目了然。自動檢查時段衝突，再也不會重複預約。</p>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
                             <i class="bi bi-bell"></i>
                         </div>
-                        <h3 class="feature-title">自動提醒通知</h3>
-                        <p class="feature-desc">預約前自動發送 LINE 提醒，大幅降低顧客爽約率。也支援 SMS 簡訊通知。</p>
+                        <h4>自動提醒通知</h4>
+                        <p>預約前自動發送 LINE 和 SMS 提醒，有效降低爽約率高達 60%。</p>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
                             <i class="bi bi-people"></i>
                         </div>
-                        <h3 class="feature-title">顧客關係管理</h3>
-                        <p class="feature-desc">顧客資料自動建檔，預約紀錄、消費金額、點數餘額一目了然。建立專屬會員等級。</p>
+                        <h4>顧客關係管理</h4>
+                        <p>顧客資料自動建檔，預約紀錄、消費金額、會員等級一目了然。</p>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#fa709a,#fee140);">
                             <i class="bi bi-ticket-perforated"></i>
                         </div>
-                        <h3 class="feature-title">票券優惠系統</h3>
-                        <p class="feature-desc">發放優惠券、折扣券吸引顧客。顧客可在 LINE 領取並使用，店家後台一鍵核銷。</p>
+                        <h4>票券優惠系統</h4>
+                        <p>發放折扣券吸引新客、回饋老客。LINE 一鍵領取，後台一鍵核銷。</p>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 fade-up">
                     <div class="feature-card">
-                        <div class="feature-icon" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#a8edea,#43b692);">
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
-                        <h3 class="feature-title">營運數據分析</h3>
-                        <p class="feature-desc">每日/週/月報表，熱門服務排行、員工業績統計。數據驅動，讓經營決策更精準。</p>
+                        <h4>營運數據分析</h4>
+                        <p>每日營收、熱門服務、員工業績一次看懂。用數據做出更好的決策。</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+                        <h4>商品銷售</h4>
+                        <p>在 LINE 上架商品，顧客直接下單購買。庫存管理、訂單追蹤一站搞定。</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#ee9ca7,#ffdde1);">
+                            <i class="bi bi-star"></i>
+                        </div>
+                        <h4>會員集點獎勵</h4>
+                        <p>消費自動集點，建立會員等級制度。讓顧客越來越忠誠，回頭率飆升。</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="feature-card">
+                        <div class="feature-icon" style="background:linear-gradient(135deg,#30cfd0,#330867);">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <h4>AI 智慧客服</h4>
+                        <p>AI 自動回答營業時間、服務價格等常見問題。24 小時不打烊的客服。</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- LINE Section -->
-    <section class="line-section">
-        <div class="container text-center">
-            <i class="bi bi-line line-icon"></i>
-            <h2 class="mb-3" style="font-size: 2rem; font-weight: 700;">整合 LINE，預約超方便</h2>
-            <p class="mb-4" style="font-size: 1.2rem; opacity: 0.9;">
-                顧客不需要下載新 APP，用熟悉的 LINE 就能完成預約<br>
-                支援 Rich Menu 快捷選單、Flex Message 精美介面
-            </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
-                    <i class="bi bi-check-circle me-2"></i>LINE 預約
+    <!-- ==================== 6. Setup Steps ==================== -->
+    <section class="setup-section section-padding">
+        <div class="container">
+            <h2 class="section-title fade-up">5 分鐘完成設定，立即開始接單</h2>
+            <p class="section-subtitle fade-up">三個簡單步驟，就能擁有專業的線上預約系統</p>
+
+            <div class="setup-steps fade-up">
+                <div class="setup-step">
+                    <div class="setup-connector"></div>
+                    <div class="setup-number">1</div>
+                    <h4>免費註冊帳號</h4>
+                    <p>只需填寫基本資料，30 秒完成註冊。不需信用卡，免費就能開始。</p>
                 </div>
-                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
-                    <i class="bi bi-check-circle me-2"></i>LINE 通知
+                <div class="setup-step">
+                    <div class="setup-connector"></div>
+                    <div class="setup-number">2</div>
+                    <h4>設定服務與排班</h4>
+                    <p>新增您的服務項目、設定價格時長、安排員工排班時間。</p>
                 </div>
-                <div class="bg-white bg-opacity-25 rounded-pill px-4 py-2">
-                    <i class="bi bi-check-circle me-2"></i>AI 智慧客服
+                <div class="setup-step">
+                    <div class="setup-number">3</div>
+                    <h4>連接 LINE 開始接單</h4>
+                    <p>綁定 LINE 官方帳號，系統自動設定。顧客立即可以用 LINE 預約。</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Industries Section -->
-    <section class="industries-section">
+    <!-- ==================== 7. Industries ==================== -->
+    <section class="industries-section section-padding">
         <div class="container">
-            <h2 class="section-title">適合各種服務業</h2>
-            <p class="section-subtitle">不論您經營什麼行業，都能輕鬆使用</p>
+            <h2 class="section-title fade-up">適合各種服務業</h2>
+            <p class="section-subtitle fade-up">不論您經營什麼行業，都能輕鬆使用</p>
 
+            <div class="row g-3 fade-up">
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x2702;&#xFE0F;</span>
+                        <h5>美容美髮</h5>
+                        <p>剪髮染燙、美甲美睫</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F9D6;</span>
+                        <h5>按摩 SPA</h5>
+                        <p>精油按摩、身體放鬆</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F3CB;&#xFE0F;</span>
+                        <h5>健身教練</h5>
+                        <p>私人教練、團體課程</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F3E5;</span>
+                        <h5>診所醫療</h5>
+                        <p>門診預約、醫美諮詢</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F37D;&#xFE0F;</span>
+                        <h5>餐廳訂位</h5>
+                        <p>座位預約、包廂預訂</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F393;</span>
+                        <h5>補習家教</h5>
+                        <p>課程預約、學員管理</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F4F7;</span>
+                        <h5>攝影工作室</h5>
+                        <p>攝影預約、檔期管理</p>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="industry-card">
+                        <span class="industry-emoji">&#x1F43E;</span>
+                        <h5>寵物美容</h5>
+                        <p>洗澡美容、寵物照護</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 8. Stats Counter ==================== -->
+    <section class="stats-section section-padding">
+        <div class="container">
             <div class="row">
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-scissors"></i></div>
-                        <div>美容美髮</div>
+                <div class="col-6 col-md-3 fade-up">
+                    <div class="stat-item">
+                        <div class="stat-number"><span class="counter" data-target="38">0</span>+</div>
+                        <div class="stat-label">功能模組</div>
                     </div>
                 </div>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-flower1"></i></div>
-                        <div>按摩 SPA</div>
+                <div class="col-6 col-md-3 fade-up">
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">全天候接單</div>
                     </div>
                 </div>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-heart-pulse"></i></div>
-                        <div>健身教練</div>
+                <div class="col-6 col-md-3 fade-up">
+                    <div class="stat-item">
+                        <div class="stat-number"><span class="counter" data-target="5">0</span> 分鐘</div>
+                        <div class="stat-label">快速設定</div>
                     </div>
                 </div>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-hospital"></i></div>
-                        <div>診所醫療</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-cup-hot"></i></div>
-                        <div>餐廳訂位</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="industry-item">
-                        <div class="industry-icon"><i class="bi bi-mortarboard"></i></div>
-                        <div>補習家教</div>
+                <div class="col-6 col-md-3 fade-up">
+                    <div class="stat-item">
+                        <div class="stat-number">$0</div>
+                        <div class="stat-label">免費開始</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing-section" id="pricing">
+    <!-- ==================== 9. Testimonials ==================== -->
+    <section class="testimonials-section section-padding">
         <div class="container">
-            <h2 class="section-title">簡單透明的價格</h2>
-            <p class="section-subtitle">基本功能免費使用，依需求選購加值功能</p>
+            <h2 class="section-title fade-up">店家真心推薦</h2>
+            <p class="section-subtitle fade-up">聽聽他們怎麼說</p>
 
-            <div class="row justify-content-center g-4">
-                <div class="col-md-6 col-lg-4">
+            <div class="row g-4">
+                <div class="col-md-4 fade-up">
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            以前每天接 20 通預約電話，現在顧客都自己用 LINE 預約。我終於可以專心服務了！爽約率也從 30% 降到 5%。
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);">A</div>
+                            <div>
+                                <div class="testimonial-name">Amy 店長</div>
+                                <div class="testimonial-role">美髮沙龍 / 台北</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-up">
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            報表功能太實用了，終於知道哪個服務最賺錢、哪個時段最忙。營收比上個月多了 20%！
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#06C755,#00B900);">K</div>
+                            <div>
+                                <div class="testimonial-name">Kevin 老闆</div>
+                                <div class="testimonial-role">按摩 SPA / 台中</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-up">
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            票券和集點功能讓回頭客變多了。顧客很喜歡用 LINE 領折扣券，來店率明顯提升。免費版就很好用！
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c);">L</div>
+                            <div>
+                                <div class="testimonial-name">Lisa 教練</div>
+                                <div class="testimonial-role">健身工作室 / 高雄</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 10. Pricing ==================== -->
+    <section class="pricing-section section-padding" id="pricing">
+        <div class="container">
+            <h2 class="section-title fade-up">簡單透明的價格</h2>
+            <p class="section-subtitle fade-up">基本功能永久免費，依需求選購進階功能</p>
+
+            <div class="row justify-content-center g-4 fade-up">
+                <div class="col-md-6 col-lg-5">
                     <div class="pricing-card">
                         <div class="pricing-title">免費版</div>
-                        <div class="pricing-price">$0 <span>/ 月</span></div>
+                        <div class="pricing-price">$0 <span class="unit">/ 永久免費</span></div>
                         <ul class="pricing-features">
                             <li><i class="bi bi-check-circle-fill"></i> LINE 預約機器人</li>
                             <li><i class="bi bi-check-circle-fill"></i> 基本預約管理</li>
                             <li><i class="bi bi-check-circle-fill"></i> 顧客資料管理</li>
-                            <li><i class="bi bi-check-circle-fill"></i> 3 位員工</li>
-                            <li><i class="bi bi-check-circle-fill"></i> 基本報表</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 3 位員工額度</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 基本營運報表</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 服務項目管理</li>
                         </ul>
-                        <a href="/tenant/register" class="btn btn-outline-primary w-100">免費開始</a>
+                        <a href="/tenant/register" class="btn btn-outline-primary w-100 py-2">免費開始</a>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-5">
                     <div class="pricing-card featured">
-                        <span class="pricing-badge">最受歡迎</span>
-                        <div class="pricing-title">專業版</div>
-                        <div class="pricing-price">依功能 <span>計價</span></div>
+                        <span class="pricing-badge">最多店家選擇</span>
+                        <div class="pricing-title" style="margin-top:0.5rem;">專業版</div>
+                        <div class="pricing-price">依功能 <span class="unit">計價</span></div>
                         <ul class="pricing-features">
-                            <li><i class="bi bi-check-circle-fill"></i> 所有免費版功能</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 包含所有免費版功能</li>
                             <li><i class="bi bi-check-circle-fill"></i> 無限員工數量</li>
                             <li><i class="bi bi-check-circle-fill"></i> 自動預約提醒</li>
                             <li><i class="bi bi-check-circle-fill"></i> 票券優惠系統</li>
-                            <li><i class="bi bi-check-circle-fill"></i> 會員等級制度</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 會員等級 + 集點</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 商品銷售功能</li>
                             <li><i class="bi bi-check-circle-fill"></i> AI 智慧客服</li>
                             <li><i class="bi bi-check-circle-fill"></i> 進階報表分析</li>
                         </ul>
-                        <a href="/tenant/register" class="btn btn-primary w-100">免費試用</a>
+                        <a href="/tenant/register" class="btn btn-primary w-100 py-2">免費試用</a>
                     </div>
                 </div>
+            </div>
+            <div class="pricing-faq-link fade-up">
+                有疑問嗎？查看 <a href="/faq">常見問題</a> 或 <a href="/pricing">完整功能比較</a>
             </div>
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
-                準備好提升您的預約管理了嗎？
-            </h2>
-            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">
-                立即免費註冊，5 分鐘內完成設定
-            </p>
-            <a href="/tenant/register" class="btn btn-cta btn-cta-primary btn-lg">
-                <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
-            </a>
+    <!-- ==================== 11. CTA ==================== -->
+    <section class="cta-section section-padding">
+        <div class="container" style="position:relative;z-index:2;">
+            <h2 class="fade-up">現在就讓你的店開始自動接單</h2>
+            <p class="fade-up">免費註冊、免綁信用卡、5 分鐘設定完成</p>
+            <div class="cta-buttons fade-up">
+                <a href="/tenant/register" class="btn btn-hero btn-hero-primary btn-lg">
+                    <i class="bi bi-rocket-takeoff me-2"></i>免費開始使用
+                </a>
+                <a href="/features" class="btn btn-hero btn-hero-outline btn-lg">
+                    了解更多功能
+                </a>
+            </div>
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ==================== 12. Footer ==================== -->
     <footer class="footer">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <h5 class="text-white mb-3">
+                <div class="col-md-5 mb-4 mb-md-0">
+                    <h5>
                         <i class="bi bi-calendar-check me-2"></i>預約平台
                     </h5>
                     <p>免費線上預約系統，整合 LINE 預約機器人<br>讓預約管理變得超簡單</p>
                 </div>
-                <div class="col-md-3">
-                    <h6 class="text-white mb-3">快速連結</h6>
-                    <ul class="list-unstyled">
+                <div class="col-6 col-md-3">
+                    <h6>快速連結</h6>
+                    <ul>
                         <li><a href="/">首頁</a></li>
                         <li><a href="/features">功能介紹</a></li>
                         <li><a href="/pricing">價格方案</a></li>
@@ -718,23 +1748,75 @@
                         <li><a href="/tenant/register">免費註冊</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h6 class="text-white mb-3">法律資訊</h6>
-                    <ul class="list-unstyled">
+                <div class="col-6 col-md-4">
+                    <h6>法律資訊</h6>
+                    <ul>
                         <li><a href="/terms">服務條款</a></li>
                         <li><a href="/privacy">隱私權政策</a></li>
-                        <li><i class="bi bi-envelope me-2 mt-2"></i>support@booking.com</li>
                     </ul>
+                    <div class="mt-2" style="font-size:0.9rem;">
+                        <i class="bi bi-envelope me-1"></i> support@booking.com
+                    </div>
                 </div>
             </div>
-            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <hr class="my-4">
             <div class="text-center">
-                <small>&copy; 2024 預約平台. All rights reserved. | <a href="/terms" class="text-muted">服務條款</a> | <a href="/privacy" class="text-muted">隱私權政策</a></small>
+                <small>&copy; 2024 預約平台. All rights reserved. | <a href="/terms">服務條款</a> | <a href="/privacy">隱私權政策</a></small>
             </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    (function() {
+        // 滾動時 Navbar 變色
+        var nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // 滾動淡入動畫
+        var fadeEls = document.querySelectorAll('.fade-up');
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        fadeEls.forEach(function(el) { observer.observe(el); });
+
+        // 數字計數器
+        var counters = document.querySelectorAll('.counter');
+        var counterObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var el = entry.target;
+                    var target = parseInt(el.getAttribute('data-target'));
+                    var duration = 1500;
+                    var step = Math.max(1, Math.floor(target / (duration / 30)));
+                    var current = 0;
+                    var timer = setInterval(function() {
+                        current += step;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        el.textContent = current;
+                    }, 30);
+                    counterObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(function(el) { counterObserver.observe(el); });
+    })();
+    </script>
 </body>
 </html>
