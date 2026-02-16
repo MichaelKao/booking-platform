@@ -139,7 +139,7 @@ public class LineWebhookService {
             // 4. 查詢會員等級
             if (customer.getMembershipLevelId() != null) {
                 String levelName = membershipLevelRepository
-                        .findById(customer.getMembershipLevelId())
+                        .findByIdAndTenantIdAndDeletedAtIsNull(customer.getMembershipLevelId(), tenantId)
                         .map(level -> level.getName())
                         .orElse(null);
                 result.put("membershipLevelName", levelName);

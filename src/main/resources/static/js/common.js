@@ -479,11 +479,11 @@ function formatPercent(value, decimals = 1) {
  */
 function renderPagination(pageData, onPageClick, containerId = 'pagination') {
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container || !pageData) return;
 
-    const { page, totalPages, first, last } = pageData;
+    const { page = 0, totalPages = 0, first = true, last = true } = pageData;
 
-    if (totalPages <= 1) {
+    if (!totalPages || totalPages <= 1) {
         container.innerHTML = '';
         return;
     }

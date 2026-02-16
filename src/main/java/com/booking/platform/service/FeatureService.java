@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -178,10 +179,15 @@ public class FeatureService {
         // 驗證租戶存在
         validateTenantExists(tenantId);
 
+        // 批次查詢所有功能定義（避免 N+1）
+        Map<FeatureCode, Feature> featureMap = featureRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .collect(Collectors.toMap(Feature::getCode, f -> f));
+
         return tenantFeatureRepository.findByTenantIdAndDeletedAtIsNullOrderByFeatureCodeAsc(tenantId)
                 .stream()
                 .map(tf -> {
-                    Feature feature = featureRepository.findByCode(tf.getFeatureCode()).orElse(null);
+                    Feature feature = featureMap.get(tf.getFeatureCode());
                     return featureMapper.toTenantFeatureResponse(tf, feature);
                 })
                 .collect(Collectors.toList());
@@ -197,9 +203,10 @@ public class FeatureService {
                 .findByTenantIdAndFeatureCodeAndDeletedAtIsNull(tenantId, featureCode)
                 .orElse(null);
 
+        Feature feature = featureRepository.findByCode(featureCode).orElse(null);
+
         if (tenantFeature == null) {
             // 如果沒有記錄，返回預設狀態
-            Feature feature = featureRepository.findByCode(featureCode).orElse(null);
             return TenantFeatureResponse.builder()
                     .tenantId(tenantId)
                     .featureCode(featureCode)
@@ -212,7 +219,6 @@ public class FeatureService {
                     .build();
         }
 
-        Feature feature = featureRepository.findByCode(featureCode).orElse(null);
         return featureMapper.toTenantFeatureResponse(tenantFeature, feature);
     }
 

@@ -66,15 +66,17 @@ public class CustomerService {
                 tenantId, status, keyword, pageable
         );
 
+        // 批次查詢所有會員等級（避免 N+1）
+        Map<String, String> levelNameMap = membershipLevelRepository
+                .findByTenantIdAndDeletedAtIsNullOrderBySortOrderAsc(tenantId)
+                .stream()
+                .collect(Collectors.toMap(MembershipLevel::getId, MembershipLevel::getName));
+
         List<CustomerResponse> content = page.getContent().stream()
                 .map(c -> {
-                    String levelName = null;
-                    if (c.getMembershipLevelId() != null) {
-                        levelName = membershipLevelRepository
-                                .findByIdAndTenantIdAndDeletedAtIsNull(c.getMembershipLevelId(), tenantId)
-                                .map(MembershipLevel::getName)
-                                .orElse(null);
-                    }
+                    String levelName = c.getMembershipLevelId() != null
+                            ? levelNameMap.get(c.getMembershipLevelId())
+                            : null;
                     return customerMapper.toResponse(c, levelName);
                 })
                 .collect(Collectors.toList());
