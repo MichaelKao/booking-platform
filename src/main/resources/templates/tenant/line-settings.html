@@ -2039,16 +2039,19 @@
 
         // 預設動作選項
         const advActionOptions = [
-            { value: 'start_booking', label: '開始預約' },
-            { value: 'view_bookings', label: '我的預約' },
-            { value: 'start_shopping', label: '瀏覽商品' },
-            { value: 'view_coupons', label: '領取票券' },
-            { value: 'view_my_coupons', label: '我的票券' },
-            { value: 'view_member_info', label: '會員資訊' },
-            { value: 'contact_shop', label: '聯絡店家' },
-            { value: 'main_menu', label: '主選單' },
-            { value: 'flex_popup', label: '自訂彈窗' }
+            { value: 'start_booking', label: '開始預約', icon: '📅' },
+            { value: 'view_bookings', label: '我的預約', icon: '📋' },
+            { value: 'start_shopping', label: '瀏覽商品', icon: '🛒' },
+            { value: 'view_coupons', label: '領取票券', icon: '🎁' },
+            { value: 'view_my_coupons', label: '我的票券', icon: '🎫' },
+            { value: 'view_member_info', label: '會員資訊', icon: '👤' },
+            { value: 'contact_shop', label: '聯絡店家', icon: '📞' },
+            { value: 'main_menu', label: '主選單', icon: '🏠' },
+            { value: 'flex_popup', label: '自訂彈窗', icon: '⭐' }
         ];
+        function getAdvActionIcon(action) {
+            return (advActionOptions.find(a => a.value === action) || {}).icon || '📌';
+        }
 
         // HTML 特殊字元轉義（防止 XSS）
         function escHtml(str) {
@@ -2302,6 +2305,7 @@
                     hasIcon: false,
                     iconShape: 'circle',
                     removeBackground: true,
+                    iconCircle: false,
                     action: { type: 'postback', data: 'action=' + def.action },
                     flexPopup: null
                 });
@@ -2330,10 +2334,14 @@
                             ${advActionOptions.map(opt => `<option value="${opt.value}" ${actionValue === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                         </select>
                     </div>
-                    <div class="d-flex align-items-center gap-1 mt-1">
+                    <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
                         <div class="form-check form-switch mb-0">
                             <input type="checkbox" class="form-check-input adv-cell-remove-bg" data-index="${i}" ${removeBg ? 'checked' : ''} id="advRemoveBg_${i}">
                             <label class="form-check-label small text-muted" for="advRemoveBg_${i}">圖示去背</label>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            <input type="checkbox" class="form-check-input adv-cell-icon-circle" data-index="${i}" ${cell.iconCircle ? 'checked' : ''} id="advIconCircle_${i}">
+                            <label class="form-check-label small text-muted" for="advIconCircle_${i}">白圓底</label>
                         </div>
                     </div>
                     <div class="mt-1 ${actionValue === 'flex_popup' ? '' : 'd-none'}" id="advFlexPopupBtn_${i}">
@@ -2383,6 +2391,13 @@
                 el.addEventListener('change', e => {
                     const idx = parseInt(e.target.dataset.index);
                     advConfig.cells[idx].removeBackground = e.target.checked;
+                });
+            });
+            container.querySelectorAll('.adv-cell-icon-circle').forEach(el => {
+                el.addEventListener('change', e => {
+                    const idx = parseInt(e.target.dataset.index);
+                    advConfig.cells[idx].iconCircle = e.target.checked;
+                    updateAdvancedPreview();
                 });
             });
         }
@@ -2470,12 +2485,21 @@
                 const labelColor = cell.labelColor || '#FFFFFF';
                 const hasIcon = advCellIconDataUrls[i];
 
+                const actionStr = typeof cell.action === 'object' ? (cell.action.data || '').replace('action=','').split('&')[0] : (cell.action || '');
+                const cellIcon = getAdvActionIcon(actionStr);
+                const useFilledCircle = cell.iconCircle || false;
+                const circleStyle = useFilledCircle
+                    ? 'background:rgba(255,255,255,.85);color:#333;box-shadow:0 2px 6px rgba(0,0,0,.2);'
+                    : 'background:transparent;border:2px solid rgba(255,255,255,.6);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);';
+
                 html += `<div class="adv-preview-cell" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%;">`;
                 // 邊框
                 html += `<div class="adv-preview-cell-border"></div>`;
                 // 圖示
                 if (hasIcon) {
                     html += `<img class="adv-preview-cell-icon" src="${advCellIconDataUrls[i]}" alt="">`;
+                } else {
+                    html += `<span style="font-size:16px;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;${circleStyle}">${cellIcon}</span>`;
                 }
                 // 文字標籤
                 if (label) {

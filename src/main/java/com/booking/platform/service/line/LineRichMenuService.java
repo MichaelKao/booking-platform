@@ -2952,15 +2952,22 @@ public class LineRichMenuService {
                                     drawH = iconSize;
                                 }
 
-                                // 有 cell 背景圖時，先畫毛玻璃圓底
+                                // 有 cell 背景圖時，根據 iconCircle 決定圓底樣式
                                 if (hasCellImage && "circle".equals(iconShape)) {
+                                    boolean useFilledCircle = cellConfig != null && cellConfig.path("iconCircle").asBoolean(false);
                                     int circleSize = iconSize + 20;
                                     int cx = centerX - circleSize / 2;
                                     int cy = centerY - circleSize / 2 - cellH / 8;
-                                    g2d.setColor(new Color(0, 0, 0, 80));
-                                    g2d.fillOval(cx + 3, cy + 3, circleSize, circleSize);
-                                    g2d.setColor(new Color(255, 255, 255, 180));
-                                    g2d.fillOval(cx, cy, circleSize, circleSize);
+                                    if (useFilledCircle) {
+                                        g2d.setColor(new Color(0, 0, 0, 80));
+                                        g2d.fillOval(cx + 3, cy + 3, circleSize, circleSize);
+                                        g2d.setColor(new Color(255, 255, 255, 180));
+                                        g2d.fillOval(cx, cy, circleSize, circleSize);
+                                    } else {
+                                        g2d.setColor(new Color(255, 255, 255, 120));
+                                        g2d.setStroke(new BasicStroke(3f));
+                                        g2d.drawOval(cx, cy, circleSize, circleSize);
+                                    }
                                 }
 
                                 BufferedImage scaledIcon = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
@@ -2991,22 +2998,32 @@ public class LineRichMenuService {
                     String action = cellConfig != null ? cellConfig.path("action").asText("") : "";
                     IconType vecIcon = ACTION_ICON_MAP.get(action);
                     if (vecIcon != null) {
+                        boolean useFilledCircle = cellConfig != null && cellConfig.path("iconCircle").asBoolean(false);
                         int vecSize = (int) (Math.min(cellW, cellH) * 0.35);
                         int circleSize = vecSize + 24;
                         int cx = centerX - circleSize / 2;
                         int cy = centerY - circleSize / 2 - cellH / 8;
 
-                        // 毛玻璃圓底 + 陰影
-                        g2d.setColor(new Color(0, 0, 0, 60));
-                        g2d.fillOval(cx + 4, cy + 4, circleSize, circleSize);
-                        g2d.setColor(new Color(255, 255, 255, 200));
-                        g2d.fillOval(cx, cy, circleSize, circleSize);
-
-                        // 白色向量圖示
                         Color savedColor = g2d.getColor();
                         Stroke savedStroke = g2d.getStroke();
-                        g2d.setColor(new Color(60, 60, 60));
-                        drawIcon(g2d, vecIcon, centerX, centerY - cellH / 8, vecSize);
+
+                        if (useFilledCircle) {
+                            // 填滿白圓底 + 深色圖示
+                            g2d.setColor(new Color(0, 0, 0, 60));
+                            g2d.fillOval(cx + 4, cy + 4, circleSize, circleSize);
+                            g2d.setColor(new Color(255, 255, 255, 200));
+                            g2d.fillOval(cx, cy, circleSize, circleSize);
+                            g2d.setColor(new Color(60, 60, 60));
+                            drawIcon(g2d, vecIcon, centerX, centerY - cellH / 8, vecSize);
+                        } else {
+                            // 細線圓框 + 白色圖示（參考和煦蒔光風格）
+                            g2d.setColor(new Color(255, 255, 255, 120));
+                            g2d.setStroke(new BasicStroke(3f));
+                            g2d.drawOval(cx, cy, circleSize, circleSize);
+                            g2d.setColor(Color.WHITE);
+                            drawIcon(g2d, vecIcon, centerX, centerY - cellH / 8, vecSize);
+                        }
+
                         g2d.setColor(savedColor);
                         g2d.setStroke(savedStroke);
                         iconDrawn = true;

@@ -1383,6 +1383,7 @@
             index:i, label:c.l, action:c.a, icon:getIcon(c.a),
             imageUrl: c.img || cellImages[c.a] || '',
             removeBackground: true,
+            iconCircle: false,
             iconShape: 'circle',
             iconScale: 'medium'
         }));
@@ -1484,6 +1485,7 @@
                     if (cell.flexPopup) fpConfigs[cell.index] = cell.flexPopup;
                     if (cell.iconShape && rmCells[cell.index]) rmCells[cell.index].iconShape = cell.iconShape;
                     if (cell.iconScale && rmCells[cell.index]) rmCells[cell.index].iconScale = cell.iconScale;
+                    if (rmCells[cell.index]) rmCells[cell.index].iconCircle = !!cell.iconCircle;
                 });
             }
         } catch(e) { console.debug('載入 RM 配置失敗', e); }
@@ -1505,7 +1507,8 @@
             action: rmCells[i]?.action || d.a,
             icon: getIcon(rmCells[i]?.action || d.a),
             iconShape: rmCells[i]?.iconShape,
-            iconScale: rmCells[i]?.iconScale
+            iconScale: rmCells[i]?.iconScale,
+            iconCircle: rmCells[i]?.iconCircle || false
         }));
         rmCells.length = defs.length;
         renderCellTable();
@@ -1549,6 +1552,9 @@
                     <label class="form-check form-switch d-inline-flex align-items-center gap-1 mt-1 mb-0 ms-1" style="font-size:.75rem">
                         <input type="checkbox" class="form-check-input" data-f="removeBg" ${cell.removeBackground?'checked':''}>去背
                     </label>`:''}
+                    ${(hasImg||hasIcon)?`<label class="form-check form-switch d-inline-flex align-items-center gap-1 mt-1 mb-0 ms-1" style="font-size:.75rem">
+                        <input type="checkbox" class="form-check-input" data-f="iconCircle" ${cell.iconCircle?'checked':''}>白圓底
+                    </label>`:''}
                 </td>
                 <td>${cell.action==='flex_popup'?`<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="openFpEditor(${i})" title="編輯彈窗"><i class="bi bi-pencil-square"></i></button>`:''}</td>
             `;
@@ -1577,6 +1583,8 @@
             if (scaleSelect) scaleSelect.addEventListener('change', e => { rmCells[i].iconScale = e.target.value; updateRmPreview(); });
             const removeBgCheck = tr.querySelector('[data-f="removeBg"]');
             if (removeBgCheck) removeBgCheck.addEventListener('change', e => { rmCells[i].removeBackground = e.target.checked; });
+            const iconCircleCheck = tr.querySelector('[data-f="iconCircle"]');
+            if (iconCircleCheck) iconCircleCheck.addEventListener('change', e => { rmCells[i].iconCircle = e.target.checked; updateRmPreview(); });
             tbody.appendChild(tr);
         });
     }
@@ -1612,7 +1620,11 @@
                     d.style.backgroundSize = 'cover';
                     d.style.backgroundPosition = 'center';
                     const cellIcon = cell.icon || getIcon(cell.action);
-                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci" style="background:rgba(255,255,255,.8);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;margin-bottom:2px">${cellIcon}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
+                    const useFilledCircle = !!cell.iconCircle;
+                    const circleStyle = useFilledCircle
+                        ? 'background:rgba(255,255,255,.85);color:#333;box-shadow:0 2px 8px rgba(0,0,0,.3);'
+                        : 'background:transparent;border:2px solid rgba(255,255,255,.6);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);';
+                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci" style="border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:2px;${circleStyle}">${cellIcon}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
                 } else if (cellIconFiles[ci]) {
                     // 有已上傳圖示：顯示圖片預覽
                     if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.15)';
@@ -1745,6 +1757,7 @@
                 if (c.iconShape && c.iconShape !== 'circle') o.iconShape = c.iconShape;
                 if (c.iconScale && c.iconScale !== 'small') o.iconScale = c.iconScale;
                 if (c.removeBackground) o.removeBackground = true;
+                if (c.iconCircle) o.iconCircle = true;
                 return o;
             })
         };
