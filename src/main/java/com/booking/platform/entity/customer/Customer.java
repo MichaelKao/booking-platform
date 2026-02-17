@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -208,6 +209,13 @@ public class Customer extends BaseEntity {
      */
     @Column(name = "tags", length = 500)
     private String tags;
+
+    /**
+     * 樂觀鎖版本號（防止並發更新丟失）
+     */
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     // ========================================
     // 業務方法

@@ -26,6 +26,12 @@ const IGNORED_CONSOLE_PATTERNS = [
   'AbortError',                     // 請求被取消（換頁時常見）
   'NS_BINDING_ABORTED',            // Firefox 請求取消
   'Load failed',                    // Safari 載入取消
+  // 第三方追蹤服務（網路錯誤不算 bug）
+  'google-analytics.com',           // GA4 追蹤
+  'googletagmanager.com',           // GTM
+  'facebook',                       // FB Pixel
+  'connect.facebook.net',           // FB SDK
+  'analytics',                      // 通用追蹤
   // 應用程式預期的 API 錯誤處理（handleResponse 用 console.error 記錄 API 失敗）
   'handleResponse',                 // common.js API 錯誤處理器的 stack trace
   '登入失敗',                       // 測試錯誤帳密時的預期訊息
@@ -53,11 +59,15 @@ export const test = base.extend({
       jsErrors.push(`[JS Error] ${error.message}`);
     });
 
-    // 2. HTTP 500+ 伺服器錯誤（永遠是 bug）
+    // 2. HTTP 500+ 伺服器錯誤（永遠是 bug，排除第三方追蹤）
     page.on('response', response => {
       if (response.status() >= 500) {
         const url = response.url();
-        if (!url.includes('favicon')) {
+        if (!url.includes('favicon') &&
+            !url.includes('google-analytics.com') &&
+            !url.includes('googletagmanager.com') &&
+            !url.includes('facebook') &&
+            !url.includes('connect.facebook.net')) {
           serverErrors.push(`[HTTP ${response.status()}] ${url}`);
         }
       }

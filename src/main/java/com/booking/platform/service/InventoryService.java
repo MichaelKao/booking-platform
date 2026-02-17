@@ -131,6 +131,9 @@ public class InventoryService {
         // 更新商品庫存
         if (product != null) {
             int newStock = quantityBefore + quantity;
+            if (newStock < 0) {
+                log.warn("庫存將為負數，已截斷為 0，商品：{}，計算值：{}", productId, newStock);
+            }
             product.setStockQuantity(Math.max(0, newStock));
             productRepository.save(product);
         }

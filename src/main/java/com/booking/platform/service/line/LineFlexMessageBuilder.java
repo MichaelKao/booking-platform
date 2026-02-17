@@ -914,7 +914,7 @@ public class LineFlexMessageBuilder {
 
         ObjectNode durationText = objectMapper.createObjectNode();
         durationText.put("type", "text");
-        durationText.put("text", String.format("服務時長 %d 分鐘", service.getDuration()));
+        durationText.put("text", String.format("服務時長 %d 分鐘", service.getDuration() != null ? service.getDuration() : 0));
         durationText.put("size", "sm");
         durationText.put("color", SECONDARY_COLOR);
         durationText.put("margin", "sm");
@@ -940,7 +940,7 @@ public class LineFlexMessageBuilder {
 
         ObjectNode priceText = objectMapper.createObjectNode();
         priceText.put("type", "text");
-        priceText.put("text", String.format("NT$ %,d", service.getPrice().intValue()));
+        priceText.put("text", String.format("NT$ %,d", service.getPrice() != null ? service.getPrice().intValue() : 0));
         priceText.put("size", "lg");
         priceText.put("weight", "bold");
         priceText.put("color", PRIMARY_COLOR);
@@ -966,8 +966,8 @@ public class LineFlexMessageBuilder {
                 "action=select_service&serviceId=%s&serviceName=%s&duration=%d&price=%d",
                 service.getId(),
                 service.getName(),
-                service.getDuration(),
-                service.getPrice().intValue()
+                service.getDuration() != null ? service.getDuration() : 0,
+                service.getPrice() != null ? service.getPrice().intValue() : 0
         );
 
         footer.set("contents", objectMapper.createArrayNode().add(
@@ -1356,8 +1356,8 @@ public class LineFlexMessageBuilder {
                     "action=select_service&serviceId=%s&serviceName=%s&duration=%d&price=%d",
                     service.getId(),
                     service.getName(),
-                    service.getDuration(),
-                    service.getPrice().intValue()
+                    service.getDuration() != null ? service.getDuration() : 0,
+                    service.getPrice() != null ? service.getPrice().intValue() : 0
             );
 
             ObjectNode serviceBox = objectMapper.createObjectNode();
@@ -1397,7 +1397,7 @@ public class LineFlexMessageBuilder {
 
             ObjectNode durationText = objectMapper.createObjectNode();
             durationText.put("type", "text");
-            durationText.put("text", String.format("⏱ %d分鐘", service.getDuration()));
+            durationText.put("text", String.format("⏱ %d分鐘", service.getDuration() != null ? service.getDuration() : 0));
             durationText.put("size", "xxs");
             durationText.put("color", SECONDARY_COLOR);
             durationText.put("flex", 1);
@@ -1405,7 +1405,7 @@ public class LineFlexMessageBuilder {
 
             ObjectNode priceText = objectMapper.createObjectNode();
             priceText.put("type", "text");
-            priceText.put("text", String.format("NT$%,d", service.getPrice().intValue()));
+            priceText.put("text", String.format("NT$%,d", service.getPrice() != null ? service.getPrice().intValue() : 0));
             priceText.put("size", "sm");
             priceText.put("weight", "bold");
             priceText.put("color", PRIMARY_COLOR);
@@ -5034,7 +5034,7 @@ public class LineFlexMessageBuilder {
             // 價格
             ObjectNode priceText = objectMapper.createObjectNode();
             priceText.put("type", "text");
-            priceText.put("text", String.format("NT$ %d", product.getPrice().intValue()));
+            priceText.put("text", String.format("NT$ %d", product.getPrice() != null ? product.getPrice().intValue() : 0));
             priceText.put("size", "lg");
             priceText.put("weight", "bold");
             priceText.put("color", PRIMARY_COLOR);
@@ -5063,7 +5063,7 @@ public class LineFlexMessageBuilder {
                     "action=select_product&productId=%s&productName=%s&price=%d",
                     product.getId(),
                     product.getName(),
-                    product.getPrice().intValue()
+                    product.getPrice() != null ? product.getPrice().intValue() : 0
             );
 
             footer.set("contents", objectMapper.createArrayNode().add(
@@ -6121,7 +6121,7 @@ public class LineFlexMessageBuilder {
             flexMessage.put("altText", "自訂選單");
             flexMessage.set("contents", carousel);
             return flexMessage;
-        } else {
+        } else if (bubblesConfig.size() > 0) {
             // 單張卡片 → Bubble
             JsonNode bubble = buildCustomFlexBubble(bubblesConfig.get(0));
 
@@ -6131,6 +6131,8 @@ public class LineFlexMessageBuilder {
             flexMessage.set("contents", bubble);
             return flexMessage;
         }
+
+        return null;
     }
 
     /**

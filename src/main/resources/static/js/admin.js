@@ -145,6 +145,10 @@ async function adminLogin(event) {
         });
 
         if (result.success && result.data) {
+            if (!result.data.accessToken) {
+                showError('登入回應異常，請稍後再試');
+                return;
+            }
             setToken(result.data.accessToken);
             if (result.data.refreshToken) {
                 setRefreshToken(result.data.refreshToken);

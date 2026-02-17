@@ -310,8 +310,8 @@ public class AiAssistantService {
         return services.stream()
                 .map(s -> String.format("- %s：NT$%d（約 %d 分鐘）%s",
                         s.getName(),
-                        s.getPrice().intValue(),
-                        s.getDuration(),
+                        s.getPrice() != null ? s.getPrice().intValue() : 0,
+                        s.getDuration() != null ? s.getDuration() : 0,
                         s.getDescription() != null ? " - " + s.getDescription() : ""))
                 .collect(Collectors.joining("\n"));
     }
@@ -370,17 +370,33 @@ public class AiAssistantService {
         );
 
         try {
+            // 使用帶超時的 RestTemplate
+            org.springframework.http.client.SimpleClientHttpRequestFactory factory =
+                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(5000);
+            factory.setReadTimeout(8000);
+            RestTemplate timeoutTemplate = new RestTemplate(factory);
+
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<String> response = timeoutTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
                     String.class
             );
 
-            // 解析回應
+            // 解析回應（含 null 防護）
+            if (response.getBody() == null) {
+                log.error("Groq API 回應 body 為 null");
+                throw new RuntimeException("AI 回應為空");
+            }
             JsonNode root = objectMapper.readTree(response.getBody());
-            return root.path("choices").get(0).path("message").path("content").asText();
+            JsonNode choices = root.path("choices");
+            if (!choices.isArray() || choices.isEmpty()) {
+                log.error("Groq API 回應 choices 為空");
+                throw new RuntimeException("AI 回應格式異常");
+            }
+            return choices.get(0).path("message").path("content").asText();
 
         } catch (Exception e) {
             log.error("呼叫 Groq API 失敗：{}", e.getMessage());

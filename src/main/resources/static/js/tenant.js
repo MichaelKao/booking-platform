@@ -49,7 +49,7 @@ async function checkFeatureSubscriptions() {
         if (result.success && result.data) {
             // 建立已啟用功能的 Set
             const enabledFeatures = new Set();
-            result.data.forEach(feature => {
+            (result.data || []).forEach(feature => {
                 if (feature.isEnabled) {
                     enabledFeatures.add(feature.code);
                 }
@@ -212,6 +212,10 @@ async function tenantLogin(event) {
         });
 
         if (result.success && result.data) {
+            if (!result.data.accessToken) {
+                showError('登入回應異常，請稍後再試');
+                return;
+            }
             setToken(result.data.accessToken);
             if (result.data.refreshToken) {
                 setRefreshToken(result.data.refreshToken);
@@ -495,7 +499,7 @@ function initCalendar(elementId, options = {}) {
                         title: `${statusPrefix[booking.status] || ''}${booking.customerName || ''} - ${booking.serviceName || ''}`,
                         start: booking.bookingDate + 'T' + booking.startTime,
                         end: booking.bookingDate + 'T' + booking.endTime,
-                        className: `status-${booking.status.toLowerCase().replace('_', '-')}`,
+                        className: `status-${(booking.status || 'PENDING').toLowerCase().replace('_', '-')}`,
                         extendedProps: booking
                     }));
                     successCallback(events);

@@ -82,18 +82,32 @@ public class LineMessageService {
      * @param replyToken 回覆 Token
      * @param messages   訊息列表
      */
+    private static final int REPLY_MAX_RETRIES = 3;
+    private static final long REPLY_RETRY_DELAY_MS = 100;
+
     public void reply(String tenantId, String replyToken, List<Map<String, Object>> messages) {
-        try {
-            String accessToken = getAccessToken(tenantId);
+        for (int attempt = 0; attempt < REPLY_MAX_RETRIES; attempt++) {
+            try {
+                String accessToken = getAccessToken(tenantId);
 
-            ObjectNode requestBody = objectMapper.createObjectNode();
-            requestBody.put("replyToken", replyToken);
-            requestBody.set("messages", objectMapper.valueToTree(messages));
+                ObjectNode requestBody = objectMapper.createObjectNode();
+                requestBody.put("replyToken", replyToken);
+                requestBody.set("messages", objectMapper.valueToTree(messages));
 
-            sendRequest(REPLY_API, accessToken, requestBody);
+                sendRequest(REPLY_API, accessToken, requestBody);
+                return;
 
-        } catch (Exception e) {
-            log.error("回覆訊息失敗，租戶：{}，錯誤：{}", tenantId, e.getMessage());
+            } catch (Exception e) {
+                log.error("回覆訊息失敗，租戶：{}，第 {} 次嘗試，錯誤：{}", tenantId, attempt + 1, e.getMessage());
+                if (attempt < REPLY_MAX_RETRIES - 1) {
+                    try {
+                        Thread.sleep(REPLY_RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -197,10 +211,9 @@ public class LineMessageService {
             sendRequest(PUSH_API, accessToken, requestBody);
 
         } catch (BusinessException e) {
-            throw e;
+            log.error("推送訊息業務錯誤，租戶：{}，用戶：{}，錯誤：{}", tenantId, userId, e.getMessage());
         } catch (Exception e) {
             log.error("推送訊息失敗，租戶：{}，用戶：{}，錯誤：{}", tenantId, userId, e.getMessage(), e);
-            throw new BusinessException(ErrorCode.LINE_SEND_FAILED, "LINE 訊息推送失敗");
         }
     }
 
@@ -318,7 +331,7 @@ public class LineMessageService {
                     JsonNode.class
             );
 
-            return response.getBody();
+            return response.getBody() != null ? response.getBody() : null;
 
         } catch (Exception e) {
             log.error("取得用戶資料失敗，租戶：{}，用戶：{}，錯誤：{}",

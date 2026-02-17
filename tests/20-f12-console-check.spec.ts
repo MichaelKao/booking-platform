@@ -20,6 +20,11 @@ const IGNORED_PATTERNS = [
   'ResizeObserver loop',           // 瀏覽器 resize 事件，非程式錯誤
   'Non-Error promise rejection',   // 某些瀏覽器的 promise 行為
   '/api/notifications/stream',     // SSE 連線關閉時的正常行為
+  'google-analytics.com',          // GA4 追蹤
+  'googletagmanager.com',          // GTM
+  'facebook',                      // FB Pixel
+  'connect.facebook.net',          // FB SDK
+  'analytics',                     // 通用追蹤
 ];
 
 function shouldIgnore(msg: string): boolean {

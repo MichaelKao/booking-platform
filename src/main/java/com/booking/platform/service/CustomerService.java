@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -266,34 +267,46 @@ public class CustomerService {
     // 點數操作
     // ========================================
 
+    private static final int MAX_RETRY = 3;
+
     @Transactional
     public CustomerResponse addPoints(String id, int points, String description) {
         String tenantId = TenantContext.getTenantId();
 
         log.info("增加顧客點數，ID：{}，點數：{}", id, points);
 
-        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
-                ));
+        for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
+            try {
+                Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                        ));
 
-        entity.addPoints(points);
-        entity = customerRepository.save(entity);
+                entity.addPoints(points);
+                entity = customerRepository.save(entity);
 
-        // 記錄點數交易
-        PointTransaction transaction = PointTransaction.builder()
-                .customerId(id)
-                .type("EARN")
-                .points(points)
-                .balanceAfter(entity.getPointBalance())
-                .description(description)
-                .build();
-        transaction.setTenantId(tenantId);
-        pointTransactionRepository.save(transaction);
+                // 記錄點數交易
+                PointTransaction transaction = PointTransaction.builder()
+                        .customerId(id)
+                        .type("EARN")
+                        .points(points)
+                        .balanceAfter(entity.getPointBalance())
+                        .description(description)
+                        .build();
+                transaction.setTenantId(tenantId);
+                pointTransactionRepository.save(transaction);
 
-        log.info("顧客點數增加成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
+                log.info("顧客點數增加成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
 
-        return customerMapper.toResponse(entity);
+                return customerMapper.toResponse(entity);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("點數增加樂觀鎖衝突，ID：{}，第 {} 次重試", id, attempt + 1);
+                if (attempt == MAX_RETRY - 1) {
+                    throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "系統繁忙，請稍後再試");
+                }
+            }
+        }
+        throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "系統繁忙，請稍後再試");
     }
 
     @Transactional
@@ -302,34 +315,44 @@ public class CustomerService {
 
         log.info("扣除顧客點數，ID：{}，點數：{}", id, points);
 
-        Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
-                ));
+        for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
+            try {
+                Customer entity = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                ErrorCode.CUSTOMER_NOT_FOUND, "找不到指定的顧客"
+                        ));
 
-        if (!entity.deductPoints(points)) {
-            throw new BusinessException(
-                    ErrorCode.POINT_INSUFFICIENT,
-                    "點數不足"
-            );
+                if (!entity.deductPoints(points)) {
+                    throw new BusinessException(
+                            ErrorCode.POINT_INSUFFICIENT,
+                            "點數不足"
+                    );
+                }
+
+                entity = customerRepository.save(entity);
+
+                // 記錄點數交易
+                PointTransaction transaction = PointTransaction.builder()
+                        .customerId(id)
+                        .type("REDEEM")
+                        .points(-points)
+                        .balanceAfter(entity.getPointBalance())
+                        .description(description)
+                        .build();
+                transaction.setTenantId(tenantId);
+                pointTransactionRepository.save(transaction);
+
+                log.info("顧客點數扣除成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
+
+                return customerMapper.toResponse(entity);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("點數扣除樂觀鎖衝突，ID：{}，第 {} 次重試", id, attempt + 1);
+                if (attempt == MAX_RETRY - 1) {
+                    throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "系統繁忙，請稍後再試");
+                }
+            }
         }
-
-        entity = customerRepository.save(entity);
-
-        // 記錄點數交易
-        PointTransaction transaction = PointTransaction.builder()
-                .customerId(id)
-                .type("REDEEM")
-                .points(-points)
-                .balanceAfter(entity.getPointBalance())
-                .description(description)
-                .build();
-        transaction.setTenantId(tenantId);
-        pointTransactionRepository.save(transaction);
-
-        log.info("顧客點數扣除成功，ID：{}，新餘額：{}", id, entity.getPointBalance());
-
-        return customerMapper.toResponse(entity);
+        throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "系統繁忙，請稍後再試");
     }
 
     // ========================================

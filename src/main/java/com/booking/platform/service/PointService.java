@@ -91,7 +91,10 @@ public class PointService {
                 .balance(tenant.getPointBalance())
                 .pendingTopUp(pendingTopUp)
                 .monthlyUsed(BigDecimal.ZERO)
-                .pushQuotaRemaining(tenant.getMonthlyPushQuota() - tenant.getMonthlyPushUsed())
+                .pushQuotaRemaining(
+                        (tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 0)
+                        - (tenant.getMonthlyPushUsed() != null ? tenant.getMonthlyPushUsed() : 0)
+                )
                 .build();
     }
 

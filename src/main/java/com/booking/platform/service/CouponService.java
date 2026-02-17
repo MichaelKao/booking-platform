@@ -608,11 +608,15 @@ public class CouponService {
     // 私有方法
     // ========================================
 
+    private static final int MAX_CODE_RETRIES = 100;
+
     private String generateCouponCode(String tenantId) {
-        String code;
-        do {
-            code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        } while (couponInstanceRepository.existsByTenantIdAndCodeAndDeletedAtIsNull(tenantId, code));
-        return code;
+        for (int i = 0; i < MAX_CODE_RETRIES; i++) {
+            String code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            if (!couponInstanceRepository.existsByTenantIdAndCodeAndDeletedAtIsNull(tenantId, code)) {
+                return code;
+            }
+        }
+        throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "無法生成唯一票券代碼，請稍後重試");
     }
 }

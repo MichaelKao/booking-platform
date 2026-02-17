@@ -151,6 +151,12 @@ public class EcpayService {
             return "0|Order Not Found";
         }
 
+        // 冪等性檢查：已處理過的付款直接回傳成功
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            log.info("付款已處理過，跳過重複回調，訂單編號：{}", merchantTradeNo);
+            return "1|OK";
+        }
+
         // ========================================
         // 3. 更新支付狀態
         // ========================================

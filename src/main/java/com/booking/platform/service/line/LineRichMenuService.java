@@ -478,6 +478,10 @@ public class LineRichMenuService {
                 return imageBytes;
             }
 
+            if (originalWidth <= 0 || originalHeight <= 0) {
+                throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "圖片尺寸無效");
+            }
+
             log.info("縮放圖片：{}x{} → {}x{}", originalWidth, originalHeight, MENU_WIDTH, MENU_HEIGHT);
 
             // 計算縮放比例（使用 cover 策略，填滿整個區域）

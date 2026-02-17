@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -117,7 +118,7 @@ public class ProductOrderService {
         long count = orderRepository.countTodayOrders(tenantId, startOfDay);
         BigDecimal revenue = orderRepository.sumTodayRevenue(tenantId, startOfDay);
 
-        return new TodayStats(count, revenue);
+        return new TodayStats(count, revenue != null ? revenue : BigDecimal.ZERO);
     }
 
     // ========================================
@@ -181,6 +182,9 @@ public class ProductOrderService {
         // 4. 建立訂單
         // ========================================
         BigDecimal unitPrice = product.getPrice();
+        if (unitPrice == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "商品價格未設定");
+        }
         BigDecimal totalAmount = unitPrice.multiply(BigDecimal.valueOf(quantity));
 
         ProductOrder order = ProductOrder.builder()
@@ -266,8 +270,8 @@ public class ProductOrderService {
                         ErrorCode.SYS_INTERNAL_ERROR, "找不到指定的訂單"
                 ));
 
-        if (order.getStatus() != ProductOrderStatus.CONFIRMED && order.getStatus() != ProductOrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "只能完成已確認或待處理的訂單");
+        if (order.getStatus() != ProductOrderStatus.CONFIRMED) {
+            throw new BusinessException(ErrorCode.SYS_INTERNAL_ERROR, "只能完成已確認的訂單");
         }
 
         order.pickup();
@@ -354,11 +358,9 @@ public class ProductOrderService {
      * 產生訂單編號
      */
     private String generateOrderNo(String tenantId) {
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        long count = orderRepository.countOrdersToday(tenantId, startOfDay);
-
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return "P" + dateStr + String.format("%04d", count + 1);
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return "P" + dateStr + uniqueSuffix;
     }
 
     /**

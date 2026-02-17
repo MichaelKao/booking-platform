@@ -418,6 +418,7 @@ function hideLoading() {
 function formatDate(date) {
     if (!date) return '-';
     const d = new Date(date);
+    if (isNaN(d.getTime())) return '-';
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -427,6 +428,7 @@ function formatDate(date) {
 function formatDateTime(datetime) {
     if (!datetime) return '-';
     const d = new Date(datetime);
+    if (isNaN(d.getTime())) return '-';
     return `${formatDate(d)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
@@ -439,6 +441,7 @@ function formatTime(time) {
         return time.substring(0, 5);
     }
     const d = new Date(time);
+    if (isNaN(d.getTime())) return '-';
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
@@ -544,7 +547,8 @@ function renderPagination(pageData, onPageClick, containerId = 'pagination') {
             e.preventDefault();
             const pageNum = parseInt(link.dataset.page);
             if (!isNaN(pageNum) && onPageClick) {
-                onPageClick(pageNum);
+                const safePage = Math.max(0, Math.min(pageNum, totalPages - 1));
+                onPageClick(safePage);
             }
         });
     });
