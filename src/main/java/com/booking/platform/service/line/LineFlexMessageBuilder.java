@@ -310,9 +310,16 @@ public class LineFlexMessageBuilder {
 
             // 圖片可點擊
             ObjectNode heroAction = objectMapper.createObjectNode();
-            heroAction.put("type", "postback");
-            heroAction.put("label", title.length() > 20 ? title.substring(0, 20) : title);
-            heroAction.put("data", "action=" + action);
+            String trimLabel = title.length() > 20 ? title.substring(0, 20) : title;
+            if (action.startsWith("http://") || action.startsWith("https://")) {
+                heroAction.put("type", "uri");
+                heroAction.put("label", trimLabel);
+                heroAction.put("uri", action);
+            } else {
+                heroAction.put("type", "postback");
+                heroAction.put("label", trimLabel);
+                heroAction.put("data", "action=" + action);
+            }
             hero.set("action", heroAction);
 
             bubble.set("hero", hero);
@@ -366,9 +373,16 @@ public class LineFlexMessageBuilder {
         button.put("height", "sm");
 
         ObjectNode btnAction = objectMapper.createObjectNode();
-        btnAction.put("type", "postback");
-        btnAction.put("label", buttonLabel.length() > 20 ? buttonLabel.substring(0, 20) : buttonLabel);
-        btnAction.put("data", "action=" + action);
+        String trimBtnLabel = buttonLabel.length() > 20 ? buttonLabel.substring(0, 20) : buttonLabel;
+        if (action.startsWith("http://") || action.startsWith("https://")) {
+            btnAction.put("type", "uri");
+            btnAction.put("label", trimBtnLabel);
+            btnAction.put("uri", action);
+        } else {
+            btnAction.put("type", "postback");
+            btnAction.put("label", trimBtnLabel);
+            btnAction.put("data", "action=" + action);
+        }
         button.set("action", btnAction);
         footerContents.add(button);
 

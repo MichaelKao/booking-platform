@@ -257,15 +257,24 @@
                 <!-- 模式切換 -->
                 <div class="alert alert-info small mb-3 py-2">
                     <i class="bi bi-info-circle me-1"></i>
-                    顧客<strong>輸入任何文字</strong>時，LINE Bot 回覆的主選單。可做成 <strong>7 張輪播卡片</strong>（左右滑動），每張卡片有獨立背景圖和按鈕。
+                    顧客<strong>輸入任何文字</strong>時，LINE Bot 回覆的主選單。可做成 <strong>1~12 張輪播卡片</strong>（左右滑動），每張卡片有獨立背景圖和按鈕。還可以<strong>插入廣告卡片</strong>（打開網址）。
                 </div>
 
                 <div class="row">
                     <!-- 左側：卡片設定 -->
                     <div class="col-lg-7">
 
-                        <!-- 7 張卡片編輯區 -->
+                        <!-- 卡片編輯區（1~12 張） -->
                         <div id="fmCardEditors"></div>
+                        <div class="text-center mb-3" id="fmAddCardWrap">
+                            <button class="btn btn-outline-success btn-sm" onclick="addFmCard()">
+                                <i class="bi bi-plus-lg me-1"></i>新增卡片
+                            </button>
+                            <button class="btn btn-outline-info btn-sm ms-2" onclick="addFmAdCard()">
+                                <i class="bi bi-megaphone me-1"></i>插入廣告卡片
+                            </button>
+                            <span class="text-muted small ms-2" id="fmCardCount"></span>
+                        </div>
 
                         <!-- 預約流程步驟自訂（收合） -->
                         <div class="card mb-3">
@@ -1272,6 +1281,10 @@
     // ================================================================
     // Flex 主選單狀態（輪播卡片模式）
     // ================================================================
+    const FM_ACTIONS = [
+        ...ACTIONS.filter(a=>a.v!=='flex_popup'),
+        { v:'open_url', l:'打開網址（廣告）', ic:'🔗' }
+    ];
     const FM_CARD_DEFAULTS = [
         { action:'start_booking',   color:'#1DB446', icon:'📅', title:'開始預約',  subtitle:'快速預約服務',     buttonLabel:'立即預約', imageUrl:'https://images.unsplash.com/photo-1560264280-88b68371db39?w=600&h=400&fit=crop', imageHeight:50 },
         { action:'view_bookings',   color:'#0066CC', icon:'📋', title:'我的預約',  subtitle:'查看或取消預約',    buttonLabel:'查看預約', imageUrl:'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600&h=400&fit=crop', imageHeight:50 },
@@ -1861,18 +1874,20 @@
             if (r.success && r.data) {
                 // 新格式（輪播卡片）
                 if (r.data.menuType === 'carousel' && r.data.cards) {
-                    r.data.cards.forEach((c, i) => {
-                        if (i < fmCards.length) {
-                            if (c.imageUrl !== undefined) fmCards[i].imageUrl = c.imageUrl;
-                            if (c.imageHeight !== undefined) fmCards[i].imageHeight = c.imageHeight;
-                            if (c.title) fmCards[i].title = c.title;
-                            if (c.subtitle !== undefined) fmCards[i].subtitle = c.subtitle;
-                            if (c.icon) fmCards[i].icon = c.icon;
-                            if (c.color) fmCards[i].color = c.color;
-                            if (c.action) fmCards[i].action = c.action;
-                            if (c.buttonLabel) fmCards[i].buttonLabel = c.buttonLabel;
-                            if (c.cardSize) fmCards[i].cardSize = c.cardSize;
-                        }
+                    fmCards = r.data.cards.map(c => {
+                        const isUrl = c.action && (c.action.startsWith('http://') || c.action.startsWith('https://'));
+                        return {
+                            imageUrl: c.imageUrl || '',
+                            imageHeight: c.imageHeight || 50,
+                            title: c.title || '功能',
+                            subtitle: c.subtitle || '',
+                            icon: c.icon || '📌',
+                            color: c.color || '#1DB446',
+                            action: isUrl ? 'open_url' : (c.action || 'start_booking'),
+                            actionUrl: isUrl ? c.action : undefined,
+                            buttonLabel: c.buttonLabel || '前往',
+                            cardSize: c.cardSize || 'auto'
+                        };
                     });
                 }
                 // 舊格式（按鈕）→ 自動轉換為卡片
@@ -1901,13 +1916,20 @@
         if (!c) return;
         c.innerHTML = '';
         fmCards.forEach((card, i) => {
+            const isUrlAction = card.action === 'open_url' || (card.action && card.action.startsWith('http'));
+            const actionVal = isUrlAction ? 'open_url' : card.action;
             const d = document.createElement('div');
             d.className = 'fm-card-editor';
             d.innerHTML = `
-                <div class="fm-card-editor-header" onclick="toggleFmCard(this)">
+                <div class="fm-card-editor-header" style="cursor:pointer">
                     <div class="fm-card-editor-num" style="background:${card.color}">${i+1}</div>
-                    <span class="fm-card-editor-title">${esc(card.icon)} ${esc(card.title)}</span>
-                    <i class="bi bi-chevron-down"></i>
+                    <span class="fm-card-editor-title" onclick="toggleFmCard(this.closest('.fm-card-editor-header'))">${esc(card.icon)} ${esc(card.title)}${isUrlAction?' <span class="badge bg-info">廣告</span>':''}</span>
+                    <span class="ms-auto d-flex gap-1 align-items-center">
+                        ${i>0?`<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="moveFmCard(${i},-1)" title="上移"><i class="bi bi-arrow-up"></i></button>`:''}
+                        ${i<fmCards.length-1?`<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="moveFmCard(${i},1)" title="下移"><i class="bi bi-arrow-down"></i></button>`:''}
+                        ${fmCards.length>1?`<button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeFmCard(${i})" title="刪除"><i class="bi bi-trash"></i></button>`:''}
+                        <i class="bi bi-chevron-down" onclick="toggleFmCard(this.closest('.fm-card-editor-header'))"></i>
+                    </span>
                 </div>
                 <div class="fm-card-editor-body${i>0?' collapsed':''}">
                     <div class="row g-2">
@@ -1963,20 +1985,21 @@
                         <div class="col-5">
                             <label class="form-label small fw-bold mb-1">點擊動作</label>
                             <select class="form-select form-select-sm" data-ci="${i}" data-f="action">
-                                ${ACTIONS.filter(a=>a.v!=='flex_popup').map(a=>`<option value="${a.v}" ${a.v===card.action?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
+                                ${FM_ACTIONS.map(a=>`<option value="${a.v}" ${a.v===actionVal?'selected':''}>${a.ic} ${a.l}</option>`).join('')}
                             </select>
                         </div>
+                        ${isUrlAction?`<div class="col-12">
+                            <label class="form-label small fw-bold mb-1"><i class="bi bi-link-45deg me-1"></i>網址 URL</label>
+                            <input type="url" class="form-control form-control-sm" data-ci="${i}" data-f="actionUrl" value="${esc(card.actionUrl||card.action||'')}" placeholder="https://example.com">
+                        </div>`:''}
                     </div>
                 </div>
             `;
             // 綁定所有 input/select 的即時更新
             d.querySelectorAll('input,select').forEach(inp => {
-                if (inp.dataset.f === 'uploadCardImg') return; // 檔案上傳另外處理
-                const ev = inp.type === 'range' || inp.type === 'color' ? 'input' : 'change';
+                if (inp.dataset.f === 'uploadCardImg') return;
                 inp.addEventListener('input', e => onFmCardFieldChange(e));
-                if (ev === 'change' && inp.type !== 'range' && inp.type !== 'color') {
-                    inp.addEventListener('change', e => onFmCardFieldChange(e));
-                }
+                if (inp.tagName === 'SELECT') inp.addEventListener('change', e => onFmCardFieldChange(e));
             });
             // 綁定檔案上傳
             const uploadInput = d.querySelector('[data-f="uploadCardImg"]');
@@ -1990,6 +2013,46 @@
             }
             c.appendChild(d);
         });
+        // 更新卡片數量顯示
+        const countEl = document.getElementById('fmCardCount');
+        if (countEl) countEl.textContent = `${fmCards.length} / 12 張`;
+        const addWrap = document.getElementById('fmAddCardWrap');
+        if (addWrap) addWrap.querySelector('.btn-outline-success').disabled = fmCards.length >= 12;
+        if (addWrap) addWrap.querySelector('.btn-outline-info').disabled = fmCards.length >= 12;
+    }
+
+    function addFmCard() {
+        if (fmCards.length >= 12) { showWarning('最多 12 張卡片'); return; }
+        fmCards.push({
+            action:'start_booking', color:'#1DB446', icon:'📅',
+            title:'新卡片', subtitle:'點擊設定內容',
+            buttonLabel:'前往', imageUrl:'', imageHeight:50, cardSize:'auto'
+        });
+        renderFmCardEditors(); updateFmCarouselPreview();
+    }
+
+    function addFmAdCard() {
+        if (fmCards.length >= 12) { showWarning('最多 12 張卡片'); return; }
+        fmCards.push({
+            action:'open_url', color:'#FF5722', icon:'📢',
+            title:'廣告卡片', subtitle:'點擊查看詳情',
+            buttonLabel:'了解更多', imageUrl:'', imageHeight:60, cardSize:'auto',
+            actionUrl: 'https://'
+        });
+        renderFmCardEditors(); updateFmCarouselPreview();
+    }
+
+    function removeFmCard(idx) {
+        if (fmCards.length <= 1) { showWarning('至少需要 1 張卡片'); return; }
+        fmCards.splice(idx, 1);
+        renderFmCardEditors(); updateFmCarouselPreview();
+    }
+
+    function moveFmCard(idx, dir) {
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= fmCards.length) return;
+        [fmCards[idx], fmCards[newIdx]] = [fmCards[newIdx], fmCards[idx]];
+        renderFmCardEditors(); updateFmCarouselPreview();
     }
 
     function onFmCardFieldChange(e) {
@@ -1998,6 +2061,26 @@
         if (isNaN(ci) || !f) return;
 
         const val = e.target.type === 'range' ? parseInt(e.target.value) : e.target.value;
+
+        // 動作切換到「打開網址」時，保留 URL
+        if (f === 'action' && val === 'open_url') {
+            fmCards[ci].action = 'open_url';
+            fmCards[ci].actionUrl = fmCards[ci].actionUrl || 'https://';
+            renderFmCardEditors(); updateFmCarouselPreview();
+            return;
+        }
+        if (f === 'action' && val !== 'open_url') {
+            fmCards[ci].action = val;
+            delete fmCards[ci].actionUrl;
+            renderFmCardEditors(); updateFmCarouselPreview();
+            return;
+        }
+        if (f === 'actionUrl') {
+            fmCards[ci].actionUrl = val;
+            updateFmCarouselPreview();
+            return;
+        }
+
         fmCards[ci][f] = val;
 
         // 即時更新
@@ -2066,9 +2149,10 @@
 
     function toggleFmCard(headerEl) {
         const body = headerEl.nextElementSibling;
+        if (!body || !body.classList.contains('fm-card-editor-body')) return;
         body.classList.toggle('collapsed');
-        const icon = headerEl.querySelector('.bi');
-        icon.className = body.classList.contains('collapsed') ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+        const chevron = headerEl.querySelector('.bi-chevron-down, .bi-chevron-up');
+        if (chevron) chevron.className = body.classList.contains('collapsed') ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
     }
 
     function updateFmCarouselPreview() {
@@ -2092,14 +2176,15 @@
                 heroHtml = `<div class="fm-card-prev-no-img">無背景圖</div>`;
             }
 
+            const isAdCard = card.action === 'open_url' || (card.action && card.action.startsWith('http'));
             d.innerHTML = `
                 ${heroHtml}
                 <div class="fm-card-prev-body">
-                    <div class="fm-card-prev-title">${esc(card.icon)} ${esc(card.title)}</div>
+                    <div class="fm-card-prev-title">${esc(card.icon)} ${esc(card.title)}${isAdCard?'<span style="font-size:10px;background:#FF5722;color:#fff;padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle">AD</span>':''}</div>
                     ${card.subtitle ? `<div class="fm-card-prev-sub">${esc(card.subtitle)}</div>` : ''}
                 </div>
                 <div class="fm-card-prev-footer">
-                    <span class="fm-card-prev-btn" style="background:${card.color}">${esc(card.buttonLabel||'前往')}</span>
+                    <span class="fm-card-prev-btn" style="background:${card.color}">${esc(card.buttonLabel||'前往')}${isAdCard?' <i class="bi bi-box-arrow-up-right" style="font-size:10px"></i>':''}</span>
                 </div>
             `;
             d.addEventListener('click', () => {
@@ -2460,7 +2545,7 @@
                 subtitle: c.subtitle || '',
                 icon: c.icon,
                 color: c.color,
-                action: c.action,
+                action: c.action === 'open_url' ? (c.actionUrl || '') : c.action,
                 buttonLabel: c.buttonLabel || '前往',
                 cardSize: c.cardSize || 'auto'
             })),
