@@ -228,39 +228,15 @@ public class LineFlexMessageBuilder {
 
         ArrayNode footerContents = objectMapper.createArrayNode();
 
-        // 按鈕 0~2：全寬按鈕（開始預約、我的預約、瀏覽商品）
-        for (int i = 0; i < 3; i++) {
-            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
-            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
-            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
-            String subtitle = getButtonField(buttonsConfig, i, "subtitle", defaultButtons[i][4]);
-            footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[i][0], color));
-        }
-
-        // 按鈕 3~4：票券並排按鈕
-        ObjectNode couponRow = objectMapper.createObjectNode();
-        couponRow.put("type", "box");
-        couponRow.put("layout", "horizontal");
-        couponRow.put("spacing", "sm");
-        couponRow.put("margin", "sm");
-
-        ArrayNode couponRowContents = objectMapper.createArrayNode();
-        for (int i = 3; i <= 4; i++) {
-            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
-            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
-            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
-            couponRowContents.add(createCompactMenuButton(icon + " " + title, "action=" + defaultButtons[i][0], color));
-        }
-        couponRow.set("contents", couponRowContents);
-        footerContents.add(couponRow);
-
-        // 按鈕 5~6：會員資訊、聯絡店家
-        for (int i = 5; i < 7; i++) {
-            String color = getButtonField(buttonsConfig, i, "color", defaultButtons[i][1]);
-            String icon = getButtonField(buttonsConfig, i, "icon", defaultButtons[i][2]);
-            String title = getButtonField(buttonsConfig, i, "title", defaultButtons[i][3]);
-            String subtitle = getButtonField(buttonsConfig, i, "subtitle", defaultButtons[i][4]);
-            footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[i][0], color));
+        // 取得可見按鈕並按 order 排序
+        List<int[]> visibleIndices = getVisibleButtonIndices(buttonsConfig, defaultButtons.length);
+        for (int[] entry : visibleIndices) {
+            int originalIndex = entry[0];
+            String color = getButtonField(buttonsConfig, originalIndex, "color", defaultButtons[originalIndex][1]);
+            String icon = getButtonField(buttonsConfig, originalIndex, "icon", defaultButtons[originalIndex][2]);
+            String title = getButtonField(buttonsConfig, originalIndex, "title", defaultButtons[originalIndex][3]);
+            String subtitle = getButtonField(buttonsConfig, originalIndex, "subtitle", defaultButtons[originalIndex][4]);
+            footerContents.add(createMenuButton(icon + " " + title, subtitle, "action=" + defaultButtons[originalIndex][0], color));
         }
 
         footer.set("contents", footerContents);
@@ -639,6 +615,39 @@ public class LineFlexMessageBuilder {
 
         header.set("contents", headerContents);
         bubble.set("header", header);
+    }
+
+    /**
+     * 取得可見按鈕索引並按 order 排序
+     *
+     * @param buttonsConfig 按鈕配置 JSON 陣列
+     * @param totalButtons  預設按鈕總數
+     * @return 排序後的 [originalIndex, order] 列表
+     */
+    private List<int[]> getVisibleButtonIndices(JsonNode buttonsConfig, int totalButtons) {
+        List<int[]> result = new ArrayList<>();
+        for (int i = 0; i < totalButtons; i++) {
+            boolean visible = true;
+            int order = i;
+            if (buttonsConfig != null && buttonsConfig.isArray() && i < buttonsConfig.size()) {
+                JsonNode btn = buttonsConfig.get(i);
+                if (btn.has("visible") && !btn.get("visible").asBoolean(true)) {
+                    visible = false;
+                }
+                if (btn.has("order")) {
+                    order = btn.get("order").asInt(i);
+                }
+            }
+            if (visible) {
+                result.add(new int[]{i, order});
+            }
+        }
+        // 至少保留 1 個按鈕
+        if (result.isEmpty()) {
+            result.add(new int[]{0, 0});
+        }
+        result.sort((a, b) -> Integer.compare(a[1], b[1]));
+        return result;
     }
 
     /**

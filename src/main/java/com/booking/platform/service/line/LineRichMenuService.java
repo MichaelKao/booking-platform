@@ -2854,6 +2854,11 @@ public class LineRichMenuService {
                     if (iconBytes != null && iconBytes.length > 0) {
                         try {
                             BufferedImage iconImg = ImageIO.read(new java.io.ByteArrayInputStream(iconBytes));
+
+                            // 去背處理
+                            if (iconImg != null && cellConfig != null && cellConfig.path("removeBackground").asBoolean(false)) {
+                                iconImg = removeBackground(iconImg, 30);
+                            }
                             if (iconImg != null) {
                                 String iconShape = cellConfig != null ? cellConfig.path("iconShape").asText("circle") : "circle";
                                 String iconScale = cellConfig != null ? cellConfig.path("iconScale").asText("small") : "small";
@@ -3157,5 +3162,123 @@ public class LineRichMenuService {
             lineConfigRepository.save(config);
         });
         log.info("儲存進階 Rich Menu 配置草稿，租戶：{}", tenantId);
+    }
+
+    // ========================================
+    // 圖示去背功能
+    // ========================================
+
+    /**
+     * 移除圖片背景（Flood Fill 從四角偵測背景色）
+     *
+     * @param img       原始圖片
+     * @param tolerance 容差值（0-255，預設 30）
+     * @return 去背後的 ARGB 圖片
+     */
+    private BufferedImage removeBackground(BufferedImage img, int tolerance) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+
+        // 建立 ARGB canvas
+        BufferedImage result = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = result.createGraphics();
+        g.drawImage(img, 0, 0, null);
+        g.dispose();
+
+        // 偵測背景色（四角平均）
+        int bgRgb = detectBackgroundColor(img);
+        if (bgRgb == -1) {
+            return result;
+        }
+
+        // 從四角 BFS flood fill
+        boolean[][] visited = new boolean[w][h];
+        floodFill(result, 0, 0, bgRgb, tolerance, visited);
+        floodFill(result, w - 1, 0, bgRgb, tolerance, visited);
+        floodFill(result, 0, h - 1, bgRgb, tolerance, visited);
+        floodFill(result, w - 1, h - 1, bgRgb, tolerance, visited);
+
+        return result;
+    }
+
+    /**
+     * 偵測背景色（取四角像素，若相似則判定為背景色）
+     *
+     * @return 背景色 RGB 值，若四角差異太大則回傳 -1
+     */
+    private int detectBackgroundColor(BufferedImage img) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+
+        int[] corners = {
+                img.getRGB(0, 0),
+                img.getRGB(w - 1, 0),
+                img.getRGB(0, h - 1),
+                img.getRGB(w - 1, h - 1)
+        };
+
+        // 檢查四角是否顏色相似
+        for (int i = 1; i < corners.length; i++) {
+            if (colorDistance(corners[0], corners[i]) > 60) {
+                return -1;
+            }
+        }
+
+        // 回傳四角平均色
+        int rSum = 0, gSum = 0, bSum = 0;
+        for (int c : corners) {
+            rSum += (c >> 16) & 0xFF;
+            gSum += (c >> 8) & 0xFF;
+            bSum += c & 0xFF;
+        }
+        return ((rSum / 4) << 16) | ((gSum / 4) << 8) | (bSum / 4);
+    }
+
+    /**
+     * BFS Flood Fill：將匹配背景色的像素設為透明
+     */
+    private void floodFill(BufferedImage img, int startX, int startY, int bgRgb, int tolerance, boolean[][] visited) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+
+        java.util.Queue<int[]> queue = new java.util.LinkedList<>();
+        queue.add(new int[]{startX, startY});
+
+        int[] dx = {0, 0, 1, -1};
+        int[] dy = {1, -1, 0, 0};
+
+        while (!queue.isEmpty()) {
+            int[] pos = queue.poll();
+            int x = pos[0], y = pos[1];
+
+            if (x < 0 || x >= w || y < 0 || y >= h || visited[x][y]) continue;
+            visited[x][y] = true;
+
+            int pixelRgb = img.getRGB(x, y);
+            double dist = colorDistance(pixelRgb, bgRgb);
+
+            if (dist <= tolerance) {
+                // 完全透明
+                img.setRGB(x, y, 0x00000000);
+                for (int d = 0; d < 4; d++) {
+                    queue.add(new int[]{x + dx[d], y + dy[d]});
+                }
+            } else if (dist <= tolerance * 2) {
+                // 邊緣平滑：根據色差漸變 alpha
+                int alpha = (int) (255 * (dist - tolerance) / tolerance);
+                alpha = Math.min(255, Math.max(0, alpha));
+                int newPixel = (alpha << 24) | (pixelRgb & 0x00FFFFFF);
+                img.setRGB(x, y, newPixel);
+            }
+        }
+    }
+
+    /**
+     * 計算兩個 RGB 顏色的歐氏距離
+     */
+    private double colorDistance(int rgb1, int rgb2) {
+        int r1 = (rgb1 >> 16) & 0xFF, g1 = (rgb1 >> 8) & 0xFF, b1 = rgb1 & 0xFF;
+        int r2 = (rgb2 >> 16) & 0xFF, g2 = (rgb2 >> 8) & 0xFF, b2 = rgb2 & 0xFF;
+        return Math.sqrt((r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2));
     }
 }

@@ -606,34 +606,7 @@
                                                 <div class="flex-menu-tip-text">點擊下方按鈕開始使用</div>
                                             </div>
                                             <div class="flex-menu-buttons" id="flexMenuPreviewButtons">
-                                                <div class="flex-menu-btn full" data-index="0" style="background:#1DB446;">
-                                                    <span class="flex-menu-btn-title">📅 開始預約</span>
-                                                    <span class="flex-menu-btn-sub">快速預約服務</span>
-                                                </div>
-                                                <div class="flex-menu-btn full" data-index="1" style="background:#0066CC;">
-                                                    <span class="flex-menu-btn-title">📋 我的預約</span>
-                                                    <span class="flex-menu-btn-sub">查看或取消預約</span>
-                                                </div>
-                                                <div class="flex-menu-btn full" data-index="2" style="background:#FF9800;">
-                                                    <span class="flex-menu-btn-title">🛍️ 瀏覽商品</span>
-                                                    <span class="flex-menu-btn-sub">購買優惠商品</span>
-                                                </div>
-                                                <div class="flex-menu-btn-row">
-                                                    <div class="flex-menu-btn compact" data-index="3" style="background:#E91E63;">
-                                                        <span class="flex-menu-btn-title">🎁 領取票券</span>
-                                                    </div>
-                                                    <div class="flex-menu-btn compact" data-index="4" style="background:#9C27B0;">
-                                                        <span class="flex-menu-btn-title">🎫 我的票券</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-menu-btn full" data-index="5" style="background:#673AB7;">
-                                                    <span class="flex-menu-btn-title">👤 會員資訊</span>
-                                                    <span class="flex-menu-btn-sub">查看點數與等級</span>
-                                                </div>
-                                                <div class="flex-menu-btn full" data-index="6" style="background:#5C6BC0;">
-                                                    <span class="flex-menu-btn-title">📞 聯絡店家</span>
-                                                    <span class="flex-menu-btn-sub">地址、電話、營業時間</span>
-                                                </div>
+                                                <!-- 按鈕由 updateFlexMenuPreview() 動態生成 -->
                                             </div>
                                         </div>
                                     </div>
@@ -1719,13 +1692,13 @@
         // ========================================
 
         const FLEX_DEFAULT_BUTTONS = [
-            { key: 'start_booking',   color: '#1DB446', icon: '📅', title: '開始預約',  subtitle: '快速預約服務' },
-            { key: 'view_bookings',   color: '#0066CC', icon: '📋', title: '我的預約',  subtitle: '查看或取消預約' },
-            { key: 'start_shopping',  color: '#FF9800', icon: '🛍️', title: '瀏覽商品',  subtitle: '購買優惠商品' },
-            { key: 'view_coupons',    color: '#E91E63', icon: '🎁', title: '領取票券',  subtitle: '' },
-            { key: 'view_my_coupons', color: '#9C27B0', icon: '🎫', title: '我的票券',  subtitle: '' },
-            { key: 'view_member_info',color: '#673AB7', icon: '👤', title: '會員資訊',  subtitle: '查看點數與等級' },
-            { key: 'contact_shop',    color: '#5C6BC0', icon: '📞', title: '聯絡店家',  subtitle: '地址、電話、營業時間' }
+            { key: 'start_booking',   color: '#1DB446', icon: '📅', title: '開始預約',  subtitle: '快速預約服務', visible: true, order: 0 },
+            { key: 'view_bookings',   color: '#0066CC', icon: '📋', title: '我的預約',  subtitle: '查看或取消預約', visible: true, order: 1 },
+            { key: 'start_shopping',  color: '#FF9800', icon: '🛍️', title: '瀏覽商品',  subtitle: '購買優惠商品', visible: true, order: 2 },
+            { key: 'view_coupons',    color: '#E91E63', icon: '🎁', title: '領取票券',  subtitle: '', visible: true, order: 3 },
+            { key: 'view_my_coupons', color: '#9C27B0', icon: '🎫', title: '我的票券',  subtitle: '', visible: true, order: 4 },
+            { key: 'view_member_info',color: '#673AB7', icon: '👤', title: '會員資訊',  subtitle: '查看點數與等級', visible: true, order: 5 },
+            { key: 'contact_shop',    color: '#5C6BC0', icon: '📞', title: '聯絡店家',  subtitle: '地址、電話、營業時間', visible: true, order: 6 }
         ];
 
         let flexMenuConfig = {
@@ -1736,25 +1709,53 @@
             buttons: JSON.parse(JSON.stringify(FLEX_DEFAULT_BUTTONS))
         };
 
+        // 拖放狀態
+        let flexDragIndex = -1;
+
         // 初始化按鈕設定列表
         function renderFlexButtonSettings() {
             const container = document.getElementById('flexButtonSettings');
+
+            // 按 order 排序顯示
+            const sorted = flexMenuConfig.buttons.map((btn, i) => ({...btn, _origIdx: i}))
+                .sort((a, b) => (a.order ?? a._origIdx) - (b.order ?? b._origIdx));
+
             let html = '';
-            flexMenuConfig.buttons.forEach((btn, i) => {
-                const isCompact = (i === 3 || i === 4);
+            sorted.forEach((btn, sortIdx) => {
+                const i = btn._origIdx;
+                const isVisible = btn.visible !== false;
                 html += `
-                <div class="flex-btn-setting border rounded p-2 mb-2">
+                <div class="flex-btn-setting border rounded p-2 mb-2 ${!isVisible ? 'opacity-50' : ''}" draggable="true" data-sort="${sortIdx}" data-index="${i}"
+                    ondragstart="onFlexBtnDragStart(event, ${sortIdx})" ondragover="onFlexBtnDragOver(event)" ondrop="onFlexBtnDrop(event, ${sortIdx})" ondragend="onFlexBtnDragEnd(event)">
                     <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="text-muted" style="cursor:grab;font-size:16px;" title="拖曳排序">↕</span>
+                        <div class="form-check form-switch mb-0" style="min-width:36px;">
+                            <input type="checkbox" class="form-check-input flex-btn-visible" data-index="${i}" ${isVisible ? 'checked' : ''} title="顯示/隱藏">
+                        </div>
                         <input type="color" class="form-control-color flex-btn-color" data-index="${i}" value="${btn.color}" style="width:30px;height:28px;border:1px solid #ccc;border-radius:4px;padding:0;">
                         <input type="text" class="form-control form-control-sm flex-btn-icon" data-index="${i}" value="${btn.icon}" style="width:42px;text-align:center;" maxlength="4">
                         <input type="text" class="form-control form-control-sm flex-btn-title" data-index="${i}" value="${btn.title}" style="flex:1;" maxlength="10">
                     </div>
-                    ${!isCompact ? `<input type="text" class="form-control form-control-sm flex-btn-subtitle" data-index="${i}" value="${btn.subtitle || ''}" placeholder="副標題（選填）" maxlength="20">` : ''}
+                    <input type="text" class="form-control form-control-sm flex-btn-subtitle" data-index="${i}" value="${btn.subtitle || ''}" placeholder="副標題（選填）" maxlength="20">
                 </div>`;
             });
             container.innerHTML = html;
 
             // 綁定事件
+            container.querySelectorAll('.flex-btn-visible').forEach(el => {
+                el.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    const visibleCount = flexMenuConfig.buttons.filter(b => b.visible !== false).length;
+                    if (!e.target.checked && visibleCount <= 1) {
+                        e.target.checked = true;
+                        showWarning('至少需要保留 1 個按鈕');
+                        return;
+                    }
+                    flexMenuConfig.buttons[idx].visible = e.target.checked;
+                    renderFlexButtonSettings();
+                    updateFlexMenuPreview();
+                });
+            });
             container.querySelectorAll('.flex-btn-color').forEach(el => {
                 el.addEventListener('input', (e) => {
                     const idx = parseInt(e.target.dataset.index);
@@ -1785,6 +1786,41 @@
             });
         }
 
+        // 拖放排序
+        function onFlexBtnDragStart(e, sortIdx) {
+            flexDragIndex = sortIdx;
+            e.currentTarget.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        function onFlexBtnDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        function onFlexBtnDrop(e, targetSortIdx) {
+            e.preventDefault();
+            if (flexDragIndex === targetSortIdx) return;
+
+            // 重新計算 order 值
+            const sorted = flexMenuConfig.buttons.map((btn, i) => ({idx: i, order: btn.order ?? i}))
+                .sort((a, b) => a.order - b.order);
+
+            // 移動元素
+            const [moved] = sorted.splice(flexDragIndex, 1);
+            sorted.splice(targetSortIdx, 0, moved);
+
+            // 更新 order
+            sorted.forEach((item, newOrder) => {
+                flexMenuConfig.buttons[item.idx].order = newOrder;
+            });
+
+            renderFlexButtonSettings();
+            updateFlexMenuPreview();
+        }
+        function onFlexBtnDragEnd(e) {
+            e.currentTarget.style.opacity = '1';
+            flexDragIndex = -1;
+        }
+
         // 更新預覽
         function updateFlexMenuPreview() {
             // Header
@@ -1797,19 +1833,21 @@
             const tipEl = document.getElementById('flexMenuPreviewTip');
             tipEl.style.display = flexMenuConfig.showTip ? '' : 'none';
 
-            // 按鈕
-            const btns = document.querySelectorAll('#flexMenuPreviewButtons .flex-menu-btn');
-            btns.forEach(btn => {
-                const idx = parseInt(btn.dataset.index);
-                if (idx >= 0 && idx < flexMenuConfig.buttons.length) {
-                    const cfg = flexMenuConfig.buttons[idx];
-                    btn.style.backgroundColor = cfg.color;
-                    const titleEl = btn.querySelector('.flex-menu-btn-title');
-                    if (titleEl) titleEl.textContent = cfg.icon + ' ' + cfg.title;
-                    const subEl = btn.querySelector('.flex-menu-btn-sub');
-                    if (subEl) subEl.textContent = cfg.subtitle || '';
-                }
+            // 動態生成按鈕預覽（過濾隱藏、按 order 排序）
+            const container = document.getElementById('flexMenuPreviewButtons');
+            const visibleBtns = flexMenuConfig.buttons
+                .map((btn, i) => ({...btn, _idx: i}))
+                .filter(btn => btn.visible !== false)
+                .sort((a, b) => (a.order ?? a._idx) - (b.order ?? b._idx));
+
+            let html = '';
+            visibleBtns.forEach(cfg => {
+                const sub = cfg.subtitle ? `<span class="flex-menu-btn-sub">${cfg.subtitle}</span>` : '';
+                html += `<div class="flex-menu-btn full" data-index="${cfg._idx}" style="background:${cfg.color};">
+                    <span class="flex-menu-btn-title">${cfg.icon} ${cfg.title}</span>${sub}
+                </div>`;
             });
+            container.innerHTML = html;
         }
 
         // Header 顏色控制
@@ -1868,6 +1906,8 @@
                                 if (btn.icon) flexMenuConfig.buttons[i].icon = btn.icon;
                                 if (btn.title) flexMenuConfig.buttons[i].title = btn.title;
                                 if (btn.subtitle !== undefined) flexMenuConfig.buttons[i].subtitle = btn.subtitle;
+                                if (btn.visible !== undefined) flexMenuConfig.buttons[i].visible = btn.visible;
+                                if (btn.order !== undefined) flexMenuConfig.buttons[i].order = btn.order;
                             }
                         });
                     }
@@ -2240,15 +2280,29 @@
             const container = document.getElementById('advCellSettings');
             const cellCount = layoutCellCounts[advConfig.layout] || 7;
 
+            // 預設 cell 標籤和動作（對應 Rich Menu 7 格）
+            const defaultCellLabels = [
+                { label: '開始預約', action: 'start_booking' },
+                { label: '我的預約', action: 'view_bookings' },
+                { label: '瀏覽商品', action: 'start_shopping' },
+                { label: '領取票券', action: 'view_coupons' },
+                { label: '我的票券', action: 'view_my_coupons' },
+                { label: '會員資訊', action: 'view_member_info' },
+                { label: '聯絡店家', action: 'contact_shop' }
+            ];
+
             // 確保 cells 陣列足夠
             while (advConfig.cells.length < cellCount) {
+                const ci = advConfig.cells.length;
+                const def = defaultCellLabels[ci] || { label: '', action: 'main_menu' };
                 advConfig.cells.push({
-                    index: advConfig.cells.length,
-                    label: '',
+                    index: ci,
+                    label: def.label,
                     labelColor: '#FFFFFF',
                     hasIcon: false,
                     iconShape: 'circle',
-                    action: { type: 'postback', data: 'action=main_menu' },
+                    removeBackground: true,
+                    action: { type: 'postback', data: 'action=' + def.action },
                     flexPopup: null
                 });
             }
@@ -2259,6 +2313,7 @@
                 const actionValue = cell.action?.type === 'flex_popup' ? 'flex_popup' : (cell.action?.data?.replace('action=', '') || 'main_menu');
                 const hasFlexPopup = !!advFlexPopups[i];
 
+                const removeBg = cell.removeBackground || false;
                 html += `
                 <div class="border rounded p-2 mb-2">
                     <div class="d-flex align-items-center gap-1 mb-1">
@@ -2274,6 +2329,12 @@
                         <select class="form-select form-select-sm adv-cell-action" data-index="${i}" style="width:110px;" onchange="onAdvActionChange(${i}, this.value)">
                             ${advActionOptions.map(opt => `<option value="${opt.value}" ${actionValue === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                         </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <div class="form-check form-switch mb-0">
+                            <input type="checkbox" class="form-check-input adv-cell-remove-bg" data-index="${i}" ${removeBg ? 'checked' : ''} id="advRemoveBg_${i}">
+                            <label class="form-check-label small text-muted" for="advRemoveBg_${i}">圖示去背</label>
+                        </div>
                     </div>
                     <div class="mt-1 ${actionValue === 'flex_popup' ? '' : 'd-none'}" id="advFlexPopupBtn_${i}">
                         <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="openFlexPopupEditor(${i})">
@@ -2316,6 +2377,12 @@
                         delete advCellIconDataUrls[idx];
                         updateAdvancedPreview();
                     }
+                });
+            });
+            container.querySelectorAll('.adv-cell-remove-bg').forEach(el => {
+                el.addEventListener('change', e => {
+                    const idx = parseInt(e.target.dataset.index);
+                    advConfig.cells[idx].removeBackground = e.target.checked;
                 });
             });
         }
