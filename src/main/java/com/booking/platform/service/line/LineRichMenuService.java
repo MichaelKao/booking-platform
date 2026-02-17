@@ -1297,19 +1297,39 @@ public class LineRichMenuService {
                 BACKGROUND_COLOR
         );
 
-        // 設定抗鋸齒
+        // 高品質渲染
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        // 填充背景
-        g2d.setColor(themeColor);
+        // ========================================
+        // 漸層背景（深 → 淺）
+        // ========================================
+        int tr = themeColor.getRed(), tg = themeColor.getGreen(), tb = themeColor.getBlue();
+        Color darkColor = new Color(
+                Math.max(0, tr - 30), Math.max(0, tg - 30), Math.max(0, tb - 30));
+        Color lightColor = new Color(
+                Math.min(255, tr + 20), Math.min(255, tg + 20), Math.min(255, tb + 20));
+        GradientPaint bgGradient = new GradientPaint(
+                0, 0, darkColor, MENU_WIDTH, MENU_HEIGHT, lightColor);
+        g2d.setPaint(bgGradient);
         g2d.fillRect(0, 0, MENU_WIDTH, MENU_HEIGHT);
+
+        // ========================================
+        // 裝飾圓點底紋
+        // ========================================
+        g2d.setColor(new Color(255, 255, 255, 12));
+        for (int x = 20; x < MENU_WIDTH; x += 50) {
+            for (int y = 20; y < MENU_HEIGHT; y += 50) {
+                g2d.fillOval(x, y, 6, 6);
+            }
+        }
 
         // 取得佈局區域
         int[][] layoutAreas = getLayoutAreas(DEFAULT_LAYOUT);
 
-        // 繪製格線（淡色）
-        g2d.setColor(new Color(255, 255, 255, 30));
+        // 繪製格線（淡色光暈）
+        g2d.setColor(new Color(255, 255, 255, 25));
         g2d.setStroke(new BasicStroke(2));
         drawGridLines(g2d, layoutAreas);
 
@@ -2342,24 +2362,50 @@ public class LineRichMenuService {
 
         // 根據格子大小調整圖示和文字尺寸
         int iconSize = Math.min(cellW, cellH) / 5;
-        int circleSize = iconSize * 2;
+        int circleSize = (int) (iconSize * 2.4);
         int fontSize = Math.max(36, Math.min(72, cellW / 12));
 
-        // 繪製圖示背景圓圈
-        g2d.setColor(ICON_BG_COLOR);
-        g2d.fillOval(centerX - circleSize / 2, centerY - circleSize / 2 - iconSize / 2, circleSize, circleSize);
+        int iconCenterY = centerY - iconSize / 2;
 
-        // 繪製向量圖示
+        // ── 外層光暈圓圈 ──
+        g2d.setColor(new Color(255, 255, 255, 18));
+        g2d.fillOval(centerX - circleSize / 2 - 8, iconCenterY - circleSize / 2 - 8,
+                circleSize + 16, circleSize + 16);
+
+        // ── 圓形漸層背景（半透明白 → 更透明）──
+        GradientPaint iconBg = new GradientPaint(
+                centerX, iconCenterY - circleSize / 2, new Color(255, 255, 255, 80),
+                centerX, iconCenterY + circleSize / 2, new Color(255, 255, 255, 30));
+        g2d.setPaint(iconBg);
+        g2d.fillOval(centerX - circleSize / 2, iconCenterY - circleSize / 2,
+                circleSize, circleSize);
+
+        // ── 圓圈邊框 ──
+        g2d.setColor(new Color(255, 255, 255, 50));
+        g2d.setStroke(new BasicStroke(2.5f));
+        g2d.drawOval(centerX - circleSize / 2, iconCenterY - circleSize / 2,
+                circleSize, circleSize);
+
+        // ── 繪製向量圖示 ──
         g2d.setColor(TEXT_COLOR);
-        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, centerY - iconSize / 4, iconSize);
+        g2d.setStroke(new BasicStroke(Math.max(6, iconSize / 8), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        drawIcon(g2d, MENU_ICON_TYPES[index], centerX, iconCenterY, iconSize);
 
-        // 繪製文字
+        // ── 繪製文字（帶陰影）──
         Font cellFont = textFont.deriveFont((float) fontSize);
         g2d.setFont(cellFont);
         FontMetrics fm = g2d.getFontMetrics();
         String text = MENU_ITEMS[index][0];
         int textWidth = fm.stringWidth(text);
-        g2d.drawString(text, centerX - textWidth / 2, centerY + circleSize / 2 + fm.getAscent());
+        int textX = centerX - textWidth / 2;
+        int textY = iconCenterY + circleSize / 2 + 10 + fm.getAscent();
+
+        // 文字陰影
+        g2d.setColor(new Color(0, 0, 0, 40));
+        g2d.drawString(text, textX + 2, textY + 2);
+        // 文字本體
+        g2d.setColor(TEXT_COLOR);
+        g2d.drawString(text, textX, textY);
     }
 
     /**
