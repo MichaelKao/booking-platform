@@ -1377,11 +1377,14 @@
         // 套用佈局
         rmLayout = s.layout;
         selectEl('#layoutSelector .rm-layout', rmLayout);
-        // 套用格子（自動帶入業種主題圖片）
+        // 套用格子（自動帶入業種主題圖片 + 啟用去背）
         const cellImages = RM_CELL_IMAGES[catKey] || {};
         rmCells = s.cells.map((c, i) => ({
             index:i, label:c.l, action:c.a, icon:getIcon(c.a),
-            imageUrl: c.img || cellImages[c.a] || ''
+            imageUrl: c.img || cellImages[c.a] || '',
+            removeBackground: true,
+            iconShape: 'circle',
+            iconScale: 'medium'
         }));
         // 套用 Flex 彈窗
         fpConfigs = {};
@@ -1542,7 +1545,10 @@
                         <option value="small" ${curScale==='small'?'selected':''}>小</option>
                         <option value="medium" ${curScale==='medium'?'selected':''}>中</option>
                         <option value="large" ${curScale==='large'?'selected':''}>大</option>
-                    </select>`:''}
+                    </select>
+                    <label class="form-check form-switch d-inline-flex align-items-center gap-1 mt-1 mb-0 ms-1" style="font-size:.75rem">
+                        <input type="checkbox" class="form-check-input" data-f="removeBg" ${cell.removeBackground?'checked':''}>去背
+                    </label>`:''}
                 </td>
                 <td>${cell.action==='flex_popup'?`<button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="openFpEditor(${i})" title="編輯彈窗"><i class="bi bi-pencil-square"></i></button>`:''}</td>
             `;
@@ -1569,6 +1575,8 @@
             if (shapeSelect) shapeSelect.addEventListener('change', e => { rmCells[i].iconShape = e.target.value; updateRmPreview(); });
             const scaleSelect = tr.querySelector('[data-f="iconScale"]');
             if (scaleSelect) scaleSelect.addEventListener('change', e => { rmCells[i].iconScale = e.target.value; updateRmPreview(); });
+            const removeBgCheck = tr.querySelector('[data-f="removeBg"]');
+            if (removeBgCheck) removeBgCheck.addEventListener('change', e => { rmCells[i].removeBackground = e.target.checked; });
             tbody.appendChild(tr);
         });
     }
@@ -1735,6 +1743,7 @@
                 if (c.imageUrl) o.imageUrl = c.imageUrl;
                 if (c.iconShape && c.iconShape !== 'circle') o.iconShape = c.iconShape;
                 if (c.iconScale && c.iconScale !== 'small') o.iconScale = c.iconScale;
+                if (c.removeBackground) o.removeBackground = true;
                 return o;
             })
         };
