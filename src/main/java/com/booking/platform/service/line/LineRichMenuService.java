@@ -211,6 +211,18 @@ public class LineRichMenuService {
             IconType.PHONE
     };
 
+    // action 字串對應向量圖示（進階模式 cell 背景圖 + 圖示疊加用）
+    private static final java.util.Map<String, IconType> ACTION_ICON_MAP = java.util.Map.ofEntries(
+            java.util.Map.entry("start_booking", IconType.CALENDAR),
+            java.util.Map.entry("view_bookings", IconType.CLIPBOARD),
+            java.util.Map.entry("start_shopping", IconType.CART),
+            java.util.Map.entry("view_coupons", IconType.TICKET),
+            java.util.Map.entry("view_my_coupons", IconType.GIFT),
+            java.util.Map.entry("view_member_info", IconType.PERSON),
+            java.util.Map.entry("contact_shop", IconType.PHONE),
+            java.util.Map.entry("flex_popup", IconType.COUPON_STAR)
+    );
+
     // ========================================
     // 公開方法
     // ========================================
@@ -2879,10 +2891,14 @@ public class LineRichMenuService {
                                 g2d.drawImage(cellImg, drawX, drawY, drawW, drawH, null);
                                 g2d.setClip(oldClip);
 
+                                // 輕微整體遮罩（讓圖示更清晰）
+                                g2d.setColor(new Color(0, 0, 0, 40));
+                                g2d.fillRect(cellX, cellY, cellW, cellH);
+
                                 // 底部漸層（讓文字可讀）
                                 GradientPaint gradient = new GradientPaint(
-                                        cellX, cellY + cellH / 2, new Color(0, 0, 0, 0),
-                                        cellX, cellY + cellH, new Color(0, 0, 0, 160)
+                                        cellX, cellY + cellH * 2 / 5, new Color(0, 0, 0, 0),
+                                        cellX, cellY + cellH, new Color(0, 0, 0, 180)
                                 );
                                 g2d.setPaint(gradient);
                                 g2d.fillRect(cellX, cellY, cellW, cellH);
@@ -2894,8 +2910,10 @@ public class LineRichMenuService {
                     }
                 }
 
-                // ── 繪製圖示（無 cell 背景圖時才顯示）──
-                if (!hasCellImage && cellIcons != null && cellIcons.containsKey(i)) {
+                // ── 繪製圖示 ──
+                boolean iconDrawn = false;
+                // 情況 1：有上傳圖示檔案（無論有無 cell 背景圖）
+                if (cellIcons != null && cellIcons.containsKey(i)) {
                     byte[] iconBytes = cellIcons.get(i);
                     if (iconBytes != null && iconBytes.length > 0) {
                         try {
@@ -2934,6 +2952,17 @@ public class LineRichMenuService {
                                     drawH = iconSize;
                                 }
 
+                                // 有 cell 背景圖時，先畫毛玻璃圓底
+                                if (hasCellImage && "circle".equals(iconShape)) {
+                                    int circleSize = iconSize + 20;
+                                    int cx = centerX - circleSize / 2;
+                                    int cy = centerY - circleSize / 2 - cellH / 8;
+                                    g2d.setColor(new Color(0, 0, 0, 80));
+                                    g2d.fillOval(cx + 3, cy + 3, circleSize, circleSize);
+                                    g2d.setColor(new Color(255, 255, 255, 180));
+                                    g2d.fillOval(cx, cy, circleSize, circleSize);
+                                }
+
                                 BufferedImage scaledIcon = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
                                 Graphics2D iconG = scaledIcon.createGraphics();
                                 try {
@@ -2949,10 +2978,38 @@ public class LineRichMenuService {
                                 int iconX = centerX - drawW / 2;
                                 int iconY = centerY - drawH / 2 - cellH / 8;
                                 g2d.drawImage(scaledIcon, iconX, iconY, null);
+                                iconDrawn = true;
                             }
                         } catch (IOException e) {
                             log.warn("載入格子 {} 圖示失敗：{}", i, e.getMessage());
                         }
+                    }
+                }
+
+                // 情況 2：有 cell 背景圖但無上傳圖示 → 用向量圖示疊加
+                if (hasCellImage && !iconDrawn) {
+                    String action = cellConfig != null ? cellConfig.path("action").asText("") : "";
+                    IconType vecIcon = ACTION_ICON_MAP.get(action);
+                    if (vecIcon != null) {
+                        int vecSize = (int) (Math.min(cellW, cellH) * 0.35);
+                        int circleSize = vecSize + 24;
+                        int cx = centerX - circleSize / 2;
+                        int cy = centerY - circleSize / 2 - cellH / 8;
+
+                        // 毛玻璃圓底 + 陰影
+                        g2d.setColor(new Color(0, 0, 0, 60));
+                        g2d.fillOval(cx + 4, cy + 4, circleSize, circleSize);
+                        g2d.setColor(new Color(255, 255, 255, 200));
+                        g2d.fillOval(cx, cy, circleSize, circleSize);
+
+                        // 白色向量圖示
+                        Color savedColor = g2d.getColor();
+                        Stroke savedStroke = g2d.getStroke();
+                        g2d.setColor(new Color(60, 60, 60));
+                        drawIcon(g2d, vecIcon, centerX, centerY - cellH / 8, vecSize);
+                        g2d.setColor(savedColor);
+                        g2d.setStroke(savedStroke);
+                        iconDrawn = true;
                     }
                 }
 
@@ -2980,13 +3037,16 @@ public class LineRichMenuService {
                     int textWidth = fm.stringWidth(label);
                     int textX = centerX - textWidth / 2;
 
-                    // 文字位置：有背景圖時放底部，有圖示時在圖示下方，否則格子中心
-                    boolean hasIcon = !hasCellImage && cellIcons != null && cellIcons.containsKey(i);
+                    // 文字位置：有圖示時在圖示下方，有背景圖時放底部，否則格子中心
                     int textY;
-                    if (hasCellImage) {
-                        // 放在格子底部（漸層區域內）
+                    if (hasCellImage && iconDrawn) {
+                        // 有背景圖 + 有圖示 → 文字放在圖示下方
+                        int vecSize = (int) (Math.min(cellW, cellH) * 0.35);
+                        textY = centerY + vecSize / 2 + fm.getAscent() / 2 - cellH / 8 + 15;
+                    } else if (hasCellImage) {
+                        // 有背景圖但無圖示 → 放在格子底部
                         textY = cellY + cellH - fm.getDescent() - 15;
-                    } else if (hasIcon) {
+                    } else if (iconDrawn) {
                         // 根據 iconScale 計算圖示實際高度
                         String iconScaleForText = cellConfig != null ? cellConfig.path("iconScale").asText("small") : "small";
                         double scaleForText;
@@ -3013,6 +3073,13 @@ public class LineRichMenuService {
                     g2d.draw(textShape);
                     g2d.setColor(labelColor);
                     g2d.fill(textShape);
+                }
+
+                // ── 格子分隔線（有 cell 背景圖時繪製）──
+                if (hasCellImage) {
+                    g2d.setColor(new Color(255, 255, 255, 30));
+                    g2d.setStroke(new BasicStroke(2));
+                    g2d.drawRect(cellX, cellY, cellW, cellH);
                 }
             }
 

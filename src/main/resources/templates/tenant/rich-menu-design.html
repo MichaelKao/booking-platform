@@ -1611,7 +1611,8 @@
                     d.style.backgroundImage = `url('${cell.imageUrl}')`;
                     d.style.backgroundSize = 'cover';
                     d.style.backgroundPosition = 'center';
-                    d.innerHTML = `<span class="cn">${ci}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
+                    const cellIcon = cell.icon || getIcon(cell.action);
+                    d.innerHTML = `<span class="cn">${ci}</span><span class="ci" style="background:rgba(255,255,255,.8);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;margin-bottom:2px">${cellIcon}</span><span class="cl" style="text-shadow:0 1px 4px rgba(0,0,0,.8);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:4px;color:#fff">${esc(cell.label)}</span>`;
                 } else if (cellIconFiles[ci]) {
                     // 有已上傳圖示：顯示圖片預覽
                     if (rmBgUrl || rmBgFile) d.style.background = 'rgba(0,0,0,.15)';
