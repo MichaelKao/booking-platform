@@ -45,6 +45,7 @@ public class TenantService {
     private final CustomerRepository customerRepository;
     private final TenantMapper tenantMapper;
     private final FeatureService featureService;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // ========================================
     // 查詢方法
@@ -233,6 +234,12 @@ public class TenantService {
         entity.setPhone(request.getPhone());
         entity.setEmail(request.getEmail());
         entity.setAddress(request.getAddress());
+
+        // 超管重設密碼
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            entity.setPassword(passwordEncoder.encode(request.getPassword()));
+            log.info("超管重設租戶密碼，租戶 ID：{}", id);
+        }
 
         // ========================================
         // 3. 儲存更新

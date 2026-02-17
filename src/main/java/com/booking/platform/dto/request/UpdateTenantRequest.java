@@ -57,4 +57,10 @@ public class UpdateTenantRequest {
      */
     @Size(max = 200, message = "地址長度不能超過 200 字")
     private String address;
+
+    /**
+     * 重設密碼（選填，僅超管可用）
+     */
+    @Size(min = 8, max = 50, message = "密碼長度需在 8-50 字元之間")
+    private String password;
 }
