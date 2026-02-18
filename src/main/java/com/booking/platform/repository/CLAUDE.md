@@ -165,7 +165,19 @@ List<Booking> findByDateRange(
 
 ### 統計查詢
 
+**重要**：報表相關統計查詢一律使用 `bookingDate`（預約日期），不使用 `createdAt`（建立時間），參數型別為 `LocalDate`。
+
 ```java
+// 依預約日期統計預約數
+long countByTenantIdAndDateRange(String tenantId, LocalDate startDate, LocalDate endDate);
+
+// 依預約日期統計特定狀態的預約數
+long countByTenantIdAndStatusAndDateRange(String tenantId, BookingStatus status, LocalDate startDate, LocalDate endDate);
+
+// 依預約日期統計營收
+BigDecimal sumRevenueByTenantIdAndStatusAndDateRange(String tenantId, BookingStatus status, LocalDate startDate, LocalDate endDate);
+
+// 依特定日期和狀態統計
 @Query("""
     SELECT COUNT(b) FROM Booking b
     WHERE b.tenantId = :tenantId

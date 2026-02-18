@@ -436,6 +436,20 @@ GET /api/public/flex-card-image/{tenantId}/{cardIndex}  # 公開存取卡片/步
 
 **注意**：LINE 聊天室背景是 LINE 平台功能，無法透過 API 控制。
 
+### Carousel 導覽 Bubble
+
+所有 Carousel 類型的 Flex Message（有資料時），第一張卡片為導覽 Bubble，包含：
+- 使用 `applyFunctionHeader` 套用自訂 Header（標題、配色、圖示）
+- 支援 Hero 圖片（從 `flexMenuConfig.functions[functionKey].imageUrl` 讀取）
+- 操作提示文字
+
+| 功能 | functionKey | 預設配色 | 說明 |
+|------|------------|---------|------|
+| 瀏覽商品 | `productMenu` | `#FF9800` | 商品列表導覽 |
+| 領取票券 | `couponList` | `#E91E63` | 可領取票券導覽 |
+| 我的票券 | `myCoupons` | `#9C27B0` | 已領取票券導覽（含使用說明） |
+| 我的預約 | `bookingList` | `#0066CC` | 預約列表導覽 |
+
 ### 返回主選單功能
 所有 Flex Message 皆包含「返回主選單」按鈕，方便用戶快速回到主選單：
 
@@ -603,6 +617,12 @@ Redis Key: `line:conversation:{tenantId}:{lineUserId}`，TTL: 30 分鐘
 - 支援特定日期請假（事假、病假、休假、特休、其他）
 - 快速選擇：明天、下週一~五、本週末、下週末
 - 請假原因備註
+
+---
+
+## 報表統計規則
+
+**重要**：所有報表統計查詢（預約數、營收、熱門服務/員工、回客數等）一律依 `bookingDate`（預約日期）篩選，不使用 `createdAt`（建立時間）。顧客統計和票券統計仍依 `createdAt`。
 
 ---
 
