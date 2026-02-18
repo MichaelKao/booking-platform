@@ -184,16 +184,19 @@ public interface CouponInstanceRepository extends JpaRepository<CouponInstance, 
 
     /**
      * 統計日期區間內已核銷票券的折扣金額總和
+     * 優先使用 actual_discount_amount（核銷時計算），fallback 到 coupon 定義的 discount_amount
      */
     @Query(value = """
-            SELECT COALESCE(SUM(c.discount_amount), 0)
+            SELECT COALESCE(SUM(
+                COALESCE(ci.actual_discount_amount, c.discount_amount)
+            ), 0)
             FROM coupon_instances ci
             JOIN coupons c ON ci.coupon_id = c.id
             WHERE ci.tenant_id = :tenantId
             AND ci.deleted_at IS NULL
             AND ci.status = 'USED'
             AND ci.used_at BETWEEN :startDateTime AND :endDateTime
-            AND c.discount_amount IS NOT NULL
+            AND (ci.actual_discount_amount IS NOT NULL OR c.discount_amount IS NOT NULL)
             """, nativeQuery = true)
     java.math.BigDecimal sumDiscountAmountByTenantIdAndDateRange(
             @Param("tenantId") String tenantId,

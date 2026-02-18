@@ -158,9 +158,10 @@ public class CouponController {
     @PostMapping("/instances/{instanceId}/redeem")
     public ApiResponse<CouponInstanceResponse> redeem(
             @PathVariable String instanceId,
-            @RequestParam(required = false) String orderId
+            @RequestParam(required = false) String orderId,
+            @RequestParam(required = false) java.math.BigDecimal orderAmount
     ) {
-        CouponInstanceResponse result = couponService.redeemCoupon(instanceId, orderId);
+        CouponInstanceResponse result = couponService.redeemCoupon(instanceId, orderId, orderAmount);
         return ApiResponse.ok("票券核銷成功", result);
     }
 
@@ -170,9 +171,10 @@ public class CouponController {
     @PostMapping("/redeem-by-code")
     public ApiResponse<CouponInstanceResponse> redeemByCode(
             @RequestParam String code,
-            @RequestParam(required = false) String orderId
+            @RequestParam(required = false) String orderId,
+            @RequestParam(required = false) java.math.BigDecimal orderAmount
     ) {
-        CouponInstanceResponse result = couponService.redeemByCode(code, orderId);
+        CouponInstanceResponse result = couponService.redeemByCode(code, orderId, orderAmount);
         return ApiResponse.ok("票券核銷成功", result);
     }
 

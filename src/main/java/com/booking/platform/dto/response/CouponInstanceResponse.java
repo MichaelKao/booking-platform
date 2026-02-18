@@ -51,6 +51,7 @@ public class CouponInstanceResponse {
     private LocalDateTime usedAt;
 
     private String usedOrderId;
+    private BigDecimal actualDiscountAmount;
     private String voidReason;
     private Boolean canUse;
 

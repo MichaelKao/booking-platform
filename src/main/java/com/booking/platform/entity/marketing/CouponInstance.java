@@ -95,6 +95,12 @@ public class CouponInstance extends BaseEntity {
     private String usedOrderId;
 
     /**
+     * 實際折扣金額（核銷時計算）
+     */
+    @Column(name = "actual_discount_amount", precision = 10, scale = 2)
+    private java.math.BigDecimal actualDiscountAmount;
+
+    /**
      * 作廢原因
      */
     @Column(name = "void_reason", length = 200)

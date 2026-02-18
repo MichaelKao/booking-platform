@@ -446,10 +446,10 @@ public class CouponService {
     // ========================================
 
     @Transactional
-    public CouponInstanceResponse redeemCoupon(String instanceId, String orderId) {
+    public CouponInstanceResponse redeemCoupon(String instanceId, String orderId, java.math.BigDecimal orderAmount) {
         String tenantId = TenantContext.getTenantId();
 
-        log.info("核銷票券，實例ID：{}，訂單ID：{}", instanceId, orderId);
+        log.info("核銷票券，實例ID：{}，訂單ID：{}，消費金額：{}", instanceId, orderId, orderAmount);
 
         CouponInstance instance = couponInstanceRepository.findByIdAndTenantIdAndDeletedAtIsNull(instanceId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -468,11 +468,19 @@ public class CouponService {
 
         // 核銷票券
         instance.use(orderId);
+
+        // 查詢票券定義，計算實際折扣金額
+        Coupon coupon = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(instance.getCouponId(), tenantId)
+                .orElse(null);
+
+        // 計算實際折扣金額
+        if (coupon != null) {
+            instance.setActualDiscountAmount(calculateActualDiscount(coupon, orderAmount));
+        }
+
         instance = couponInstanceRepository.save(instance);
 
         // 更新票券已使用數量
-        Coupon coupon = couponRepository.findByIdAndTenantIdAndDeletedAtIsNull(instance.getCouponId(), tenantId)
-                .orElse(null);
         if (coupon != null) {
             coupon.use();
             couponRepository.save(coupon);
@@ -505,6 +513,27 @@ public class CouponService {
     /**
      * 發送票券核銷通知給顧客
      */
+    /**
+     * 計算實際折扣金額
+     */
+    private java.math.BigDecimal calculateActualDiscount(Coupon coupon, java.math.BigDecimal orderAmount) {
+        if (coupon.getType() == CouponType.DISCOUNT_AMOUNT) {
+            // 固定金額折扣
+            return coupon.getDiscountAmount() != null ? coupon.getDiscountAmount() : java.math.BigDecimal.ZERO;
+        } else if (coupon.getType() == CouponType.DISCOUNT_PERCENT && orderAmount != null) {
+            // 百分比折扣：折扣金額 = 消費金額 × 折扣比例
+            java.math.BigDecimal discount = orderAmount.multiply(coupon.getDiscountPercent())
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+            // 如果有最高折抵上限，取較小值
+            if (coupon.getMaxDiscountAmount() != null && discount.compareTo(coupon.getMaxDiscountAmount()) > 0) {
+                discount = coupon.getMaxDiscountAmount();
+            }
+            return discount;
+        }
+        // GIFT、ADDON 或百分比但沒提供消費金額
+        return null;
+    }
+
     private void sendRedeemNotification(String tenantId, CouponInstance instance, Coupon coupon) {
         try {
             // 查詢顧客的 LINE User ID
@@ -545,7 +574,7 @@ public class CouponService {
     }
 
     @Transactional
-    public CouponInstanceResponse redeemByCode(String code, String orderId) {
+    public CouponInstanceResponse redeemByCode(String code, String orderId, java.math.BigDecimal orderAmount) {
         String tenantId = TenantContext.getTenantId();
 
         CouponInstance instance = couponInstanceRepository.findByTenantIdAndCodeAndDeletedAtIsNull(tenantId, code)
@@ -553,7 +582,7 @@ public class CouponService {
                         ErrorCode.COUPON_NOT_FOUND, "找不到指定的票券"
                 ));
 
-        return redeemCoupon(instance.getId(), orderId);
+        return redeemCoupon(instance.getId(), orderId, orderAmount);
     }
 
     // ========================================

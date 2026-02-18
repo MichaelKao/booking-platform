@@ -66,6 +66,7 @@ public class CouponMapper {
                 .expiresAt(entity.getExpiresAt())
                 .usedAt(entity.getUsedAt())
                 .usedOrderId(entity.getUsedOrderId())
+                .actualDiscountAmount(entity.getActualDiscountAmount())
                 .voidReason(entity.getVoidReason())
                 .canUse(entity.canUse())
                 .createdAt(entity.getCreatedAt())
