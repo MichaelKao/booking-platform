@@ -107,13 +107,10 @@ public class PointTopUpService {
         long approvedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.APPROVED);
         long rejectedCount = pointTopUpRepository.countByStatusAndDeletedAtIsNull(TopUpStatus.REJECTED);
 
-        // 計算本月總金額（已通過的）
+        // 計算本月總金額（已通過的，使用 DB 查詢避免載入全部記錄）
         LocalDateTime monthStart = java.time.LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        BigDecimal totalAmount = pointTopUpRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtAsc(TopUpStatus.APPROVED)
-                .stream()
-                .filter(p -> p.getReviewedAt() != null && !p.getReviewedAt().isBefore(monthStart))
-                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDateTime monthEnd = monthStart.plusMonths(1);
+        BigDecimal totalAmount = pointTopUpRepository.sumApprovedAmountBetween(monthStart, monthEnd);
 
         return java.util.Map.of(
                 "pendingCount", pendingCount,
@@ -246,8 +243,8 @@ public class PointTopUpService {
             );
         }
 
-        // 取得租戶並更新點數
-        Tenant tenant = tenantRepository.findById(topUp.getTenantId())
+        // 取得租戶並更新點數（排除已刪除的租戶）
+        Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(topUp.getTenantId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.TENANT_NOT_FOUND, "找不到指定的租戶"
                 ));

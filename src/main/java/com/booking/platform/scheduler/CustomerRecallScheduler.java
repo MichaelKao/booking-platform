@@ -68,9 +68,8 @@ public class CustomerRecallScheduler {
         log.info("開始執行顧客喚回任務");
 
         try {
-            // 取得所有啟用顧客喚回的店家
-            List<Tenant> tenants = tenantRepository.findAll().stream()
-                    .filter(t -> t.getDeletedAt() == null)
+            // 取得所有啟用顧客喚回的店家（只查未刪除的）
+            List<Tenant> tenants = tenantRepository.findAllByDeletedAtIsNull().stream()
                     .filter(t -> Boolean.TRUE.equals(t.getEnableCustomerRecall()))
                     .filter(t -> featureService.isFeatureEnabled(t.getId(), FeatureCode.AUTO_RECALL))
                     .toList();

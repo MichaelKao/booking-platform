@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -41,10 +42,14 @@ public class CampaignPushService {
      * <p>非同步執行，不阻塞主流程
      */
     @Async
+    @Transactional
     public void sendCampaignPush(String tenantId, Campaign campaign) {
         log.info("開始推播活動，租戶：{}，活動：{}", tenantId, campaign.getName());
 
         try {
+            // 重新載入最新的 campaign（避免 detached entity 覆蓋併發更新）
+            Campaign freshCampaign = campaignRepository.findById(campaign.getId()).orElse(campaign);
+
             // 取得所有 LINE 追蹤者
             List<LineUser> followers = lineUserRepository
                     .findByTenantIdAndIsFollowedAndDeletedAtIsNull(tenantId, true);
@@ -55,13 +60,13 @@ public class CampaignPushService {
             for (LineUser user : followers) {
                 try {
                     // 推播訊息
-                    lineMessageService.pushText(tenantId, user.getLineUserId(), campaign.getPushMessage());
+                    lineMessageService.pushText(tenantId, user.getLineUserId(), freshCampaign.getPushMessage());
 
                     // 如果有關聯票券，自動發給每位顧客
-                    if (campaign.getCouponId() != null && user.getCustomerId() != null) {
+                    if (freshCampaign.getCouponId() != null && user.getCustomerId() != null) {
                         try {
                             TenantContext.setTenantId(tenantId);
-                            couponService.issueToCustomer(campaign.getCouponId(), user.getCustomerId());
+                            couponService.issueToCustomer(freshCampaign.getCouponId(), user.getCustomerId());
                         } catch (Exception e) {
                             log.debug("自動發放票券失敗（可能已領取）：{}", e.getMessage());
                         } finally {
@@ -75,10 +80,10 @@ public class CampaignPushService {
             }
 
             // 更新參與人數
-            campaign.setParticipantCount(successCount);
-            campaignRepository.save(campaign);
+            freshCampaign.setParticipantCount(successCount);
+            campaignRepository.save(freshCampaign);
 
-            log.info("活動推播完成，活動：{}，成功：{}/{}", campaign.getName(), successCount, followers.size());
+            log.info("活動推播完成，活動：{}，成功：{}/{}", freshCampaign.getName(), successCount, followers.size());
 
         } catch (Exception e) {
             log.error("活動推播執行失敗，活動：{}，錯誤：{}", campaign.getName(), e.getMessage(), e);

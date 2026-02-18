@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -50,6 +51,11 @@ public interface TenantRepository extends JpaRepository<Tenant, String> {
      * 依密碼重設 Token 查詢（排除已刪除）
      */
     Optional<Tenant> findByPasswordResetTokenAndDeletedAtIsNull(String passwordResetToken);
+
+    /**
+     * 查詢所有未刪除的租戶
+     */
+    List<Tenant> findAllByDeletedAtIsNull();
 
     // ========================================
     // 存在性檢查

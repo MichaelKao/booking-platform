@@ -67,9 +67,8 @@ public class BirthdayGreetingScheduler {
             int month = today.getMonthValue();
             int day = today.getDayOfMonth();
 
-            // 取得所有啟用生日祝福的店家
-            List<Tenant> tenants = tenantRepository.findAll().stream()
-                    .filter(t -> t.getDeletedAt() == null)
+            // 取得所有啟用生日祝福的店家（只查未刪除的）
+            List<Tenant> tenants = tenantRepository.findAllByDeletedAtIsNull().stream()
                     .filter(t -> Boolean.TRUE.equals(t.getEnableBirthdayGreeting()))
                     .filter(t -> featureService.isFeatureEnabled(t.getId(), FeatureCode.AUTO_BIRTHDAY))
                     .toList();
