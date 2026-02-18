@@ -538,7 +538,7 @@ public class CouponService {
         if (coupon.getType() == CouponType.DISCOUNT_AMOUNT) {
             // 固定金額折扣
             return coupon.getDiscountAmount() != null ? coupon.getDiscountAmount() : java.math.BigDecimal.ZERO;
-        } else if (coupon.getType() == CouponType.DISCOUNT_PERCENT && orderAmount != null) {
+        } else if (coupon.getType() == CouponType.DISCOUNT_PERCENT && orderAmount != null && coupon.getDiscountPercent() != null) {
             // 百分比折扣：折扣金額 = 消費金額 × 折扣比例
             java.math.BigDecimal discount = orderAmount.multiply(coupon.getDiscountPercent())
                     .setScale(2, java.math.RoundingMode.HALF_UP);
