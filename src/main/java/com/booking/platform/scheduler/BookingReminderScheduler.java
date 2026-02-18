@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
@@ -58,9 +59,8 @@ public class BookingReminderScheduler {
         log.info("開始執行預約提醒任務");
 
         try {
-            // 取得所有啟用預約提醒的店家
-            List<Tenant> tenants = tenantRepository.findAll().stream()
-                    .filter(t -> t.getDeletedAt() == null)
+            // 取得所有啟用預約提醒的店家（只查未刪除的）
+            List<Tenant> tenants = tenantRepository.findAllByDeletedAtIsNull().stream()
                     .filter(t -> Boolean.TRUE.equals(t.getEnableBookingReminder()))
                     .toList();
 
@@ -82,15 +82,13 @@ public class BookingReminderScheduler {
                 List<Tenant> tenantsForHours = entry.getValue();
 
                 // 計算目標時間範圍（當前時間 + 提醒小時數）
-                LocalDate targetDate = LocalDate.now();
-                LocalTime currentTime = LocalTime.now();
-                LocalTime targetStartTime = currentTime.plusHours(reminderHours);
-                LocalTime targetEndTime = targetStartTime.plusHours(1);
-
-                // 如果跨日，需要調整日期
-                if (targetStartTime.isBefore(currentTime)) {
-                    targetDate = targetDate.plusDays(1);
-                }
+                // 使用 LocalDateTime 避免 LocalTime.plusHours() 跨日溢位問題
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime targetStart = now.plusHours(reminderHours);
+                LocalDateTime targetEnd = targetStart.plusHours(1);
+                LocalDate targetDate = targetStart.toLocalDate();
+                LocalTime targetStartTime = targetStart.toLocalTime();
+                LocalTime targetEndTime = targetEnd.toLocalTime();
 
                 for (Tenant tenant : tenantsForHours) {
                     try {
