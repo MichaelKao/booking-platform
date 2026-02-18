@@ -260,6 +260,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             LEFT JOIN service_items s ON b.service_id = s.id
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
+            AND b.service_id IS NOT NULL
             AND b.status = 'COMPLETED'
             AND b.booking_date BETWEEN :startDate AND :endDate
             GROUP BY b.service_id, s.name
@@ -282,6 +283,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             LEFT JOIN staffs st ON b.staff_id = st.id
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
+            AND b.staff_id IS NOT NULL
             AND b.status = 'COMPLETED'
             AND b.booking_date BETWEEN :startDate AND :endDate
             GROUP BY b.staff_id, st.name
@@ -437,6 +439,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             SELECT COUNT(*) FROM bookings b
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
+            AND b.status = 'COMPLETED'
             AND EXTRACT(HOUR FROM b.start_time) = :hour
             AND b.booking_date BETWEEN :startDate AND :endDate
             """, nativeQuery = true)

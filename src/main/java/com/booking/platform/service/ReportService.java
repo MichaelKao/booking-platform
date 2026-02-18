@@ -37,6 +37,7 @@ public class ReportService {
     private final CustomerRepository customerRepository;
     private final CouponInstanceRepository couponInstanceRepository;
     private final ProductRepository productRepository;
+    private final ProductOrderRepository productOrderRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final TenantFeatureRepository tenantFeatureRepository;
 
@@ -127,6 +128,17 @@ public class ReportService {
             serviceRevenue = BigDecimal.ZERO;
         }
 
+        // 商品營收統計（依建立時間，只計算已完成的訂單）
+        BigDecimal productRevenue = productOrderRepository.sumCompletedRevenueByTenantIdAndDateRange(
+                tenantId, startDateTime, endDateTime
+        );
+        if (productRevenue == null) {
+            productRevenue = BigDecimal.ZERO;
+        }
+
+        // 總營收 = 服務營收 + 商品營收
+        BigDecimal totalRevenue = serviceRevenue.add(productRevenue);
+
         // 計算平均客單價
         BigDecimal averageOrderValue = BigDecimal.ZERO;
         if (completedBookings > 0) {
@@ -146,9 +158,9 @@ public class ReportService {
                 .newCustomers(newCustomers)
                 .returningCustomers(returningCustomers)
                 .totalServedCustomers(completedBookings) // 簡化：以完成預約數代替
-                .totalRevenue(serviceRevenue) // 服務營收即為總營收
+                .totalRevenue(totalRevenue)
                 .serviceRevenue(serviceRevenue)
-                .productRevenue(BigDecimal.ZERO) // 商品營收另計
+                .productRevenue(productRevenue)
                 .averageOrderValue(averageOrderValue)
                 .issuedCoupons(issuedCoupons)
                 .usedCoupons(usedCoupons)
@@ -471,11 +483,14 @@ public class ReportService {
         // 顧客價值分析
         BigDecimal avgCustomerValue = BigDecimal.ZERO;
         if (activeCustomers > 0) {
-            // 簡化計算：總完成預約 / 活躍顧客數
-            long completedBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
+            // 平均顧客價值 = 營收 / 活躍顧客數
+            BigDecimal revenue = bookingRepository.sumRevenueByTenantIdAndStatusAndDateRange(
                     tenantId, BookingStatus.COMPLETED, startDate, endDate
             );
-            avgCustomerValue = BigDecimal.valueOf(completedBookings)
+            if (revenue == null) {
+                revenue = BigDecimal.ZERO;
+            }
+            avgCustomerValue = revenue
                     .divide(BigDecimal.valueOf(activeCustomers), 2, RoundingMode.HALF_UP);
         }
 

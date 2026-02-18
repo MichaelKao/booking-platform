@@ -104,6 +104,25 @@ public interface TenantFeatureRepository extends JpaRepository<TenantFeature, St
     Optional<TenantFeature> findByTenantIdAndFeatureCode(String tenantId, FeatureCode featureCode);
 
     /**
+     * 計算租戶每月功能訂閱消耗的點數總和
+     * 使用 customMonthlyPoints 覆蓋 Feature.monthlyPoints（若有設定）
+     */
+    @Query("""
+            SELECT COALESCE(SUM(
+                CASE WHEN tf.customMonthlyPoints IS NOT NULL THEN tf.customMonthlyPoints
+                     ELSE COALESCE(f.monthlyPoints, 0)
+                END
+            ), 0)
+            FROM TenantFeature tf
+            JOIN Feature f ON f.code = tf.featureCode
+            WHERE tf.tenantId = :tenantId
+            AND tf.deletedAt IS NULL
+            AND tf.status = 'ENABLED'
+            AND (tf.expiresAt IS NULL OR tf.expiresAt > CURRENT_TIMESTAMP)
+            """)
+    int sumMonthlyPointsByTenantId(@Param("tenantId") String tenantId);
+
+    /**
      * 查詢所有啟用指定功能的租戶
      */
     List<TenantFeature> findByFeatureCodeAndDeletedAtIsNull(FeatureCode featureCode);

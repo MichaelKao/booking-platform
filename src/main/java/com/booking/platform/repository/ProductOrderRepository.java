@@ -92,4 +92,14 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Stri
     @Query("SELECT COUNT(o) FROM ProductOrder o WHERE o.tenantId = :tenantId " +
            "AND o.createdAt >= :startOfDay")
     long countOrdersToday(@Param("tenantId") String tenantId, @Param("startOfDay") LocalDateTime startOfDay);
+
+    /**
+     * 計算指定日期範圍內已完成訂單的總營收（依建立時間）
+     */
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM ProductOrder o WHERE o.tenantId = :tenantId " +
+           "AND o.status = 'COMPLETED' AND o.createdAt BETWEEN :startDate AND :endDate AND o.deletedAt IS NULL")
+    java.math.BigDecimal sumCompletedRevenueByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }

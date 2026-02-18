@@ -14,6 +14,7 @@ import com.booking.platform.entity.tenant.Tenant;
 import com.booking.platform.enums.TopUpStatus;
 import com.booking.platform.mapper.PointTopUpMapper;
 import com.booking.platform.repository.PointTopUpRepository;
+import com.booking.platform.repository.TenantFeatureRepository;
 import com.booking.platform.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ public class PointService {
 
     private final TenantRepository tenantRepository;
     private final PointTopUpRepository pointTopUpRepository;
+    private final TenantFeatureRepository tenantFeatureRepository;
     private final PointTopUpMapper pointTopUpMapper;
 
     // ========================================
@@ -82,7 +84,13 @@ public class PointService {
         }
 
         // ========================================
-        // 4. 返回結果
+        // 4. 計算每月功能訂閱消耗的點數
+        // ========================================
+
+        int monthlyFeaturePoints = tenantFeatureRepository.sumMonthlyPointsByTenantId(tenantId);
+
+        // ========================================
+        // 5. 返回結果
         // ========================================
 
         return PointBalanceResponse.builder()
@@ -90,7 +98,7 @@ public class PointService {
                 .tenantName(tenant.getName())
                 .balance(tenant.getPointBalance())
                 .pendingTopUp(pendingTopUp)
-                .monthlyUsed(BigDecimal.ZERO)
+                .monthlyUsed(BigDecimal.valueOf(monthlyFeaturePoints))
                 .pushQuotaRemaining(
                         (tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 0)
                         - (tenant.getMonthlyPushUsed() != null ? tenant.getMonthlyPushUsed() : 0)
