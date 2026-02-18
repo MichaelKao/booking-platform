@@ -2911,6 +2911,28 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bubbles = objectMapper.createArrayNode();
 
+        // 導覽 Bubble（含自訂 Header 和 Hero 圖片）
+        ObjectNode guideBubble = objectMapper.createObjectNode();
+        guideBubble.put("type", "bubble");
+        guideBubble.put("size", "kilo");
+        if (tenantId != null) {
+            applyFunctionHeader(guideBubble, tenantId, "bookingList", "#0066CC", "📋", "我的預約");
+        }
+        ObjectNode guideBody = objectMapper.createObjectNode();
+        guideBody.put("type", "box");
+        guideBody.put("layout", "vertical");
+        guideBody.put("spacing", "md");
+        guideBody.put("paddingAll", "15px");
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "👈 往左滑動查看所有預約\n\n共 " + bookings.size() + " 筆預約");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        guideBody.set("contents", objectMapper.createArrayNode().add(guideText));
+        guideBubble.set("body", guideBody);
+        bubbles.add(guideBubble);
+
         for (Booking booking : bookings) {
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
@@ -3809,6 +3831,28 @@ public class LineFlexMessageBuilder {
 
         ArrayNode bubbles = objectMapper.createArrayNode();
 
+        // 導覽 Bubble（含自訂 Header 和 Hero 圖片）
+        ObjectNode guideBubble = objectMapper.createObjectNode();
+        guideBubble.put("type", "bubble");
+        guideBubble.put("size", "kilo");
+        if (tenantId != null) {
+            applyFunctionHeader(guideBubble, tenantId, "couponList", "#E91E63", "🎁", "領取票券");
+        }
+        ObjectNode guideBody = objectMapper.createObjectNode();
+        guideBody.put("type", "box");
+        guideBody.put("layout", "vertical");
+        guideBody.put("spacing", "md");
+        guideBody.put("paddingAll", "15px");
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "👈 往左滑動查看所有票券\n\n點擊「領取」獲得優惠券");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        guideBody.set("contents", objectMapper.createArrayNode().add(guideText));
+        guideBubble.set("body", guideBody);
+        bubbles.add(guideBubble);
+
         for (Coupon coupon : coupons) {
             ObjectNode bubble = objectMapper.createObjectNode();
             bubble.put("type", "bubble");
@@ -3965,7 +4009,7 @@ public class LineFlexMessageBuilder {
         ArrayNode bubbles = objectMapper.createArrayNode();
 
         // 第一個 Bubble：使用說明
-        bubbles.add(buildCouponUsageGuide());
+        bubbles.add(buildCouponUsageGuide(tenantId));
 
         for (CouponInstance instance : instances) {
             ObjectNode bubble = objectMapper.createObjectNode();
@@ -4110,31 +4154,35 @@ public class LineFlexMessageBuilder {
     /**
      * 建構票券使用說明 Bubble
      */
-    private ObjectNode buildCouponUsageGuide() {
+    private ObjectNode buildCouponUsageGuide(String tenantId) {
         ObjectNode bubble = objectMapper.createObjectNode();
         bubble.put("type", "bubble");
         bubble.put("size", "kilo");
 
-        // Header
-        ObjectNode header = objectMapper.createObjectNode();
-        header.put("type", "box");
-        header.put("layout", "vertical");
-        header.put("backgroundColor", "#FF6B6B");
-        header.put("paddingAll", "15px");
+        // 套用自訂 Header（含 Hero 圖片）
+        if (tenantId != null) {
+            applyFunctionHeader(bubble, tenantId, "myCoupons", "#9C27B0", "🎫", "我的票券");
+        } else {
+            ObjectNode header = objectMapper.createObjectNode();
+            header.put("type", "box");
+            header.put("layout", "vertical");
+            header.put("backgroundColor", "#FF6B6B");
+            header.put("paddingAll", "15px");
 
-        ArrayNode headerContents = objectMapper.createArrayNode();
+            ArrayNode headerContents = objectMapper.createArrayNode();
 
-        ObjectNode headerIcon = objectMapper.createObjectNode();
-        headerIcon.put("type", "text");
-        headerIcon.put("text", "📋 票券使用說明");
-        headerIcon.put("size", "md");
-        headerIcon.put("weight", "bold");
-        headerIcon.put("color", "#FFFFFF");
-        headerIcon.put("align", "center");
-        headerContents.add(headerIcon);
+            ObjectNode headerIcon = objectMapper.createObjectNode();
+            headerIcon.put("type", "text");
+            headerIcon.put("text", "📋 票券使用說明");
+            headerIcon.put("size", "md");
+            headerIcon.put("weight", "bold");
+            headerIcon.put("color", "#FFFFFF");
+            headerIcon.put("align", "center");
+            headerContents.add(headerIcon);
 
-        header.set("contents", headerContents);
-        bubble.set("header", header);
+            header.set("contents", headerContents);
+            bubble.set("header", header);
+        }
 
         // Body
         ObjectNode body = objectMapper.createObjectNode();
@@ -5018,6 +5066,28 @@ public class LineFlexMessageBuilder {
         carousel.put("type", "carousel");
 
         ArrayNode bubbles = objectMapper.createArrayNode();
+
+        // 導覽 Bubble（含自訂 Header 和 Hero 圖片）
+        ObjectNode guideBubble = objectMapper.createObjectNode();
+        guideBubble.put("type", "bubble");
+        guideBubble.put("size", "kilo");
+        if (tenantId != null) {
+            applyFunctionHeader(guideBubble, tenantId, "productMenu", "#FF9800", "🛍️", "瀏覽商品");
+        }
+        ObjectNode guideBody = objectMapper.createObjectNode();
+        guideBody.put("type", "box");
+        guideBody.put("layout", "vertical");
+        guideBody.put("spacing", "md");
+        guideBody.put("paddingAll", "15px");
+        ObjectNode guideText = objectMapper.createObjectNode();
+        guideText.put("type", "text");
+        guideText.put("text", "👈 往左滑動查看所有商品\n\n點擊「選購」加入購物");
+        guideText.put("size", "sm");
+        guideText.put("color", SECONDARY_COLOR);
+        guideText.put("wrap", true);
+        guideBody.set("contents", objectMapper.createArrayNode().add(guideText));
+        guideBubble.set("body", guideBody);
+        bubbles.add(guideBubble);
 
         for (Product product : products) {
             ObjectNode bubble = objectMapper.createObjectNode();

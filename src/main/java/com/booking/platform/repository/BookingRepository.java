@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -221,35 +220,35 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // ========================================
 
     /**
-     * 統計日期區間內的預約數
+     * 統計日期區間內的預約數（依預約日期）
      */
     @Query("""
             SELECT COUNT(b) FROM Booking b
             WHERE b.tenantId = :tenantId
             AND b.deletedAt IS NULL
-            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            AND b.bookingDate BETWEEN :startDate AND :endDate
             """)
     long countByTenantIdAndDateRange(
             @Param("tenantId") String tenantId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     /**
-     * 統計日期區間內特定狀態的預約數
+     * 統計日期區間內特定狀態的預約數（依預約日期）
      */
     @Query("""
             SELECT COUNT(b) FROM Booking b
             WHERE b.tenantId = :tenantId
             AND b.deletedAt IS NULL
             AND b.status = :status
-            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            AND b.bookingDate BETWEEN :startDate AND :endDate
             """)
     long countByTenantIdAndStatusAndDateRange(
             @Param("tenantId") String tenantId,
             @Param("status") BookingStatus status,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     /**
@@ -262,15 +261,15 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND b.status = 'COMPLETED'
-            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.booking_date BETWEEN :startDate AND :endDate
             GROUP BY b.service_id, s.name
             ORDER BY cnt DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<Object[]> findTopServicesByTenantId(
             @Param("tenantId") String tenantId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
             @Param("limit") int limit
     );
 
@@ -284,15 +283,15 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND b.status = 'COMPLETED'
-            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.booking_date BETWEEN :startDate AND :endDate
             GROUP BY b.staff_id, st.name
             ORDER BY cnt DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<Object[]> findTopStaffByTenantId(
             @Param("tenantId") String tenantId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
             @Param("limit") int limit
     );
 
@@ -416,36 +415,36 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // ========================================
 
     /**
-     * 統計不重複顧客數（進階報表用）
+     * 統計不重複顧客數（進階報表用，依預約日期）
      */
     @Query("""
             SELECT COUNT(DISTINCT b.customerId) FROM Booking b
             WHERE b.tenantId = :tenantId
             AND b.deletedAt IS NULL
             AND b.customerId IS NOT NULL
-            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            AND b.bookingDate BETWEEN :startDate AND :endDate
             """)
     long countDistinctCustomersByTenantIdAndDateRange(
             @Param("tenantId") String tenantId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     /**
-     * 統計指定時段的預約數（尖峰時段分析用）
+     * 統計指定時段的預約數（尖峰時段分析用，依預約日期）
      */
     @Query(value = """
             SELECT COUNT(*) FROM bookings b
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND EXTRACT(HOUR FROM b.start_time) = :hour
-            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.booking_date BETWEEN :startDate AND :endDate
             """, nativeQuery = true)
     long countByTenantIdAndHour(
             @Param("tenantId") String tenantId,
             @Param("hour") int hour,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     // ========================================
@@ -460,13 +459,13 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenantId = :tenantId
             AND b.deletedAt IS NULL
             AND b.status = :status
-            AND b.createdAt BETWEEN :startDateTime AND :endDateTime
+            AND b.bookingDate BETWEEN :startDate AND :endDate
             """)
     BigDecimal sumRevenueByTenantIdAndStatusAndDateRange(
             @Param("tenantId") String tenantId,
             @Param("status") BookingStatus status,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     /**
@@ -493,20 +492,20 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE b.tenant_id = :tenantId
             AND b.deleted_at IS NULL
             AND b.customer_id IS NOT NULL
-            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.booking_date BETWEEN :startDate AND :endDate
             AND b.customer_id IN (
                 SELECT DISTINCT b2.customer_id
                 FROM bookings b2
                 WHERE b2.tenant_id = :tenantId
                 AND b2.deleted_at IS NULL
                 AND b2.customer_id IS NOT NULL
-                AND b2.created_at < :startDateTime
+                AND b2.booking_date < :startDate
             )
             """, nativeQuery = true)
     long countReturningCustomersByTenantIdAndDateRange(
             @Param("tenantId") String tenantId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     /**
@@ -519,13 +518,13 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             AND b.service_id = :serviceId
             AND b.deleted_at IS NULL
             AND b.status = 'COMPLETED'
-            AND b.created_at BETWEEN :startDateTime AND :endDateTime
+            AND b.booking_date BETWEEN :startDate AND :endDate
             """, nativeQuery = true)
     BigDecimal sumRevenueByTenantIdAndServiceIdAndDateRange(
             @Param("tenantId") String tenantId,
             @Param("serviceId") String serviceId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     // ========================================

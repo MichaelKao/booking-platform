@@ -76,21 +76,22 @@ public class ReportService {
 
         log.info("產生報表摘要，租戶：{}，期間：{} ~ {}", tenantId, startDate, endDate);
 
+        // 顧客/票券統計仍使用 LocalDateTime（依建立時間）
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-        // 預約統計
+        // 預約統計（依預約日期）
         long totalBookings = bookingRepository.countByTenantIdAndDateRange(
-                tenantId, startDateTime, endDateTime
+                tenantId, startDate, endDate
         );
         long completedBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.COMPLETED, startDateTime, endDateTime
+                tenantId, BookingStatus.COMPLETED, startDate, endDate
         );
         long cancelledBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.CANCELLED, startDateTime, endDateTime
+                tenantId, BookingStatus.CANCELLED, startDate, endDate
         );
         long noShowBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.NO_SHOW, startDateTime, endDateTime
+                tenantId, BookingStatus.NO_SHOW, startDate, endDate
         );
 
         BigDecimal completionRate = BigDecimal.ZERO;
@@ -100,17 +101,17 @@ public class ReportService {
                     .multiply(BigDecimal.valueOf(100));
         }
 
-        // 顧客統計
+        // 顧客統計（依建立時間）
         long newCustomers = customerRepository.countNewByTenantIdAndDateRange(
                 tenantId, startDateTime, endDateTime
         );
 
-        // 回客統計（在指定時間範圍內有預約，且在此之前也有過預約的顧客）
+        // 回客統計（依預約日期）
         long returningCustomers = bookingRepository.countReturningCustomersByTenantIdAndDateRange(
-                tenantId, startDateTime, endDateTime
+                tenantId, startDate, endDate
         );
 
-        // 票券統計
+        // 票券統計（依建立時間）
         long issuedCoupons = couponInstanceRepository.countIssuedByTenantIdAndDateRange(
                 tenantId, startDateTime, endDateTime
         );
@@ -118,9 +119,9 @@ public class ReportService {
                 tenantId, startDateTime, endDateTime
         );
 
-        // 營收統計（只計算已完成的預約）
+        // 營收統計（依預約日期，只計算已完成的預約）
         BigDecimal serviceRevenue = bookingRepository.sumRevenueByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.COMPLETED, startDateTime, endDateTime
+                tenantId, BookingStatus.COMPLETED, startDate, endDate
         );
         if (serviceRevenue == null) {
             serviceRevenue = BigDecimal.ZERO;
@@ -171,15 +172,16 @@ public class ReportService {
         LocalDate current = startDate;
 
         while (!current.isAfter(endDate)) {
-            LocalDateTime dayStart = current.atStartOfDay();
-            LocalDateTime dayEnd = current.atTime(LocalTime.MAX);
-
+            // 預約統計依預約日期
             long bookingCount = bookingRepository.countByTenantIdAndDateRange(
-                    tenantId, dayStart, dayEnd
+                    tenantId, current, current
             );
             long completedCount = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                    tenantId, BookingStatus.COMPLETED, dayStart, dayEnd
+                    tenantId, BookingStatus.COMPLETED, current, current
             );
+            // 顧客統計依建立時間
+            LocalDateTime dayStart = current.atStartOfDay();
+            LocalDateTime dayEnd = current.atTime(LocalTime.MAX);
             long newCustomerCount = customerRepository.countNewByTenantIdAndDateRange(
                     tenantId, dayStart, dayEnd
             );
@@ -216,11 +218,8 @@ public class ReportService {
 
         log.info("查詢熱門服務，租戶：{}，期間：{} ~ {}，數量：{}", tenantId, startDate, endDate, limit);
 
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-
         List<Object[]> topServices = bookingRepository.findTopServicesByTenantId(
-                tenantId, startDateTime, endDateTime, limit
+                tenantId, startDate, endDate, limit
         );
 
         // 計算總數用於百分比
@@ -243,7 +242,7 @@ public class ReportService {
 
             // 計算該服務的營收
             BigDecimal amount = bookingRepository.sumRevenueByTenantIdAndServiceIdAndDateRange(
-                    tenantId, serviceId, startDateTime, endDateTime
+                    tenantId, serviceId, startDate, endDate
             );
             if (amount == null) {
                 amount = BigDecimal.ZERO;
@@ -269,11 +268,8 @@ public class ReportService {
 
         log.info("查詢熱門員工，租戶：{}，期間：{} ~ {}，數量：{}", tenantId, startDate, endDate, limit);
 
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-
         List<Object[]> topStaff = bookingRepository.findTopStaffByTenantId(
-                tenantId, startDateTime, endDateTime, limit
+                tenantId, startDate, endDate, limit
         );
 
         // 計算總數用於百分比
@@ -336,14 +332,12 @@ public class ReportService {
         ReportSummaryResponse summary = getSummary(today, today);
 
         // 補充 Dashboard 所需欄位
-        // 今日預約數
+        // 今日預約數（依預約日期）
         summary.setTodayBookings(summary.getTotalBookings());
 
-        // 待確認預約數
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        // 待確認預約數（依預約日期）
         long pendingCount = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.PENDING, startOfDay, endOfDay
+                tenantId, BookingStatus.PENDING, today, today
         );
         summary.setPendingBookings(pendingCount);
 
@@ -351,12 +345,10 @@ public class ReportService {
         long totalCustomers = customerRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
         summary.setTotalCustomers(totalCustomers);
 
-        // 本月營收（只計算已完成的預約）
+        // 本月營收（依預約日期，只計算已完成的預約）
         LocalDate startOfMonth = today.withDayOfMonth(1);
-        LocalDateTime monthStart = startOfMonth.atStartOfDay();
-        LocalDateTime monthEnd = today.atTime(LocalTime.MAX);
         BigDecimal monthlyRevenue = bookingRepository.sumRevenueByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.COMPLETED, monthStart, monthEnd
+                tenantId, BookingStatus.COMPLETED, startOfMonth, today
         );
         summary.setMonthlyRevenue(monthlyRevenue != null ? monthlyRevenue : BigDecimal.ZERO);
 
@@ -395,10 +387,7 @@ public class ReportService {
 
         log.info("查詢時段分布，租戶：{}，期間：{} ~ {}", tenantId, startDate, endDate);
 
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-
-        return analyzePeakHours(tenantId, startDateTime, endDateTime);
+        return analyzePeakHours(tenantId, startDate, endDate);
     }
 
     // ========================================
@@ -427,6 +416,7 @@ public class ReportService {
                     .build();
         }
 
+        // 顧客統計仍使用 LocalDateTime（依建立時間）
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
@@ -436,7 +426,7 @@ public class ReportService {
                 tenantId, startDateTime, endDateTime
         );
         long activeCustomers = bookingRepository.countDistinctCustomersByTenantIdAndDateRange(
-                tenantId, startDateTime, endDateTime
+                tenantId, startDate, endDate
         );
 
         // 計算顧客保留率
@@ -453,7 +443,7 @@ public class ReportService {
         // 服務趨勢分析 - 計算各服務的預約數變化
         List<AdvancedReportResponse.ServiceTrend> serviceTrends = new ArrayList<>();
         List<Object[]> topServices = bookingRepository.findTopServicesByTenantId(
-                tenantId, startDateTime, endDateTime, 5
+                tenantId, startDate, endDate, 5
         );
         for (Object[] row : topServices) {
             serviceTrends.add(AdvancedReportResponse.ServiceTrend.builder()
@@ -465,14 +455,14 @@ public class ReportService {
         }
 
         // 尖峰時段分析
-        List<AdvancedReportResponse.PeakHour> peakHours = analyzePeakHours(tenantId, startDateTime, endDateTime);
+        List<AdvancedReportResponse.PeakHour> peakHours = analyzePeakHours(tenantId, startDate, endDate);
 
         // 顧客價值分析
         BigDecimal avgCustomerValue = BigDecimal.ZERO;
         if (activeCustomers > 0) {
             // 簡化計算：總完成預約 / 活躍顧客數
             long completedBookings = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                    tenantId, BookingStatus.COMPLETED, startDateTime, endDateTime
+                    tenantId, BookingStatus.COMPLETED, startDate, endDate
             );
             avgCustomerValue = BigDecimal.valueOf(completedBookings)
                     .divide(BigDecimal.valueOf(activeCustomers), 2, RoundingMode.HALF_UP);
@@ -497,12 +487,12 @@ public class ReportService {
      * 分析尖峰時段
      */
     private List<AdvancedReportResponse.PeakHour> analyzePeakHours(
-            String tenantId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+            String tenantId, LocalDate startDate, LocalDate endDate) {
         List<AdvancedReportResponse.PeakHour> peakHours = new ArrayList<>();
 
-        // 統計各時段的預約數
+        // 統計各時段的預約數（依預約日期）
         for (int hour = 9; hour < 21; hour++) {
-            long count = bookingRepository.countByTenantIdAndHour(tenantId, hour, startDateTime, endDateTime);
+            long count = bookingRepository.countByTenantIdAndHour(tenantId, hour, startDate, endDate);
             peakHours.add(AdvancedReportResponse.PeakHour.builder()
                     .hour(hour)
                     .hourLabel(String.format("%02d:00 - %02d:00", hour, hour + 1))
