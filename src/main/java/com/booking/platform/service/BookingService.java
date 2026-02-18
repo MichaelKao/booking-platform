@@ -742,6 +742,24 @@ public class BookingService {
         log.info("預約完成，ID：{}", entity.getId());
 
         // ========================================
+        // 更新顧客統計（到訪次數、消費金額）
+        // ========================================
+        if (entity.getCustomerId() != null && entity.getPrice() != null) {
+            try {
+                var customer = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(
+                        entity.getCustomerId(), tenantId
+                ).orElse(null);
+                if (customer != null) {
+                    customer.addVisit(entity.getPrice());
+                    customerRepository.save(customer);
+                    log.debug("更新顧客統計，顧客 ID：{}，消費：{}", entity.getCustomerId(), entity.getPrice());
+                }
+            } catch (Exception e) {
+                log.warn("更新顧客統計失敗，顧客 ID：{}，錯誤：{}", entity.getCustomerId(), e.getMessage());
+            }
+        }
+
+        // ========================================
         // 自動集點（POINT_SYSTEM 功能）
         // ========================================
         if (entity.getCustomerId() != null) {
@@ -855,6 +873,21 @@ public class BookingService {
         entity = bookingRepository.save(entity);
 
         log.info("已標記爽約，ID：{}", entity.getId());
+
+        // 更新顧客爽約次數
+        if (entity.getCustomerId() != null) {
+            try {
+                var customer = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(
+                        entity.getCustomerId(), tenantId
+                ).orElse(null);
+                if (customer != null && customer.getNoShowCount() != null) {
+                    customer.setNoShowCount(customer.getNoShowCount() + 1);
+                    customerRepository.save(customer);
+                }
+            } catch (Exception e) {
+                log.warn("更新顧客爽約次數失敗，顧客 ID：{}，錯誤：{}", entity.getCustomerId(), e.getMessage());
+            }
+        }
 
         // 發送 LINE 通知
         lineNotificationService.sendBookingStatusNotification(entity, BookingStatus.NO_SHOW, null);

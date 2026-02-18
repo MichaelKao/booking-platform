@@ -181,4 +181,23 @@ public interface CouponInstanceRepository extends JpaRepository<CouponInstance, 
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
     );
+
+    /**
+     * 統計日期區間內已核銷票券的折扣金額總和
+     */
+    @Query(value = """
+            SELECT COALESCE(SUM(c.discount_amount), 0)
+            FROM coupon_instances ci
+            JOIN coupons c ON ci.coupon_id = c.id
+            WHERE ci.tenant_id = :tenantId
+            AND ci.deleted_at IS NULL
+            AND ci.status = 'USED'
+            AND ci.used_at BETWEEN :startDateTime AND :endDateTime
+            AND c.discount_amount IS NOT NULL
+            """, nativeQuery = true)
+    java.math.BigDecimal sumDiscountAmountByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

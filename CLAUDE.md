@@ -955,7 +955,7 @@ npx playwright test tests/06-sse-notifications.spec.ts
 npx playwright test --list
 ```
 
-**測試套件 (1206 tests in 41 files)：**
+**測試套件 (1229 tests in 42 files)：**
 
 | 檔案 | 說明 | 測試數 |
 |------|------|--------|
@@ -997,6 +997,7 @@ npx playwright test --list
 | `30-rich-menu-custom.spec.ts` | Rich Menu 自訂模式 + 佈局選擇 + API 契約 | 52 |
 | `31-advanced-rich-menu.spec.ts` | 進階自訂 Rich Menu + 功能訂閱 + API | 19 |
 | `31-flex-menu-step-editor.spec.ts` | Flex Menu 步驟編輯器 + 卡片圖片上傳 | 36 |
+| `32-business-logic-correctness.spec.ts` | 業務邏輯正確性測試（數值驗證） | 23 |
 | `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
 
 **測試涵蓋範圍：**
@@ -1435,4 +1436,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 1206 |
+| E2E 測試 | 1229 |

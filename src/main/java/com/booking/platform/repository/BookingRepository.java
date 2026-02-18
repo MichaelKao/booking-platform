@@ -554,6 +554,70 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
      */
     long countByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, BookingStatus status);
 
+    /**
+     * 統計特定狀態的不重複顧客數（依預約日期）
+     */
+    @Query("""
+            SELECT COUNT(DISTINCT b.customerId) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.customerId IS NOT NULL
+            AND b.status = :status
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            """)
+    long countDistinctCustomersByTenantIdAndStatusAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("status") BookingStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /**
+     * 計算平均來客週期（天）：有多次預約的顧客，平均兩次預約之間的天數
+     */
+    @Query(value = """
+            SELECT AVG(avg_interval) FROM (
+                SELECT customer_id,
+                       AVG(next_date - booking_date) as avg_interval
+                FROM (
+                    SELECT customer_id, booking_date,
+                           LEAD(booking_date) OVER (PARTITION BY customer_id ORDER BY booking_date) as next_date
+                    FROM bookings
+                    WHERE tenant_id = :tenantId
+                    AND deleted_at IS NULL
+                    AND status = 'COMPLETED'
+                    AND customer_id IS NOT NULL
+                    AND booking_date BETWEEN :startDate AND :endDate
+                ) sub
+                WHERE next_date IS NOT NULL
+                GROUP BY customer_id
+            ) avg_sub
+            """, nativeQuery = true)
+    BigDecimal avgVisitIntervalByTenantIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /**
+     * 統計特定服務在指定狀態和日期範圍內的預約數（服務趨勢用）
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.deletedAt IS NULL
+            AND b.serviceId = :serviceId
+            AND b.status = :status
+            AND b.bookingDate BETWEEN :startDate AND :endDate
+            """)
+    long countByTenantIdAndServiceIdAndStatusAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("serviceId") String serviceId,
+            @Param("status") BookingStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     // ========================================
     // 存在性檢查
     // ========================================

@@ -157,14 +157,18 @@ public class ReportService {
                 .completionRate(completionRate)
                 .newCustomers(newCustomers)
                 .returningCustomers(returningCustomers)
-                .totalServedCustomers(completedBookings) // 簡化：以完成預約數代替
+                .totalServedCustomers(bookingRepository.countDistinctCustomersByTenantIdAndStatusAndDateRange(
+                        tenantId, BookingStatus.COMPLETED, startDate, endDate
+                ))
                 .totalRevenue(totalRevenue)
                 .serviceRevenue(serviceRevenue)
                 .productRevenue(productRevenue)
                 .averageOrderValue(averageOrderValue)
                 .issuedCoupons(issuedCoupons)
                 .usedCoupons(usedCoupons)
-                .couponDiscountAmount(BigDecimal.ZERO)
+                .couponDiscountAmount(couponInstanceRepository.sumDiscountAmountByTenantIdAndDateRange(
+                        tenantId, startDateTime, endDateTime
+                ))
                 .build();
     }
 
@@ -461,19 +465,45 @@ public class ReportService {
         }
 
         // 計算平均來客週期（天）
-        BigDecimal avgVisitInterval = BigDecimal.valueOf(30); // 預設 30 天
+        BigDecimal avgVisitInterval = bookingRepository.avgVisitIntervalByTenantIdAndDateRange(
+                tenantId, startDate, endDate
+        );
+        if (avgVisitInterval == null) {
+            avgVisitInterval = BigDecimal.ZERO;
+        }
 
-        // 服務趨勢分析 - 計算各服務的預約數變化
+        // 服務趨勢分析 - 計算各服務的預約數變化（與前一期比較）
+        long periodDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        LocalDate prevStart = startDate.minusDays(periodDays);
+        LocalDate prevEnd = startDate.minusDays(1);
+
         List<AdvancedReportResponse.ServiceTrend> serviceTrends = new ArrayList<>();
         List<Object[]> topServices = bookingRepository.findTopServicesByTenantId(
                 tenantId, startDate, endDate, 5
         );
         for (Object[] row : topServices) {
+            String svcId = (String) row[0];
+            Long currentCount = (Long) row[2];
+
+            // 查詢前一期同一服務的預約數
+            long prevCount = bookingRepository.countByTenantIdAndServiceIdAndStatusAndDateRange(
+                    tenantId, svcId, BookingStatus.COMPLETED, prevStart, prevEnd
+            );
+
+            BigDecimal growth = BigDecimal.ZERO;
+            if (prevCount > 0) {
+                growth = BigDecimal.valueOf(currentCount - prevCount)
+                        .divide(BigDecimal.valueOf(prevCount), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+            } else if (currentCount > 0) {
+                growth = BigDecimal.valueOf(100);
+            }
+
             serviceTrends.add(AdvancedReportResponse.ServiceTrend.builder()
-                    .serviceId((String) row[0])
+                    .serviceId(svcId)
                     .serviceName((String) row[1])
-                    .currentPeriodCount((Long) row[2])
-                    .growthRate(BigDecimal.ZERO) // 需要比較前一期
+                    .currentPeriodCount(currentCount)
+                    .growthRate(growth)
                     .build());
         }
 
