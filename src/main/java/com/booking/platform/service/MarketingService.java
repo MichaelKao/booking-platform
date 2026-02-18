@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
@@ -43,6 +44,10 @@ public class MarketingService {
 
     private final MarketingPushRepository marketingPushRepository;
     private final TenantRepository tenantRepository;
+
+    @Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    private MarketingService self;
     private final LineUserRepository lineUserRepository;
     private final LineMessageService lineMessageService;
     private final ObjectMapper objectMapper;
@@ -161,8 +166,8 @@ public class MarketingService {
         push.startSending();
         marketingPushRepository.save(push);
 
-        // 非同步發送
-        executePushAsync(push, tenant);
+        // 非同步發送（透過 proxy 呼叫，確保 @Async 生效）
+        self.executePushAsync(push, tenant);
 
         return toResponse(push);
     }
@@ -231,14 +236,19 @@ public class MarketingService {
      * 非同步執行推播
      */
     @Async("notificationExecutor")
-    public void executePushAsync(MarketingPush push, Tenant tenant) {
+    @Transactional
+    public void executePushAsync(MarketingPush push, Tenant ignoredTenant) {
         try {
             String tenantId = push.getTenantId();
 
-            // 取得目標用戶
-            List<LineUser> targetUsers = getTargetUsers(push);
+            // 重新載入最新的 push 和 tenant（避免 detached entity 覆蓋併發更新）
+            MarketingPush freshPush = marketingPushRepository.findById(push.getId()).orElse(push);
+            Tenant freshTenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
 
-            log.info("開始發送行銷推播，ID：{}，目標人數：{}", push.getId(), targetUsers.size());
+            // 取得目標用戶
+            List<LineUser> targetUsers = getTargetUsers(freshPush);
+
+            log.info("開始發送行銷推播，ID：{}，目標人數：{}", freshPush.getId(), targetUsers.size());
 
             int successCount = 0;
             int failCount = 0;
@@ -246,7 +256,7 @@ public class MarketingService {
             for (LineUser user : targetUsers) {
                 try {
                     // 發送文字訊息
-                    lineMessageService.pushText(tenantId, user.getLineUserId(), push.getContent());
+                    lineMessageService.pushText(tenantId, user.getLineUserId(), freshPush.getContent());
                     successCount++;
                 } catch (Exception e) {
                     log.warn("發送推播失敗，LINE User ID：{}，錯誤：{}", user.getLineUserId(), e.getMessage());
@@ -255,19 +265,26 @@ public class MarketingService {
             }
 
             // 更新推播狀態
-            push.complete(successCount, failCount);
-            marketingPushRepository.save(push);
+            freshPush.complete(successCount, failCount);
+            marketingPushRepository.save(freshPush);
 
             // 扣除推送額度
-            tenant.usePushQuota(successCount);
-            tenantRepository.save(tenant);
+            if (freshTenant != null) {
+                freshTenant.usePushQuota(successCount);
+                tenantRepository.save(freshTenant);
+            }
 
-            log.info("行銷推播發送完成，ID：{}，成功：{}，失敗：{}", push.getId(), successCount, failCount);
+            log.info("行銷推播發送完成，ID：{}，成功：{}，失敗：{}", freshPush.getId(), successCount, failCount);
 
         } catch (Exception e) {
             log.error("行銷推播執行失敗，ID：{}，錯誤：{}", push.getId(), e.getMessage(), e);
-            push.markFailed(e.getMessage());
-            marketingPushRepository.save(push);
+            try {
+                MarketingPush failedPush = marketingPushRepository.findById(push.getId()).orElse(push);
+                failedPush.markFailed(e.getMessage());
+                marketingPushRepository.save(failedPush);
+            } catch (Exception saveError) {
+                log.error("更新推播失敗狀態也失敗：{}", saveError.getMessage());
+            }
         }
     }
 

@@ -177,10 +177,7 @@ public class AuthService {
 
         // 使用 code 或 email 查詢
         Tenant tenant = tenantRepository.findByCodeAndDeletedAtIsNull(request.getUsername())
-                .or(() -> tenantRepository.findAll().stream()
-                        .filter(t -> t.getDeletedAt() == null)
-                        .filter(t -> request.getUsername().equals(t.getEmail()))
-                        .findFirst())
+                .or(() -> tenantRepository.findByEmailAndDeletedAtIsNull(request.getUsername()))
                 .orElseThrow(() -> {
                     log.warn("店家登入失敗，帳號不存在：{}", request.getUsername());
                     return new BusinessException(ErrorCode.AUTH_LOGIN_FAILED);
@@ -427,9 +424,7 @@ public class AuthService {
         // 3. 檢查 Email 是否已存在
         // ========================================
 
-        if (tenantRepository.findAll().stream()
-                .filter(t -> t.getDeletedAt() == null)
-                .anyMatch(t -> request.getEmail().equalsIgnoreCase(t.getEmail()))) {
+        if (tenantRepository.existsByEmailAndDeletedAtIsNull(request.getEmail())) {
             throw new BusinessException(ErrorCode.SYS_PARAM_ERROR, "此電子郵件已被註冊");
         }
 
@@ -524,10 +519,7 @@ public class AuthService {
         // ========================================
 
         Tenant tenant = tenantRepository.findByCodeAndDeletedAtIsNull(request.getEmail())
-                .or(() -> tenantRepository.findAll().stream()
-                        .filter(t -> t.getDeletedAt() == null)
-                        .filter(t -> request.getEmail().equalsIgnoreCase(t.getEmail()))
-                        .findFirst())
+                .or(() -> tenantRepository.findByEmailAndDeletedAtIsNull(request.getEmail()))
                 .orElse(null);
 
         // 即使找不到也不報錯，避免洩漏帳號是否存在
@@ -576,10 +568,7 @@ public class AuthService {
         // 2. 查詢並驗證 Token
         // ========================================
 
-        Tenant tenant = tenantRepository.findAll().stream()
-                .filter(t -> t.getDeletedAt() == null)
-                .filter(t -> request.getToken().equals(t.getPasswordResetToken()))
-                .findFirst()
+        Tenant tenant = tenantRepository.findByPasswordResetTokenAndDeletedAtIsNull(request.getToken())
                 .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_TOKEN_INVALID, "無效的重設連結"));
 
         // 檢查 Token 是否過期

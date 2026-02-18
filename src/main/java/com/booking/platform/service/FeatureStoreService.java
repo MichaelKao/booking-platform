@@ -395,10 +395,9 @@ public class FeatureStoreService {
                 break;
 
             case EXTRA_PUSH:
-                // 增加推送額度（每月額外 500 則）
-                int currentQuota = tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 100;
-                tenant.setMonthlyPushQuota(currentQuota + 500);
-                log.info("EXTRA_PUSH 已啟用，推送額度增加至 {}", tenant.getMonthlyPushQuota());
+                // 設定推送額度為 600（冪等操作，避免重複累加）
+                tenant.setMonthlyPushQuota(600);
+                log.info("EXTRA_PUSH 已啟用，推送額度設為 600");
                 break;
 
             default:
@@ -422,10 +421,9 @@ public class FeatureStoreService {
                 break;
 
             case EXTRA_PUSH:
-                // 減少推送額度
-                int currentQuota = tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 600;
-                tenant.setMonthlyPushQuota(Math.max(100, currentQuota - 500));
-                log.info("EXTRA_PUSH 已取消，推送額度恢復至 {}", tenant.getMonthlyPushQuota());
+                // 恢復預設推送額度（冪等操作）
+                tenant.setMonthlyPushQuota(100);
+                log.info("EXTRA_PUSH 已取消，推送額度恢復為 100");
                 break;
 
             default:

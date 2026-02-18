@@ -880,8 +880,9 @@ public class BookingService {
                 var customer = customerRepository.findByIdAndTenantIdAndDeletedAtIsNull(
                         entity.getCustomerId(), tenantId
                 ).orElse(null);
-                if (customer != null && customer.getNoShowCount() != null) {
-                    customer.setNoShowCount(customer.getNoShowCount() + 1);
+                if (customer != null) {
+                    int current = customer.getNoShowCount() != null ? customer.getNoShowCount() : 0;
+                    customer.setNoShowCount(current + 1);
                     customerRepository.save(customer);
                 }
             } catch (Exception e) {

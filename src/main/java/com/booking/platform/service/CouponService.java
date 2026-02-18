@@ -233,6 +233,12 @@ public class CouponService {
                         ErrorCode.COUPON_NOT_FOUND, "找不到指定的票券"
                 ));
 
+        // 只有 DRAFT 狀態可以發布
+        if (entity.getStatus() != CouponStatus.DRAFT) {
+            throw new BusinessException(ErrorCode.SYS_INVALID_OPERATION,
+                    "只有草稿狀態的票券可以發布，目前狀態：" + entity.getStatus());
+        }
+
         entity.publish();
         entity = couponRepository.save(entity);
 
@@ -250,6 +256,12 @@ public class CouponService {
                         ErrorCode.COUPON_NOT_FOUND, "找不到指定的票券"
                 ));
 
+        // 只有 PUBLISHED 狀態可以暫停
+        if (entity.getStatus() != CouponStatus.PUBLISHED) {
+            throw new BusinessException(ErrorCode.SYS_INVALID_OPERATION,
+                    "只有已發布的票券可以暫停，目前狀態：" + entity.getStatus());
+        }
+
         entity.pause();
         entity = couponRepository.save(entity);
 
@@ -266,6 +278,12 @@ public class CouponService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.COUPON_NOT_FOUND, "找不到指定的票券"
                 ));
+
+        // 只有 PAUSED 狀態可以恢復
+        if (entity.getStatus() != CouponStatus.PAUSED) {
+            throw new BusinessException(ErrorCode.SYS_INVALID_OPERATION,
+                    "只有已暫停的票券可以恢復，目前狀態：" + entity.getStatus());
+        }
 
         entity.resume();
         entity = couponRepository.save(entity);

@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,6 +53,9 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class Booking extends BaseEntity {
+
+    @Version
+    private Long version;
 
     // ========================================
     // 預約時間

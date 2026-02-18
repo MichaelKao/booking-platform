@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,6 +49,9 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class Tenant extends BaseEntity {
+
+    @Version
+    private Long version;
 
     // ========================================
     // 基本資料欄位
@@ -476,7 +480,9 @@ public class Tenant extends BaseEntity {
      * @return true 表示額度足夠
      */
     public boolean hasPushQuota(int count) {
-        return (this.monthlyPushQuota - this.monthlyPushUsed) >= count;
+        int quota = this.monthlyPushQuota != null ? this.monthlyPushQuota : 100;
+        int used = this.monthlyPushUsed != null ? this.monthlyPushUsed : 0;
+        return (quota - used) >= count;
     }
 
     /**
@@ -485,7 +491,7 @@ public class Tenant extends BaseEntity {
      * @param count 使用數量
      */
     public void usePushQuota(int count) {
-        this.monthlyPushUsed += count;
+        this.monthlyPushUsed = (this.monthlyPushUsed != null ? this.monthlyPushUsed : 0) + count;
     }
 
     /**
@@ -525,7 +531,9 @@ public class Tenant extends BaseEntity {
      * @return true 表示額度足夠
      */
     public boolean hasSmsQuota(int count) {
-        return (this.monthlySmsQuota - this.monthlySmsUsed) >= count;
+        int quota = this.monthlySmsQuota != null ? this.monthlySmsQuota : 0;
+        int used = this.monthlySmsUsed != null ? this.monthlySmsUsed : 0;
+        return (quota - used) >= count;
     }
 
     /**
@@ -534,7 +542,7 @@ public class Tenant extends BaseEntity {
      * @param count 使用數量
      */
     public void useSmsQuota(int count) {
-        this.monthlySmsUsed += count;
+        this.monthlySmsUsed = (this.monthlySmsUsed != null ? this.monthlySmsUsed : 0) + count;
     }
 
     /**

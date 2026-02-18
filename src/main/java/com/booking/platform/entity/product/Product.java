@@ -33,6 +33,9 @@ import java.math.BigDecimal;
 @Builder
 public class Product extends BaseEntity {
 
+    @Version
+    private Long version;
+
     /**
      * 商品名稱
      */

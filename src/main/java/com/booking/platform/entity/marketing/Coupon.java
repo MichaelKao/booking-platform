@@ -33,6 +33,9 @@ import java.time.LocalDateTime;
 @Builder
 public class Coupon extends BaseEntity {
 
+    @Version
+    private Long version;
+
     /**
      * 票券名稱
      */

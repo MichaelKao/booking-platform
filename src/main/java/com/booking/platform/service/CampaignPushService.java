@@ -33,6 +33,7 @@ public class CampaignPushService {
     private final CouponService couponService;
     private final CustomerRepository customerRepository;
     private final CampaignRepository campaignRepository;
+    private final CustomerService customerService;
 
     /**
      * 發布活動時推播 LINE 訊息給所有追蹤者
@@ -104,10 +105,18 @@ public class CampaignPushService {
             }
         }
 
-        // 贈送點數
+        // 贈送點數（透過 CustomerService 建立交易紀錄）
         if (campaign.getBonusPoints() != null && campaign.getBonusPoints() > 0) {
-            customer.addPoints(campaign.getBonusPoints());
-            customerRepository.save(customer);
+            try {
+                TenantContext.setTenantId(tenantId);
+                customerService.addPoints(customer.getId(),
+                        campaign.getBonusPoints(),
+                        "活動獎勵：" + campaign.getName());
+            } catch (Exception e) {
+                log.warn("活動點數贈送失敗，顧客：{}，錯誤：{}", customer.getId(), e.getMessage());
+            } finally {
+                TenantContext.clear();
+            }
         }
 
         // 遞增參與人數

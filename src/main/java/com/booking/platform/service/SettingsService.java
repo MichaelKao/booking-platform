@@ -272,7 +272,7 @@ public class SettingsService {
                 .maxStaffCount(tenant.getMaxStaffCount())
                 .monthlyPushQuota(tenant.getMonthlyPushQuota())
                 .monthlyPushUsed(tenant.getMonthlyPushUsed())
-                .monthlyPushRemaining(tenant.getMonthlyPushQuota() - tenant.getMonthlyPushUsed())
+                .monthlyPushRemaining((tenant.getMonthlyPushQuota() != null ? tenant.getMonthlyPushQuota() : 100) - (tenant.getMonthlyPushUsed() != null ? tenant.getMonthlyPushUsed() : 0))
                 .pointBalance(tenant.getPointBalance())
                 .activatedAt(tenant.getActivatedAt())
                 .expiredAt(tenant.getExpiredAt())
