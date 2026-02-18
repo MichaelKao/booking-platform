@@ -699,7 +699,7 @@
             },
             {
                 name: '復古毛孩館', desc: '復古溫馨風，社區寵物店', theme:'ORANGE', layout:'3+4',
-                img: 'https://images.unsplash.com/photo-1450778869180-e77fc4a85bf0?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約服務',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'經典好物',a:'start_shopping'},
                     {l:'老客優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'會員資料',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
@@ -771,7 +771,7 @@
             },
             {
                 name: '森林寵物莊園', desc: '大地自然風，寵物牧場/農場', theme:'BOUTIQUE', layout:'2+3',
-                img: 'https://images.unsplash.com/photo-1592754862816-5765fad54a68?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約體驗',a:'start_booking'},{l:'我的預約',a:'view_bookings'},
                     {l:'天然好物',a:'start_shopping'},{l:'會員中心',a:'view_member_info'},{l:'聯絡莊園',a:'contact_shop'}
@@ -945,7 +945,7 @@
             },
             {
                 name: '光感科技美膚', desc: '科技未來風，儀器美容', theme:'BLUE', layout:'2x3',
-                img: 'https://images.unsplash.com/photo-1596704017234-0ac038ef754e?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'科技保養',a:'start_shopping'},
                     {l:'體驗價',a:'view_coupons'},{l:'膚質檔案',a:'view_member_info'},{l:'線上諮詢',a:'contact_shop'}
@@ -1140,7 +1140,7 @@
             },
             {
                 name: '復古理容院', desc: '美式復古風，經典理容', theme:'ORANGE', layout:'3+4',
-                img: 'https://images.unsplash.com/photo-1585747860-8b13dee7a37e?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約理容',a:'start_booking'},{l:'我的預約',a:'view_bookings'},{l:'經典髮品',a:'start_shopping'},
                     {l:'老客優惠',a:'view_coupons'},{l:'我的票券',a:'view_my_coupons'},{l:'紳士檔案',a:'view_member_info'},{l:'聯絡店家',a:'contact_shop'}
@@ -1863,7 +1863,7 @@
             },
             {
                 name: '有機農場餐桌', desc: '產地直送風，農場餐廳', theme:'BOUTIQUE', layout:'2+3',
-                img: 'https://images.unsplash.com/photo-1525610553eee-0f5e0dc56d68?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約訂位',a:'start_booking'},{l:'我的訂位',a:'view_bookings'},
                     {l:'農場直送',a:'start_shopping'},{l:'綠色會員',a:'view_member_info'},{l:'聯絡農場',a:'contact_shop'}
@@ -1954,7 +1954,7 @@
             },
             {
                 name: '粉紅閨蜜SPA', desc: '甜蜜閨蜜風，女性專屬SPA', theme:'BOUTIQUE', layout:'2+3',
-                img: 'https://images.unsplash.com/photo-1540555700-8b13dee7a37e?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約療程',a:'start_booking'},{l:'我的預約',a:'view_bookings'},
                     {l:'SPA 好物',a:'start_shopping'},{l:'閨蜜優惠',a:'view_coupons'},{l:'甜心會員',a:'view_member_info'}
@@ -1995,7 +1995,7 @@
             },
             {
                 name: '和風湯屋', desc: '日式溫泉風，湯屋/岩盤浴', theme:'GREEN', layout:'1+2',
-                img: 'https://images.unsplash.com/photo-1515377905-4b937e2e88a0?w=600&h=300&fit=crop',
+                img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&h=300&fit=crop',
                 cells: [
                     {l:'預約泡湯',a:'start_booking'},
                     {l:'湯客會員',a:'view_member_info'},{l:'聯絡湯屋',a:'contact_shop'}
@@ -2770,47 +2770,55 @@
                     fd.append('cellIcon_' + idx, file);
                 });
                 const r = await fetch('/api/settings/line/rich-menu/create-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
-                const d = await r.json();
+                const d = await r.json().catch(()=>({success:false,message:'伺服器回應 '+r.status}));
                 if (d.success) { showSuccess('Rich Menu 已發布到 LINE！顧客開啟聊天即可看到'); }
-                else showError(d.message || '發布失敗');
+                else { if (r.status >= 500) showError('伺服器暫時繁忙，請稍後再試（' + r.status + '）'); else showError(d.message || '發布失敗'); }
             } else {
                 const r = await api.post('/api/settings/line/rich-menu/create', { theme: rmTheme });
                 if (r.success) { showSuccess('Rich Menu 已發布到 LINE！顧客開啟聊天即可看到'); }
                 else showError(r.message || '發布失敗');
             }
-        } catch(e) { showError('發布失敗：'+e.message); }
+        } catch(e) { showError('發布失敗：'+(e.message||'網路錯誤，請檢查網路連線')); }
         finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-2"></i>發布到 LINE'; }
     }
 
     async function previewRichMenu() {
         const btn = document.getElementById('btnPreview');
         btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>產生中...';
-        try {
-            const config = buildRmConfig();
-            const fd = new FormData();
-            fd.append('config', JSON.stringify(config));
-            if (rmBgFile) {
-                fd.append('backgroundImage', rmBgFile);
-            } else if (rmBgUrl) {
-                fd.append('backgroundImageUrl', rmBgUrl);
+        const maxRetry = 2;
+        for (let attempt = 1; attempt <= maxRetry; attempt++) {
+            try {
+                const config = buildRmConfig();
+                const fd = new FormData();
+                fd.append('config', JSON.stringify(config));
+                if (rmBgFile) {
+                    fd.append('backgroundImage', rmBgFile);
+                } else if (rmBgUrl) {
+                    fd.append('backgroundImageUrl', rmBgUrl);
+                }
+                Object.entries(cellIconFiles).forEach(([idx, file]) => {
+                    fd.append('cellIcon_' + idx, file);
+                });
+                const r = await fetch('/api/settings/line/rich-menu/preview-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
+                if (r.ok) {
+                    const blob = await r.blob();
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('previewResultImg').src = url;
+                    document.getElementById('previewResultCard').classList.remove('d-none');
+                    document.getElementById('previewResultCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
+                    showSuccess('預覽圖已產生！這就是發布後顧客看到的樣子');
+                    break;
+                } else {
+                    const d = await r.json().catch(()=>({message:'伺服器回應 '+r.status}));
+                    if (attempt < maxRetry) { await new Promise(ok=>setTimeout(ok,2000)); continue; }
+                    showError(d?.message || '預覽失敗（HTTP '+r.status+'）');
+                }
+            } catch(e) {
+                if (attempt < maxRetry) { await new Promise(ok=>setTimeout(ok,2000)); continue; }
+                showError('預覽失敗：'+(e.message||'網路錯誤'));
             }
-            Object.entries(cellIconFiles).forEach(([idx, file]) => {
-                fd.append('cellIcon_' + idx, file);
-            });
-            const r = await fetch('/api/settings/line/rich-menu/preview-advanced', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body:fd });
-            if (r.ok) {
-                const blob = await r.blob();
-                const url = URL.createObjectURL(blob);
-                document.getElementById('previewResultImg').src = url;
-                document.getElementById('previewResultCard').classList.remove('d-none');
-                document.getElementById('previewResultCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
-                showSuccess('預覽圖已產生！這就是發布後顧客看到的樣子');
-            } else {
-                const d = await r.json().catch(()=>null);
-                showError(d?.message || '預覽失敗');
-            }
-        } catch(e) { showError('預覽失敗：'+e.message); }
-        finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-eye me-1"></i>精確預覽'; }
+        }
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-eye me-1"></i>精確預覽';
     }
 
     function buildRmConfig() {
