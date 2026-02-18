@@ -207,13 +207,14 @@ public class AuthService {
         // 3. 驗證密碼
         // ========================================
 
-        // 如果租戶有設定密碼，使用加密密碼驗證；否則使用預設密碼
+        // 驗證密碼
         boolean passwordValid = false;
         if (tenant.getPassword() != null && !tenant.getPassword().isEmpty()) {
             passwordValid = passwordEncoder.matches(request.getPassword(), tenant.getPassword());
         } else {
-            // 舊帳號相容：使用預設密碼 "password123"
-            passwordValid = "password123".equals(request.getPassword());
+            // 舊帳號尚未設定密碼，引導使用忘記密碼功能
+            log.warn("店家登入失敗，帳號尚未設定密碼：{}，請使用忘記密碼功能", request.getUsername());
+            throw new BusinessException(ErrorCode.AUTH_LOGIN_FAILED, "此帳號尚未設定密碼，請使用「忘記密碼」功能設定新密碼");
         }
 
         if (!passwordValid) {
@@ -645,8 +646,9 @@ public class AuthService {
         if (tenant.getPassword() != null && !tenant.getPassword().isEmpty()) {
             currentPasswordValid = passwordEncoder.matches(request.getCurrentPassword(), tenant.getPassword());
         } else {
-            // 舊帳號相容
-            currentPasswordValid = "password123".equals(request.getCurrentPassword());
+            // 舊帳號尚未設定密碼，引導使用忘記密碼功能
+            log.warn("更改密碼失敗，帳號尚未設定密碼，租戶 ID：{}，請使用忘記密碼功能", tenantId);
+            throw new BusinessException(ErrorCode.AUTH_LOGIN_FAILED, "此帳號尚未設定密碼，請使用「忘記密碼」功能設定新密碼");
         }
 
         if (!currentPasswordValid) {
