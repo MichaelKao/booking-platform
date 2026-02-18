@@ -5,12 +5,23 @@ import { TEST_ACCOUNTS, getTomorrow } from './utils/test-helpers';
  * 時間/日期驗證測試
  *
  * 測試範圍：
- * 1. 員工排班：開始時間不能晚於結束時間、休息時間驗證
+ * 1. 員工排班：開始時間不能晚於結束時間、休息時間驗證（後端 + 前端防呆）
  * 2. 員工請假（半天）：開始時間不能晚於結束時間
- * 3. 店家設定：營業時間、休息時間驗證
+ * 3. 店家設定：營業時間、休息時間驗證（後端 + 前端防呆）
  * 4. 預約更新：開始時間不能晚於結束時間
  * 5. 票券有效期：起始日不能晚於結束日
  * 6. 行銷活動：開始時間不能晚於結束時間
+ *
+ * 預設值（新店家/新員工）：
+ * - 營業時間：09:00-18:00
+ * - 午休時間：12:00-13:00
+ * - 公休日：週六、週日
+ * - 員工排班：週一至五 09:00-18:00 午休 12:00-13:00
+ *
+ * 前端防呆（settings.html / staff.html）：
+ * - 營業時間：開始 < 結束
+ * - 休息時間：開始 < 結束、在營業範圍內、成對填寫
+ * - 員工排班：上班開始 < 結束、休息開始 < 結束、休息在上班範圍內
  */
 
 // 取得店家 Token
@@ -247,7 +258,7 @@ test.describe('時間/日期驗證', () => {
       console.log(`休息時間反轉: ${response.status()}, message: ${data.message || ''}`);
     });
 
-    test('正常營業設定應成功', async ({ request }) => {
+    test('正常營業設定應成功（預設 09:00-18:00 午休 12:00-13:00）', async ({ request }) => {
       if (!tenantToken) {
         test.skip();
         return;
@@ -257,7 +268,7 @@ test.describe('時間/日期驗證', () => {
         headers: { 'Authorization': `Bearer ${tenantToken}` },
         data: {
           businessStartTime: '09:00',
-          businessEndTime: '21:00',
+          businessEndTime: '18:00',
           breakStartTime: '12:00',
           breakEndTime: '13:00'
         }
@@ -269,6 +280,28 @@ test.describe('時間/日期驗證', () => {
       if (data.success) {
         expect(data.success).toBeTruthy();
       }
+    });
+
+    test('休息時間超出營業範圍應被拒絕', async ({ request }) => {
+      if (!tenantToken) {
+        test.skip();
+        return;
+      }
+
+      // 休息開始時間早於營業開始
+      const response = await request.put('/api/settings', {
+        headers: { 'Authorization': `Bearer ${tenantToken}` },
+        data: {
+          businessStartTime: '09:00',
+          businessEndTime: '18:00',
+          breakStartTime: '08:00',
+          breakEndTime: '12:00'
+        }
+      });
+
+      expect(response.status()).not.toBe(500);
+      // 後端可能不驗證這個，但至少不 500
+      console.log(`休息超出營業範圍: ${response.status()}`);
     });
   });
 

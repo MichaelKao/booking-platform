@@ -949,56 +949,82 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 npx playwright test
 
 # 執行特定測試
-npx playwright test tests/06-sse-notifications.spec.ts
+npx playwright test tests/21-sse-notifications.spec.ts
 
 # 列出所有測試
 npx playwright test --list
 ```
 
-**測試套件 (1229 tests in 42 files)：**
+**測試套件 (34 files，按操作邏輯分區)：**
 
-| 檔案 | 說明 | 測試數 |
-|------|------|--------|
-| `00-setup.spec.ts` | 環境檢查 | 5 |
-| `01-auth.spec.ts` | 認證功能 | 11 |
-| `02-admin.spec.ts` | 超管後台基本測試 | 12 |
-| `03-tenant-dashboard.spec.ts` | 店家後台基本測試 | 7 |
-| `04-tenant-features.spec.ts` | API 測試 | 16 |
-| `05-feature-store.spec.ts` | 功能商店 | 11 |
-| `06-sse-notifications.spec.ts` | SSE 即時通知 | 13 |
-| `07-admin-crud.spec.ts` | 超管 CRUD 完整測試 | 33 |
-| `08-tenant-booking.spec.ts` | 預約管理完整測試 | 28 |
-| `09-tenant-pages.spec.ts` | 店家後台所有頁面測試 | 33 |
-| `09-tenant-customer.spec.ts` | 顧客管理測試 | 32 |
-| `10-admin-pages.spec.ts` | 超管後台所有頁面測試 | 13 |
-| `10-tenant-staff-service.spec.ts` | 員工&服務管理測試 | 25 |
-| `11-public-pages.spec.ts` | 公開頁面測試 | 24 |
-| `11-tenant-product-coupon.spec.ts` | 商品&票券管理測試 | 29 |
-| `12-tenant-campaign-marketing.spec.ts` | 行銷活動&推播測試 | 24 |
-| `13-tenant-settings.spec.ts` | 設定頁面測試 | 41 |
-| `14-tenant-reports.spec.ts` | 報表&匯出測試 | 38 |
-| `15-line-bot.spec.ts` | LINE Bot 測試 | 19 |
-| `16-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱測試 | 22 |
-| `17-comprehensive-forms.spec.ts` | 表單驗證測試 | 25 |
-| `18-feature-store-details.spec.ts` | 功能商店詳情測試 | 23 |
-| `19-seo-pages.spec.ts` | SEO 頁面測試 | 45 |
-| `19-ai-menu-logic.spec.ts` | AI 客服選單邏輯測試 | 2 |
-| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 | 40 |
-| `21-notification-system.spec.ts` | 通知系統補齊+顧客刪除按鈕測試 | 25 |
-| `22-full-coverage-ui.spec.ts` | 全覆蓋 UI 測試 | 94 |
-| `23-deep-interaction-test.spec.ts` | 深度互動測試 | 33 |
-| `24-onboarding-setup-status.spec.ts` | 新手引導系統&側邊欄設定狀態測試 | 46 |
-| `24-rwd-responsive.spec.ts` | RWD 響應式設計測試 | 90 |
-| `25-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） | 22 |
-| `26-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） | 23 |
-| `27-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 | 132 |
-| `28-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工測試 | 12 |
-| `29-time-validation.spec.ts` | 時間/日期驗證（開始<結束）+ 前端防呆 | 16 |
-| `30-rich-menu-custom.spec.ts` | Rich Menu 自訂模式 + 佈局選擇 + API 契約 | 52 |
-| `31-advanced-rich-menu.spec.ts` | 進階自訂 Rich Menu + 功能訂閱 + API | 19 |
-| `31-flex-menu-step-editor.spec.ts` | Flex Menu 步驟編輯器 + 卡片圖片上傳 | 36 |
-| `32-business-logic-correctness.spec.ts` | 業務邏輯正確性測試（數值驗證） | 23 |
-| `99-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋測試 | 33 |
+### Zone 0: 基礎設施 (00-03)
+
+| 檔案 | 說明 |
+|------|------|
+| `00-setup.spec.ts` | 環境檢查（健康檢查、頁面可訪問、超管登入） |
+| `01-auth.spec.ts` | 認證流程（登入、註冊、忘記密碼、Token 刷新） |
+| `02-admin.spec.ts` | 超管後台（儀表板、店家管理、功能管理、儲值審核、API 驗證） |
+| `03-tenant-dashboard.spec.ts` | 店家後台基本環境（儀表板載入、側邊欄、基本導航） |
+
+### Zone 1: 超管操作 (04-05)
+
+| 檔案 | 說明 |
+|------|------|
+| `04-admin-crud.spec.ts` | 超管 CRUD 完整流程（店家增刪改查、功能啟停、儲值審核） |
+| `05-admin-topup-features.spec.ts` | 功能管理 + 儲值 + 訂閱流程 API 測試 |
+
+### Zone 2: 店家核心業務 (06-14)
+
+| 檔案 | 說明 |
+|------|------|
+| `06-booking-management.spec.ts` | 預約管理 + 全流程業務邏輯驗證（PENDING→CONFIRMED→COMPLETED、取消、時段佔用） |
+| `07-tenant-customer.spec.ts` | 顧客管理 + 點數業務邏輯驗證（增減點數餘額、封鎖/解封） |
+| `08-staff-service.spec.ts` | 員工管理 + 服務管理（排班、請假、服務分類） |
+| `09-product-coupon.spec.ts` | 商品管理 + 票券管理 + 庫存一致性 + 票券生命週期驗證 |
+| `10-campaign-marketing.spec.ts` | 行銷活動 + 推播 + 狀態機驗證（DRAFT→PUBLISHED→PAUSED→ENDED） |
+| `11-settings.spec.ts` | 店家設定 + LINE 設定 + 點數設定 |
+| `12-reports-export.spec.ts` | 報表 + Excel/PDF 匯出 |
+| `13-membership-forms.spec.ts` | 會員等級 + 表單驗證 |
+| `14-feature-store-details.spec.ts` | 功能商店詳情 + 訂閱/取消流程 |
+
+### Zone 3: LINE Bot (15-19)
+
+| 檔案 | 說明 |
+|------|------|
+| `15-line-bot.spec.ts` | LINE Webhook + 狀態機 + AI 智慧客服 |
+| `16-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 |
+| `17-rich-menu-custom.spec.ts` | Rich Menu 預設 + 自訂模式 + 佈局選擇 |
+| `18-advanced-rich-menu.spec.ts` | 進階自訂 Rich Menu + 功能訂閱控制 |
+| `19-flex-menu-step-editor.spec.ts` | Flex Menu 步驟編輯器 + 卡片圖片上傳 |
+
+### Zone 4: 跨域驗證 (20-24)
+
+| 檔案 | 說明 |
+|------|------|
+| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 |
+| `21-sse-notifications.spec.ts` | SSE 即時通知 + 通知系統完整測試 |
+| `22-public-seo-pages.spec.ts` | 公開頁面 + SEO 驗證（meta tags、OG、sitemap） |
+| `23-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱顯示控制 |
+| `24-onboarding-setup-status.spec.ts` | 新手引導系統 + 側邊欄設定狀態 |
+
+### Zone 5: 品質閘門 (25-30)
+
+| 檔案 | 說明 |
+|------|------|
+| `25-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） |
+| `26-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工 |
+| `27-time-validation.spec.ts` | 時間/日期驗證（開始<結束）+ 前端防呆 |
+| `28-rwd-responsive.spec.ts` | RWD 響應式設計測試 |
+| `29-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） |
+| `30-full-coverage-ui.spec.ts` | 全覆蓋 UI + 深度互動測試 |
+
+### Zone 6: 回歸+防護 (31-33)
+
+| 檔案 | 說明 |
+|------|------|
+| `31-business-logic-correctness.spec.ts` | 業務邏輯正確性 + 報表交叉驗證 |
+| `32-bugfix-verification.spec.ts` | Bug 修復回歸驗證 |
+| `33-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋（壓軸） |
 
 **測試涵蓋範圍：**
 
@@ -1009,25 +1035,16 @@ npx playwright test --list
 - 所有 API 端點（19 個主要 API 完整驗證）
 - 所有表單欄位和按鈕（9 個新增按鈕 Modal 測試）
 - **F12 Console 自動監控**（所有 UI 測試自動檢測 JS 錯誤、HTTP 500、console.error）
-- JavaScript 錯誤檢測（SyntaxError、ReferenceError、TypeError）
-- HTTP 錯誤檢測（400/500 回應監控）
-- 「載入失敗」文字檢測
+- **業務邏輯深度驗證**（預約狀態流轉、點數餘額一致、庫存增減、票券生命週期、活動狀態機、報表交叉驗證）
 - 功能訂閱與側邊欄顯示控制
 - 新手引導卡片（顯示/步驟/進度條/關閉/導航/持久化）
-- 側邊欄進度環（SVG/百分比/完成隱藏）
-- 側邊欄注意圓點（脈動動畫/next-step）
-- 側邊欄店家 footer（店家名稱/跨頁面載入）
-- 設定完成狀態 API（欄位驗證/邊界值）
 - LINE Bot 對話狀態和訊息格式
 - LINE Bot 服務分類選擇流程（狀態機、Postback、goBack、邊界情況）
 - Excel/PDF 匯出功能
-- 靜態資源（CSS/JS）載入
-- 顧客點數交易記錄 API
-- 報表摘要統計（回頭客、服務營收）
-- 超管儀表板金額計算
 - SEO 資源驗證（robots.txt、sitemap.xml、OG 圖片、Meta Tags）
 - **頁面健康驗證**（載入完成檢測、卡住的「載入中」、孤立 spinner、載入遮罩）
 - **API 契約驗證**（前端欄位名 vs 後端 DTO 欄位名匹配，防止 400 錯誤）
+- **多租戶資料隔離驗證**（不同角色 token 不能跨域存取）
 
 **靜態分析腳本（scripts/audit-frontend-apis.js）：**
 
@@ -1043,7 +1060,7 @@ npx playwright test --list
 - 監控三類錯誤：`pageerror`（JS 執行錯誤）、HTTP 500+（伺服器錯誤）、`console.error`（過濾瀏覽器雜訊）
 - 任何未過濾的 F12 錯誤會讓測試直接失敗
 - 過濾清單包含：瀏覽器內建訊息（favicon、net::ERR_、SSE 等）和應用程式預期的 API 錯誤處理（handleResponse、登入失敗、換頁中斷等）
-- 共 21 個 UI 測試檔案已整合此 fixture
+- 大多數 UI 測試檔案已整合此 fixture
 
 **測試基礎設施注意事項：**
 
@@ -1053,7 +1070,7 @@ npx playwright test --list
 
 **測試安全注意事項：**
 
-- LINE 設定測試（`13-tenant-settings.spec.ts`）**不會覆蓋**真實的 LINE credentials
+- LINE 設定測試（`11-settings.spec.ts`）**不會覆蓋**真實的 LINE credentials
 - 測試只會更新訊息設定（welcomeMessage、defaultReply），不動 channelId/channelSecret/channelAccessToken
 - 啟用/停用測試會**確保最終保持啟用狀態**，避免影響生產環境
 
@@ -1218,28 +1235,25 @@ test('刪除顧客 — 確認對話框顯示後執行刪除', ...);
 
 ```
 tests/
-├── 00-setup.spec.ts            ← 環境前置檢查（health check）
-├── 01-auth.spec.ts             ← 認證（最基本，其他測試依賴它）
-├── 02~06-*.spec.ts             ← 基本功能測試
-├── 07~15-*.spec.ts             ← 各模組 CRUD 測試
-├── 16~19-*.spec.ts             ← 進階功能測試
-├── 20-f12-console-check.spec.ts ← 全頁面 Console 錯誤檢測
-├── 21~25-*.spec.ts             ← 專項驗證測試
-├── 26-api-contract-validator.spec.ts ← API 契約驗證
-├── 27-line-category-selection.spec.ts ← LINE Bot 分類選擇功能
-├── 28-booking-slot-conflict.spec.ts ← 預約時段衝突與自動分配員工
-├── 29-time-validation.spec.ts      ← 時間/日期驗證（開始<結束）
-├── 30-rich-menu-custom.spec.ts     ← Rich Menu 7 格預覽 + 自訂模式
-├── 99-comprehensive-bug-hunt.spec.ts ← 全面掃描（壓軸）
+├── 00~03-*.spec.ts             ← Zone 0: 基礎設施（環境、認證、超管/店家基本）
+├── 04~05-*.spec.ts             ← Zone 1: 超管操作（CRUD、功能管理）
+├── 06~14-*.spec.ts             ← Zone 2: 店家核心業務（預約→顧客→員工→商品→行銷→設定→報表）
+├── 15~19-*.spec.ts             ← Zone 3: LINE Bot（Webhook、分類、Rich Menu、Flex Menu）
+├── 20~24-*.spec.ts             ← Zone 4: 跨域驗證（F12、SSE、公開頁面、側邊欄、引導）
+├── 25~30-*.spec.ts             ← Zone 5: 品質閘門（API 契約、衝突、時間、RWD、健康、全覆蓋）
+├── 31~33-*.spec.ts             ← Zone 6: 回歸+防護（業務正確性、bugfix、全面掃描）
 ├── fixtures.ts                 ← 共用 Fixture（F12 監控）
 └── utils/test-helpers.ts       ← 共用輔助函式
 ```
 
 **編號邏輯**：
-- `00-09`：基礎設施和核心功能
-- `10-19`：各模組深度測試
-- `20-29`：品質驗證和防護網
-- `99`：全面掃描（放最後跑）
+- `00-03`：基礎設施（Zone 0）
+- `04-05`：超管操作（Zone 1）
+- `06-14`：店家核心業務（Zone 2）
+- `15-19`：LINE Bot（Zone 3）
+- `20-24`：跨域驗證（Zone 4）
+- `25-30`：品質閘門（Zone 5）
+- `31-33`：回歸+防護（Zone 6）
 
 ### 防護網測試清單（適用於所有 Web 專案）
 
@@ -1436,4 +1450,4 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試 | 1229 |
+| E2E 測試檔案 | 34 |

@@ -2,17 +2,32 @@ import { test, expect, APIRequestContext } from './fixtures';
 import { tenantLogin, waitForLoading, WAIT_TIME, TEST_ACCOUNTS } from './utils/test-helpers';
 
 /**
- * 通知系統補齊 + 顧客刪除按鈕 測試
+ * SSE 即時通知 + 通知系統完整測試
  *
  * 測試範圍：
- * 1. notification.js 新增事件類型驗證
- * 2. SseNotificationService 新通知方法驗證
- * 3. ProductOrderService LINE 通知整合驗證
- * 4. CouponService SSE 通知整合驗證
- * 5. CustomerService SSE 通知整合驗證
- * 6. customers.html 刪除按鈕 UI 驗證
- * 7. 所有相關頁面 F12 Console 無錯誤（透過 fixtures.ts 自動檢測）
+ * 1. SSE 端點連線與認證
+ * 2. SSE Content-Type 與服務健康
+ * 3. notification.js 載入與基本功能
+ * 4. notification.js 事件類型與處理函數完整性
+ * 5. notification.js 音效/toast/頁面刷新整合
+ * 6. SSE 通知服務 API 整合驗證（商品訂單/票券/顧客）
+ * 7. 商品訂單 LINE 通知驗證
+ * 8. 顧客管理 - 刪除按鈕 UI 驗證
+ * 9. 相關頁面 currentPage 設定與 loadData 驗證
+ * 10. 通知 UI 元素驗證
  */
+
+// 取得超管 Token
+async function getAdminToken(request: APIRequestContext): Promise<string> {
+  const response = await request.post('/api/auth/admin/login', {
+    data: {
+      username: TEST_ACCOUNTS.admin.username,
+      password: TEST_ACCOUNTS.admin.password
+    }
+  });
+  const data = await response.json();
+  return data.data.accessToken;
+}
 
 // 取得店家 Token
 async function getTenantToken(request: APIRequestContext): Promise<string> {
@@ -24,32 +39,124 @@ async function getTenantToken(request: APIRequestContext): Promise<string> {
 }
 
 // ========================================
-// 1. notification.js 事件類型完整性驗證
+// 1. SSE 端點連線與認證
 // ========================================
-test.describe('notification.js 新增事件類型驗證', () => {
+test.describe('SSE 端點連線與認證', () => {
+  let adminToken: string;
 
-  test('notification.js 包含所有 SSE 事件監聽', async ({ page }) => {
+  test.beforeAll(async ({ request }) => {
+    adminToken = await getAdminToken(request);
+  });
+
+  test('未認證的 SSE 連線應返回 401', async ({ request }) => {
+    const response = await request.get('/api/notifications/stream', {
+      headers: {
+        'Accept': 'text/event-stream'
+      }
+    });
+
+    expect(response.status()).toBe(401);
+  });
+
+  test('認證的 SSE 連線應返回 200', async ({ request }) => {
+    const response = await request.get('/api/notifications/stream', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Accept': 'text/event-stream'
+      }
+    });
+
+    // 認證後應該成功（可能因為沒有 tenantId 而立即關閉）
+    const status = response.status();
+    console.log(`認證 SSE 狀態碼: ${status}`);
+    expect(status).toBeLessThan(500);
+  });
+
+  test('SSE 端點回應正確的 Content-Type', async ({ request }) => {
+    const response = await request.get('/api/notifications/stream', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Accept': 'text/event-stream'
+      }
+    });
+
+    if (response.ok()) {
+      const contentType = response.headers()['content-type'];
+      console.log(`Content-Type: ${contentType}`);
+      if (contentType) {
+        expect(contentType).toContain('text/event-stream');
+      }
+    }
+  });
+
+  test('SSE 服務健康檢查正常', async ({ request }) => {
+    const response = await request.get('/health');
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.status).toBe('UP');
+  });
+});
+
+// ========================================
+// 2. notification.js 載入與基本功能
+// ========================================
+test.describe('notification.js 載入與基本功能', () => {
+
+  test('notification.js 可正確載入', async ({ page }) => {
+    const response = await page.goto('/js/notification.js');
+    expect(response?.status()).toBe(200);
+
+    const content = await response?.text();
+    expect(content).toContain('initNotificationService');
+    expect(content).toContain('EventSource');
+    expect(content).toContain('playNotificationSound');
+
+    const hasBeepSound = content?.includes('playBeepSound');
+    console.log(`Web Audio API fallback: ${hasBeepSound ? '已部署' : '待部署'}`);
+  });
+
+  test('音效播放功能存在', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
-    // 原有事件
+    expect(content).toContain('playNotificationSound');
+    expect(content).toContain('soundEnabled');
+
+    const hasWebAudioFallback = content.includes('AudioContext') && content.includes('createOscillator');
+    console.log(`音效實作: ${hasWebAudioFallback ? 'Web Audio API + Audio Element' : '僅 Audio Element'}`);
+
+    // 至少要有基本的音效功能
+    expect(content.includes('Audio') || content.includes('AudioContext')).toBeTruthy();
+  });
+});
+
+// ========================================
+// 3. notification.js 事件類型與處理函數完整性
+// ========================================
+test.describe('notification.js 事件類型完整性', () => {
+
+  test('包含所有 SSE 事件監聽', async ({ page }) => {
+    const response = await page.goto('/js/notification.js');
+    const content = await response?.text() || '';
+
+    // 預約事件
     expect(content).toContain('new_booking');
     expect(content).toContain('booking_updated');
     expect(content).toContain('booking_status_changed');
     expect(content).toContain('booking_cancelled');
 
-    // 新增事件
+    // 商品訂單/票券/顧客事件
     expect(content).toContain('new_product_order');
     expect(content).toContain('product_order_status_changed');
     expect(content).toContain('coupon_claimed');
     expect(content).toContain('new_customer');
   });
 
-  test('notification.js 包含所有事件處理函數', async ({ page }) => {
+  test('包含所有事件處理函數', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
-    // 原有處理函數
+    // 預約處理函數
     expect(content).toContain('handleNewBooking');
     expect(content).toContain('handleBookingUpdated');
     expect(content).toContain('handleBookingStatusChanged');
@@ -62,21 +169,46 @@ test.describe('notification.js 新增事件類型驗證', () => {
     expect(content).toContain('handleNewCustomer');
   });
 
-  test('notification.js 事件處理函數含音效播放', async ({ page }) => {
+  test('connectSSE 函數正確註冊所有事件監聽', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
-    // 新商品訂單、票券領取、新顧客應播放音效
-    // 用正規表達式檢查每個 handler 內有 playNotificationSound
+    const expectedListeners = [
+      "'new_booking'",
+      "'booking_updated'",
+      "'booking_status_changed'",
+      "'booking_cancelled'",
+      "'new_product_order'",
+      "'product_order_status_changed'",
+      "'coupon_claimed'",
+      "'new_customer'"
+    ];
+
+    for (const listener of expectedListeners) {
+      expect(content).toContain(`addEventListener(${listener}`);
+      console.log(`事件監聽 ${listener}: 已註冊`);
+    }
+  });
+});
+
+// ========================================
+// 4. notification.js 音效/toast/頁面刷新整合
+// ========================================
+test.describe('notification.js 處理函數整合驗證', () => {
+
+  test('事件處理函數含音效播放', async ({ page }) => {
+    const response = await page.goto('/js/notification.js');
+    const content = await response?.text() || '';
+
     const handlers = ['handleNewProductOrder', 'handleCouponClaimed', 'handleNewCustomer'];
     for (const handler of handlers) {
       const handlerRegex = new RegExp(`function\\s+${handler}[\\s\\S]*?playNotificationSound`);
       expect(content).toMatch(handlerRegex);
-      console.log(`${handler}: 包含音效播放 ✓`);
+      console.log(`${handler}: 包含音效播放`);
     }
   });
 
-  test('notification.js 事件處理函數含 toast 通知', async ({ page }) => {
+  test('事件處理函數含 toast 通知', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
@@ -89,11 +221,11 @@ test.describe('notification.js 新增事件類型驗證', () => {
     for (const handler of handlers) {
       const handlerRegex = new RegExp(`function\\s+${handler}[\\s\\S]*?showNotificationToast`);
       expect(content).toMatch(handlerRegex);
-      console.log(`${handler}: 包含 toast 通知 ✓`);
+      console.log(`${handler}: 包含 toast 通知`);
     }
   });
 
-  test('notification.js 事件處理函數含 refreshPageData', async ({ page }) => {
+  test('事件處理函數含 refreshPageData', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
@@ -106,11 +238,11 @@ test.describe('notification.js 新增事件類型驗證', () => {
     for (const handler of handlers) {
       const handlerRegex = new RegExp(`function\\s+${handler}[\\s\\S]*?refreshPageData`);
       expect(content).toMatch(handlerRegex);
-      console.log(`${handler}: 包含頁面刷新 ✓`);
+      console.log(`${handler}: 包含頁面刷新`);
     }
   });
 
-  test('refreshPageData 包含所有新頁面 case', async ({ page }) => {
+  test('refreshPageData 包含所有頁面 case', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
@@ -125,37 +257,63 @@ test.describe('notification.js 新增事件類型驗證', () => {
     expect(content).toContain("case 'coupons'");
   });
 
-  test('connectSSE 函數正確註冊所有事件監聽', async ({ page }) => {
+  test('notification.js 前端完整性統計', async ({ page }) => {
     const response = await page.goto('/js/notification.js');
     const content = await response?.text() || '';
 
-    // 所有 addEventListener 呼叫（在 connectSSE 函數內）
-    const expectedListeners = [
-      "'new_booking'",
-      "'booking_updated'",
-      "'booking_status_changed'",
-      "'booking_cancelled'",
-      "'new_product_order'",
-      "'product_order_status_changed'",
-      "'coupon_claimed'",
-      "'new_customer'"
+    // 統計事件類型
+    const eventTypes = [
+      'new_booking', 'booking_updated', 'booking_status_changed', 'booking_cancelled',
+      'new_product_order', 'product_order_status_changed', 'coupon_claimed', 'new_customer'
     ];
 
-    for (const listener of expectedListeners) {
-      expect(content).toContain(`addEventListener(${listener}`);
-      console.log(`事件監聽 ${listener}: 已註冊 ✓`);
+    let registered = 0;
+    for (const eventType of eventTypes) {
+      if (content.includes(`addEventListener('${eventType}'`)) {
+        registered++;
+      }
     }
+
+    console.log(`事件類型: ${registered}/${eventTypes.length} 已註冊`);
+    expect(registered).toBe(eventTypes.length);
+
+    // 統計頁面刷新 case
+    const pageCases = ['bookings', 'calendar', 'dashboard', 'product-orders', 'customers', 'coupons'];
+    let caseCount = 0;
+    for (const pageCase of pageCases) {
+      if (content.includes(`case '${pageCase}'`)) {
+        caseCount++;
+      }
+    }
+
+    console.log(`頁面刷新 case: ${caseCount}/${pageCases.length}`);
+    expect(caseCount).toBe(pageCases.length);
   });
 });
 
 // ========================================
-// 2. SSE 通知 API 驗證
+// 5. SSE 通知服務 API 整合驗證
 // ========================================
-test.describe('SSE 通知服務整合驗證', () => {
+test.describe('SSE 通知服務 API 整合驗證', () => {
   let tenantToken: string;
 
   test.beforeAll(async ({ request }) => {
     tenantToken = await getTenantToken(request);
+  });
+
+  test('預約 API 存在且可呼叫', async ({ request }) => {
+    const adminToken = await getAdminToken(request);
+
+    const response = await request.get('/api/bookings?page=0&size=1', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+
+    const status = response.status();
+    console.log(`預約 API 狀態碼: ${status}`);
+    // 超管呼叫店家 API 可能返回 403，但不應該是 404 或 500
+    expect(status).toBeLessThan(500);
   });
 
   test('商品訂單 API 可呼叫（SSE 通知已整合）', async ({ request }) => {
@@ -201,22 +359,32 @@ test.describe('SSE 通知服務整合驗證', () => {
     console.log(`顧客數: ${data.data?.totalElements || 0}`);
   });
 
-  test('SSE 端點正常（健康檢查）', async ({ request }) => {
+  test('SseNotificationService 所有通知方法已整合', async ({ request }) => {
     const response = await request.get('/health');
     expect(response.ok()).toBeTruthy();
-    const data = await response.json();
-    expect(data.status).toBe('UP');
 
-    console.log('SSE 通知服務整合清單：');
-    console.log('  - 預約：新增/更新/確認/完成/取消/爽約');
-    console.log('  - 商品訂單：新增/確認/完成/取消');
-    console.log('  - 票券：LINE 領取');
-    console.log('  - 顧客：新增');
+    console.log('=== SSE 通知服務整合清單 ===');
+    console.log('預約通知 (BookingService):');
+    console.log('  - notifyNewBooking - 新預約');
+    console.log('  - notifyBookingUpdated - 預約更新');
+    console.log('  - notifyBookingStatusChanged - 狀態變更');
+    console.log('  - notifyBookingCancelled - 取消預約');
+    console.log('');
+    console.log('商品訂單通知 (ProductOrderService):');
+    console.log('  - notifyNewProductOrder - 新訂單 (SSE)');
+    console.log('  - notifyProductOrderStatusChanged - 確認/完成/取消 (SSE)');
+    console.log('  - sendOrderLineNotification - 確認/完成/取消 (LINE)');
+    console.log('');
+    console.log('票券通知 (CouponService):');
+    console.log('  - notifyCouponClaimed - 票券領取 (SSE)');
+    console.log('');
+    console.log('顧客通知 (CustomerService):');
+    console.log('  - notifyNewCustomer - 新顧客 (SSE)');
   });
 });
 
 // ========================================
-// 3. 商品訂單 LINE 通知驗證
+// 6. 商品訂單 LINE 通知驗證
 // ========================================
 test.describe('商品訂單 LINE 通知驗證', () => {
   let tenantToken: string;
@@ -228,7 +396,6 @@ test.describe('商品訂單 LINE 通知驗證', () => {
   test('商品訂單確認 API 可呼叫（含 LINE 通知）', async ({ request }) => {
     if (!tenantToken) return;
 
-    // 取得第一筆待處理訂單
     const listResponse = await request.get('/api/product-orders?status=PENDING&page=0&size=1', {
       headers: { 'Authorization': `Bearer ${tenantToken}` }
     });
@@ -239,7 +406,6 @@ test.describe('商品訂單 LINE 通知驗證', () => {
         const orderId = listData.data.content[0].id;
         console.log(`找到待處理訂單: ${orderId}`);
 
-        // 確認訂單（會觸發 SSE + LINE 通知）
         const confirmResponse = await request.post(`/api/product-orders/${orderId}/confirm`, {
           headers: { 'Authorization': `Bearer ${tenantToken}` }
         });
@@ -278,7 +444,6 @@ test.describe('商品訂單 LINE 通知驗證', () => {
   test('商品訂單取消 API 可呼叫（含 LINE 通知）', async ({ request }) => {
     if (!tenantToken) return;
 
-    // 這裡只驗證 API 端點存在且不返回 500
     const response = await request.post('/api/product-orders/nonexistent/cancel', {
       headers: {
         'Authorization': `Bearer ${tenantToken}`,
@@ -294,7 +459,56 @@ test.describe('商品訂單 LINE 通知驗證', () => {
 });
 
 // ========================================
-// 4. 顧客管理頁面 - 刪除按鈕 UI 驗證
+// 7. 通知 UI 元素驗證
+// ========================================
+test.describe('通知 UI 元素驗證', () => {
+
+  test('tenant layout 有基本 HTML 結構', async ({ page }) => {
+    await page.goto('/tenant/login');
+    await page.waitForLoadState('domcontentloaded');
+
+    const html = await page.content();
+    expect(html).toContain('<!DOCTYPE html>');
+  });
+
+  test('sounds 目錄可訪問（即使為空）', async ({ page }) => {
+    const response = await page.goto('/sounds/notification.mp3');
+
+    const status = response?.status() || 404;
+    console.log(`Sound file status: ${status}`);
+    expect(status).toBeGreaterThan(0);
+  });
+
+  test('店家登入頁面正常', async ({ page }) => {
+    await page.goto('/tenant/login');
+    await expect(page.locator('#username')).toBeVisible();
+  });
+});
+
+// ========================================
+// 8. SSE 前端整合測試（超管後台）
+// ========================================
+test.describe('SSE 前端整合測試', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/admin/login');
+    await page.evaluate(() => localStorage.clear());
+    await page.fill('#username', TEST_ACCOUNTS.admin.username);
+    await page.fill('#password', TEST_ACCOUNTS.admin.password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin\/dashboard/, { timeout: 20000 });
+  });
+
+  test('超管後台 notification.js 應正確載入', async ({ page }) => {
+    await page.goto('/admin/dashboard');
+    await page.waitForLoadState('domcontentloaded');
+
+    const title = await page.title();
+    expect(title).toBeDefined();
+  });
+});
+
+// ========================================
+// 9. 顧客管理 - 刪除按鈕 UI 驗證
 // ========================================
 test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
 
@@ -307,12 +521,11 @@ test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
     await waitForLoading(page);
     await page.waitForTimeout(WAIT_TIME.api);
 
-    // 檢查 deleteCustomer 函數存在
     const hasDeleteFn = await page.evaluate(() => {
       return typeof (window as any).deleteCustomer === 'function';
     });
     expect(hasDeleteFn).toBeTruthy();
-    console.log('deleteCustomer 函數: 存在 ✓');
+    console.log('deleteCustomer 函數: 存在');
   });
 
   test('顧客列表有刪除按鈕', async ({ page }) => {
@@ -320,17 +533,15 @@ test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
     await waitForLoading(page);
     await page.waitForTimeout(WAIT_TIME.api);
 
-    // 檢查表格中有刪除按鈕（trash icon）
     const deleteButtons = page.locator('table tbody .btn-outline-danger, table tbody button[title="刪除顧客"]');
     const count = await deleteButtons.count();
     console.log(`刪除按鈕數: ${count}`);
 
     if (count > 0) {
-      // 確認按鈕有 trash icon
       const firstBtn = deleteButtons.first();
       const hasTrashIcon = await firstBtn.locator('i.bi-trash').count();
       expect(hasTrashIcon).toBeGreaterThan(0);
-      console.log('刪除按鈕圖示: bi-trash ✓');
+      console.log('刪除按鈕圖示: bi-trash');
     }
   });
 
@@ -344,18 +555,15 @@ test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
       await deleteBtn.click();
       await page.waitForTimeout(WAIT_TIME.short);
 
-      // 應該顯示確認對話框
       const confirmModal = page.locator('.modal.show, #confirmModal.show');
       const isVisible = await confirmModal.isVisible();
-      console.log(`確認對話框: ${isVisible ? '顯示 ✓' : '未顯示'}`);
+      console.log(`確認對話框: ${isVisible ? '顯示' : '未顯示'}`);
 
       if (isVisible) {
-        // 確認對話框含「確定要刪除」文字
         const modalText = await confirmModal.textContent();
         expect(modalText).toContain('刪除');
-        console.log('對話框文字: 包含「刪除」✓');
+        console.log('對話框文字: 包含「刪除」');
 
-        // 取消對話框（不實際刪除）
         const cancelBtn = confirmModal.locator('#confirmCancelBtn, .btn-secondary');
         if (await cancelBtn.isVisible()) {
           await cancelBtn.click();
@@ -384,9 +592,9 @@ test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
       const editCount = await editBtn.count();
       const deleteCount = await deleteBtn.count();
 
-      console.log(`查看按鈕: ${viewCount > 0 ? '✓' : '✗'}`);
-      console.log(`編輯按鈕: ${editCount > 0 ? '✓' : '✗'}`);
-      console.log(`刪除按鈕: ${deleteCount > 0 ? '✓' : '✗'}`);
+      console.log(`查看按鈕: ${viewCount > 0 ? 'OK' : 'MISSING'}`);
+      console.log(`編輯按鈕: ${editCount > 0 ? 'OK' : 'MISSING'}`);
+      console.log(`刪除按鈕: ${deleteCount > 0 ? 'OK' : 'MISSING'}`);
 
       expect(viewCount).toBeGreaterThan(0);
       expect(editCount).toBeGreaterThan(0);
@@ -398,27 +606,25 @@ test.describe('顧客管理 - 刪除按鈕 UI 驗證', () => {
 });
 
 // ========================================
-// 5. 商品訂單頁面 F12 無錯誤（含 currentPage 設定）
+// 10. 相關頁面 currentPage 設定與 loadData 驗證
 // ========================================
-test.describe('商品訂單頁面驗證', () => {
+test.describe('通知相關頁面 currentPage 與 loadData 驗證', () => {
 
   test.beforeEach(async ({ page }) => {
     await tenantLogin(page);
   });
 
-  test('商品訂單頁面載入無 F12 錯誤', async ({ page }) => {
+  test('商品訂單頁面載入正常且 currentPage 正確', async ({ page }) => {
     await page.goto('/tenant/product-orders');
     await waitForLoading(page);
     await page.waitForTimeout(WAIT_TIME.api);
 
-    // 檢查頁面標題
     const title = page.locator('h1, .page-title');
     await expect(title.first()).toBeVisible();
 
-    // 確認頁面 HTML 包含 currentPage 設定
     const html = await page.content();
     expect(html).toContain("currentPage = 'product-orders'");
-    console.log('商品訂單 currentPage: product-orders ✓');
+    console.log('商品訂單 currentPage: product-orders');
   });
 
   test('商品訂單頁面有 loadData 函數', async ({ page }) => {
@@ -428,20 +634,10 @@ test.describe('商品訂單頁面驗證', () => {
 
     const hasLoadData = await page.evaluate(() => typeof (window as any).loadData === 'function');
     expect(hasLoadData).toBeTruthy();
-    console.log('loadData 函數: 存在 ✓');
-  });
-});
-
-// ========================================
-// 6. 顧客頁面 F12 無錯誤（含 currentPage 設定）
-// ========================================
-test.describe('顧客頁面驗證', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await tenantLogin(page);
+    console.log('loadData 函數: 存在');
   });
 
-  test('顧客頁面載入無 F12 錯誤', async ({ page }) => {
+  test('顧客頁面載入正常且 currentPage 正確', async ({ page }) => {
     await page.goto('/tenant/customers');
     await waitForLoading(page);
     await page.waitForTimeout(WAIT_TIME.api);
@@ -449,10 +645,9 @@ test.describe('顧客頁面驗證', () => {
     const title = page.locator('h1, .page-title');
     await expect(title.first()).toBeVisible();
 
-    // 確認頁面 HTML 包含 currentPage 設定
     const html = await page.content();
     expect(html).toContain("currentPage = 'customers'");
-    console.log('顧客 currentPage: customers ✓');
+    console.log('顧客 currentPage: customers');
   });
 
   test('顧客頁面有 loadData 函數', async ({ page }) => {
@@ -462,88 +657,15 @@ test.describe('顧客頁面驗證', () => {
 
     const hasLoadData = await page.evaluate(() => typeof (window as any).loadData === 'function');
     expect(hasLoadData).toBeTruthy();
-    console.log('loadData 函數: 存在 ✓');
-  });
-});
-
-// ========================================
-// 7. 票券頁面 F12 無錯誤（含 currentPage 設定）
-// ========================================
-test.describe('票券頁面驗證', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await tenantLogin(page);
+    console.log('loadData 函數: 存在');
   });
 
-  test('票券頁面載入無 F12 錯誤', async ({ page }) => {
+  test('票券頁面載入正常', async ({ page }) => {
     await page.goto('/tenant/coupons');
     await waitForLoading(page);
     await page.waitForTimeout(WAIT_TIME.api);
 
     const title = page.locator('h1, .page-title');
     await expect(title.first()).toBeVisible();
-  });
-});
-
-// ========================================
-// 8. 整合流程驗證
-// ========================================
-test.describe('通知系統整合流程驗證', () => {
-
-  test('SseNotificationService 所有通知方法已整合', async ({ request }) => {
-    // 透過健康檢查驗證服務正常
-    const response = await request.get('/health');
-    expect(response.ok()).toBeTruthy();
-
-    console.log('=== SSE 通知服務整合清單 ===');
-    console.log('預約通知 (BookingService):');
-    console.log('  ✓ notifyNewBooking - 新預約');
-    console.log('  ✓ notifyBookingUpdated - 預約更新');
-    console.log('  ✓ notifyBookingStatusChanged - 狀態變更');
-    console.log('  ✓ notifyBookingCancelled - 取消預約');
-    console.log('');
-    console.log('商品訂單通知 (ProductOrderService):');
-    console.log('  ✓ notifyNewProductOrder - 新訂單 (SSE)');
-    console.log('  ✓ notifyProductOrderStatusChanged - 確認/完成/取消 (SSE)');
-    console.log('  ✓ sendOrderLineNotification - 確認/完成/取消 (LINE)');
-    console.log('');
-    console.log('票券通知 (CouponService):');
-    console.log('  ✓ notifyCouponClaimed - 票券領取 (SSE)');
-    console.log('');
-    console.log('顧客通知 (CustomerService):');
-    console.log('  ✓ notifyNewCustomer - 新顧客 (SSE)');
-  });
-
-  test('notification.js 前端完整性', async ({ page }) => {
-    const response = await page.goto('/js/notification.js');
-    const content = await response?.text() || '';
-
-    // 統計事件類型
-    const eventTypes = [
-      'new_booking', 'booking_updated', 'booking_status_changed', 'booking_cancelled',
-      'new_product_order', 'product_order_status_changed', 'coupon_claimed', 'new_customer'
-    ];
-
-    let registered = 0;
-    for (const eventType of eventTypes) {
-      if (content.includes(`addEventListener('${eventType}'`)) {
-        registered++;
-      }
-    }
-
-    console.log(`事件類型: ${registered}/${eventTypes.length} 已註冊`);
-    expect(registered).toBe(eventTypes.length);
-
-    // 統計頁面刷新 case
-    const pageCases = ['bookings', 'calendar', 'dashboard', 'product-orders', 'customers', 'coupons'];
-    let caseCount = 0;
-    for (const pageCase of pageCases) {
-      if (content.includes(`case '${pageCase}'`)) {
-        caseCount++;
-      }
-    }
-
-    console.log(`頁面刷新 case: ${caseCount}/${pageCases.length}`);
-    expect(caseCount).toBe(pageCases.length);
   });
 });

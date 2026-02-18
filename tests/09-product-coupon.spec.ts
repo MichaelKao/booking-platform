@@ -608,3 +608,172 @@ test.describe('票券管理 UI 測試', () => {
     });
   });
 });
+
+test.describe('商品庫存一致性驗證', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const loginRes = await request.post('/api/auth/tenant/login', {
+      data: { username: 'e2etest@example.com', password: 'Test12345' }
+    });
+    const loginData = await loginRes.json();
+    tenantToken = loginData.data?.accessToken;
+  });
+
+  test('調整庫存 +10 → 驗證 stock 確實增加', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const prodRes = await request.get('/api/products?size=1', { headers });
+    const products = (await prodRes.json()).data?.content || [];
+    if (products.length === 0) {
+      console.log('無商品資料，跳過');
+      return;
+    }
+    const productId = products[0].id;
+
+    // 取得當前庫存
+    const detailRes1 = await request.get(`/api/products/${productId}`, { headers });
+    const detail1 = (await detailRes1.json()).data;
+    const beforeStock = detail1?.stock || 0;
+
+    // 調整庫存 +10
+    const adjustRes = await request.post(`/api/products/${productId}/adjust-stock`, {
+      headers,
+      data: { quantity: 10, reason: 'E2E 庫存測試' }
+    });
+
+    if (adjustRes.ok()) {
+      const detailRes2 = await request.get(`/api/products/${productId}`, { headers });
+      const detail2 = (await detailRes2.json()).data;
+      const afterStock = detail2?.stock || 0;
+      expect(afterStock).toBe(beforeStock + 10);
+      console.log(`✓ 庫存從 ${beforeStock} 增加到 ${afterStock}`);
+
+      // 回復庫存
+      await request.post(`/api/products/${productId}/adjust-stock`, {
+        headers,
+        data: { quantity: -10, reason: 'E2E 庫存回復' }
+      });
+    }
+  });
+
+  test('上架 → 驗證 status = ON_SALE → 下架 → 驗證 status = OFF_SHELF', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const prodRes = await request.get('/api/products?size=1', { headers });
+    const products = (await prodRes.json()).data?.content || [];
+    if (products.length === 0) return;
+    const productId = products[0].id;
+
+    // 上架
+    const onSaleRes = await request.post(`/api/products/${productId}/on-sale`, { headers });
+    if (onSaleRes.ok()) {
+      const detailRes = await request.get(`/api/products/${productId}`, { headers });
+      const detail = (await detailRes.json()).data;
+      expect(detail?.status).toBe('ON_SALE');
+      console.log('✓ 商品已上架');
+    }
+
+    // 下架
+    const offShelfRes = await request.post(`/api/products/${productId}/off-shelf`, { headers });
+    if (offShelfRes.ok()) {
+      const detailRes = await request.get(`/api/products/${productId}`, { headers });
+      const detail = (await detailRes.json()).data;
+      expect(detail?.status).toBe('OFF_SHELF');
+      console.log('✓ 商品已下架');
+    }
+
+    // 回復上架狀態
+    await request.post(`/api/products/${productId}/on-sale`, { headers });
+  });
+});
+
+test.describe('票券生命週期驗證', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const loginRes = await request.post('/api/auth/tenant/login', {
+      data: { username: 'e2etest@example.com', password: 'Test12345' }
+    });
+    const loginData = await loginRes.json();
+    tenantToken = loginData.data?.accessToken;
+  });
+
+  test('票券發布 → 暫停 → 恢復 → 每步驗證 status', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const couponRes = await request.get('/api/coupons?size=1', { headers });
+    const coupons = (await couponRes.json()).data?.content || [];
+    if (coupons.length === 0) {
+      console.log('無票券資料，跳過');
+      return;
+    }
+    const couponId = coupons[0].id;
+    const originalStatus = coupons[0].status;
+
+    // 發布
+    const publishRes = await request.post(`/api/coupons/${couponId}/publish`, { headers });
+    if (publishRes.ok()) {
+      const detailRes = await request.get(`/api/coupons/${couponId}`, { headers });
+      const detail = (await detailRes.json()).data;
+      expect(detail?.status).toBe('ACTIVE');
+      console.log('✓ 票券已發布 (ACTIVE)');
+
+      // 暫停
+      const pauseRes = await request.post(`/api/coupons/${couponId}/pause`, { headers });
+      if (pauseRes.ok()) {
+        const detailRes2 = await request.get(`/api/coupons/${couponId}`, { headers });
+        const detail2 = (await detailRes2.json()).data;
+        expect(detail2?.status).toBe('PAUSED');
+        console.log('✓ 票券已暫停 (PAUSED)');
+
+        // 恢復
+        const resumeRes = await request.post(`/api/coupons/${couponId}/resume`, { headers });
+        if (resumeRes.ok()) {
+          const detailRes3 = await request.get(`/api/coupons/${couponId}`, { headers });
+          const detail3 = (await detailRes3.json()).data;
+          expect(detail3?.status).toBe('ACTIVE');
+          console.log('✓ 票券已恢復 (ACTIVE)');
+        }
+      }
+    }
+  });
+
+  test('發放票券給顧客 → 驗證 issuedCount 增加', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const [couponRes, custRes] = await Promise.all([
+      request.get('/api/coupons?size=1', { headers }),
+      request.get('/api/customers?size=1', { headers })
+    ]);
+    const coupons = (await couponRes.json()).data?.content || [];
+    const customers = (await custRes.json()).data?.content || [];
+    if (coupons.length === 0 || customers.length === 0) return;
+
+    const couponId = coupons[0].id;
+    const customerId = customers[0].id;
+
+    // 取得發放前的 issuedCount
+    const detailRes1 = await request.get(`/api/coupons/${couponId}`, { headers });
+    const detail1 = (await detailRes1.json()).data;
+    const beforeCount = detail1?.issuedCount || 0;
+
+    // 發放
+    const issueRes = await request.post(`/api/coupons/${couponId}/issue`, {
+      headers,
+      data: { customerId }
+    });
+
+    if (issueRes.ok()) {
+      const detailRes2 = await request.get(`/api/coupons/${couponId}`, { headers });
+      const detail2 = (await detailRes2.json()).data;
+      const afterCount = detail2?.issuedCount || 0;
+      expect(afterCount).toBeGreaterThan(beforeCount);
+      console.log(`✓ issuedCount 從 ${beforeCount} 增加到 ${afterCount}`);
+    }
+  });
+});

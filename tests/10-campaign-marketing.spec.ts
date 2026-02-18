@@ -501,3 +501,87 @@ test.describe('行銷推播 UI 測試', () => {
     });
   });
 });
+
+test.describe('行銷活動狀態機驗證', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const loginRes = await request.post('/api/auth/tenant/login', {
+      data: { username: 'e2etest@example.com', password: 'Test12345' }
+    });
+    const loginData = await loginRes.json();
+    tenantToken = loginData.data?.accessToken;
+  });
+
+  test('DRAFT → PUBLISHED → PAUSED → ACTIVE → ENDED 全流程', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const campRes = await request.get('/api/campaigns?size=1', { headers });
+    const campaigns = (await campRes.json()).data?.content || [];
+    if (campaigns.length === 0) {
+      console.log('無行銷活動資料，跳過');
+      return;
+    }
+    const campaignId = campaigns[0].id;
+    const originalStatus = campaigns[0].status;
+
+    // 發布 (DRAFT → PUBLISHED/ACTIVE)
+    const publishRes = await request.post(`/api/campaigns/${campaignId}/publish`, { headers });
+    if (publishRes.ok()) {
+      const detailRes = await request.get(`/api/campaigns/${campaignId}`, { headers });
+      const detail = (await detailRes.json()).data;
+      const status = detail?.status;
+      expect(['PUBLISHED', 'ACTIVE']).toContain(status);
+      console.log(`✓ 活動已發布 (${status})`);
+
+      // 暫停
+      const pauseRes = await request.post(`/api/campaigns/${campaignId}/pause`, { headers });
+      if (pauseRes.ok()) {
+        const detailRes2 = await request.get(`/api/campaigns/${campaignId}`, { headers });
+        const detail2 = (await detailRes2.json()).data;
+        expect(detail2?.status).toBe('PAUSED');
+        console.log('✓ 活動已暫停 (PAUSED)');
+
+        // 恢復
+        const resumeRes = await request.post(`/api/campaigns/${campaignId}/resume`, { headers });
+        if (resumeRes.ok()) {
+          const detailRes3 = await request.get(`/api/campaigns/${campaignId}`, { headers });
+          const detail3 = (await detailRes3.json()).data;
+          const resumedStatus = detail3?.status;
+          expect(['PUBLISHED', 'ACTIVE']).toContain(resumedStatus);
+          console.log(`✓ 活動已恢復 (${resumedStatus})`);
+
+          // 結束
+          const endRes = await request.post(`/api/campaigns/${campaignId}/end`, { headers });
+          if (endRes.ok()) {
+            const detailRes4 = await request.get(`/api/campaigns/${campaignId}`, { headers });
+            const detail4 = (await detailRes4.json()).data;
+            expect(detail4?.status).toBe('ENDED');
+            console.log('✓ 活動已結束 (ENDED)');
+          }
+        }
+      }
+    }
+  });
+
+  test('每次狀態轉換後 GET 驗證 status 一致', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    // 取得活動列表驗證 API 回應格式
+    const campRes = await request.get('/api/campaigns', { headers });
+    expect(campRes.ok()).toBeTruthy();
+    const data = (await campRes.json()).data;
+    expect(data).toBeTruthy();
+
+    // 驗證列表中每筆活動都有 status 欄位
+    const campaigns = data?.content || data || [];
+    if (Array.isArray(campaigns) && campaigns.length > 0) {
+      for (const camp of campaigns.slice(0, 3)) {
+        expect(camp.status).toBeTruthy();
+        console.log(`活動 ${camp.name || camp.id}: status=${camp.status}`);
+      }
+    }
+  });
+});

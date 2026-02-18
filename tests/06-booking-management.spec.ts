@@ -558,3 +558,142 @@ test.describe('預約管理 UI 測試', () => {
     });
   });
 });
+
+test.describe('預約全流程業務邏輯驗證', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const loginRes = await request.post('/api/auth/tenant/login', {
+      data: { username: 'e2etest@example.com', password: 'Test12345' }
+    });
+    const loginData = await loginRes.json();
+    tenantToken = loginData.data?.accessToken;
+  });
+
+  test('建立預約 → 確認 → 完成：狀態實際變更驗證', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    // 取得必要資料
+    const [custRes, svcRes] = await Promise.all([
+      request.get('/api/customers?size=1', { headers }),
+      request.get('/api/services/bookable', { headers })
+    ]);
+    const customers = (await custRes.json()).data?.content || [];
+    const services = (await svcRes.json()).data || [];
+    if (customers.length === 0 || services.length === 0) {
+      console.log('缺少顧客或服務資料，跳過');
+      return;
+    }
+
+    // 建立預約
+    const createRes = await request.post('/api/bookings', {
+      headers,
+      data: {
+        customerId: customers[0].id,
+        serviceItemId: services[0].id,
+        bookingDate: '2099-12-31',
+        startTime: '10:00',
+        customerNote: 'E2E 業務流程測試'
+      }
+    });
+    const createData = await createRes.json();
+    if (!createData.success || !createData.data?.id) {
+      console.log('建立預約失敗（可能無可用員工），跳過後續驗證');
+      return;
+    }
+
+    const bookingId = createData.data.id;
+
+    // 驗證初始狀態為 PENDING
+    const getRes1 = await request.get(`/api/bookings/${bookingId}`, { headers });
+    const booking1 = (await getRes1.json()).data;
+    expect(booking1.status).toBe('PENDING');
+
+    // 確認預約
+    const confirmRes = await request.post(`/api/bookings/${bookingId}/confirm`, { headers });
+    if (confirmRes.ok()) {
+      const getRes2 = await request.get(`/api/bookings/${bookingId}`, { headers });
+      const booking2 = (await getRes2.json()).data;
+      expect(booking2.status).toBe('CONFIRMED');
+    }
+
+    // 完成預約
+    const completeRes = await request.post(`/api/bookings/${bookingId}/complete`, { headers });
+    if (completeRes.ok()) {
+      const getRes3 = await request.get(`/api/bookings/${bookingId}`, { headers });
+      const booking3 = (await getRes3.json()).data;
+      expect(booking3.status).toBe('COMPLETED');
+    }
+  });
+
+  test('取消預約後驗證狀態變更', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const [custRes, svcRes] = await Promise.all([
+      request.get('/api/customers?size=1', { headers }),
+      request.get('/api/services/bookable', { headers })
+    ]);
+    const customers = (await custRes.json()).data?.content || [];
+    const services = (await svcRes.json()).data || [];
+    if (customers.length === 0 || services.length === 0) return;
+
+    const createRes = await request.post('/api/bookings', {
+      headers,
+      data: {
+        customerId: customers[0].id,
+        serviceItemId: services[0].id,
+        bookingDate: '2099-12-30',
+        startTime: '14:00',
+        customerNote: 'E2E 取消測試'
+      }
+    });
+    const createData = await createRes.json();
+    if (!createData.success || !createData.data?.id) return;
+
+    const bookingId = createData.data.id;
+
+    // 取消預約
+    const cancelRes = await request.post(`/api/bookings/${bookingId}/cancel`, { headers });
+    if (cancelRes.ok()) {
+      const getRes = await request.get(`/api/bookings/${bookingId}`, { headers });
+      const booking = (await getRes.json()).data;
+      expect(booking.status).toBe('CANCELLED');
+    }
+  });
+
+  test('PENDING 不佔用時段 — 同時段可多筆 PENDING', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const [custRes, svcRes] = await Promise.all([
+      request.get('/api/customers?size=1', { headers }),
+      request.get('/api/services/bookable', { headers })
+    ]);
+    const customers = (await custRes.json()).data?.content || [];
+    const services = (await svcRes.json()).data || [];
+    if (customers.length === 0 || services.length === 0) return;
+
+    // 建立兩筆同時段 PENDING 預約
+    const bookingData = {
+      customerId: customers[0].id,
+      serviceItemId: services[0].id,
+      bookingDate: '2099-12-29',
+      startTime: '11:00',
+      customerNote: 'E2E PENDING 並存測試'
+    };
+
+    const res1 = await request.post('/api/bookings', { headers, data: bookingData });
+    const res2 = await request.post('/api/bookings', { headers, data: { ...bookingData, customerNote: 'E2E PENDING 並存測試 2' } });
+
+    // 兩筆都應該能建立成功（PENDING 不衝突）
+    if (res1.ok() && res2.ok()) {
+      const data1 = await res1.json();
+      const data2 = await res2.json();
+      expect(data1.success).toBeTruthy();
+      expect(data2.success).toBeTruthy();
+      console.log('✓ 同時段可建立多筆 PENDING 預約');
+    }
+  });
+});

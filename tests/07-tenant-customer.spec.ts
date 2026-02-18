@@ -679,3 +679,109 @@ test.describe('顧客標籤 API 測試', () => {
     }
   });
 });
+
+test.describe('顧客點數業務邏輯驗證', () => {
+  let tenantToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const loginRes = await request.post('/api/auth/tenant/login', {
+      data: { username: 'e2etest@example.com', password: 'Test12345' }
+    });
+    const loginData = await loginRes.json();
+    tenantToken = loginData.data?.accessToken;
+  });
+
+  test('增加點數 → 驗證餘額確實增加', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    // 取得第一個顧客
+    const custRes = await request.get('/api/customers?size=1', { headers });
+    const customers = (await custRes.json()).data?.content || [];
+    if (customers.length === 0) {
+      console.log('無顧客資料，跳過');
+      return;
+    }
+    const customerId = customers[0].id;
+
+    // 取得當前點數（從顧客詳情）
+    const detailRes1 = await request.get(`/api/customers/${customerId}`, { headers });
+    const detail1 = (await detailRes1.json()).data;
+    const beforePoints = detail1?.currentPoints || detail1?.points || 0;
+
+    // 增加 50 點
+    const addRes = await request.post(`/api/customers/${customerId}/points/add`, {
+      headers,
+      data: { points: 50, reason: 'E2E 測試增加點數' }
+    });
+
+    if (addRes.ok()) {
+      // 驗證餘額增加
+      const detailRes2 = await request.get(`/api/customers/${customerId}`, { headers });
+      const detail2 = (await detailRes2.json()).data;
+      const afterPoints = detail2?.currentPoints || detail2?.points || 0;
+      expect(afterPoints).toBe(beforePoints + 50);
+      console.log(`✓ 點數從 ${beforePoints} 增加到 ${afterPoints}`);
+    }
+  });
+
+  test('扣除點數 → 驗證餘額確實減少', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const custRes = await request.get('/api/customers?size=1', { headers });
+    const customers = (await custRes.json()).data?.content || [];
+    if (customers.length === 0) return;
+    const customerId = customers[0].id;
+
+    const detailRes1 = await request.get(`/api/customers/${customerId}`, { headers });
+    const detail1 = (await detailRes1.json()).data;
+    const beforePoints = detail1?.currentPoints || detail1?.points || 0;
+
+    if (beforePoints < 10) {
+      console.log(`點數不足(${beforePoints})，跳過扣除測試`);
+      return;
+    }
+
+    const deductRes = await request.post(`/api/customers/${customerId}/points/deduct`, {
+      headers,
+      data: { points: 10, reason: 'E2E 測試扣除點數' }
+    });
+
+    if (deductRes.ok()) {
+      const detailRes2 = await request.get(`/api/customers/${customerId}`, { headers });
+      const detail2 = (await detailRes2.json()).data;
+      const afterPoints = detail2?.currentPoints || detail2?.points || 0;
+      expect(afterPoints).toBe(beforePoints - 10);
+      console.log(`✓ 點數從 ${beforePoints} 減少到 ${afterPoints}`);
+    }
+  });
+
+  test('封鎖顧客 → 驗證狀態為 BLOCKED → 解除封鎖', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const custRes = await request.get('/api/customers?size=1', { headers });
+    const customers = (await custRes.json()).data?.content || [];
+    if (customers.length === 0) return;
+    const customerId = customers[0].id;
+
+    // 封鎖
+    const blockRes = await request.post(`/api/customers/${customerId}/block`, { headers });
+    if (blockRes.ok()) {
+      const detailRes = await request.get(`/api/customers/${customerId}`, { headers });
+      const detail = (await detailRes.json()).data;
+      expect(detail?.isBlocked || detail?.blocked).toBeTruthy();
+      console.log('✓ 顧客已封鎖');
+    }
+
+    // 解除封鎖（確保最終狀態恢復）
+    const unblockRes = await request.post(`/api/customers/${customerId}/unblock`, { headers });
+    if (unblockRes.ok()) {
+      const detailRes2 = await request.get(`/api/customers/${customerId}`, { headers });
+      const detail2 = (await detailRes2.json()).data;
+      expect(detail2?.isBlocked || detail2?.blocked).toBeFalsy();
+      console.log('✓ 顧客已解除封鎖');
+    }
+  });
+});

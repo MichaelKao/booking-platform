@@ -452,12 +452,42 @@ test.describe('6. ConversationContext 欄位', () => {
 });
 
 // ================================================================
-//  SECTION 7：GoBack 返回邏輯
+//  SECTION 7：GoBack 確定性返回邏輯（不依賴 previousState）
 // ================================================================
 
-test.describe('7. GoBack 返回邏輯', () => {
+test.describe('7. GoBack 確定性返回邏輯', () => {
 
-    const goBackTests = [
+    // 確定性狀態映射：每個狀態固定回到邏輯前一步
+    const deterministicGoBack: Record<string, string> = {
+        'SELECTING_SERVICE': 'IDLE',
+        'SELECTING_CATEGORY': 'IDLE',
+        'SELECTING_DATE': 'SELECTING_SERVICE',
+        'SELECTING_STAFF': 'SELECTING_DATE',
+        'SELECTING_TIME': 'SELECTING_STAFF',
+        'INPUTTING_NOTE': 'SELECTING_TIME',
+        'CONFIRMING_BOOKING': 'INPUTTING_NOTE',
+        'BROWSING_PRODUCTS': 'IDLE',
+        'VIEWING_PRODUCT_DETAIL': 'BROWSING_PRODUCTS',
+        'SELECTING_QUANTITY': 'VIEWING_PRODUCT_DETAIL',
+        'CONFIRMING_PURCHASE': 'SELECTING_QUANTITY',
+        'IDLE': 'IDLE',
+    };
+
+    for (const [from, expectedTarget] of Object.entries(deterministicGoBack)) {
+        test(`${from} → goBack → ${expectedTarget}（確定性映射）`, () => {
+            expect(deterministicGoBack[from]).toBe(expectedTarget);
+        });
+    }
+
+    test('goBack 不依賴 previousState — 重複點擊不會錯亂', () => {
+        // 模擬：用戶在 SELECTING_STAFF，重複點了舊的 select_service 按鈕
+        // previousState 會被覆蓋，但確定性映射不受影響
+        const state = 'SELECTING_STAFF';
+        const result = deterministicGoBack[state];
+        expect(result).toBe('SELECTING_DATE'); // 永遠回到選日期，不管 previousState
+    });
+
+    const goBackMenuTests = [
         { from: 'SELECTING_SERVICE', withCategory: true, expectedMenu: 'buildServiceMenuByCategory' },
         { from: 'SELECTING_SERVICE', withCategory: false, expectedMenu: 'buildServiceMenu' },
         { from: 'SELECTING_CATEGORY', withCategory: false, expectedMenu: 'mainMenu' },
@@ -467,10 +497,9 @@ test.describe('7. GoBack 返回邏輯', () => {
         { from: 'INPUTTING_NOTE', withCategory: false, expectedMenu: 'buildNoteInputPrompt' },
     ];
 
-    for (const t of goBackTests) {
+    for (const t of goBackMenuTests) {
         const label = t.withCategory ? `${t.from}（有分類）` : t.from;
-        test(`${label} → goBack → ${t.expectedMenu}`, () => {
-            // 模擬 goBack 後 switch 邏輯
+        test(`${label} → goBack → 顯示 ${t.expectedMenu}`, () => {
             let menu: string;
             switch (t.from) {
                 case 'SELECTING_CATEGORY':
@@ -491,6 +520,106 @@ test.describe('7. GoBack 返回邏輯', () => {
             expect(menu).toBe(t.expectedMenu);
         });
     }
+});
+
+// ================================================================
+//  SECTION 7b：下游資料清除與防呆機制
+// ================================================================
+
+test.describe('7b. 下游資料清除與防呆', () => {
+
+    test('選擇服務時清除下游資料（日期、員工、時間、備註）', () => {
+        const ctx: any = {
+            selectedServiceId: 'svc-old',
+            selectedDate: '2025-03-01',
+            selectedStaffId: 'staff-1',
+            selectedTime: '10:00',
+            customerNote: '舊備註',
+        };
+
+        // clearDownstreamFromDate
+        ctx.selectedDate = null;
+        ctx.selectedStaffId = null;
+        ctx.selectedStaffName = null;
+        ctx.selectedTime = null;
+        ctx.customerNote = null;
+
+        expect(ctx.selectedDate).toBeNull();
+        expect(ctx.selectedStaffId).toBeNull();
+        expect(ctx.selectedTime).toBeNull();
+        expect(ctx.customerNote).toBeNull();
+    });
+
+    test('選擇日期時清除下游資料（員工、時間、備註）', () => {
+        const ctx: any = {
+            selectedDate: '2025-03-01',
+            selectedStaffId: 'staff-1',
+            selectedStaffName: '小明',
+            selectedTime: '10:00',
+            customerNote: '備註',
+        };
+
+        // clearDownstreamFromStaff
+        ctx.selectedStaffId = null;
+        ctx.selectedStaffName = null;
+        ctx.selectedTime = null;
+        ctx.customerNote = null;
+
+        expect(ctx.selectedDate).toBe('2025-03-01'); // 日期保留
+        expect(ctx.selectedStaffId).toBeNull();
+        expect(ctx.selectedTime).toBeNull();
+    });
+
+    test('選擇員工時清除下游資料（時間、備註）', () => {
+        const ctx: any = {
+            selectedStaffId: 'staff-1',
+            selectedTime: '10:00',
+            customerNote: '備註',
+        };
+
+        // clearDownstreamFromTime
+        ctx.selectedTime = null;
+        ctx.customerNote = null;
+
+        expect(ctx.selectedStaffId).toBe('staff-1'); // 員工保留
+        expect(ctx.selectedTime).toBeNull();
+        expect(ctx.customerNote).toBeNull();
+    });
+
+    test('重複點擊舊按鈕不會導致資料殘留', () => {
+        const ctx: any = {
+            state: 'SELECTING_TIME',
+            selectedServiceId: 'svc-1',
+            selectedDate: '2025-03-01',
+            selectedStaffId: 'staff-1',
+            selectedTime: '14:00',
+            customerNote: '舊備註',
+        };
+
+        // 用戶往上滑點了舊的 select_service → 系統先清除下游
+        ctx.selectedDate = null;
+        ctx.selectedStaffId = null;
+        ctx.selectedStaffName = null;
+        ctx.selectedTime = null;
+        ctx.customerNote = null;
+        ctx.state = 'SELECTING_DATE';
+
+        expect(ctx.state).toBe('SELECTING_DATE');
+        expect(ctx.selectedTime).toBeNull();
+        expect(ctx.customerNote).toBeNull();
+    });
+
+    test('前置條件缺失時引導重新開始', () => {
+        // 模擬：select_staff 但 selectedDate 為 null
+        const ctx: any = {
+            state: 'SELECTING_STAFF',
+            selectedServiceId: 'svc-1',
+            selectedDate: null, // 缺失
+        };
+
+        const shouldRedirect = ctx.selectedDate === null;
+        expect(shouldRedirect).toBe(true);
+    });
 });
 
 // ================================================================

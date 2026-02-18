@@ -677,3 +677,99 @@ test.describe('業務邏輯正確性測試', () => {
     });
   });
 });
+
+test.describe('報表數字交叉驗證', () => {
+  let tenantToken: string;
+  let adminToken: string;
+
+  test.beforeAll(async ({ request }) => {
+    const [tenantRes, adminRes] = await Promise.all([
+      request.post('/api/auth/tenant/login', {
+        data: { username: 'e2etest@example.com', password: 'Test12345' }
+      }),
+      request.post('/api/auth/admin/login', {
+        data: { username: 'admin', password: 'admin123' }
+      })
+    ]);
+    tenantToken = (await tenantRes.json()).data?.accessToken;
+    adminToken = (await adminRes.json()).data?.accessToken;
+  });
+
+  test('多租戶資料隔離：不同 token 查詢數據不混合', async ({ request }) => {
+    if (!tenantToken || !adminToken) return;
+
+    // 店家看到的預約數
+    const tenantBookings = await request.get('/api/bookings?size=1', {
+      headers: { 'Authorization': `Bearer ${tenantToken}` }
+    });
+    expect(tenantBookings.ok()).toBeTruthy();
+
+    // 超管看到的全部店家（不應該用店家 token 能看到其他店家資料）
+    const adminTenants = await request.get('/api/admin/tenants', {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    expect(adminTenants.ok()).toBeTruthy();
+
+    // 用超管 token 不應該能呼叫店家 API
+    const crossRes = await request.get('/api/bookings', {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    // 預期 403 或錯誤（非店家角色）
+    expect(crossRes.status()).not.toBe(200);
+    console.log(`✓ 超管 token 呼叫店家 API 回應: ${crossRes.status()} (非 200 = 隔離正確)`);
+  });
+
+  test('today/weekly/monthly 報表範圍一致性', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const [todayRes, weeklyRes, monthlyRes] = await Promise.all([
+      request.get('/api/reports/today', { headers }),
+      request.get('/api/reports/weekly', { headers }),
+      request.get('/api/reports/monthly', { headers })
+    ]);
+
+    // 所有端點都應該正常回應
+    expect(todayRes.status()).toBeLessThan(500);
+    expect(weeklyRes.status()).toBeLessThan(500);
+    expect(monthlyRes.status()).toBeLessThan(500);
+
+    if (todayRes.ok() && weeklyRes.ok() && monthlyRes.ok()) {
+      const today = (await todayRes.json()).data;
+      const weekly = (await weeklyRes.json()).data;
+      const monthly = (await monthlyRes.json()).data;
+
+      // 今日數據 ≤ 週數據 ≤ 月數據（範圍從小到大）
+      const todayCount = today?.totalBookings || today?.bookingCount || 0;
+      const weeklyCount = weekly?.totalBookings || weekly?.bookingCount || 0;
+      const monthlyCount = monthly?.totalBookings || monthly?.bookingCount || 0;
+
+      expect(weeklyCount).toBeGreaterThanOrEqual(todayCount);
+      expect(monthlyCount).toBeGreaterThanOrEqual(weeklyCount);
+      console.log(`✓ 報表範圍遞增: 今日=${todayCount}, 週=${weeklyCount}, 月=${monthlyCount}`);
+    }
+  });
+
+  test('dashboard 摘要數據非 null', async ({ request }) => {
+    if (!tenantToken) return;
+    const headers = { 'Authorization': `Bearer ${tenantToken}` };
+
+    const dashRes = await request.get('/api/reports/dashboard', { headers });
+    expect(dashRes.ok()).toBeTruthy();
+
+    const data = (await dashRes.json()).data;
+    expect(data).toBeTruthy();
+
+    // 驗證關鍵欄位存在且為數字
+    if (data) {
+      const numericFields = ['totalBookings', 'totalCustomers', 'totalRevenue', 'todayBookings'];
+      for (const field of numericFields) {
+        if (data[field] !== undefined) {
+          expect(typeof data[field]).toBe('number');
+          expect(data[field]).toBeGreaterThanOrEqual(0);
+          console.log(`  ${field}: ${data[field]}`);
+        }
+      }
+    }
+  });
+});
