@@ -111,6 +111,11 @@ public class MembershipLevel extends BaseEntity {
      * 計算可獲得的點數
      */
     public int calculatePoints(BigDecimal amount) {
-        return amount.multiply(this.pointRate).intValue();
+        if (amount == null || this.pointRate == null) {
+            return 0;
+        }
+        return amount.multiply(this.pointRate)
+                .setScale(0, java.math.RoundingMode.FLOOR)
+                .intValue();
     }
 }

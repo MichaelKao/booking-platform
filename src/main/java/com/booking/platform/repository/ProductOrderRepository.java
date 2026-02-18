@@ -90,7 +90,7 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Stri
      * 產生訂單編號
      */
     @Query("SELECT COUNT(o) FROM ProductOrder o WHERE o.tenantId = :tenantId " +
-           "AND o.createdAt >= :startOfDay")
+           "AND o.createdAt >= :startOfDay AND o.deletedAt IS NULL")
     long countOrdersToday(@Param("tenantId") String tenantId, @Param("startOfDay") LocalDateTime startOfDay);
 
     /**

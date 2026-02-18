@@ -6,6 +6,7 @@ import com.booking.platform.dto.response.MembershipLevelResponse;
 import com.booking.platform.service.MembershipLevelService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,6 +63,7 @@ public class MembershipLevelController {
      * 建立會員等級
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<MembershipLevelResponse> create(@Valid @RequestBody CreateMembershipLevelRequest request) {
         MembershipLevelResponse result = membershipLevelService.create(request);
         return ApiResponse.ok("會員等級建立成功", result);

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -80,6 +81,7 @@ public class CustomerController {
      * 建立顧客
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CustomerResponse> create(@Valid @RequestBody CreateCustomerRequest request) {
         CustomerResponse result = customerService.create(request);
         return ApiResponse.ok("顧客建立成功", result);

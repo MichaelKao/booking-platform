@@ -160,6 +160,13 @@ public class AdminTenantController {
         String status = request.get("status");
         log.info("收到更新租戶狀態請求，ID：{}，狀態：{}", id, status);
 
+        if (status == null || status.isBlank()) {
+            throw new com.booking.platform.common.exception.BusinessException(
+                    com.booking.platform.common.exception.ErrorCode.SYS_PARAM_ERROR,
+                    "狀態值不能為空"
+            );
+        }
+
         TenantResponse result;
         switch (status) {
             case "ACTIVE":

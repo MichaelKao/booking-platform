@@ -507,6 +507,9 @@ public class Tenant extends BaseEntity {
      * @param amount 增加金額
      */
     public void addPoints(BigDecimal amount) {
+        if (this.pointBalance == null) {
+            this.pointBalance = BigDecimal.ZERO;
+        }
         this.pointBalance = this.pointBalance.add(amount);
     }
 
@@ -517,6 +520,9 @@ public class Tenant extends BaseEntity {
      * @return true 表示扣除成功
      */
     public boolean deductPoints(BigDecimal amount) {
+        if (this.pointBalance == null) {
+            this.pointBalance = BigDecimal.ZERO;
+        }
         if (this.pointBalance.compareTo(amount) < 0) {
             return false;
         }

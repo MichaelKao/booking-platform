@@ -1,5 +1,6 @@
 package com.booking.platform.dto.request;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -27,6 +28,7 @@ public class CreatePointTopUpRequest {
     private Integer points;
 
     @NotNull(message = "金額不能為空")
+    @DecimalMin(value = "0.01", message = "金額必須大於 0")
     private BigDecimal amount;
 
     @Size(max = 50, message = "付款方式長度不能超過 50 字")

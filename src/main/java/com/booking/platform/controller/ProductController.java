@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -91,6 +92,7 @@ public class ProductController {
      * 建立商品
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
         ProductResponse result = productService.create(request);
         return ApiResponse.ok("商品建立成功", result);
