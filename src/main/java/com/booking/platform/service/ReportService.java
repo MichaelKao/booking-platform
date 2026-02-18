@@ -290,11 +290,22 @@ public class ReportService {
                         .multiply(BigDecimal.valueOf(100));
             }
 
+            // 計算該員工的營收
+            BigDecimal amount = BigDecimal.ZERO;
+            if (staffId != null) {
+                amount = bookingRepository.sumRevenueByTenantIdAndStaffIdAndDateRange(
+                        tenantId, staffId, startDate, endDate
+                );
+                if (amount == null) {
+                    amount = BigDecimal.ZERO;
+                }
+            }
+
             result.add(TopItemResponse.builder()
                     .id(staffId)
                     .name(staffName)
                     .count(count)
-                    .amount(BigDecimal.ZERO)
+                    .amount(amount)
                     .percentage(percentage)
                     .build());
         }
@@ -335,9 +346,9 @@ public class ReportService {
         // 今日預約數（依預約日期）
         summary.setTodayBookings(summary.getTotalBookings());
 
-        // 待確認預約數（依預約日期）
-        long pendingCount = bookingRepository.countByTenantIdAndStatusAndDateRange(
-                tenantId, BookingStatus.PENDING, today, today
+        // 待確認預約數（所有日期，店家需要處理的不只今天的）
+        long pendingCount = bookingRepository.countByTenantIdAndStatusAndDeletedAtIsNull(
+                tenantId, BookingStatus.PENDING
         );
         summary.setPendingBookings(pendingCount);
 

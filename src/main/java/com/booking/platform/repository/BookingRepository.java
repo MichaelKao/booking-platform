@@ -527,6 +527,30 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("endDate") LocalDate endDate
     );
 
+    /**
+     * 計算員工營收（員工業績報表用）
+     */
+    @Query(value = """
+            SELECT COALESCE(SUM(b.price), 0)
+            FROM bookings b
+            WHERE b.tenant_id = :tenantId
+            AND b.staff_id = :staffId
+            AND b.deleted_at IS NULL
+            AND b.status = 'COMPLETED'
+            AND b.booking_date BETWEEN :startDate AND :endDate
+            """, nativeQuery = true)
+    BigDecimal sumRevenueByTenantIdAndStaffIdAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("staffId") String staffId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /**
+     * 統計特定狀態的預約數（不限日期）
+     */
+    long countByTenantIdAndStatusAndDeletedAtIsNull(String tenantId, BookingStatus status);
+
     // ========================================
     // 存在性檢查
     // ========================================
