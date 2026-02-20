@@ -474,12 +474,12 @@ SELECTING_SERVICE（選擇服務）- 有分類時按分類分組顯示（每分�
 SELECTING_DATE（選擇日期）- 只顯示有可預約時段的日期（過濾公休日、全員滿檔、無可用時段）
   ↓ 選擇日期
 SELECTING_STAFF（選擇員工）- 根據日期篩選，顯示每位員工可預約時段數；無時段的員工灰色不可點
-  ↓ 選擇員工（或不指定）
-SELECTING_TIME（選擇時段）
+  ↓ 選擇員工（或不指定）     ※ requiresStaff=false 時自動跳過此步驟
+SELECTING_TIME（選擇時段）- requiresStaff=false 時顯示剩餘名額
   ↓ 選擇時段
 INPUTTING_NOTE（輸入備註）- 可直接輸入文字或點選「跳過」
   ↓ 輸入備註或跳過
-CONFIRMING_BOOKING（確認預約）
+CONFIRMING_BOOKING（確認預約）- requiresStaff=false 時不顯示「服務人員」行
   ↓ 確認
 IDLE（完成，回到閒置）
 ```
@@ -720,22 +720,37 @@ ecpay:
 | `CANCELLED` | 否 | 已取消 |
 | `NO_SHOW` | 否 | 爽約 |
 
+### 容量預約模式
+
+支援三種預約模式，透過 `ServiceItem.maxCapacity` 和 `Staff.maxConcurrentBookings` 控制，**預設值皆為 1，確保現有行為完全不變**：
+
+| 模式 | 條件 | 衝突判斷 | 適用場景 |
+|------|------|---------|---------|
+| 一對一（預設） | `requiresStaff=true`, `maxConcurrentBookings=1` | `exists` = 衝突 | 美容院、按摩 |
+| 員工容量模式 | `requiresStaff=true`, `maxConcurrentBookings>1` | `count < maxConcurrentBookings` | 健身團課、教練 |
+| 服務容量模式 | `requiresStaff=false` | `count < maxCapacity` | 餐廳、場地預約 |
+
+**相關欄位**：
+- `ServiceItem.maxCapacity`（Integer, default=1）：每時段最大預約數（`requiresStaff=false` 時使用）
+- `ServiceItem.requiresStaff`（Boolean, default=true）：是否需要指定員工
+- `Staff.maxConcurrentBookings`（Integer, default=1）：員工同一時段最大同時預約數
+
 ### 衝突檢查規則
 
 **只有 `CONFIRMED` 狀態的預約才算衝突**，PENDING 不佔用時段。
 
 **建立預約（create）**：
-1. 員工全天請假 → 拒絕
-2. 員工半天假時段重疊 → 拒絕
-3. 員工已有 CONFIRMED 預約衝突 → 拒絕
-4. 未指定員工 → 自動分配可用員工（隨機選一位無 CONFIRMED 衝突的）
-5. 所有員工都被 CONFIRMED 佔滿 → 拒絕
-6. 預約緩衝時間（`bookingBufferMinutes` 設定）
+1. `requiresStaff=false`（服務容量模式）：`countByService < maxCapacity` → OK，staffId=null
+2. `requiresStaff=true` + 指定員工：檢查請假 → `countByStaff < maxConcurrentBookings` → OK
+3. `requiresStaff=true` + 不指定：自動分配 `countByStaff < maxConcurrentBookings` 的員工
+4. 所有容量都滿 → 拒絕
+5. 預約緩衝時間（`bookingBufferMinutes` 設定）
 
 **確認預約（confirm）— 真正的驗證關卡**：
-1. 已指定員工 → 檢查該員工是否有其他 CONFIRMED 衝突
-2. 未指定員工 → 自動分配可用員工
-3. 衝突或無可用員工 → 拒絕確認
+1. `requiresStaff=false`：`countByService < maxCapacity` → OK
+2. 已指定員工 → `countByStaff < maxConcurrentBookings` → OK
+3. 未指定員工 → 自動分配可用員工
+4. 衝突或無可用容量 → 拒絕確認
 
 ### 「我的預約」（LINE Bot）
 
@@ -743,11 +758,15 @@ ecpay:
 
 ### 日期/員工/時段智慧過濾（LINE Bot）
 
-**日期選單**：`buildDateMenu(tenantId, duration)` 對每個日期呼叫 `hasAnyAvailableSlot()` 過濾無可預約時段的日期。
+**日期選單**：`buildDateMenu(tenantId, duration, serviceId)` 過濾無可預約時段的日期。
+- `requiresStaff=true`：逐員工檢查是否有可用時段
+- `requiresStaff=false`：檢查服務容量 `count < maxCapacity`（不檢查員工）
 
-**員工選單**：`buildStaffMenuByDate(tenantId, serviceId, date, duration)` 對每位員工呼叫 `getAvailableSlotCount()` 計算可預約時段數，無時段的員工灰色不可點。
+**員工選單**：`buildStaffMenuByDate(tenantId, serviceId, date, duration)` 對每位員工呼叫 `getAvailableSlotCount()` 計算可預約時段數，無時段的員工灰色不可點。（`requiresStaff=false` 時跳過此步驟）
 
-**時段選單**：不指定員工時，每個時段會檢查是否至少有一位員工無 CONFIRMED 衝突，全部滿了則不顯示該時段。
+**時段選單**：`buildTimeMenu(tenantId, staffId, date, duration, serviceId)` 產生可預約時段。
+- `requiresStaff=false` + `maxCapacity > 1`：顯示剩餘名額「10:00 (剩3)」
+- `requiresStaff=true`：使用 `count < maxConcurrentBookings` 檢查員工容量
 
 ### 時間/日期驗證規則
 
