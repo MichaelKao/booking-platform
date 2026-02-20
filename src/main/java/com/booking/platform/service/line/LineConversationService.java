@@ -225,6 +225,30 @@ public class LineConversationService {
     }
 
     /**
+     * 設定選擇的服務（含 requiresStaff）
+     */
+    public ConversationContext setSelectedService(
+            String tenantId,
+            String lineUserId,
+            String serviceId,
+            String serviceName,
+            Integer duration,
+            Integer price,
+            Boolean requiresStaff
+    ) {
+        ConversationContext context = getContext(tenantId, lineUserId);
+        context.clearDownstreamFromDate();
+        context.setService(serviceId, serviceName, duration, price, requiresStaff);
+        context.transitionTo(ConversationState.SELECTING_DATE);
+        saveContext(context);
+
+        log.debug("設定選擇的服務，租戶：{}，LINE User：{}，服務：{}，需要員工：{}",
+                tenantId, lineUserId, serviceName, requiresStaff);
+
+        return context;
+    }
+
+    /**
      * 設定選擇的員工
      *
      * @param tenantId   租戶 ID

@@ -136,6 +136,7 @@ public class StaffService {
                 .status(StaffStatus.ACTIVE)
                 .isBookable(request.getIsBookable() != null ? request.getIsBookable() : true)
                 .isVisible(request.getIsVisible() != null ? request.getIsVisible() : true)
+                .maxConcurrentBookings(request.getMaxConcurrentBookings() != null ? request.getMaxConcurrentBookings() : 1)
                 .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0)
                 .build();
 
@@ -169,6 +170,9 @@ public class StaffService {
         }
         if (request.getIsVisible() != null) {
             entity.setIsVisible(request.getIsVisible());
+        }
+        if (request.getMaxConcurrentBookings() != null) {
+            entity.setMaxConcurrentBookings(request.getMaxConcurrentBookings());
         }
         if (request.getSortOrder() != null) {
             entity.setSortOrder(request.getSortOrder());

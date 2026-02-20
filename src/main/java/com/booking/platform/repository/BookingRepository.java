@@ -184,6 +184,68 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             @Param("excludeId") String excludeId
     );
 
+    /**
+     * 計算某員工某時段的 CONFIRMED 預約數（容量模式用）
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.staffId = :staffId
+            AND b.bookingDate = :date
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            AND (b.startTime < :endTime AND b.endTime > :startTime)
+            """)
+    long countConflictingBookings(
+            @Param("tenantId") String tenantId,
+            @Param("staffId") String staffId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    /**
+     * 計算某服務某時段的 CONFIRMED 預約數（無員工的容量模式用）
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.serviceId = :serviceId
+            AND b.bookingDate = :date
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            AND (b.startTime < :endTime AND b.endTime > :startTime)
+            """)
+    long countConflictingBookingsByService(
+            @Param("tenantId") String tenantId,
+            @Param("serviceId") String serviceId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
+    /**
+     * 計算某員工某時段的 CONFIRMED 預約數，排除指定預約（更新預約用）
+     */
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.tenantId = :tenantId
+            AND b.staffId = :staffId
+            AND b.bookingDate = :date
+            AND b.id != :excludeId
+            AND b.deletedAt IS NULL
+            AND b.status = 'CONFIRMED'
+            AND (b.startTime < :endTime AND b.endTime > :startTime)
+            """)
+    long countConflictingBookingsExcluding(
+            @Param("tenantId") String tenantId,
+            @Param("staffId") String staffId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("excludeId") String excludeId
+    );
+
     // ========================================
     // 統計查詢
     // ========================================

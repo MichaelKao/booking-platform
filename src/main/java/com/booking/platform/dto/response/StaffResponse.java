@@ -31,6 +31,7 @@ public class StaffResponse {
     private StaffStatus status;
     private Boolean isBookable;
     private Boolean isVisible;
+    private Integer maxConcurrentBookings;
     private Integer sortOrder;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

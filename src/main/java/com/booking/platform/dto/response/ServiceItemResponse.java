@@ -34,6 +34,7 @@ public class ServiceItemResponse {
     private ServiceStatus status;
     private Boolean isVisible;
     private Boolean requiresStaff;
+    private Integer maxCapacity;
     private Integer sortOrder;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

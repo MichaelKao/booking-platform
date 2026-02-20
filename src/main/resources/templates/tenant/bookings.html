@@ -420,7 +420,7 @@
                     ${b.customerPhone ? `<small class="text-muted d-none d-sm-block">${escapeHtml(b.customerPhone)}</small>` : ''}
                 </td>
                 <td class="d-none d-md-table-cell">${escapeHtml(b.serviceName || '-')}</td>
-                <td class="d-none d-lg-table-cell">${escapeHtml(b.staffName || '未指定')}</td>
+                <td class="d-none d-lg-table-cell">${escapeHtml(b.staffName || '無需指定')}</td>
                 <td class="d-none d-sm-table-cell text-nowrap">${formatMoney(b.price || 0)}</td>
                 <td class="text-center">${getBookingStatusBadge(b.status)}</td>
                 <td class="text-center">
@@ -615,7 +615,7 @@
                         <h6 class="mb-3"><i class="bi bi-scissors me-1"></i>服務資訊</h6>
                         <div class="row mb-2">
                             <div class="col-md-6"><strong>服務項目：</strong>${escapeHtml(b.serviceName || '-')}</div>
-                            <div class="col-md-6"><strong>服務人員：</strong>${escapeHtml(b.staffName || '未指定')}</div>
+                            <div class="col-md-6"><strong>服務人員：</strong>${escapeHtml(b.staffName || '無需指定')}</div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-6"><strong>預約日期：</strong>${formatDate(b.bookingDate)}</div>

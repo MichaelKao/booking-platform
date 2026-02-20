@@ -113,6 +113,11 @@ public class Staff extends BaseEntity {
     @Builder.Default
     private Boolean isVisible = true;
 
+    /** 同一時段最大同時預約數 */
+    @Column(name = "max_concurrent_bookings")
+    @Builder.Default
+    private Integer maxConcurrentBookings = 1;
+
     // ========================================
     // 排序
     // ========================================

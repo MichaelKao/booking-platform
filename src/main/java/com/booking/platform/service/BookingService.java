@@ -201,11 +201,12 @@ public class BookingService {
         }
 
         // ========================================
-        // 3. 查詢員工（如果有指定）
+        // 3. 查詢員工（如果有指定且服務需要員工）
         // ========================================
 
+        boolean serviceRequiresStaffCheck = !Boolean.FALSE.equals(service.getRequiresStaff());
         Staff staff = null;
-        if (request.getStaffId() != null) {
+        if (serviceRequiresStaffCheck && request.getStaffId() != null) {
             staff = staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(
                             request.getStaffId(), tenantId)
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -318,24 +319,36 @@ public class BookingService {
         // 6. 檢查時段衝突 / 自動分配員工
         // ========================================
 
-        if (staff != null) {
-            // 有指定員工：檢查衝突
-            boolean hasConflict = bookingRepository.existsConflictingBooking(
-                    tenantId,
-                    staff.getId(),
-                    request.getBookingDate(),
-                    startTime,
-                    endTimeWithBuffer
-            );
+        boolean serviceRequiresStaff = !Boolean.FALSE.equals(service.getRequiresStaff());
 
-            if (hasConflict) {
+        if (!serviceRequiresStaff) {
+            // 服務容量模式（不需要員工）：按服務的 maxCapacity 檢查
+            int maxCapacity = service.getMaxCapacity() != null ? service.getMaxCapacity() : 1;
+            long currentCount = bookingRepository.countConflictingBookingsByService(
+                    tenantId, service.getId(), request.getBookingDate(), startTime, endTimeWithBuffer
+            );
+            if (currentCount >= maxCapacity) {
+                throw new BusinessException(
+                        ErrorCode.BOOKING_TIME_CONFLICT,
+                        "該時段已額滿，請選擇其他時間"
+                );
+            }
+            // 不分配員工
+            staff = null;
+        } else if (staff != null) {
+            // 員工模式（已指定員工）：按員工的 maxConcurrentBookings 檢查
+            int maxConcurrent = staff.getMaxConcurrentBookings() != null ? staff.getMaxConcurrentBookings() : 1;
+            long currentCount = bookingRepository.countConflictingBookings(
+                    tenantId, staff.getId(), request.getBookingDate(), startTime, endTimeWithBuffer
+            );
+            if (currentCount >= maxConcurrent) {
                 throw new BusinessException(
                         ErrorCode.BOOKING_TIME_CONFLICT,
                         "該時段已被預約，請選擇其他時間"
                 );
             }
         } else {
-            // 未指定員工：從可用員工中自動分配一位
+            // 員工模式（未指定員工）：自動分配可用員工
             staff = findAvailableStaffForSlot(
                     tenantId, request.getBookingDate(), startTime, endTimeWithBuffer
             );
@@ -554,7 +567,7 @@ public class BookingService {
         // 7. 檢查時段衝突（含緩衝時間）
         // ========================================
 
-        if (entity.getStaffId() != null && hasTimeChange) {
+        if (hasTimeChange) {
             // 取得租戶設定的緩衝時間
             Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
             int bufferMinutes = (tenant != null && tenant.getBookingBufferMinutes() != null)
@@ -562,20 +575,39 @@ public class BookingService {
 
             LocalTime endTimeWithBuffer = entity.getEndTime().plusMinutes(bufferMinutes);
 
-            boolean hasConflict = bookingRepository.existsConflictingBookingExcluding(
-                    tenantId,
-                    entity.getStaffId(),
-                    entity.getBookingDate(),
-                    entity.getStartTime(),
-                    endTimeWithBuffer,
-                    id
-            );
-
-            if (hasConflict) {
-                throw new BusinessException(
-                        ErrorCode.BOOKING_TIME_CONFLICT,
-                        "該時段已被預約，請選擇其他時間"
+            if (entity.getStaffId() != null) {
+                // 有員工：按 maxConcurrentBookings 檢查（排除自身）
+                Staff updateStaff = staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(entity.getStaffId(), tenantId).orElse(null);
+                int maxConcurrent = (updateStaff != null && updateStaff.getMaxConcurrentBookings() != null)
+                        ? updateStaff.getMaxConcurrentBookings() : 1;
+                long currentCount = bookingRepository.countConflictingBookingsExcluding(
+                        tenantId, entity.getStaffId(), entity.getBookingDate(),
+                        entity.getStartTime(), endTimeWithBuffer, id
                 );
+                if (currentCount >= maxConcurrent) {
+                    throw new BusinessException(
+                            ErrorCode.BOOKING_TIME_CONFLICT,
+                            "該時段已被預約，請選擇其他時間"
+                    );
+                }
+            } else if (entity.getServiceId() != null) {
+                // 無員工但有服務：按服務容量檢查
+                ServiceItem updateService = serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(entity.getServiceId(), tenantId).orElse(null);
+                if (updateService != null && Boolean.FALSE.equals(updateService.getRequiresStaff())) {
+                    int maxCapacity = updateService.getMaxCapacity() != null ? updateService.getMaxCapacity() : 1;
+                    long currentCount = bookingRepository.countConflictingBookingsByService(
+                            tenantId, entity.getServiceId(), entity.getBookingDate(),
+                            entity.getStartTime(), endTimeWithBuffer
+                    );
+                    // 排除自身（countByService 不排除，需手動減 1）
+                    long adjustedCount = Math.max(0, currentCount - 1);
+                    if (adjustedCount >= maxCapacity) {
+                        throw new BusinessException(
+                                ErrorCode.BOOKING_TIME_CONFLICT,
+                                "該時段已額滿，請選擇其他時間"
+                        );
+                    }
+                }
             }
         }
 
@@ -670,26 +702,48 @@ public class BookingService {
             );
         }
 
-        // 確認時驗證員工可用性（CONFIRMED 才佔用時段，所以確認是真正的驗證關卡）
+        // 確認時驗證時段可用性（CONFIRMED 才佔用時段，所以確認是真正的驗證關卡）
         Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantId).orElse(null);
         int bufferMinutes = (tenant != null && tenant.getBookingBufferMinutes() != null)
                 ? tenant.getBookingBufferMinutes() : 0;
         LocalTime endTimeWithBuffer = entity.getEndTime().plusMinutes(bufferMinutes);
 
-        if (entity.getStaffId() != null) {
-            // 已指定員工：檢查 CONFIRMED 衝突
-            boolean hasConflict = bookingRepository.existsConflictingBooking(
+        // 查詢服務項目判斷是否需要員工
+        ServiceItem confirmService = entity.getServiceId() != null
+                ? serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(entity.getServiceId(), tenantId).orElse(null)
+                : null;
+        boolean requiresStaff = confirmService == null || !Boolean.FALSE.equals(confirmService.getRequiresStaff());
+
+        if (!requiresStaff) {
+            // 服務容量模式：按服務 maxCapacity 檢查
+            int maxCapacity = confirmService.getMaxCapacity() != null ? confirmService.getMaxCapacity() : 1;
+            long currentCount = bookingRepository.countConflictingBookingsByService(
+                    tenantId, entity.getServiceId(), entity.getBookingDate(),
+                    entity.getStartTime(), endTimeWithBuffer
+            );
+            if (currentCount >= maxCapacity) {
+                throw new BusinessException(
+                        ErrorCode.BOOKING_TIME_CONFLICT,
+                        "該時段已額滿，無法確認"
+                );
+            }
+        } else if (entity.getStaffId() != null) {
+            // 員工模式（已指定員工）：按 maxConcurrentBookings 檢查
+            Staff confirmStaff = staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(entity.getStaffId(), tenantId).orElse(null);
+            int maxConcurrent = (confirmStaff != null && confirmStaff.getMaxConcurrentBookings() != null)
+                    ? confirmStaff.getMaxConcurrentBookings() : 1;
+            long currentCount = bookingRepository.countConflictingBookings(
                     tenantId, entity.getStaffId(), entity.getBookingDate(),
                     entity.getStartTime(), endTimeWithBuffer
             );
-            if (hasConflict) {
+            if (currentCount >= maxConcurrent) {
                 throw new BusinessException(
                         ErrorCode.BOOKING_TIME_CONFLICT,
                         "該時段員工已有其他已確認的預約，無法確認"
                 );
             }
         } else {
-            // 未指定員工：自動分配可用員工
+            // 員工模式（未指定員工）：自動分配可用員工
             Staff autoAssigned = findAvailableStaffForSlot(
                     tenantId, entity.getBookingDate(), entity.getStartTime(), endTimeWithBuffer
             );
@@ -958,11 +1012,12 @@ public class BookingService {
                 }
             }
 
-            // 檢查預約衝突
-            boolean hasConflict = bookingRepository.existsConflictingBooking(
+            // 檢查預約衝突（容量模式：count < maxConcurrentBookings）
+            int maxConcurrent = s.getMaxConcurrentBookings() != null ? s.getMaxConcurrentBookings() : 1;
+            long currentCount = bookingRepository.countConflictingBookings(
                     tenantId, s.getId(), date, startTime, endTimeWithBuffer
             );
-            if (!hasConflict) {
+            if (currentCount < maxConcurrent) {
                 candidates.add(s);
             }
         }

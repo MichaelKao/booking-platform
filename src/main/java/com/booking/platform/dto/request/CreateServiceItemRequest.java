@@ -48,5 +48,8 @@ public class CreateServiceItemRequest {
 
     private Boolean requiresStaff;
 
+    @Min(value = 1, message = "最大容量至少 1")
+    private Integer maxCapacity;
+
     private Integer sortOrder;
 }

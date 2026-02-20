@@ -77,6 +77,10 @@ public class UpdateServiceItemRequest {
      */
     private Boolean requireStaff;
 
+    /** 每時段最大預約數 */
+    @Min(value = 1, message = "最大容量至少 1")
+    private Integer maxCapacity;
+
     /**
      * 是否允許 LINE 預約
      */

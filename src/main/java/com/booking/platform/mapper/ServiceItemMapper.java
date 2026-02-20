@@ -35,6 +35,7 @@ public class ServiceItemMapper {
                 .status(entity.getStatus())
                 .isVisible(entity.getIsVisible())
                 .requiresStaff(entity.getRequiresStaff())
+                .maxCapacity(entity.getMaxCapacity())
                 .sortOrder(entity.getSortOrder())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

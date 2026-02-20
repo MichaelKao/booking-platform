@@ -112,6 +112,20 @@
                                 <div class="invalid-feedback">時長 5-480 分鐘</div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="requiresStaff" checked onchange="toggleMaxCapacity()">
+                                    <label class="form-check-label" for="requiresStaff">需要指定員工</label>
+                                </div>
+                                <div class="form-text">關閉後適用於餐廳、場地等不需指定員工的服務</div>
+                            </div>
+                            <div class="col-6 mb-3" id="maxCapacityGroup" style="display:none;">
+                                <label class="form-label">每時段最大預約數</label>
+                                <input type="number" class="form-control" id="maxCapacity" min="1" max="999" value="1" placeholder="1">
+                                <div class="form-text">不需員工時，每個時段可接受的預約數量</div>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">描述</label>
                             <textarea class="form-control" id="description" rows="2" maxlength="500" placeholder="服務描述（選填）"></textarea>
@@ -278,10 +292,18 @@
                 </tr>`).join('');
         }
 
+        function toggleMaxCapacity() {
+            const requiresStaff = document.getElementById('requiresStaff').checked;
+            document.getElementById('maxCapacityGroup').style.display = requiresStaff ? 'none' : '';
+        }
+
         function openCreateModal() {
             document.getElementById('dataForm').reset();
             document.getElementById('dataForm').classList.remove('was-validated');
             document.getElementById('dataId').value = '';
+            document.getElementById('requiresStaff').checked = true;
+            document.getElementById('maxCapacity').value = 1;
+            toggleMaxCapacity();
             document.getElementById('modalTitle').textContent = '新增服務';
             new bootstrap.Modal(document.getElementById('formModal')).show();
         }
@@ -298,6 +320,9 @@
                     document.getElementById('price').value = d.price || 0;
                     document.getElementById('duration').value = d.duration || 30;
                     document.getElementById('description').value = d.description || '';
+                    document.getElementById('requiresStaff').checked = d.requiresStaff !== false;
+                    document.getElementById('maxCapacity').value = d.maxCapacity || 1;
+                    toggleMaxCapacity();
                     document.getElementById('modalTitle').textContent = '編輯服務';
                     new bootstrap.Modal(document.getElementById('formModal')).show();
                 }
@@ -331,12 +356,17 @@
             }
 
             const id = document.getElementById('dataId').value;
+            const requiresStaff = document.getElementById('requiresStaff').checked;
+            const maxCapacity = parseInt(document.getElementById('maxCapacity').value) || 1;
             const data = {
                 name: nameEl.value.trim(),
                 categoryId: document.getElementById('categoryId').value || null,
                 price: price,
                 duration: duration,
-                description: document.getElementById('description').value.trim() || null
+                description: document.getElementById('description').value.trim() || null,
+                requiresStaff: requiresStaff,
+                requireStaff: requiresStaff,
+                maxCapacity: requiresStaff ? 1 : maxCapacity
             };
 
             try {

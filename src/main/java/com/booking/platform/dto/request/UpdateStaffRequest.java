@@ -86,4 +86,8 @@ public class UpdateStaffRequest {
      * 是否顯示於前台
      */
     private Boolean isVisible;
+
+    /** 同一時段最大同時預約數 */
+    @Min(value = 1, message = "最大同時預約數至少 1")
+    private Integer maxConcurrentBookings;
 }

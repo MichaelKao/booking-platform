@@ -459,15 +459,21 @@ public class LineWebhookService {
             return;
         }
 
+        // 查詢服務的 requiresStaff 設定
+        Boolean requiresStaff = serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(serviceId, tenantId)
+                .map(s -> s.getRequiresStaff())
+                .orElse(true);
+
         conversationService.setSelectedService(
                 tenantId, userId, serviceId, serviceName,
                 duration != null ? Integer.parseInt(duration) : null,
-                price != null ? Integer.parseInt(price) : null
+                price != null ? Integer.parseInt(price) : null,
+                requiresStaff
         );
 
         // 新流程：選完服務後顯示日期選單（傳入服務時長過濾無可用時段的日期）
         Integer serviceDuration = duration != null ? Integer.parseInt(duration) : null;
-        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, serviceDuration);
+        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, serviceDuration, serviceId);
         messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
     }
 
@@ -502,7 +508,8 @@ public class LineWebhookService {
                 tenantId,
                 staffId,
                 context.getSelectedDate(),
-                context.getSelectedServiceDuration()
+                context.getSelectedServiceDuration(),
+                context.getSelectedServiceId()
         );
         messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
     }
@@ -535,10 +542,20 @@ public class LineWebhookService {
         // 取得對話上下文
         ConversationContext context = conversationService.getContext(tenantId, userId);
 
-        // 新流程：選完日期後顯示員工選單（根據日期篩選可用員工，傳入服務時長檢查可預約時段）
-        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
-                tenantId, context.getSelectedServiceId(), date, context.getSelectedServiceDuration());
-        messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+        // 如果服務不需要員工，跳過員工選擇，直接顯示時段選單
+        if (Boolean.FALSE.equals(context.getSelectedServiceRequiresStaff())) {
+            // 自動設定 staff=null 並跳到時段選擇
+            conversationService.setSelectedStaff(tenantId, userId, null, "無需指定");
+            JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
+                    tenantId, null, date, context.getSelectedServiceDuration(),
+                    context.getSelectedServiceId());
+            messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
+        } else {
+            // 新流程：選完日期後顯示員工選單（根據日期篩選可用員工，傳入服務時長檢查可預約時段）
+            JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
+                    tenantId, context.getSelectedServiceId(), date, context.getSelectedServiceDuration());
+            messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+        }
     }
 
     /**
@@ -707,33 +724,40 @@ public class LineWebhookService {
                     }
                 }
                 case SELECTING_STAFF -> {
-                    // 返回選員工時需要根據已選日期篩選，傳入服務時長檢查可預約時段
-                    LocalDate selectedDate = context.getSelectedDate();
-                    if (selectedDate == null) {
-                        log.warn("SELECTING_STAFF 狀態但 selectedDate 為 null，返回日期選單");
-                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                    // 如果服務不需要員工，重導回日期選擇
+                    if (Boolean.FALSE.equals(context.getSelectedServiceRequiresStaff())) {
+                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration(), context.getSelectedServiceId());
                         messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
                     } else {
-                        JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
-                                tenantId, context.getSelectedServiceId(), selectedDate,
-                                context.getSelectedServiceDuration());
-                        messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+                        // 返回選員工時需要根據已選日期篩選，傳入服務時長檢查可預約時段
+                        LocalDate selectedDate = context.getSelectedDate();
+                        if (selectedDate == null) {
+                            log.warn("SELECTING_STAFF 狀態但 selectedDate 為 null，返回日期選單");
+                            JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration(), context.getSelectedServiceId());
+                            messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
+                        } else {
+                            JsonNode staffMenu = flexMessageBuilder.buildStaffMenuByDate(
+                                    tenantId, context.getSelectedServiceId(), selectedDate,
+                                    context.getSelectedServiceDuration());
+                            messageService.replyFlex(tenantId, replyToken, "請選擇服務人員", staffMenu);
+                        }
                     }
                 }
                 case SELECTING_DATE -> {
-                    JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                    JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration(), context.getSelectedServiceId());
                     messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
                 }
                 case SELECTING_TIME -> {
                     LocalDate selectedDate = context.getSelectedDate();
                     if (selectedDate == null) {
                         log.warn("SELECTING_TIME 狀態但 selectedDate 為 null，返回日期選單");
-                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration());
+                        JsonNode dateMenu = flexMessageBuilder.buildDateMenu(tenantId, context.getSelectedServiceDuration(), context.getSelectedServiceId());
                         messageService.replyFlex(tenantId, replyToken, "請選擇日期", dateMenu);
                     } else {
                         JsonNode timeMenu = flexMessageBuilder.buildTimeMenu(
                                 tenantId, context.getSelectedStaffId(),
-                                selectedDate, context.getSelectedServiceDuration()
+                                selectedDate, context.getSelectedServiceDuration(),
+                                context.getSelectedServiceId()
                         );
                         messageService.replyFlex(tenantId, replyToken, "請選擇時段", timeMenu);
                     }

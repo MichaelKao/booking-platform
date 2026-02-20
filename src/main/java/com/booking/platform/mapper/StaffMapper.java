@@ -29,6 +29,7 @@ public class StaffMapper {
                 .status(entity.getStatus())
                 .isBookable(entity.getIsBookable())
                 .isVisible(entity.getIsVisible())
+                .maxConcurrentBookings(entity.getMaxConcurrentBookings())
                 .sortOrder(entity.getSortOrder())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

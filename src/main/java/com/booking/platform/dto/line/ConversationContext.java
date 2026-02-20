@@ -102,6 +102,11 @@ public class ConversationContext implements Serializable {
     private Integer selectedServicePrice;
 
     /**
+     * 選擇的服務是否需要指定員工
+     */
+    private Boolean selectedServiceRequiresStaff;
+
+    /**
      * 選擇的員工 ID（null 表示不指定）
      */
     private String selectedStaffId;
@@ -205,7 +210,8 @@ public class ConversationContext implements Serializable {
             case SELECTING_CATEGORY -> ConversationState.IDLE;
             case SELECTING_DATE -> ConversationState.SELECTING_SERVICE;
             case SELECTING_STAFF -> ConversationState.SELECTING_DATE;
-            case SELECTING_TIME -> ConversationState.SELECTING_STAFF;
+            case SELECTING_TIME -> Boolean.FALSE.equals(this.selectedServiceRequiresStaff)
+                    ? ConversationState.SELECTING_DATE : ConversationState.SELECTING_STAFF;
             case INPUTTING_NOTE -> ConversationState.SELECTING_TIME;
             case CONFIRMING_BOOKING -> ConversationState.INPUTTING_NOTE;
             // 商品流程
@@ -239,6 +245,7 @@ public class ConversationContext implements Serializable {
         this.selectedServiceName = null;
         this.selectedServiceDuration = null;
         this.selectedServicePrice = null;
+        this.selectedServiceRequiresStaff = null;
         this.selectedStaffId = null;
         this.selectedStaffName = null;
         this.selectedDate = null;
@@ -317,16 +324,24 @@ public class ConversationContext implements Serializable {
     /**
      * 設定服務資訊
      *
-     * @param serviceId   服務 ID
-     * @param serviceName 服務名稱
-     * @param duration    服務時長（分鐘）
-     * @param price       服務價格
+     * @param serviceId     服務 ID
+     * @param serviceName   服務名稱
+     * @param duration      服務時長（分鐘）
+     * @param price         服務價格
      */
     public void setService(String serviceId, String serviceName, Integer duration, Integer price) {
         this.selectedServiceId = serviceId;
         this.selectedServiceName = serviceName;
         this.selectedServiceDuration = duration;
         this.selectedServicePrice = price;
+    }
+
+    /**
+     * 設定服務資訊（含 requiresStaff）
+     */
+    public void setService(String serviceId, String serviceName, Integer duration, Integer price, Boolean requiresStaff) {
+        setService(serviceId, serviceName, duration, price);
+        this.selectedServiceRequiresStaff = requiresStaff;
     }
 
     /**

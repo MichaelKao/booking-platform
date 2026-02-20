@@ -63,6 +63,11 @@
                         <textarea class="form-control" id="bio" rows="3" maxlength="500"></textarea>
                         <div class="form-text"><span id="bioCount">0</span>/500</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">同時段最大預約數</label>
+                        <input type="number" class="form-control" id="maxConcurrentBookings" min="1" max="999" value="1" placeholder="1">
+                        <div class="form-text">此員工同一時段可同時接待的預約數量（預設 1）</div>
+                    </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="form-check form-switch">
@@ -314,6 +319,7 @@
             document.getElementById('dataId').value = '';
             document.getElementById('isBookable').checked = true;
             document.getElementById('isVisible').checked = true;
+            document.getElementById('maxConcurrentBookings').value = 1;
             document.getElementById('bioCount').textContent = '0';
             document.getElementById('modalTitle').textContent = '新增員工';
             new bootstrap.Modal(document.getElementById('formModal')).show();
@@ -334,6 +340,7 @@
                     document.getElementById('bioCount').textContent = (d.bio || '').length;
                     document.getElementById('isBookable').checked = d.isBookable !== false;
                     document.getElementById('isVisible').checked = d.isVisible !== false;
+                    document.getElementById('maxConcurrentBookings').value = d.maxConcurrentBookings || 1;
                     document.getElementById('modalTitle').textContent = '編輯員工';
                     new bootstrap.Modal(document.getElementById('formModal')).show();
                 }
@@ -382,7 +389,8 @@
                 email: emailValue || null,
                 bio: document.getElementById('bio').value.trim() || null,
                 isBookable: document.getElementById('isBookable').checked,
-                isVisible: document.getElementById('isVisible').checked
+                isVisible: document.getElementById('isVisible').checked,
+                maxConcurrentBookings: parseInt(document.getElementById('maxConcurrentBookings').value) || 1
             };
 
             const btn = document.querySelector('#formModal .btn-primary');

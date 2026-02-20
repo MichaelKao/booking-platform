@@ -1,6 +1,7 @@
 package com.booking.platform.dto.request;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,9 @@ public class CreateStaffRequest {
     private Boolean isBookable;
 
     private Boolean isVisible;
+
+    @Min(value = 1, message = "最大同時預約數至少 1")
+    private Integer maxConcurrentBookings;
 
     private Integer sortOrder;
 }

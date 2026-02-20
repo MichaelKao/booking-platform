@@ -1800,6 +1800,18 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容（Carousel 格式）
      */
     public JsonNode buildDateMenu(String tenantId, Integer duration) {
+        return buildDateMenu(tenantId, duration, null);
+    }
+
+    /**
+     * 建構日期選單（支援服務容量模式）
+     *
+     * @param tenantId  租戶 ID
+     * @param duration  服務時長（分鐘）
+     * @param serviceId 服務 ID（用於容量模式判斷，可為 null）
+     * @return Flex Message 內容（Carousel 格式）
+     */
+    public JsonNode buildDateMenu(String tenantId, Integer duration, String serviceId) {
         // 取得店家設定
         Optional<Tenant> tenantOpt = tenantRepository.findByIdAndDeletedAtIsNull(tenantId);
         Tenant tenant = tenantOpt.orElse(null);
@@ -1864,6 +1876,24 @@ public class LineFlexMessageBuilder {
             }
         }
 
+        // 查詢服務的容量模式
+        ServiceItem serviceForDate = (serviceId != null)
+                ? serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(serviceId, tenantId).orElse(null)
+                : null;
+        boolean serviceRequiresStaff = (serviceForDate == null) || !Boolean.FALSE.equals(serviceForDate.getRequiresStaff());
+        int serviceMaxCapacity = (serviceForDate != null && serviceForDate.getMaxCapacity() != null)
+                ? serviceForDate.getMaxCapacity() : 1;
+
+        // 建立服務預約快取（服務容量模式使用）
+        Map<LocalDate, List<Booking>> serviceBookingByDate = new java.util.HashMap<>();
+        if (!serviceRequiresStaff && serviceId != null) {
+            for (Booking b : confirmedBookings) {
+                if (serviceId.equals(b.getServiceId())) {
+                    serviceBookingByDate.computeIfAbsent(b.getBookingDate(), k -> new java.util.ArrayList<>()).add(b);
+                }
+            }
+        }
+
         // 收集所有可用日期（實際檢查是否有可預約時段）
         List<LocalDate> availableDates = new java.util.ArrayList<>();
         int dayOffset = 0;
@@ -1873,9 +1903,16 @@ public class LineFlexMessageBuilder {
             int dayOfWeek = date.getDayOfWeek().getValue() % 7;
 
             if (!closedDays.contains(dayOfWeek)) {
-                // 逐一檢查員工，只要有任何一位員工的任何一個時段可用即可
                 boolean dateHasSlot = false;
 
+                if (!serviceRequiresStaff) {
+                    // 服務容量模式：不檢查員工，直接檢查服務容量
+                    dateHasSlot = checkDateSlotForServiceCapacity(
+                            date, today, businessStart, businessEnd, interval,
+                            tenantBreakStart, tenantBreakEnd, serviceDuration,
+                            serviceBookingByDate, serviceMaxCapacity);
+                } else {
+                // 逐一檢查員工，只要有任何一位員工的任何一個時段可用即可
                 for (Staff staff : allActiveStaff) {
                     // 檢查排班：是否上班
                     StaffSchedule schedule = scheduleCache
@@ -1956,6 +1993,7 @@ public class LineFlexMessageBuilder {
 
                     if (dateHasSlot) break;
                 }
+                } // end else (staff mode)
 
                 if (dateHasSlot) {
                     availableDates.add(date);
@@ -2171,8 +2209,34 @@ public class LineFlexMessageBuilder {
      * @return Flex Message 內容
      */
     public JsonNode buildTimeMenu(String tenantId, String staffId, LocalDate date, Integer duration) {
+        return buildTimeMenu(tenantId, staffId, date, duration, null);
+    }
+
+    /**
+     * 建構時段選單（支援服務容量模式）
+     *
+     * @param tenantId  租戶 ID
+     * @param staffId   員工 ID（可為 null）
+     * @param date      日期
+     * @param duration  服務時長（分鐘）
+     * @param serviceId 服務 ID（用於容量模式，可為 null）
+     * @return Flex Message 內容
+     */
+    public JsonNode buildTimeMenu(String tenantId, String staffId, LocalDate date, Integer duration, String serviceId) {
         // 根據店家營業時間、員工排班、已有預約產生可用時段
-        List<LocalTime> availableSlots = generateAvailableSlots(tenantId, staffId, date, duration);
+        List<LocalTime> availableSlots = generateAvailableSlots(tenantId, staffId, date, duration, serviceId);
+
+        // 查詢服務容量資訊（用於顯示剩餘名額）
+        ServiceItem serviceForTime = (serviceId != null)
+                ? serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(serviceId, tenantId).orElse(null)
+                : null;
+        boolean showCapacity = false;
+        int timeMaxCapacity = 1;
+        if (serviceForTime != null && Boolean.FALSE.equals(serviceForTime.getRequiresStaff())
+                && serviceForTime.getMaxCapacity() != null && serviceForTime.getMaxCapacity() > 1) {
+            showCapacity = true;
+            timeMaxCapacity = serviceForTime.getMaxCapacity();
+        }
 
         // 讀取步驟自訂配置
         String timeStepColor = getStepConfig(tenantId, "time", "color", "#4A90D9");
@@ -2214,7 +2278,15 @@ public class LineFlexMessageBuilder {
 
             for (int j = i; j < Math.min(i + 3, availableSlots.size()); j++) {
                 LocalTime time = availableSlots.get(j);
-                rowContents.add(createTimeButton(time));
+                if (showCapacity) {
+                    // 查詢剩餘名額
+                    long count = bookingRepository.countConflictingBookingsByService(
+                            tenantId, serviceId, date, time, time.plusMinutes(duration != null ? duration : 60));
+                    int remaining = (int) (timeMaxCapacity - count);
+                    rowContents.add(createTimeButtonWithCapacity(time, remaining));
+                } else {
+                    rowContents.add(createTimeButton(time));
+                }
             }
 
             // 補齊空位
@@ -2254,6 +2326,20 @@ public class LineFlexMessageBuilder {
      * @return 可用時段列表
      */
     private List<LocalTime> generateAvailableSlots(String tenantId, String staffId, LocalDate date, Integer duration) {
+        return generateAvailableSlots(tenantId, staffId, date, duration, null);
+    }
+
+    /**
+     * 產生可用時段（支援服務容量模式）
+     *
+     * @param tenantId  租戶 ID
+     * @param staffId   員工 ID（可為 null）
+     * @param date      日期
+     * @param duration  服務時長（分鐘）
+     * @param serviceId 服務 ID（用於容量模式，可為 null）
+     * @return 可用時段列表
+     */
+    private List<LocalTime> generateAvailableSlots(String tenantId, String staffId, LocalDate date, Integer duration, String serviceId) {
         List<LocalTime> slots = new ArrayList<>();
 
         // 防護：日期為 null 時返回空
@@ -2334,6 +2420,20 @@ public class LineFlexMessageBuilder {
         // 服務時長
         int serviceDuration = duration != null ? duration : 60;
 
+        // 預先查詢服務容量資訊（避免在迴圈內重複查詢）
+        ServiceItem svcForSlot = (serviceId != null)
+                ? serviceItemRepository.findByIdAndTenantIdAndDeletedAtIsNull(serviceId, tenantId).orElse(null)
+                : null;
+        boolean svcRequiresStaff = (svcForSlot == null) || !Boolean.FALSE.equals(svcForSlot.getRequiresStaff());
+        int svcMaxCap = (svcForSlot != null && svcForSlot.getMaxCapacity() != null) ? svcForSlot.getMaxCapacity() : 1;
+
+        // 預先查詢員工容量（避免在迴圈內重複查詢）
+        Staff staffEntityForSlot = (staffId != null && !staffId.isEmpty())
+                ? staffRepository.findByIdAndTenantIdAndDeletedAtIsNull(staffId, tenantId).orElse(null)
+                : null;
+        int staffMaxConcurrent = (staffEntityForSlot != null && staffEntityForSlot.getMaxConcurrentBookings() != null)
+                ? staffEntityForSlot.getMaxConcurrentBookings() : 1;
+
         // 產生時段
         LocalTime current = effectiveStart;
         while (!current.plusMinutes(serviceDuration).isAfter(effectiveEnd)) {
@@ -2353,30 +2453,41 @@ public class LineFlexMessageBuilder {
                 }
             }
 
-            // 檢查是否有衝突預約
-            if (isAvailable && staffId != null && !staffId.isEmpty()) {
-                // 指定員工：檢查該員工是否有衝突
-                boolean hasConflict = bookingRepository.existsConflictingBooking(
-                        tenantId, staffId, date, current, current.plusMinutes(serviceDuration)
-                );
-                if (hasConflict) {
-                    isAvailable = false;
-                }
-            } else if (isAvailable) {
-                // 不指定員工：檢查是否至少有一位員工可用
-                List<Staff> availableStaffForSlot = getAvailableStaffForDate(tenantId, date);
-                boolean anyStaffFree = false;
-                for (Staff s : availableStaffForSlot) {
-                    boolean conflict = bookingRepository.existsConflictingBooking(
-                            tenantId, s.getId(), date, current, current.plusMinutes(serviceDuration)
-                    );
-                    if (!conflict) {
-                        anyStaffFree = true;
-                        break;
+            // 檢查是否有衝突預約（支援容量模式）
+            if (isAvailable) {
+                LocalTime slotEnd = current.plusMinutes(serviceDuration);
+
+                if (!svcRequiresStaff && serviceId != null) {
+                    // 服務容量模式：檢查此服務的預約數是否超過容量
+                    long count = bookingRepository.countConflictingBookingsByService(
+                            tenantId, serviceId, date, current, slotEnd);
+                    if (count >= svcMaxCap) {
+                        isAvailable = false;
                     }
-                }
-                if (!anyStaffFree) {
-                    isAvailable = false;
+                } else if (staffId != null && !staffId.isEmpty()) {
+                    // 指定員工容量模式
+                    long count = bookingRepository.countConflictingBookings(
+                            tenantId, staffId, date, current, slotEnd);
+                    if (count >= staffMaxConcurrent) {
+                        isAvailable = false;
+                    }
+                } else {
+                    // 不指定員工：檢查是否至少有一位員工有可用容量
+                    List<Staff> availableStaffForSlot = getAvailableStaffForDate(tenantId, date);
+                    boolean anyStaffFree = false;
+                    for (Staff s : availableStaffForSlot) {
+                        int maxConcurrent = (s.getMaxConcurrentBookings() != null)
+                                ? s.getMaxConcurrentBookings() : 1;
+                        long count = bookingRepository.countConflictingBookings(
+                                tenantId, s.getId(), date, current, slotEnd);
+                        if (count < maxConcurrent) {
+                            anyStaffFree = true;
+                            break;
+                        }
+                    }
+                    if (!anyStaffFree) {
+                        isAvailable = false;
+                    }
                 }
             }
 
@@ -2435,6 +2546,64 @@ public class LineFlexMessageBuilder {
     }
 
     /**
+     * 檢查指定日期是否有可預約時段（服務容量模式，不檢查員工）
+     */
+    private boolean checkDateSlotForServiceCapacity(
+            LocalDate date, LocalDate today,
+            LocalTime businessStart, LocalTime businessEnd, int interval,
+            LocalTime tenantBreakStart, LocalTime tenantBreakEnd,
+            int serviceDuration,
+            Map<LocalDate, List<Booking>> serviceBookingByDate,
+            int serviceMaxCapacity) {
+
+        List<Booking> svcDateBookings = serviceBookingByDate
+                .getOrDefault(date, java.util.Collections.emptyList());
+
+        LocalTime current = businessStart;
+
+        // 今天額外檢查：跳過已過去的時段
+        if (date.equals(today)) {
+            LocalTime minTime = LocalTime.now().plusMinutes(30);
+            if (!minTime.isBefore(businessEnd)) return false;
+            if (minTime.isAfter(current)) {
+                int minutesPast = (minTime.getHour() * 60 + minTime.getMinute())
+                        - (current.getHour() * 60 + current.getMinute());
+                int skip = (int) Math.ceil((double) minutesPast / interval);
+                current = current.plusMinutes((long) skip * interval);
+            }
+        }
+
+        while (!current.plusMinutes(serviceDuration).isAfter(businessEnd)) {
+            boolean slotOk = true;
+            LocalTime slotEnd = current.plusMinutes(serviceDuration);
+
+            // 店家休息時間
+            if (tenantBreakStart != null && tenantBreakEnd != null
+                    && isTimeOverlapping(current, slotEnd, tenantBreakStart, tenantBreakEnd)) {
+                slotOk = false;
+            }
+
+            // 服務容量檢查（記憶體內比對）
+            if (slotOk) {
+                long count = 0;
+                for (Booking b : svcDateBookings) {
+                    if (b.getStartTime().isBefore(slotEnd) && b.getEndTime().isAfter(current)) {
+                        count++;
+                    }
+                }
+                if (count >= serviceMaxCapacity) {
+                    slotOk = false;
+                }
+            }
+
+            if (slotOk) return true;
+            current = current.plusMinutes(interval);
+        }
+
+        return false;
+    }
+
+    /**
      * 檢查兩個時間區間是否重疊
      */
     private boolean isTimeOverlapping(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
@@ -2472,6 +2641,25 @@ public class LineFlexMessageBuilder {
         ObjectNode action = objectMapper.createObjectNode();
         action.put("type", "postback");
         action.put("label", time.format(DateTimeFormatter.ofPattern("HH:mm")));
+        action.put("data", "action=select_time&time=" + time.format(DateTimeFormatter.ISO_LOCAL_TIME));
+
+        button.set("action", action);
+        return button;
+    }
+
+    /**
+     * 建構時段按鈕（含剩餘名額）
+     */
+    private ObjectNode createTimeButtonWithCapacity(LocalTime time, int remaining) {
+        ObjectNode button = objectMapper.createObjectNode();
+        button.put("type", "button");
+        button.put("style", "secondary");
+        button.put("height", "sm");
+        button.put("flex", 1);
+
+        ObjectNode action = objectMapper.createObjectNode();
+        action.put("type", "postback");
+        action.put("label", time.format(DateTimeFormatter.ofPattern("HH:mm")) + " (剩" + remaining + ")");
         action.put("data", "action=select_time&time=" + time.format(DateTimeFormatter.ISO_LOCAL_TIME));
 
         button.set("action", action);
@@ -2521,11 +2709,13 @@ public class LineFlexMessageBuilder {
         // 服務
         bodyContents.add(createInfoRow("服務項目", context.getSelectedServiceName()));
 
-        // 員工
-        String staffName = context.getSelectedStaffName() != null
-                ? context.getSelectedStaffName()
-                : "不指定";
-        bodyContents.add(createInfoRow("服務人員", staffName));
+        // 員工（requiresStaff=false 時不顯示）
+        if (!Boolean.FALSE.equals(context.getSelectedServiceRequiresStaff())) {
+            String staffName = context.getSelectedStaffName() != null
+                    ? context.getSelectedStaffName()
+                    : "不指定";
+            bodyContents.add(createInfoRow("服務人員", staffName));
+        }
 
         // 日期
         String dateStr = context.getSelectedDate()
@@ -2689,8 +2879,10 @@ public class LineFlexMessageBuilder {
 
         // 預約詳情
         bodyContents.add(createInfoRow("服務項目", context.getSelectedServiceName()));
-        bodyContents.add(createInfoRow("服務人員",
-                context.getSelectedStaffName() != null ? context.getSelectedStaffName() : "不指定"));
+        if (!Boolean.FALSE.equals(context.getSelectedServiceRequiresStaff())) {
+            bodyContents.add(createInfoRow("服務人員",
+                    context.getSelectedStaffName() != null ? context.getSelectedStaffName() : "不指定"));
+        }
         bodyContents.add(createInfoRow("日期",
                 context.getSelectedDate().format(DateTimeFormatter.ofPattern("yyyy年M月d日 (E)"))));
         bodyContents.add(createInfoRow("時間",

@@ -114,6 +114,7 @@ public class ServiceItemService {
                 .status(ServiceStatus.ACTIVE)
                 .isVisible(request.getIsVisible() != null ? request.getIsVisible() : true)
                 .requiresStaff(request.getRequiresStaff() != null ? request.getRequiresStaff() : true)
+                .maxCapacity(request.getMaxCapacity() != null ? request.getMaxCapacity() : 1)
                 .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0)
                 .build();
 
@@ -159,6 +160,9 @@ public class ServiceItemService {
         }
         if (request.getRequiresStaff() != null) {
             entity.setRequiresStaff(request.getRequiresStaff());
+        }
+        if (request.getMaxCapacity() != null) {
+            entity.setMaxCapacity(request.getMaxCapacity());
         }
         if (request.getSortOrder() != null) {
             entity.setSortOrder(request.getSortOrder());

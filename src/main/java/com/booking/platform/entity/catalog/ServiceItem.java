@@ -121,6 +121,11 @@ public class ServiceItem extends BaseEntity {
     @Builder.Default
     private Boolean requiresStaff = true;
 
+    /** 每時段最大預約數（requiresStaff=false 時使用） */
+    @Column(name = "max_capacity")
+    @Builder.Default
+    private Integer maxCapacity = 1;
+
     // ========================================
     // 排序
     // ========================================
