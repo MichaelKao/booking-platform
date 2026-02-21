@@ -51,7 +51,8 @@ import java.time.LocalTime;
 public class Tenant extends BaseEntity {
 
     @Version
-    private Long version;
+    @Builder.Default
+    private Long version = 0L;
 
     // ========================================
     // 生命週期回調：確保 tenantId = id

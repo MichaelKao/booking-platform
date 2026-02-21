@@ -11,10 +11,12 @@ import com.booking.platform.repository.StaffRepository;
 import com.booking.platform.repository.TenantRepository;
 import com.booking.platform.service.AuthService;
 import com.booking.platform.service.FeatureService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,6 +43,7 @@ public class DataInitializer implements CommandLineRunner {
     private final TenantRepository tenantRepository;
     private final ServiceItemRepository serviceItemRepository;
     private final StaffRepository staffRepository;
+    private final EntityManager entityManager;
 
     // ========================================
     // 初始化
@@ -51,6 +54,9 @@ public class DataInitializer implements CommandLineRunner {
         log.info("========================================");
         log.info("開始資料初始化...");
         log.info("========================================");
+
+        // 修復歷史資料中 @Version 欄位為 NULL 的問題
+        fixNullVersionFields();
 
         // 初始化預設超級管理員帳號
         initAdminUser();
@@ -70,6 +76,27 @@ public class DataInitializer implements CommandLineRunner {
         log.info("========================================");
         log.info("資料初始化完成");
         log.info("========================================");
+    }
+
+    /**
+     * 修復歷史資料中 @Version 欄位為 NULL 的問題
+     * （NULL version 會導致 JPA save() 誤判為新實體，嘗試 INSERT 而非 UPDATE）
+     */
+    @Transactional
+    private void fixNullVersionFields() {
+        try {
+            String[] tables = {"tenants", "customers", "bookings", "coupons", "products"};
+            for (String table : tables) {
+                int updated = entityManager
+                        .createNativeQuery("UPDATE " + table + " SET version = 0 WHERE version IS NULL")
+                        .executeUpdate();
+                if (updated > 0) {
+                    log.info("修復 {} 表 {} 筆 version=NULL 記錄", table, updated);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("修復 version NULL 欄位失敗（可能欄位尚未建立）：{}", e.getMessage());
+        }
     }
 
     /**
