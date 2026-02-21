@@ -81,6 +81,20 @@ async function validatePageHealth(page: Page, url: string): Promise<string[]> {
   await page.waitForLoadState('domcontentloaded');
   await waitForApiSettled(page, 15000);
 
+  // 額外等待 loading overlay 消失（某些頁面 API 完成後仍有動畫延遲）
+  try {
+    await page.waitForFunction(() => {
+      const overlays = document.querySelectorAll('.loading-overlay');
+      for (const overlay of overlays) {
+        const style = window.getComputedStyle(overlay as HTMLElement);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') return false;
+      }
+      return true;
+    }, { timeout: 10000 });
+  } catch {
+    // timeout - will be caught by the overlay check below
+  }
+
   const issues: string[] = [];
 
   // 檢查 1: 卡住的「載入中」文字
