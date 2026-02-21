@@ -24,11 +24,19 @@ import {
  */
 
 async function getTenantToken(request: APIRequestContext): Promise<string> {
-  const response = await request.post('/api/auth/tenant/login', {
-    data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
-  });
-  const data = await response.json();
-  return data.data?.accessToken || '';
+  // 重試最多 3 次以容忍暫時性 DNS/網路錯誤
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await request.post('/api/auth/tenant/login', {
+        data: { username: TEST_ACCOUNTS.tenant.username, password: TEST_ACCOUNTS.tenant.password }
+      });
+      const data = await response.json();
+      if (data.data?.accessToken) return data.data.accessToken;
+    } catch {
+      if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  return '';
 }
 
 // ============================================================
