@@ -224,46 +224,34 @@ test.describe('票券發放與核銷', () => {
     expect(customers.length).toBeGreaterThan(0);
     customerId = customers[0].id;
 
-    // 取得已發布票券
-    const couponRes = await request.get('/api/coupons?status=PUBLISHED&page=0&size=1', {
+    // 建立並發布一張新票券（validStartAt 使用昨天，確保 canUse=true 可核銷）
+    const futureStart = new Date();
+    futureStart.setDate(futureStart.getDate() - 1);
+    const futureEnd = new Date();
+    futureEnd.setDate(futureEnd.getDate() + 60);
+    const formatDt = (d: Date) => {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} 00:00:00`;
+    };
+    const createRes = await request.post('/api/coupons', {
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      data: {
+        name: generateTestData('RedeemCpn'),
+        type: 'DISCOUNT_AMOUNT',
+        discountAmount: 50,
+        totalQuantity: 100,
+        limitPerCustomer: 5,
+        validStartAt: formatDt(futureStart),
+        validEndAt: formatDt(futureEnd)
+      }
+    });
+    expect(createRes.ok()).toBeTruthy();
+    publishedCouponId = (await createRes.json()).data.id;
+
+    const pubRes = await request.post(`/api/coupons/${publishedCouponId}/publish`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    expect(couponRes.ok()).toBeTruthy();
-    const couponData = await couponRes.json();
-    const coupons = couponData.data?.content || [];
-
-    if (coupons.length > 0) {
-      publishedCouponId = coupons[0].id;
-    } else {
-      // 建立並發布一張新票券（validStartAt 使用昨天，確保立即可用）
-      const futureStart = new Date();
-      futureStart.setDate(futureStart.getDate() - 1);
-      const futureEnd = new Date();
-      futureEnd.setDate(futureEnd.getDate() + 60);
-      const formatDt = (d: Date) => {
-        const pad = (n: number) => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} 00:00:00`;
-      };
-      const createRes = await request.post('/api/coupons', {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        data: {
-          name: generateTestData('RedeemCpn'),
-          type: 'DISCOUNT_AMOUNT',
-          discountAmount: 50,
-          totalQuantity: 100,
-          limitPerCustomer: 5,
-          validStartAt: formatDt(futureStart),
-          validEndAt: formatDt(futureEnd)
-        }
-      });
-      expect(createRes.ok()).toBeTruthy();
-      publishedCouponId = (await createRes.json()).data.id;
-
-      const pubRes = await request.post(`/api/coupons/${publishedCouponId}/publish`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      expect(pubRes.ok()).toBeTruthy();
-    }
+    expect(pubRes.ok()).toBeTruthy();
 
     expect(publishedCouponId).toBeTruthy();
     expect(customerId).toBeTruthy();

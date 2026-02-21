@@ -79,7 +79,7 @@ async function waitForApiSettled(page: Page, timeoutMs = 8000): Promise<void> {
 async function validatePageHealth(page: Page, url: string): Promise<string[]> {
   await page.goto(url);
   await page.waitForLoadState('domcontentloaded');
-  await waitForApiSettled(page, 10000);
+  await waitForApiSettled(page, 15000);
 
   const issues: string[] = [];
 

@@ -71,9 +71,9 @@ async function getPrerequisiteData(request: APIRequestContext, token: string): P
   return { customerId, serviceItemId, staffId };
 }
 
-/** 生成一個不會與先前測試衝突的隨機未來日期（30~120 天內的工作日） */
+/** 生成一個不會與先前測試衝突的隨機未來日期（5~25 天內的工作日，不超過 maxAdvanceBookingDays） */
 function randomFutureDate(): string {
-  const daysAhead = Math.floor(Math.random() * 90) + 30;
+  const daysAhead = Math.floor(Math.random() * 20) + 5;
   const d = new Date();
   d.setDate(d.getDate() + daysAhead);
   // 避開週六(6)、週日(0)
