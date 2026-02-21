@@ -91,7 +91,7 @@ function randomTime(): string {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-/** 建立一筆預約，回傳 booking ID */
+/** 建立一筆預約，回傳 booking ID。遇到「該時段已被預約」自動嘗試不同日期/時段（最多 5 次） */
 async function createBooking(
   request: APIRequestContext,
   token: string,
@@ -102,22 +102,41 @@ async function createBooking(
   staffId?: string | null,
 ): Promise<string> {
   const headers = { 'Authorization': `Bearer ${token}` };
-  const response = await request.post('/api/bookings', {
-    headers,
-    data: {
-      customerId: data.customerId,
-      serviceItemId: data.serviceItemId,
-      staffId: staffId !== undefined ? staffId : data.staffId,
-      bookingDate,
-      startTime,
-      customerNote: note,
+  let currentDate = bookingDate;
+  let currentTime = startTime;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const response = await request.post('/api/bookings', {
+      headers,
+      data: {
+        customerId: data.customerId,
+        serviceItemId: data.serviceItemId,
+        staffId: staffId !== undefined ? staffId : data.staffId,
+        bookingDate: currentDate,
+        startTime: currentTime,
+        customerNote: note,
+      }
+    });
+    const body = await response.json();
+
+    if (response.ok() && body.success) {
+      expect(body.data.id).toBeTruthy();
+      return body.data.id;
     }
-  });
-  const body = await response.json();
-  expect(response.ok(), `建立預約失敗: ${response.status()} ${bookingDate} ${startTime} - ${body.message || JSON.stringify(body)}`).toBeTruthy();
-  expect(body.success).toBeTruthy();
-  expect(body.data.id).toBeTruthy();
-  return body.data.id;
+
+    // 如果是時段已被預約，自動換一個日期/時段重試
+    const msg = body.message || '';
+    if (response.status() === 400 && (msg.includes('已被預約') || msg.includes('衝突'))) {
+      currentDate = randomFutureDate();
+      currentTime = randomTime();
+      continue;
+    }
+
+    // 其他錯誤直接失敗
+    expect(response.ok(), `建立預約失敗: ${response.status()} ${currentDate} ${currentTime} - ${msg}`).toBeTruthy();
+  }
+
+  throw new Error(`建立預約失敗: 嘗試 5 次仍無法找到可用時段`);
 }
 
 // ============================================================

@@ -86,6 +86,8 @@ const TENANT_CODE = 'michaelshop';
 // ===========================================================================
 
 test.describe('1. LINE Webhook API', () => {
+  // LINE Webhook 測試容忍暫時性 DNS 錯誤
+  test.describe.configure({ retries: 1 });
 
   test('POST empty events array returns < 500', async ({ request }) => {
     const res = await request.post(`/api/line/webhook/${TENANT_CODE}`, {

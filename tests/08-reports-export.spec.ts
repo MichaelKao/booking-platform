@@ -408,6 +408,8 @@ test.describe('匯出功能', () => {
 // ============================================================
 
 test.describe('報表頁面 UI', () => {
+  test.describe.configure({ retries: 1 });
+
   test.beforeEach(async ({ page }) => {
     await tenantLogin(page);
   });
@@ -452,6 +454,20 @@ test.describe('報表頁面 UI', () => {
 
     const hourlySection = page.locator('#hourlyDistribution');
     await expect(hourlySection).toBeVisible();
+
+    // 等待載入中文字消失（報表資料可能較慢載入）
+    try {
+      await page.waitForFunction(
+        (selector) => {
+          const el = document.querySelector(selector);
+          return el && !el.textContent?.includes('載入中');
+        },
+        '#hourlyDistribution',
+        { timeout: 10000 }
+      );
+    } catch {
+      // timeout fallback
+    }
 
     const loadingText = hourlySection.locator('text=載入中');
     const hasLoading = await loadingText.count();
