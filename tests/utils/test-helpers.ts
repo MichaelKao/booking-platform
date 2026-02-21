@@ -11,7 +11,7 @@ export const TEST_ACCOUNTS = {
     password: 'admin123'
   },
   tenant: {
-    username: 'e2etest@example.com',
+    username: 'e2etest',
     password: 'Test12345'
   }
 };

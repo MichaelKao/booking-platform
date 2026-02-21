@@ -968,130 +968,49 @@ mvn spring-boot:run -Dspring.profiles.active=prod
 npx playwright test
 
 # 執行特定測試
-npx playwright test tests/21-sse-notifications.spec.ts
+npx playwright test tests/02-booking-lifecycle.spec.ts
 
 # 列出所有測試
 npx playwright test --list
 ```
 
-**測試套件 (34 files，按操作邏輯分區)：**
+**測試套件（13 files，~346 tests，按業務邏輯分區）：**
 
-### Zone 0: 基礎設施 (00-03)
+| 檔案 | 測試數 | 說明 |
+|------|--------|------|
+| `00-infrastructure.spec.ts` | ~15 | 環境健康、認證流程、多租戶隔離、基本導航 |
+| `01-admin-operations.spec.ts` | ~33 | 超管儀表板、店家 CRUD、功能管理、儲值審核、訂閱生命週期 |
+| `02-booking-lifecycle.spec.ts` | ~37 | 預約全生命週期（PENDING→CONFIRMED→COMPLETED/CANCELLED/NO_SHOW）、時段衝突、PENDING不佔用 |
+| `03-customer-management.spec.ts` | ~23 | 顧客 CRUD、點數加減餘額驗證、封鎖/解封、標籤管理 |
+| `04-staff-service.spec.ts` | ~20 | 員工 CRUD、排班設定與持久化驗證、請假管理、服務 CRUD |
+| `05-product-order.spec.ts` | ~22 | 商品 CRUD、庫存增減驗證、上下架狀態、商品訂單 |
+| `06-coupon-campaign.spec.ts` | ~28 | 票券生命週期（DRAFT→ACTIVE→PAUSED→ACTIVE）、核銷流程、行銷活動狀態機（DRAFT→PUBLISHED→PAUSED→ENDED） |
+| `07-settings-config.spec.ts` | ~28 | 店家設定、點數累積設定、LINE 設定（安全）、功能商店訂閱、會員等級、側邊欄功能控制 |
+| `08-reports-export.spec.ts` | ~24 | 報表摘要/統計 API、報表一致性交叉驗證、Excel/PDF 匯出 |
+| `09-line-bot.spec.ts` | ~20 | LINE Webhook API、LINE 設定 API、Flex Menu、Rich Menu UI、AI 智慧客服 |
+| `10-public-pages.spec.ts` | ~30 | 公開頁面、SEO Meta、所有後台頁面健康驗證、RWD 響應式、新手引導 |
+| `11-business-rules.spec.ts` | ~30 | 時間驗證規則、API 契約驗證、報表一致性、預約狀態機完整性、SSE 端點、密碼安全 |
+| `12-data-integrity.spec.ts` | ~36 | API 回應格式、分頁一致性、軟刪除、空資料處理、並發安全、錯誤處理、特殊字元、Token 處理 |
 
-| 檔案 | 說明 |
-|------|------|
-| `00-setup.spec.ts` | 環境檢查（健康檢查、頁面可訪問、超管登入） |
-| `01-auth.spec.ts` | 認證流程（登入、註冊、忘記密碼、Token 刷新） |
-| `02-admin.spec.ts` | 超管後台（儀表板、店家管理、功能管理、儲值審核、API 驗證） |
-| `03-tenant-dashboard.spec.ts` | 店家後台基本環境（儀表板載入、側邊欄、基本導航） |
+**測試設計原則：**
 
-### Zone 1: 超管操作 (04-05)
-
-| 檔案 | 說明 |
-|------|------|
-| `04-admin-crud.spec.ts` | 超管 CRUD 完整流程（店家增刪改查、功能啟停、儲值審核） |
-| `05-admin-topup-features.spec.ts` | 功能管理 + 儲值 + 訂閱流程 API 測試 |
-
-### Zone 2: 店家核心業務 (06-14)
-
-| 檔案 | 說明 |
-|------|------|
-| `06-booking-management.spec.ts` | 預約管理 + 全流程業務邏輯驗證（PENDING→CONFIRMED→COMPLETED、取消、時段佔用） |
-| `07-tenant-customer.spec.ts` | 顧客管理 + 點數業務邏輯驗證（增減點數餘額、封鎖/解封） |
-| `08-staff-service.spec.ts` | 員工管理 + 服務管理（排班、請假、服務分類） |
-| `09-product-coupon.spec.ts` | 商品管理 + 票券管理 + 庫存一致性 + 票券生命週期驗證 |
-| `10-campaign-marketing.spec.ts` | 行銷活動 + 推播 + 狀態機驗證（DRAFT→PUBLISHED→PAUSED→ENDED） |
-| `11-settings.spec.ts` | 店家設定 + LINE 設定 + 點數設定 |
-| `12-reports-export.spec.ts` | 報表 + Excel/PDF 匯出 |
-| `13-membership-forms.spec.ts` | 會員等級 + 表單驗證 |
-| `14-feature-store-details.spec.ts` | 功能商店詳情 + 訂閱/取消流程 |
-
-### Zone 3: LINE Bot (15-19)
-
-| 檔案 | 說明 |
-|------|------|
-| `15-line-bot.spec.ts` | LINE Webhook + 狀態機 + AI 智慧客服 |
-| `16-line-category-selection.spec.ts` | LINE Bot 分類選擇 + GoBack 確定性返回 + 下游清除 |
-| `17-rich-menu-custom.spec.ts` | Rich Menu 預設 + 自訂模式 + 佈局選擇 |
-| `18-advanced-rich-menu.spec.ts` | 進階自訂 Rich Menu + 功能訂閱控制 |
-| `19-flex-menu-step-editor.spec.ts` | Flex Menu 步驟編輯器 + 卡片圖片上傳 |
-
-### Zone 4: 跨域驗證 (20-24)
-
-| 檔案 | 說明 |
-|------|------|
-| `20-f12-console-check.spec.ts` | F12 Console 全頁面錯誤檢測 |
-| `21-sse-notifications.spec.ts` | SSE 即時通知 + 通知系統完整測試 |
-| `22-public-seo-pages.spec.ts` | 公開頁面 + SEO 驗證（meta tags、OG、sitemap） |
-| `23-sidebar-feature-visibility.spec.ts` | 側邊欄功能訂閱顯示控制 |
-| `24-onboarding-setup-status.spec.ts` | 新手引導系統 + 側邊欄設定狀態 |
-
-### Zone 5: 品質閘門 (25-30)
-
-| 檔案 | 說明 |
-|------|------|
-| `25-api-contract-validator.spec.ts` | 前後端 API 契約驗證（欄位名匹配） |
-| `26-booking-slot-conflict.spec.ts` | 預約時段衝突與自動分配員工 |
-| `27-time-validation.spec.ts` | 時間/日期驗證（開始<結束）+ 前端防呆 |
-| `28-rwd-responsive.spec.ts` | RWD 響應式設計測試 |
-| `29-page-health-validator.spec.ts` | 頁面健康驗證（載入完成、無卡住指標） |
-| `30-full-coverage-ui.spec.ts` | 全覆蓋 UI + 深度互動測試 |
-
-### Zone 6: 回歸+防護 (31-33)
-
-| 檔案 | 說明 |
-|------|------|
-| `31-business-logic-correctness.spec.ts` | 業務邏輯正確性 + 報表交叉驗證 |
-| `32-bugfix-verification.spec.ts` | Bug 修復回歸驗證 |
-| `33-comprehensive-bug-hunt.spec.ts` | 全面 BUG 搜尋（壓軸） |
-
-**測試涵蓋範圍：**
-
-- 所有超管頁面（儀表板、店家管理、功能管理、儲值審核）
-- 所有店家頁面（18 頁面：儀表板、預約管理、行事曆、報表、顧客、員工、服務、商品、庫存異動、商品訂單、票券、行銷活動、行銷推播、設定、LINE設定、功能商店、點數管理、會員等級）
-- 所有公開頁面（登入、註冊、忘記密碼、顧客自助取消預約）
-- 所有 SEO 頁面（首頁、功能介紹、價格方案、FAQ、行業頁面、法律頁面）
-- 所有 API 端點（19 個主要 API 完整驗證）
-- 所有表單欄位和按鈕（9 個新增按鈕 Modal 測試）
-- **F12 Console 自動監控**（所有 UI 測試自動檢測 JS 錯誤、HTTP 500、console.error）
-- **業務邏輯深度驗證**（預約狀態流轉、點數餘額一致、庫存增減、票券生命週期、活動狀態機、報表交叉驗證）
-- 功能訂閱與側邊欄顯示控制
-- 新手引導卡片（顯示/步驟/進度條/關閉/導航/持久化）
-- LINE Bot 對話狀態和訊息格式
-- LINE Bot 服務分類選擇流程（狀態機、Postback、goBack、邊界情況）
-- Excel/PDF 匯出功能
-- SEO 資源驗證（robots.txt、sitemap.xml、OG 圖片、Meta Tags）
-- **頁面健康驗證**（載入完成檢測、卡住的「載入中」、孤立 spinner、載入遮罩）
-- **API 契約驗證**（前端欄位名 vs 後端 DTO 欄位名匹配，防止 400 錯誤）
-- **多租戶資料隔離驗證**（不同角色 token 不能跨域存取）
-
-**靜態分析腳本（scripts/audit-frontend-apis.js）：**
-
-- 不需啟動伺服器，直接掃描 HTML 原始碼
-- `STALE_LOADING`：檢查 HTML 有「載入中」文字的元素是否有對應 JS DOM 操作
-- `ORPHAN_SPINNER`：檢查 spinner 容器是否有 JS 代碼去移除/替換
-- `FIELD_MISMATCH`：比對前端 api.post/put 送出的欄位名與後端 Java DTO 欄位名，找出不匹配
-- 執行方式：`node scripts/audit-frontend-apis.js`
+- **使用者操作角度**：以業務流程（而非 API 端點）為測試單位
+- **強斷言**：每個測試都有 `expect()` 斷言，杜絕 `console.log` 代替斷言、`if (!token) return` 靜默跳過
+- **業務邏輯驗證**：狀態變更後重新 GET 確認持久化（不只看回應碼）
+- **串行測試**：需要依序執行的測試使用 `test.describe.serial`
+- **資料清理**：測試建立的資料在 `afterAll` 中清理，避免汙染環境
 
 **F12 Console 自動監控（fixtures.ts）：**
 
-- 所有 UI 測試檔案透過 `import { test, expect } from './fixtures'` 自動啟用 F12 監控
+- 所有測試檔案透過 `import { test, expect } from './fixtures'` 自動啟用 F12 監控
 - 監控三類錯誤：`pageerror`（JS 執行錯誤）、HTTP 500+（伺服器錯誤）、`console.error`（過濾瀏覽器雜訊）
 - 任何未過濾的 F12 錯誤會讓測試直接失敗
-- 過濾清單包含：瀏覽器內建訊息（favicon、net::ERR_、SSE 等）和應用程式預期的 API 錯誤處理（handleResponse、登入失敗、換頁中斷等）
-- 大多數 UI 測試檔案已整合此 fixture
 
 **測試基礎設施注意事項：**
 
-- 使用 `domcontentloaded` 而非 `networkidle` 等待頁面載入
-- 原因：SSE 連線會保持網路活躍，導致 `networkidle` 永遠無法觸發
-- 所有測試檔案已更新使用正確的等待策略
-
-**測試安全注意事項：**
-
-- LINE 設定測試（`11-settings.spec.ts`）**不會覆蓋**真實的 LINE credentials
-- 測試只會更新訊息設定（welcomeMessage、defaultReply），不動 channelId/channelSecret/channelAccessToken
-- 啟用/停用測試會**確保最終保持啟用狀態**，避免影響生產環境
+- 使用 `domcontentloaded` 而非 `networkidle` 等待頁面載入（SSE 會保持網路活躍）
+- LINE 設定測試**不會覆蓋**真實 LINE credentials
+- 啟用/停用測試確保最終狀態恢復
 
 ---
 
@@ -1250,29 +1169,33 @@ test('刪除顧客 — 確認對話框顯示後執行刪除', ...);
 | 載入遮罩蓋住頁面 | 檢查 `.loading-overlay` opacity | 遮罩的 hide 邏輯有 bug |
 | 空白表格 | 檢查 tbody 是否有 tr 或「無資料」提示 | API 回應格式錯但沒報錯 |
 
-### 測試檔案命名規範
+### 測試檔案結構
 
 ```
 tests/
-├── 00~03-*.spec.ts             ← Zone 0: 基礎設施（環境、認證、超管/店家基本）
-├── 04~05-*.spec.ts             ← Zone 1: 超管操作（CRUD、功能管理）
-├── 06~14-*.spec.ts             ← Zone 2: 店家核心業務（預約→顧客→員工→商品→行銷→設定→報表）
-├── 15~19-*.spec.ts             ← Zone 3: LINE Bot（Webhook、分類、Rich Menu、Flex Menu）
-├── 20~24-*.spec.ts             ← Zone 4: 跨域驗證（F12、SSE、公開頁面、側邊欄、引導）
-├── 25~30-*.spec.ts             ← Zone 5: 品質閘門（API 契約、衝突、時間、RWD、健康、全覆蓋）
-├── 31~33-*.spec.ts             ← Zone 6: 回歸+防護（業務正確性、bugfix、全面掃描）
-├── fixtures.ts                 ← 共用 Fixture（F12 監控）
-└── utils/test-helpers.ts       ← 共用輔助函式
+├── 00-infrastructure.spec.ts     ← 環境健康、認證流程、多租戶隔離
+├── 01-admin-operations.spec.ts   ← 超管儀表板、店家 CRUD、功能管理、儲值審核
+├── 02-booking-lifecycle.spec.ts  ← 預約全生命週期、時段衝突、狀態機
+├── 03-customer-management.spec.ts ← 顧客 CRUD、點數餘額、封鎖/解封、標籤
+├── 04-staff-service.spec.ts      ← 員工排班/請假、服務 CRUD
+├── 05-product-order.spec.ts      ← 商品 CRUD、庫存增減、上下架
+├── 06-coupon-campaign.spec.ts    ← 票券/活動生命週期、票券核銷
+├── 07-settings-config.spec.ts    ← 設定、LINE 設定、功能商店、會員等級
+├── 08-reports-export.spec.ts     ← 報表 API、一致性驗證、Excel/PDF 匯出
+├── 09-line-bot.spec.ts           ← LINE Webhook、設定 API、Flex Menu、Rich Menu
+├── 10-public-pages.spec.ts       ← 公開頁面、SEO、頁面健康、RWD、引導
+├── 11-business-rules.spec.ts     ← 時間驗證、API 契約、狀態機完整性、SSE
+├── 12-data-integrity.spec.ts     ← 回應格式、分頁、軟刪除、並發、錯誤處理
+├── fixtures.ts                   ← 共用 Fixture（F12 監控）
+└── utils/test-helpers.ts         ← 共用輔助函式
 ```
 
 **編號邏輯**：
-- `00-03`：基礎設施（Zone 0）
-- `04-05`：超管操作（Zone 1）
-- `06-14`：店家核心業務（Zone 2）
-- `15-19`：LINE Bot（Zone 3）
-- `20-24`：跨域驗證（Zone 4）
-- `25-30`：品質閘門（Zone 5）
-- `31-33`：回歸+防護（Zone 6）
+- `00`：基礎設施與認證
+- `01`：超管操作
+- `02-08`：店家核心業務（預約→顧客→員工→商品→票券→設定→報表）
+- `09`：LINE Bot
+- `10-12`：品質閘門（頁面健康、業務規則、資料完整性）
 
 ### 防護網測試清單（適用於所有 Web 專案）
 
@@ -1469,4 +1392,5 @@ GROQ_MODEL=llama-3.3-70b-versatile  # 模型（可選）
 | CSS 檔案 | 3 |
 | JS 檔案 | 4 |
 | i18n 檔案 | 4 |
-| E2E 測試檔案 | 34 |
+| E2E 測試檔案 | 13 |
+| E2E 測試數量 | ~346 |

@@ -54,6 +54,35 @@ public class Tenant extends BaseEntity {
     private Long version;
 
     // ========================================
+    // 生命週期回調：確保 tenantId = id
+    // ========================================
+
+    /**
+     * 新增前確保 tenantId 與 id 一致
+     * （Tenant 是租戶本身，tenantId 應等於自己的 id）
+     */
+    @Override
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        super.onCreate();
+        if (this.getTenantId() == null && this.getId() != null) {
+            this.setTenantId(this.getId());
+        }
+    }
+
+    /**
+     * 更新前確保 tenantId 與 id 一致
+     */
+    @Override
+    @jakarta.persistence.PreUpdate
+    protected void onUpdate() {
+        super.onUpdate();
+        if (this.getTenantId() == null && this.getId() != null) {
+            this.setTenantId(this.getId());
+        }
+    }
+
+    // ========================================
     // 基本資料欄位
     // ========================================
 
