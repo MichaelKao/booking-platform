@@ -508,27 +508,42 @@ test.describe('4. PENDING 不佔用時段', () => {
 
   test('同時段建立兩筆 PENDING 預約 - 兩筆都應成功', async ({ request }) => {
     const headers = { 'Authorization': `Bearer ${token}` };
-    const bookingDate = randomFutureDate();
-    const startTime = randomTime();
 
-    // 第一筆
-    const res1 = await request.post('/api/bookings', {
-      headers,
-      data: {
-        customerId: prereqs.customerId,
-        serviceItemId: prereqs.serviceItemId,
-        staffId: prereqs.staffId,
-        bookingDate,
-        startTime,
-        customerNote: 'E2E PENDING coexist #1',
+    // 找到一個可用的時段（未被 CONFIRMED 佔用）
+    let bookingDate = '';
+    let startTime = '';
+    let data1: any;
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      bookingDate = randomFutureDate();
+      startTime = randomTime();
+
+      const res1 = await request.post('/api/bookings', {
+        headers,
+        data: {
+          customerId: prereqs.customerId,
+          serviceItemId: prereqs.serviceItemId,
+          staffId: prereqs.staffId,
+          bookingDate,
+          startTime,
+          customerNote: 'E2E PENDING coexist #1',
+        }
+      });
+
+      if (res1.ok()) {
+        data1 = await res1.json();
+        break;
       }
-    });
-    expect(res1.ok()).toBeTruthy();
-    const data1 = await res1.json();
+      // 時段被佔用，重試不同日期/時段
+      if (attempt === 4) {
+        expect(res1.ok(), `5 次嘗試仍無法找到可用時段`).toBeTruthy();
+      }
+    }
+
     expect(data1.success).toBeTruthy();
     expect(data1.data.status).toBe('PENDING');
 
-    // 第二筆 - 完全相同的時段和員工
+    // 第二筆 - 完全相同的時段和員工（PENDING 不佔用時段，應該可以建立）
     const res2 = await request.post('/api/bookings', {
       headers,
       data: {
