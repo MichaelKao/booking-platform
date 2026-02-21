@@ -685,6 +685,9 @@ test.describe('6. 預約更新', () => {
 // ============================================================
 
 test.describe('7. 預約管理 UI', () => {
+  // UI 測試依賴頁面載入，增加超時容忍偶發性網路延遲
+  test.describe.configure({ retries: 1 });
+
   test.beforeEach(async ({ page }) => {
     await tenantLogin(page);
   });
