@@ -207,8 +207,8 @@ test.describe('2. API Contract Validation', () => {
         customerId: testIds.customerId || 'test-id',
         serviceItemId: testIds.serviceId || 'test-id',
         staffId: testIds.staffId,
-        bookingDate: '2099-12-31',
-        startTime: '10:00',
+        bookingDate: (() => { const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().slice(0, 10); })(),
+        startTime: '15:00',
         customerNote: 'contract-test'
       }
     });

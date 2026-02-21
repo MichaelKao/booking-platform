@@ -84,9 +84,9 @@ function randomFutureDate(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** 生成一個隨機整點時間 (09:00 ~ 11:00, 14:00 ~ 17:00，避開午休) */
+/** 生成一個隨機整點時間 (14:00 ~ 17:00，只用下午時段避開店家午休 08:00-12:00) */
 function randomTime(): string {
-  const slots = [9, 10, 11, 14, 15, 16, 17];
+  const slots = [14, 15, 16, 17];
   const hour = slots[Math.floor(Math.random() * slots.length)];
   return `${String(hour).padStart(2, '0')}:00`;
 }
@@ -604,10 +604,10 @@ test.describe('6. 預約更新', () => {
   test('更新預約備註 - 驗證更新持久化', async ({ request }) => {
     const headers = { 'Authorization': `Bearer ${token}` };
 
-    // 建立一筆預約
+    // 建立一筆預約（使用有效的未來日期）
     const bookingId = await createBooking(
       request, token, prereqs,
-      '2099-12-20', '15:00',
+      randomFutureDate(), '15:00',
       'E2E update test: original note'
     );
 
@@ -635,7 +635,7 @@ test.describe('6. 預約更新', () => {
 
     const bookingId = await createBooking(
       request, token, prereqs,
-      '2099-12-21', '09:00',
+      randomFutureDate(), '15:00',
       'E2E update internal note test'
     );
 
@@ -877,7 +877,7 @@ test.describe('附加: 預約回應格式與邊界情況', () => {
         customerId: prereqs.customerId,
         serviceItemId: prereqs.serviceItemId,
         staffId: null,
-        bookingDate: '2099-12-22',
+        bookingDate: randomFutureDate(),
         startTime: '16:00',
         customerNote: 'E2E auto-assign staff test',
       }

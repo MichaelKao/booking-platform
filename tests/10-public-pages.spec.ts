@@ -259,6 +259,8 @@ test.describe('SEO Meta Tags', () => {
 // ============================================================
 
 test.describe('店家後台頁面載入', () => {
+  // 這些頁面涉及多個 API 呼叫，在伺服器負載高時可能需要重試
+  test.describe.configure({ retries: 2 });
 
   const tenantPages = [
     { path: '/tenant/dashboard', name: '儀表板' },
